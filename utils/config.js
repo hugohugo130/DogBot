@@ -11,8 +11,6 @@ const DATABASE_FILES = {
     "serverIP.json": {},
 };
 
-const serverIPFile = join(database_folder, "serverIP.json")
-
 const DEFAULT_VALUES = {
     "user": {
         "database.json": {},
@@ -20,6 +18,14 @@ const DEFAULT_VALUES = {
         "rpg_shop.json": {},
     },
 };
+
+const onlineDB_Files = [
+    "database.json",
+    "rpg_database.json",
+    "rpg_shop.json",
+];
+
+const serverIPFile = join(database_folder, "serverIP.json");
 
 const BETA = false;
 const DEFAULT_IP = "hugo.904037.xyz"
