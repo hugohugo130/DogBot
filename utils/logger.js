@@ -1,6 +1,5 @@
 const winston = require('winston');
 const { EmbedBuilder, MessageFlags } = require('discord.js');
-const { wait_until_ready } = require('./wait_until_ready.js');
 const { time } = require('./time.js');
 const config = require('./config.js');
 
@@ -8,7 +7,7 @@ const config = require('./config.js');
 const loggerManager = new Map();
 const sendQueue = [];
 
-// 颜色映射
+// 顏色映射
 const LEVEL_COLORS = {
     error: 0xEC0C25,
     warn: 0xFFCC00,
@@ -17,7 +16,7 @@ const LEVEL_COLORS = {
     verbose: 0x800080
 };
 
-// 频道映射
+// 頻道映射
 const CHANNEL_MAPPING = {
     error: config.error_channel_id,
     warn: config.warn_channel_id,
@@ -26,13 +25,13 @@ const CHANNEL_MAPPING = {
     verbose: config.log_channel_id
 };
 
-// 自定义 Discord Transport
+// 自定義 Discord Transport
 class DiscordTransport extends winston.Transport {
     constructor(opts) {
         super(opts);
         this.name = 'discord';
         this.client = opts.client;
-        this.level = opts.level || 'warn'; // 默认只发送 warn 和 error
+        this.level = opts.level || 'warn'; // 默认只發送 warn 和 error
         this.channels = new Map();
         this._isReady = false;
 
@@ -44,8 +43,8 @@ class DiscordTransport extends winston.Transport {
                 this._isReady = true;
                 this._processQueue();
             });
-        }
-    }
+        };
+    };
 
     async _getChannel(level) {
         const channelId = CHANNEL_MAPPING[level];
@@ -56,15 +55,15 @@ class DiscordTransport extends winston.Transport {
             } catch (error) {
                 console.error(`Failed to fetch channel ${channelId}:`, error);
                 return null;
-            }
-        }
+            };
+        };
         return this.channels.get(channelId);
-    }
+    };
 
     _truncateContent(content, maxLength = 1000) {
         if (content.length <= maxLength) return content;
         return '...' + content.slice(-(maxLength - 3));
-    }
+    };
 
     async _sendToDiscord(info) {
         try {
@@ -77,7 +76,7 @@ class DiscordTransport extends winston.Transport {
             const moduleName = info.module || 'unknown';
             let description = info.message;
 
-            // 处理错误堆栈
+            // 處理錯誤堆栈
             if (info.stack) {
                 description = `\`\`\`${this._truncateContent(info.stack, 984)}\`\`\``;
             } else if (info.message && info.message.length > 100) {
@@ -98,38 +97,38 @@ class DiscordTransport extends winston.Transport {
             });
         } catch (error) {
             console.error('Failed to send log to Discord:', error);
-        }
-    }
+        };
+    };
 
     async _processQueue() {
         while (sendQueue.length > 0) {
             const info = sendQueue.shift();
             await this._sendToDiscord(info);
-        }
-    }
+        };
+    };
 
     log(info, callback) {
         setImmediate(() => {
             this.emit('logged', info);
         });
 
-        // 只在特定级别发送到 Discord
+        // 只在特定級別發送到 Discord
         if (!['error', 'warn'].includes(info.level)) {
             return callback();
-        }
+        };
 
-        // 如果客户端未就绪，加入队列
+        // 如果客户端未就緒，加入隊列
         if (!this._isReady) {
             sendQueue.push(info);
         } else {
             this._sendToDiscord(info).finally(() => callback());
-        }
+        };
 
         return true;
-    }
-}
+    };
+};
 
-// 自定义控制台格式
+// 自定義控制台格式
 const consoleFormat = winston.format.combine(
     winston.format.timestamp(),
     winston.format.printf(({ timestamp, level, message, module }) => {
@@ -138,7 +137,6 @@ const consoleFormat = winston.format.combine(
     })
 );
 
-// 获取调用者模块名（保持你的原有逻辑）
 function getCallerModuleName(depth = 4) {
     try {
         const err = new Error();
@@ -154,14 +152,14 @@ function getCallerModuleName(depth = 4) {
             return fileName.replace('.js', '');
         }
     } catch {
-        // 忽略错误
+        // 忽略錯誤
     }
     return 'unknown';
 }
 
-// 主 logger 函数
+// 主 logger 函數
 function get_logger(options = {}) {
-    // 处理参数
+    // 處理參數
     if (typeof options === 'string') {
         options = { name: options };
     } else if (typeof options === 'object' && !options.name) {
@@ -179,11 +177,11 @@ function get_logger(options = {}) {
         return loggerManager.get(name);
     }
 
-    // 创建 transports
+    // 創建 transports
     const transports = [
         new winston.transports.Console({
             format: consoleFormat,
-            level: 'debug' // 控制台显示所有级别
+            level: 'debug' // 控制台显示所有級別
         })
     ];
 
@@ -195,11 +193,11 @@ function get_logger(options = {}) {
         }));
     }
 
-    // 创建 logger
+    // 創建 logger
     const logger = winston.createLogger({
         level: level,
         format: winston.format.combine(
-            winston.format.errors({ stack: true }), // 捕获错误堆栈
+            winston.format.errors({ stack: true }), // 捕获錯誤堆栈
             winston.format.timestamp(),
             winston.format.json()
         ),
@@ -207,39 +205,38 @@ function get_logger(options = {}) {
         transports: transports
     });
 
-    // 存储 logger
+    // 儲存 logger
     loggerManager.set(name, logger);
 
     return logger;
-}
+};
 
-// 处理发送队列
+// 處理發送隊列
 async function process_send_queue(client) {
-    // 如果队列中有消息且提供了 client，创建临时 logger 处理
+    // 如果隊列中有消息且提供了 client，創建臨時 logger 處理
     if (sendQueue.length > 0 && client) {
         const tempLogger = get_logger({ name: 'queue-processor', client });
 
         for (const info of sendQueue) {
-            // 重新记录这些消息
+            // 重新記錄這些訊息
             tempLogger.log(info);
-        }
+        };
 
-        // 清空队列
+        // 清空隊列
         sendQueue.length = 0;
-    }
-}
+    };
+};
 
-// 优雅关闭
 async function shutdown() {
     for (const [name, logger] of loggerManager) {
         logger.end(() => {
             console.log(`Logger ${name} closed`);
         });
-    }
+    };
 
-    // 等待所有传输完成
+    // 等待所有傳輸完成
     await new Promise(resolve => setTimeout(resolve, 1000));
-}
+};
 
 module.exports = {
     get_logger,
