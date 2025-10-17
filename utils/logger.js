@@ -27,7 +27,7 @@ const CHANNEL_MAPPING = {
 };
 
 // 自定義 Discord Transport
-class DiscordTransport extends winston.transport {
+class DiscordTransport extends winston.Transport {
     constructor(opts) {
         super(opts);
         this.name = 'discord';
