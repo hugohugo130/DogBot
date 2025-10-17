@@ -2,7 +2,7 @@ const { readJson, writeJson, existsSync, join } = require("./file.js");
 const { database_folder, DATABASE_FILES, DEFAULT_VALUES } = require("./config.js");
 const { get_logger } = require("./logger.js");
 
-const logger = get_logger("check_db_files");
+const logger = get_logger({ name: "check_db_files" });
 
 async function checkDBFilesExists() {
     for (const [file, defaultValue] of Object.entries(DATABASE_FILES)) {

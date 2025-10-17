@@ -184,7 +184,7 @@ function getCallerModuleName(depth = 4) {
 // 主 logger 函數
 /**
  * 
- * @param {{name: string, client: object, level: string}} options
+ * @param {{name: string, client: object}} options
  * @returns {winston.Logger}
  */
 function get_logger(options = {}) {
