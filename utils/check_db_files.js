@@ -18,7 +18,7 @@ async function checkDBFilesExists() {
 /**
  * @warning run this before client.login may block forever
  * @param {object} client 
- * @returns {void}
+ * @returns {Promise<void>}
  */
 async function checkDBFilesDefault(client) {
     const files = DEFAULT_VALUES.user;
