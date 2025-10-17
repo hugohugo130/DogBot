@@ -24,7 +24,7 @@ async function checkDBFilesDefault(client) {
     const files = DEFAULT_VALUES.user;
     if (Object.keys(files).length === 0) return;
 
-    wait_until_ready(client)；
+    wait_until_ready(client);
 
     const guildCollection = await client.guilds.fetch();
     const guildArray = [...guildCollection.values()];
