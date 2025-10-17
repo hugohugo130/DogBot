@@ -138,6 +138,7 @@ const consoleFormat = winston.format.combine(
 );
 
 function getCallerModuleName(depth = 4) {
+    let res;
     try {
         const err = new Error();
         const stackLines = err.stack.split('\n');
@@ -152,24 +153,50 @@ function getCallerModuleName(depth = 4) {
             return fileName.replace('.js', '');
         }
     } catch {
-        // 忽略錯誤
-    }
-    return 'unknown';
+        res = 'unknown'
+    };
+    res = 'unknown';
+    if (res !== "unknown") {
+        const originalPrepareStackTrace = Error.prepareStackTrace;
+        let callerFile;
+
+        try {
+            const err = new Error();
+            Error.prepareStackTrace = (err, stack) => stack; // Override to get stack frames
+            const currentFile = err.stack.shift().getFileName(); // File where getCallerFile is defined
+
+            while (err.stack.length) {
+                callerFile = err.stack.shift().getFileName();
+                if (currentFile !== callerFile) { // Find the first different file in the stack
+                    break;
+                }
+            }
+        } catch (e) {
+            callerFile = "unknown"
+        } finally {
+            Error.prepareStackTrace = originalPrepareStackTrace; // Restore original
+        };
+        return callerFile;
+    };
+    return res;
 }
 
 // 主 logger 函數
+/**
+ * 
+ * @param {{name: string, client: object, level: string}} options
+ * @returns {winston.Logger}
+ */
 function get_logger(options = {}) {
     // 處理參數
     if (typeof options === 'string') {
+        console.warn(`[get_logger] [DEPRECATED] options use string instead of object, module ${getCallerModuleName(4)}`)
         options = { name: options };
-    } else if (typeof options === 'object' && !options.name) {
-        console.warn('Deprecated: Using object without name property');
-    }
+    };
 
     const {
         name = getCallerModuleName(4),
         client = null,
-        level = 'info'
     } = options;
 
     // 返回已存在的 logger
@@ -189,13 +216,12 @@ function get_logger(options = {}) {
     if (client) {
         transports.push(new DiscordTransport({
             client,
-            level: 'info'
         }));
     }
 
     // 創建 logger
     const logger = winston.createLogger({
-        level: level,
+        level: "debug",
         format: winston.format.combine(
             winston.format.errors({ stack: true }), // 捕获錯誤堆栈
             winston.format.timestamp(),
