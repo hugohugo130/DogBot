@@ -35,7 +35,7 @@ class DiscordTransport extends winston.Transport {
         this.level = opts.level || 'warn'; // 默认只发送 warn 和 error
         this.channels = new Map();
         this._isReady = false;
-        
+
         // 检查客户端状态
         if (this.client && this.client.isReady && this.client.isReady()) {
             this._isReady = true;
@@ -76,7 +76,7 @@ class DiscordTransport extends winston.Transport {
 
             const moduleName = info.module || 'unknown';
             let description = info.message;
-            
+
             // 处理错误堆栈
             if (info.stack) {
                 description = `\`\`\`${this._truncateContent(info.stack, 984)}\`\`\``;
@@ -92,9 +92,9 @@ class DiscordTransport extends winston.Transport {
                 .setColor(LEVEL_COLORS[info.level] || 0x000000)
                 .setTimestamp(info.timestamp);
 
-            await channel.send({ 
-                embeds: [embed], 
-                flags: MessageFlags.SuppressNotifications 
+            await channel.send({
+                embeds: [embed],
+                flags: MessageFlags.SuppressNotifications
             });
         } catch (error) {
             console.error('Failed to send log to Discord:', error);
@@ -144,10 +144,10 @@ function getCallerModuleName(depth = 4) {
         const err = new Error();
         const stackLines = err.stack.split('\n');
         const callerLine = stackLines[depth] || stackLines[stackLines.length - 1];
-        
-        const match = callerLine.match(/\((.*):\d+:\d+\)$/) || 
-                     callerLine.match(/(.*):\d+:\d+$/);
-        
+
+        const match = callerLine.match(/\((.*):\d+:\d+\)$/) ||
+            callerLine.match(/(.*):\d+:\d+$/);
+
         if (match) {
             const fullPath = match[1];
             const fileName = fullPath.split(/[\\/]/).pop();
@@ -167,7 +167,7 @@ function get_logger(options = {}) {
     } else if (typeof options === 'object' && !options.name) {
         console.warn('Deprecated: Using object without name property');
     }
-    
+
     const {
         name = getCallerModuleName(4),
         client = null,
@@ -218,12 +218,12 @@ async function process_send_queue(client) {
     // 如果队列中有消息且提供了 client，创建临时 logger 处理
     if (sendQueue.length > 0 && client) {
         const tempLogger = get_logger({ name: 'queue-processor', client });
-        
+
         for (const info of sendQueue) {
             // 重新记录这些消息
             tempLogger.log(info);
         }
-        
+
         // 清空队列
         sendQueue.length = 0;
     }
@@ -236,7 +236,7 @@ async function shutdown() {
             console.log(`Logger ${name} closed`);
         });
     }
-    
+
     // 等待所有传输完成
     await new Promise(resolve => setTimeout(resolve, 1000));
 }
