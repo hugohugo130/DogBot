@@ -1,11 +1,13 @@
-const fs = require("fs")
+const fs = require("fs");
 const fsp = fs.promises;
+const path = require("path");
 
 const { INDENT } = require("./config.js");
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
 const readdir = fsp.readdir;
+const join = path.join;
 
 function needsStringify(obj) {
     if (typeof obj === 'string') {
@@ -113,4 +115,5 @@ module.exports = {
     readdir,
     readScheduleSync,
     readSchedule,
+    join,
 };

@@ -1,7 +1,7 @@
 const { REST, Routes } = require("discord.js");
 const { BotID } = require("./utils/config.js");
 const { loadslashcmd } = require("./utils/loadslashcmd.js");
-require("dotenv").config({ quiet: true });
+require("dotenv").config();
 
 let commands = loadslashcmd(false);
 const rest = new REST().setToken(process.env.TOKEN);

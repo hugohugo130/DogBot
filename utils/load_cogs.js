@@ -22,7 +22,7 @@ function load_cog(client, cog) {
 function processDirectory(client, dirPath) {
     const items = fs.readdirSync(dirPath).filter(item => !load_skiplist.includes(item));
     let loadedFiles = 0;
-    const logger = get_logger({ client: client });
+    const logger = get_logger(null, client );
 
     for (const item of items) {
         const itemPath = path.join(dirPath, item);

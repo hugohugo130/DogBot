@@ -1,7 +1,7 @@
 module.exports = {
     senderr({ client, msg, clientready }) {
         const { get_logger } = require("./logger.js");
-        const logger = get_logger({ client: client || null });
+        const logger = get_logger(null, client || null);
         if (msg == undefined) {
             const error = new Error();
             const stack = error.stack.split("\n");

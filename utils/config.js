@@ -2,9 +2,19 @@ const cwd = process.cwd;
 
 const INDENT = 4;
 const database_folder = `${cwd()}/db`
+
 const DATABASE_FILES = {
+    "database.json": {},
     "rpg_database.json": {},
     "rpg_shop.json": {},
+};
+
+const DEFAULT_VALUES = {
+    "user": {
+        "database.json": {},
+        "rpg_database.json": {},
+        "rpg_shop.json": {},
+    },
 };
 
 const BETA = false;
@@ -24,6 +34,7 @@ module.exports = {
     INDENT,
     database_folder,
     DATABASE_FILES,
+    DEFAULT_VALUES,
     BETA,
     DEFAULT_IP,
     cogsFolder,

@@ -17,7 +17,7 @@ async function send_msg(channel, level, color, logger_name, message) {
         .setDescription(message)
         .setColor(color);
 
-    return await channel.send({ embeds: [embed], flags: MessageFlags.SuppressNotifications})
+    return await channel.send({ embeds: [embed], flags: MessageFlags.SuppressNotifications })
 };
 
 class Console {
@@ -31,9 +31,9 @@ class Console {
     };
 
 
-    beautifly_msg(msg) {
+    beautifly_msg(msg, level) {
         if (!msg.includes(`[${year}`)) {
-            msg = `${time()} ${msg}`;
+            msg = `${time()} [${this.name}] - ${level} - ${msg}`;
         };
 
         if (!msg.includes("```")) {
@@ -44,10 +44,10 @@ class Console {
     };
 
     log(message) {
-        message = this.beautifly_msg(message);
-        console.log(message.replaceAll("```", ""));
         const level = "INFO";
         const color = 0xFFFFFF;
+        message = this.beautifly_msg(message, level);
+        console.log(message.replaceAll("```", ""));
         if (!this.client?.isReady()) {
             global._send_queue.push({
                 name: this.name,
@@ -62,10 +62,10 @@ class Console {
     };
 
     warn(message) {
-        message = this.beautifly_msg(message);
-        console.warn(message.replaceAll("```", ""));
         const level = "WARN";
         const color = 0xFFCC00;
+        message = this.beautifly_msg(message, level);
+        console.warn(message.replaceAll("```", ""));
         if (!this.client) {
             global._send_queue.push({
                 name: this.name,
@@ -80,10 +80,10 @@ class Console {
     };
 
     error(message) {
-        message = this.beautifly_msg(message);
-        console.error(message.replaceAll("```", ""));
         const level = "ERROR";
         const color = 0xEC0C25;
+        message = this.beautifly_msg(message, level);
+        console.error(message.replaceAll("```", ""));
         if (!this.client) {
             global._send_queue.push({
                 name: this.name,
@@ -119,7 +119,15 @@ function getCallerModuleName(depth) {
     };
 };
 
-function get_logger({ name = null, client = null, depth = 4 }) {
+function get_logger(name = null, client = null, depth = 4) {
+    if (typeof name === 'object' && name !== null && !Array.isArray(name)) {
+        console.error(`[get_logger] - ERROR - DEPRECATED!! module ${getCallerModuleName()} is using {} to give the args of get_logger!`);
+        const data = name;
+        name = data.name ?? 4;
+        client = data.client ?? 4;
+        depth = data.depth ?? 4;
+    };
+
     if (!name) name = getCallerModuleName(depth);
     if (name === "unknown") throw new Error("unknown caller");
     if (!client) {
