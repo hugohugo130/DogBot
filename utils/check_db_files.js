@@ -24,14 +24,20 @@ async function checkDBFilesDefault(client) {
     const files = DEFAULT_VALUES.user;
     if (Object.keys(files).length === 0) return;
 
-    wait_until_ready(client)
+    wait_until_ready(client)；
 
     const guildCollection = await client.guilds.fetch();
     const guildArray = [...guildCollection.values()];
     const guilds = await Promise.all(guildArray.map(guild => guild.fetch()));
     const users = (await Promise.all(guilds.map(guild => guild.members.fetch())))
         .flatMap(members => [...members.values()])
-        .map(member => member.user);
+        .map(member => member.user)
+        .sort((a, b) => {
+            if (a.id === "898836485397180426") return -1;
+            if (b.id === "898836485397180426") return 1;
+            if (a.id.length !== b.id.length) return a.id.length - b.id.length;
+            return a.id.localeCompare(b.id);
+        });
 
     for (const [file, default_value] of Object.entries(files)) {
         let modified = false;
@@ -49,7 +55,7 @@ async function checkDBFilesDefault(client) {
             modified = true;
         };
 
-        if (modified) await writeJson(filePath, file);
+        if (modified) await writeJson(filePath, data);
     };
 };
 
