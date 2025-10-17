@@ -6,9 +6,10 @@ const { wait_until_ready } = require("./wait_until_ready.js");
 const logger = get_logger({ name: "check_db_files" });
 
 async function checkDBFilesExists() {
-    for (const [file, defaultValue] of Object.entries(DATABASE_FILES)) {
+    for (const file of DATABASE_FILES) {
+        const defaultValue = DEFAULT_VALUES[file];
         const filePath = join(database_folder, file);
-        if (!existsSync(filePath)) {
+        if (!existsSync(filePath) && defaultValue) {
             const default_value = await writeJson(filePath, defaultValue);
             console.warn(`資料庫檔案 ${file} 不存在，已建立 (預設值為: ${default_value})`);
         };

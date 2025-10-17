@@ -4,18 +4,19 @@ const join = require("path").join;
 const INDENT = 4;
 const database_folder = `${cwd()}/db`
 
-const DATABASE_FILES = {
-    "database.json": {},
-    "rpg_database.json": {},
-    "rpg_shop.json": {},
-    "serverIP.json": {},
-};
+const DATABASE_FILES = [
+    "database.json",
+    "rpg_database.json",
+    "rpg_shop.json",
+    "serverIP.json",
+];
 
 const DEFAULT_VALUES = {
     "user": {
         "database.json": {},
         "rpg_database.json": {},
         "rpg_shop.json": {},
+        "serverIP.json": {},
     },
 };
 
@@ -44,6 +45,7 @@ module.exports = {
     INDENT,
     database_folder,
     DATABASE_FILES,
+    onlineDB_Files,
     serverIPFile,
     DEFAULT_VALUES,
     BETA,

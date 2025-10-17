@@ -2,7 +2,7 @@ const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
 
-const { INDENT } = require("./config.js");
+const { INDENT, onlineDB_Files, DATABASE_FILES } = require("./config.js");
 const { getServerIPSync } = require("./getSeverIPSync.js");
 
 const existsSync = fs.existsSync;
@@ -262,15 +262,15 @@ async function onlineDB_checkFileContent(filename) {
 
 // === 批量檢查所有資料庫檔案 ===
 async function checkAllDatabaseFilesContent() {
-    for (const file of databaseFiles) {
+    for (const file of DATABASE_FILES) {
         await onlineDB_checkFileContent(file);
     };
 };
 
 // === 批量上傳所有資料庫檔案 ===
 async function uploadAllDatabaseFiles() {
-    for (const file of databaseFiles) {
-        if (fs.existsSync(file)) {
+    for (const file of DATABASE_FILES) {
+        if (fs.existsSync(file) && onlineDB_Files.includes(file)) {
             await onlineDB_uploadFile(file);
         };
     };
