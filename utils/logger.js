@@ -27,12 +27,12 @@ const CHANNEL_MAPPING = {
 };
 
 // 自定義 Discord Transport
-class DiscordTransport extends winston.Transport {
+class DiscordTransport extends winston.transport {
     constructor(opts) {
         super(opts);
         this.name = 'discord';
         this.client = opts.client;
-        this.level = opts.level || 'warn'; // 默认只發送 warn 和 error
+        this.level = opts.level || 'warn'; // 默認只發送 warn 和 error
         this.channels = new Map();
         this._isReady = false;
 
