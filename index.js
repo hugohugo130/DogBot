@@ -6,6 +6,7 @@ const { time } = require("./utils/time.js");
 const { get_logger } = require('./utils/logger.js');
 const { loadslashcmd } = require('./utils/loadslashcmd.js');
 const { run_schedule } = require("./utils/run_schedule.js");
+const { safeshutdown } = require('./utils/safeshutdown.js');
 const rl = require("readline").createInterface({
     input: process.stdin,
     output: process.stdout
@@ -26,9 +27,7 @@ client.setMaxListeners(Infinity);
 
 rl.on("line", async (input) => {
     if (input === "stop") {
-        logger.info(`${time()} 機器人正在關機....`);
-        await client.destroy();
-        process.exit();
+        await safeshutdown(client);
     };
 });
 

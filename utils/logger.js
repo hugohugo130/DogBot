@@ -6,7 +6,7 @@ const config = require('./config.js');
 
 // 全局管理器
 const loggerManager = new Map();
-const sendQueue = [];
+global.sendQueue = [];
 
 // 顏色映射
 const LEVEL_COLORS = {
@@ -112,7 +112,7 @@ class DiscordTransport extends winston.Transport {
 
         // 如果客户端未就緒，加入隊列
         if (!this._isReady) {
-            sendQueue.push(info);
+            global.sendQueue.push(info);
         } else {
             this._sendToDiscord(info).finally(() => callback());
         };
@@ -185,7 +185,6 @@ function getCallerModuleName(depth = 4) {
     return res;
 }
 
-// 主 logger 函數
 /**
  * 
  * @param {{name: string, client: object}} options
@@ -198,7 +197,7 @@ function get_logger(options = {}) {
         options = { name: options };
     };
 
-    console.debug(`options: ${options}, call from ${getCallerModuleName(4)}`);
+    // console.debug(`options: ${options}, call from ${getCallerModuleName(4)}`);
 
     const {
         name = getCallerModuleName(4),
@@ -245,8 +244,8 @@ function get_logger(options = {}) {
 
 // 處理發送隊列
 async function process_send_queue(client) {
-    while (sendQueue.length > 0) {
-        const info = sendQueue[0];
+    while (global.sendQueue.length > 0) {
+        const info = global.sendQueue[0];
 
         try {
             const level = info.level.toUpperCase();
@@ -258,15 +257,15 @@ async function process_send_queue(client) {
             const channel = await client.channels.fetch(channel_id);
             if (!channel) {
                 get_logger({ name: 'queue-processor', client }).warn(`channel id ${channel_id} not found, can't process send queue`);
-                sendQueue.shift();
+                global.sendQueue.shift();
                 continue;
             };
 
             await send_msg(channel, level, color, logger_name, message)
-            sendQueue.shift();
+            global.sendQueue.shift();
         } catch (error) {
             console.error('Failed to process queued message:', error);
-            sendQueue.shift();
+            global.sendQueue.shift();
         };
     };
 };
