@@ -1,4 +1,5 @@
 const cwd = process.cwd;
+const join = require("path").join;
 
 const INDENT = 4;
 const database_folder = `${cwd()}/db`
@@ -7,7 +8,10 @@ const DATABASE_FILES = {
     "database.json": {},
     "rpg_database.json": {},
     "rpg_shop.json": {},
+    "serverIP.json": {},
 };
+
+const serverIPFile = join(database_folder, "serverIP.json")
 
 const DEFAULT_VALUES = {
     "user": {
@@ -34,6 +38,7 @@ module.exports = {
     INDENT,
     database_folder,
     DATABASE_FILES,
+    serverIPFile,
     DEFAULT_VALUES,
     BETA,
     DEFAULT_IP,
