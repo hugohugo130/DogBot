@@ -1,6 +1,7 @@
 const { readJson, writeJson, existsSync, join } = require("./file.js");
 const { database_folder, DATABASE_FILES, DEFAULT_VALUES } = require("./config.js");
 const { get_logger } = require("./logger.js");
+const { wait_until_ready } = require("./wait_until_ready.js");
 
 const logger = get_logger({ name: "check_db_files" });
 
@@ -14,9 +15,16 @@ async function checkDBFilesExists() {
     };
 };
 
+/**
+ * @warning run this before client.login may block forever
+ * @param {object} client 
+ * @returns {void}
+ */
 async function checkDBFilesDefault(client) {
     const files = DEFAULT_VALUES.user;
     if (Object.keys(files).length === 0) return;
+
+    wait_until_ready(client)
 
     const guildCollection = await client.guilds.fetch();
     const guildArray = [...guildCollection.values()];
@@ -25,11 +33,10 @@ async function checkDBFilesDefault(client) {
         .flatMap(members => [...members.values()])
         .map(member => member.user);
 
-    for (const file of files) {
+    for (const [file, default_value] of Object.entries(files)) {
         let modified = false;
         const filePath = join(database_folder, file);
         const data = await readJson(filePath);
-        const default_value = files[file]
         if (!default_value) {
             logger.warn(`警告：資料庫檔案 ${file} 缺失預設值，請及時補充。`);
             continue;

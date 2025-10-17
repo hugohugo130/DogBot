@@ -26,25 +26,25 @@ client.setMaxListeners(Infinity);
 
 rl.on("line", async (input) => {
     if (input === "stop") {
-        logger.log(`${time()} 機器人正在關機....`);
+        logger.info(`${time()} 機器人正在關機....`);
         await client.destroy();
         process.exit();
     };
 });
 
 client.once(Events.ClientReady, async () => {
+    await checkDBFilesDefault(client);
     const schedules = run_schedule(client);
-    logger.log(`已加載 ${schedules} 個排程`);
+    logger.info(`已加載 ${schedules} 個排程`);
 });
 
 (async () => {
-    logger.log("機器人正在啟動....");
-    const [cogs, reload] = load_cogs(client);
-    logger.log(`已${reload ? "重新" : ""}加載 ${cogs} 個程式碼`);
+    logger.info("機器人正在啟動....");
+    const cogs = load_cogs(client);
+    logger.info(`已加載 ${cogs} 個程式碼`);
     const slashcmd = loadslashcmd(true);
-    logger.log(`已加載 ${slashcmd.length} 個斜線指令`);
+    logger.info(`已加載 ${slashcmd.length} 個斜線指令`);
     await checkDBFilesExists();
-    await checkDBFilesDefault(client);
     client.serverIP = getServerIPSync(client);
 
     await client.login(process.env.TOKEN);

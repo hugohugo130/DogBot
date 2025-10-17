@@ -7,7 +7,7 @@ module.exports = {
     execute: async function (client) {
         global._client = client;
         const bot = client.user;
-        const logger = get_logger(null, client);
-        logger.log(`機器人 ${bot.globalName || bot.username} 啟動成功`);
+        const logger = get_logger({ client });
+        logger.info(`機器人 ${bot.globalName || bot.username} 啟動成功`);
     },
 }

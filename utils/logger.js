@@ -1,4 +1,5 @@
 const winston = require('winston');
+const path = require("path");
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { time } = require('./time.js');
 const config = require('./config.js');
@@ -36,12 +37,11 @@ class DiscordTransport extends winston.Transport {
         this._isReady = false;
 
         // 检查客户端状态
-        if (this.client && this.client.isReady && this.client.isReady()) {
+        if (this.client?.isReady?.()) {
             this._isReady = true;
         } else if (this.client) {
             this.client.once('ready', () => {
                 this._isReady = true;
-                this._processQueue();
             });
         };
     };
@@ -71,7 +71,7 @@ class DiscordTransport extends winston.Transport {
             if (!channel) {
                 console.warn(`Channel for level ${info.level} not found`);
                 return;
-            }
+            };
 
             const moduleName = info.module || 'unknown';
             let description = info.message;
@@ -83,7 +83,7 @@ class DiscordTransport extends winston.Transport {
                 description = `\`\`\`${this._truncateContent(info.message, 984)}\`\`\``;
             } else {
                 description = `\`\`\`${info.message}\`\`\``;
-            }
+            };
 
             const embed = new EmbedBuilder()
                 .setTitle(`${info.level.toUpperCase()} - ${moduleName}`)
@@ -97,13 +97,6 @@ class DiscordTransport extends winston.Transport {
             });
         } catch (error) {
             console.error('Failed to send log to Discord:', error);
-        };
-    };
-
-    async _processQueue() {
-        while (sendQueue.length > 0) {
-            const info = sendQueue.shift();
-            await this._sendToDiscord(info);
         };
     };
 
@@ -132,13 +125,24 @@ class DiscordTransport extends winston.Transport {
 const consoleFormat = winston.format.combine(
     winston.format.timestamp(),
     winston.format.printf(({ timestamp, level, message, module }) => {
-        const formattedTime = time(new Date(timestamp));
-        return `[${formattedTime}][${module}] - ${level.toUpperCase()} - ${message}`;
-    })
+        return `${time()} [${path.basename(module, ".js")}] - ${level.toUpperCase()} - ${message}`;
+    }),
 );
 
+async function send_msg(channel, level, color, logger_name, message) {
+    const embed = new EmbedBuilder()
+        .setTitle(`${level} - ${logger_name}`)
+        .setDescription(`\`\`\`\n${message}\n\`\`\``)
+        .setColor(color);
+
+    return await channel.send({
+        embeds: [embed],
+        flags: MessageFlags.SuppressNotifications
+    });
+};
+
 function getCallerModuleName(depth = 4) {
-    let res;
+    let res = 'unknown';
     try {
         const err = new Error();
         const stackLines = err.stack.split('\n');
@@ -150,12 +154,12 @@ function getCallerModuleName(depth = 4) {
         if (match) {
             const fullPath = match[1];
             const fileName = fullPath.split(/[\\/]/).pop();
-            return fileName.replace('.js', '');
+            res = fileName.replace('.js', '');
         }
     } catch {
         res = 'unknown'
     };
-    res = 'unknown';
+
     if (res !== "unknown") {
         const originalPrepareStackTrace = Error.prepareStackTrace;
         let callerFile;
@@ -193,6 +197,8 @@ function get_logger(options = {}) {
         console.warn(`[get_logger] [DEPRECATED] options use string instead of object, module ${getCallerModuleName(4)}`)
         options = { name: options };
     };
+
+    console.debug(`options: ${options}, call from ${getCallerModuleName(4)}`);
 
     const {
         name = getCallerModuleName(4),
@@ -239,17 +245,29 @@ function get_logger(options = {}) {
 
 // 處理發送隊列
 async function process_send_queue(client) {
-    // 如果隊列中有消息且提供了 client，創建臨時 logger 處理
-    if (sendQueue.length > 0 && client) {
-        const tempLogger = get_logger({ name: 'queue-processor', client });
+    while (sendQueue.length > 0) {
+        const info = sendQueue[0];
 
-        for (const info of sendQueue) {
-            // 重新記錄這些訊息
-            tempLogger.log(info);
+        try {
+            const level = info.level.toUpperCase();
+            const logger_name = info.module || 'unknown';
+            const message = info.stack || info.message;
+            const color = LEVEL_COLORS[info.level] || 0x000000;
+            const channel_id = CHANNEL_MAPPING[info.level];
+
+            const channel = await client.channels.fetch(channel_id);
+            if (!channel) {
+                get_logger({ name: 'queue-processor', client }).warn(`channel id ${channel_id} not found, can't process send queue`);
+                sendQueue.shift();
+                continue;
+            };
+
+            await send_msg(channel, level, color, logger_name, message)
+            sendQueue.shift();
+        } catch (error) {
+            console.error('Failed to process queued message:', error);
+            sendQueue.shift();
         };
-
-        // 清空隊列
-        sendQueue.length = 0;
     };
 };
 

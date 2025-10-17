@@ -4,6 +4,7 @@ const path = require("path");
 const { get_logger } = require("./logger.js");
 
 const load_skiplist = [];
+const logger = get_logger();
 
 function load_cog(client, cog) {
     if (cog.name && cog.execute) {
@@ -35,7 +36,7 @@ function processDirectory(client, dirPath) {
             const cog = require(itemPath);
             const res = load_cog(client, cog);
             if (!res) continue;
-            else logger.log(`${time()} cog ${item} 已加載`);
+            else logger.info(`${time()} cog ${item} 已加載`);
 
             loadedFiles++;
         };
@@ -49,13 +50,9 @@ function load_cogs(client, reload = false) {
         const { cogsFolder } = require("./config.js");
 
         const totalFiles = processDirectory(client, cogsFolder);
-        return [totalFiles, reload];
+        return totalFiles;
     } catch (error) {
-        require("./senderr.js").senderr({
-            client: null,
-            msg: `加載程式碼(cogs)時出錯:\n${error.stack}`,
-            clientready: false
-        });
+        logger.error(`加載程式碼(cogs)時出錯:\n${error.stack}`);
     };
 };
 
