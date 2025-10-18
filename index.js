@@ -1,8 +1,8 @@
 const { Client, GatewayIntentBits, Events } = require('discord.js');
 const { checkDBFilesExists, checkDBFilesDefault } = require('./utils/check_db_files.js');
+const { checkAllDatabaseFilesContent } = require('./utils/onlineDB.js');
 const { load_cogs } = require("./utils/load_cogs.js");
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
-const { time } = require("./utils/time.js");
 const { get_logger } = require('./utils/logger.js');
 const { loadslashcmd } = require('./utils/loadslashcmd.js');
 const { run_schedule } = require("./utils/run_schedule.js");
@@ -33,11 +33,12 @@ rl.on("line", async (input) => {
 
 client.once(Events.ClientReady, async () => {
     await checkDBFilesDefault(client);
-    const schedules = run_schedule(client);
+    const schedules = await run_schedule(client);
     logger.info(`已加載 ${schedules} 個排程`);
 });
 
 (async () => {
+    await checkAllDatabaseFilesContent()
     logger.info("機器人正在啟動....");
     const cogs = load_cogs(client);
     logger.info(`已加載 ${cogs} 個程式碼`);
