@@ -1,15 +1,18 @@
-const { uploadAllDatabaseFiles } = require("./file.js");
+const { uploadAllDatabaseFiles } = require("./onlineDB.js");
 const { get_logger } = require("./logger.js");
+const { asleep } = require("./sleep.js");
+const { BotName } = require("./config.js");
 
 async function safeshutdown(client) {
     const logger = get_logger({ client });
-    await uploadAllDatabaseFiles()
+    const success = await uploadAllDatabaseFiles();
 
-    logger.info("已上載所有資料庫檔案");
-    logger.info("🛑 哈狗機器犬 已關機！");
+    logger.info(success ? "已上載所有資料庫檔案" : "上載資料庫檔案失敗，下次請選擇上載資料庫檔案或無操作！");
+    logger.info(`🛑 ${client.name || BotName || client.user.tag} 已關機！`);
 
-    while (global.sendQueue.length > 0) {
-        await Promise.all(resolve => setTimeout(resolve, 1000));
+    while (true) {
+        if (global.sendQueue.length <= 0) break;
+        await asleep(250);
     };
 
     await client.destroy();
