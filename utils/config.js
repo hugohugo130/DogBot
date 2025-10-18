@@ -4,6 +4,10 @@ const join = require("path").join;
 const INDENT = 4;
 const database_folder = `${cwd()}/db`
 
+const BETA = false;
+const DEFAULT_IP = "hugo.904037.xyz"
+const DEFAULT_PORT = 3003
+
 const DATABASE_FILES = [
     "database.json",
     "rpg_database.json",
@@ -16,8 +20,13 @@ const DEFAULT_VALUES = {
         "database.json": {},
         "rpg_database.json": {},
         "rpg_shop.json": {},
-        "serverIP.json": {},
     },
+    "single": {
+        "serverIP.json": {
+            IP: DEFAULT_IP,
+            PORT: DEFAULT_PORT,
+        },
+    }
 };
 
 const onlineDB_Files = [
@@ -28,9 +37,6 @@ const onlineDB_Files = [
 
 const serverIPFile = join(database_folder, "serverIP.json");
 
-const BETA = false;
-const DEFAULT_IP = "hugo.904037.xyz"
-
 const cogsFolder = `${cwd()}/cogs`
 const scheduleEverysec = `${cwd()}/schedule/everysec`
 const scheduleEverymin = `${cwd()}/schedule/everymin`
@@ -40,6 +46,7 @@ const warn_channel_id = "1423292323827159040"
 const error_channel_id = "1423292323827159040"
 
 const BotID = "1422212094274830470";
+const BotName = null; // 預設為 client.user.tag
 
 module.exports = {
     INDENT,
@@ -50,6 +57,7 @@ module.exports = {
     DEFAULT_VALUES,
     BETA,
     DEFAULT_IP,
+    DEFAULT_PORT,
     cogsFolder,
     log_channel_id,
     warn_channel_id,
@@ -57,4 +65,5 @@ module.exports = {
     scheduleEverysec,
     scheduleEverymin,
     BotID,
+    BotName,
 };

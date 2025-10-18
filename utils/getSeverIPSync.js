@@ -1,6 +1,7 @@
 const { writeJsonSync } = require("./file.js");
-const { DEFAULT_IP, serverIPFile } = require("./config.js");
+const { DEFAULT_IP, DEFAULT_PORT, serverIPFile } = require("./config.js");
 const { get_logger } = require("./logger.js");
+const fs = require("fs");
 
 const logger = get_logger();
 
@@ -35,22 +36,27 @@ function getServerIPSync() {
     };
 
     if (!serverIP || !check_IP_valid(serverIP, PORT)) {
+        let IP = DEFAULT_IP;
+
         try {
-            let IP = DEFAULT_IP;
-
-            try {
-
-                if (check_IP_valid("127.0.0.1", PORT)) {
-                    IP = "127.0.0.1";
-                    logger.info("偵測到本地伺服器，已切換 IP 為 127.0.0.1");
-                };
-            } catch (_) { }
-
-            serverIP = { IP, PORT };
-            writeJsonSync(serverIPFile, serverIP);
-        } finally {
-            delete default_value;
+            if (check_IP_valid("127.0.0.1", PORT)) {
+                IP = "127.0.0.1";
+                logger.info("偵測到本地伺服器，已切換 IP 為 127.0.0.1");
+            };
+        } catch (_) {
+            IP = DEFAULT_IP;
         };
+
+        serverIP = { IP, PORT };
+        writeJsonSync(serverIPFile, serverIP);
+    };
+
+    if (!serverIP.IP) {
+        serverIP.IP = DEFAULT_IP;
+    };
+
+    if (!serverIP.PORT) {
+        serverIP.PORT = DEFAULT_PORT;
     };
 
     return serverIP;
