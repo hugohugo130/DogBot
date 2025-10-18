@@ -3,6 +3,7 @@ const path = require("path");
 const { EmbedBuilder, MessageFlags } = require('discord.js');
 const { time } = require('./time.js');
 const config = require('./config.js');
+const { client_ready, wait_until_ready } = require('./wait_until_ready.js');
 
 // 全局管理器
 const loggerManager = new Map();
@@ -199,15 +200,17 @@ function get_logger(options = {}) {
 
     // console.debug(`options: ${options}, call from ${getCallerModuleName(4)}`);
 
-    const {
+    let {
         name = getCallerModuleName(4),
         client = null,
     } = options;
 
+    if (client_ready()) client = wait_until_ready();
+
     // 返回已存在的 logger
     if (loggerManager.has(name)) {
         return loggerManager.get(name);
-    }
+    };
 
     // 創建 transports
     const transports = [
@@ -222,7 +225,7 @@ function get_logger(options = {}) {
         transports.push(new DiscordTransport({
             client,
         }));
-    }
+    };
 
     // 創建 logger
     const logger = winston.createLogger({
