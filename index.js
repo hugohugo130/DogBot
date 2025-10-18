@@ -38,7 +38,7 @@ client.once(Events.ClientReady, async () => {
 });
 
 (async () => {
-    await checkAllDatabaseFilesContent()
+    await checkAllDatabaseFilesContent();
     logger.info("機器人正在啟動....");
     const cogs = load_cogs(client);
     logger.info(`已加載 ${cogs} 個程式碼`);
