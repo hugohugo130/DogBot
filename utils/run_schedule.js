@@ -1,17 +1,46 @@
-const schedule = require("node-schedule");
+// const schedule = require("node-schedule");
 const path = require("path");
 const { wait_until_ready } = require("./wait_until_ready.js");
+const { asleep } = require("./sleep.js");
 
 let run_lock = {};
 
-function setup_schedule(spec, execute, client = null, ...args) {
+async function interval(per_sec, execute, ...args) {
+    while (true) {
+        const start = Date.now();
+        await execute(...args);
+        const elapsed = Date.now() - start;
+        const delay = per_sec * 1000 - elapsed;
+        if (delay > 0) {
+            await asleep(delay);
+        };
+    };
+};
+
+// function setup_schedule(spec, execute, client = null, ...args) {
+async function setup_schedule(per_sec, execute, client = null, ...args) {
     if (!client) {
         client = wait_until_ready();
     };
 
-    schedule.scheduleJob(spec, async function () {
-        await execute(client, ...args);
-    });
+    setTimeout(async () => {
+        await interval(per_sec, execute, client, ...args)
+    }, 0);
+
+    // const workerScript = `
+    //     parentPort.once('message', async ({ per_sec, args }) => {
+    //         await interval(per_sec, require('${__filename}').scheduleFunc, ...args);
+    //     });
+    // `;
+
+    // const worker = new Worker(workerScript, { eval: true });
+    // worker.postMessage({ per_sec, args: [client, ...args] });
+
+
+
+    // schedule.scheduleJob(spec, async function () {
+    //     await execute(client, ...args);
+    // });
 };
 
 function wait_for_lock(basename, timeout = 5, start = 0, check_per = 500) {
@@ -40,17 +69,17 @@ async function scheduleFunc(client, file, per) {
     };
 };
 
-function run_schedule(client) {
+async function run_schedule(client) {
     const { readScheduleSync } = require("./file.js");
 
     const [everysec, everymin] = readScheduleSync();
 
     for (const file of everysec) {
-        setup_schedule("* * * * * *", scheduleFunc, client, file, "秒");
+        await setup_schedule(1, scheduleFunc, client, file, "秒");
     };
 
     for (const file of everymin) {
-        setup_schedule("0 * * * * *", scheduleFunc, client, file, "分鐘");
+        await setup_schedule(60, scheduleFunc, client, file, "分鐘");
     };
 
     return everysec.length + everymin.length;
