@@ -7,10 +7,7 @@ const { get_logger } = require('./utils/logger.js');
 const { loadslashcmd } = require('./utils/loadslashcmd.js');
 const { run_schedule } = require("./utils/run_schedule.js");
 const { safeshutdown } = require('./utils/safeshutdown.js');
-const rl = require("readline").createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
+const { get_areadline } = require('./utils/readline.js');
 require("dotenv").config();
 
 const client = new Client({
@@ -25,19 +22,22 @@ const logger = get_logger({ client });
 
 client.setMaxListeners(Infinity);
 
-rl.on("line", async (input) => {
-    if (input === "stop") {
-        await safeshutdown(client);
-    };
-});
-
 client.once(Events.ClientReady, async () => {
     await checkDBFilesDefault(client);
     const schedules = await run_schedule(client);
     logger.info(`已加載 ${schedules} 個排程`);
+
+    const rl = get_areadline();
+
+    rl.on("line", async (input) => {
+        if (input === "stop") {
+            await safeshutdown(client);
+        };
+    });
 });
 
 (async () => {
+    global._client = null;
     await checkAllDatabaseFilesContent();
     logger.info("機器人正在啟動....");
     const cogs = load_cogs(client);
@@ -48,4 +48,5 @@ client.once(Events.ClientReady, async () => {
     client.serverIP = getServerIPSync(client);
 
     await client.login(process.env.TOKEN);
+    global._client = client;
 })();

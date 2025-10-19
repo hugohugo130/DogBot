@@ -19,18 +19,20 @@ const logger = get_logger();
  */
 function readFileSync(file_path, options = null) {
     const filename = path.basename(file_path)
-    if (DATABASE_FILES.includes(filename) && !existsSync(filename)) {
-        const default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
+
+    if (!existsSync(file_path) && DATABASE_FILES.includes(filename)) {
+        const default_value = DEFAULT_VALUES.single[filename]
+        const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
             return acc || category[filename];
         }, undefined);
 
         if (!default_value) {
-            logger.warn(`警告：資料庫檔案 ${filename} 缺失預設值，請及時補充。`);
-            return {};
+            if (!other_category_default_value) logger.warn(`警告：資料庫檔案 ${filename} 缺失預設值，請及時補充。`);
+            else return {};
+        } else {
+            writeJsonSync(file_path, default_value);
+            return default_value;
         };
-
-        writeJsonSync(file_path, default_value);
-        return default_value;
     };
 
     return fs.readFileSync(file_path, options);

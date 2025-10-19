@@ -2,11 +2,13 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const FormData = require('form-data');
+const { isDeepStrictEqual } = require("node:util");
 
 const { getServerIPSync } = require("./getSeverIPSync.js");
 const { onlineDB_Files, DATABASE_FILES, database_folder } = require("./config.js");
 const { get_logger } = require("./logger.js");
 const { readFileSync, join } = require("./file.js");
+const { get_areadline } = require("./readline.js");
 
 const { IP: serverIP, PORT } = getServerIPSync();
 const SERVER_URL = `http://${serverIP}:${PORT}`;
@@ -78,10 +80,10 @@ async function onlineDB_uploadFile(filepath) {
                 throw err;
             };
         };
-        
+
         const form = new FormData();
         form.append('file', fs.createReadStream(filepath));
-        
+
         const stats = fs.statSync(filepath);
         form.append('mtime', stats.mtime.getTime());
         const res = await axios.post(`${SERVER_URL}/files`, form, { headers: form.getHeaders() });
@@ -107,70 +109,93 @@ async function onlineDB_deleteFile(filename) {
     }
 };
 
-async function onlineDB_checkFileContent(filename) {
-    // 讀取本地檔案內容
-    let localContent;
-    try {
-        localContent = readFileSync(join_db_folder(filename), 'utf8');
-    } catch (err) {
-        logger.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
-        localContent = null;
-    };
-
-    // 從遠端獲取檔案內容
-    let remoteContent;
-    try {
-        const response = await axios.get(`${SERVER_URL}/files/${filename}`);
-        remoteContent = JSON.stringify(response.data);
-        if (localContent instanceof Object) {
-            localContent = JSON.stringify(localContent);
-        } else localContent = JSON.stringify(JSON.parse(localContent)); // 格式化本地內容以進行比較
-    } catch (err) {
-        if (err.response?.status === 404) {
-            logger.error(`遠端檔案不存在: ${filename}`);
-        } else {
-            logger.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
-        };
-
-        remoteContent = null;
-    };
-
-    if (localContent && remoteContent) {
-        if (localContent !== remoteContent) {
-            const rl = require("readline/promises").createInterface({
-                input: process.stdin,
-                output: process.stdout
-            });
-
-            console.log("=".repeat(30));
-            console.log(`檔案 ${filename} 內容不同:`);
-            console.log('1. 上載本地檔案到遠端');
-            console.log('2. 下載遠端檔案到本地');
-            console.log('3. 不做任何事');
-
-            const answer = await rl.question('請選擇操作 (1/2/3): ');
-            rl.close();
-            result = true;
-            switch (answer.trim()) {
-                case '1':
-                    await onlineDB_uploadFile(filename);
-                    break;
-                case '2':
-                    await onlineDB_downloadFile(filename);
-                    break;
-                default:
-                    console.log('未進行任何操作');
+async function onlineDB_checkFileContent(filename, maxRetries = 3) {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            const rl = get_areadline();
+            // 讀取本地檔案內容
+            let localContent;
+            try {
+                localContent = readFileSync(join_db_folder(filename), 'utf8');
+            } catch (err) {
+                logger.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
+                localContent = null;
             };
 
-            console.log("=".repeat(30));
-            delete rl;
+            // 從遠端獲取檔案內容
+            let remoteContent;
+            try {
+                const response = await axios.get(`${SERVER_URL}/files/${filename}`);
+                remoteContent = JSON.stringify(response.data);
+                if (localContent instanceof Object) {
+                    localContent = JSON.stringify(localContent);
+                } else localContent = JSON.stringify(JSON.parse(localContent));
+            } catch (err) {
+                if (err.response?.status === 404) {
+                    logger.error(`遠端檔案不存在: ${filename}`);
+                } else if (err.stack.includes("socket hang up")) continue;
+                else {
+                    logger.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
+                    continue;
+                };
+
+                remoteContent = null;
+            };
+
+            if (localContent && remoteContent) {
+                // logger.debug(`localContent: ${localContent}`);
+                // logger.debug(`remoteContent: ${remoteContent}`);
+                // logger.debug(`isDeepStrictEqual(localContent, remoteContent): ${isDeepStrictEqual(localContent, remoteContent)}`);
+
+                if (!isDeepStrictEqual(localContent, remoteContent)) {
+                    let answer;
+                    do {
+                        console.log("=".repeat(30));
+                        console.log(`檔案 ${filename} 內容不同:`);
+                        console.log('1. 上載本地檔案到遠端');
+                        console.log('2. 下載遠端檔案到本地');
+                        console.log('3. 不做任何事');
+
+                        answer = await rl.question('請選擇操作 (1/2/3): ');
+                        if (!['1', '2', '3'].includes(answer.trim())) {
+                            logger.info('請輸入有效的選項 (1/2/3)');
+                        };
+                    } while (!['1', '2', '3'].includes(answer.trim()));
+
+                    console.log(`已選擇: ${answer.trim()}`);
+                    switch (answer.trim()) {
+                        case '1':
+                            await onlineDB_uploadFile(filename);
+                            return;
+                        case '2':
+                            await onlineDB_downloadFile(filename);
+                            return;
+                        case '3':
+                            console.log('未進行任何操作');
+                            return;
+                    };
+                };
+            } else if (localContent && !remoteContent) {
+                logger.info(`遠端無 ${filename} 檔案，準備上載本地檔案`);
+                await onlineDB_uploadFile(filename);
+                return;
+            } else if (!localContent && remoteContent) {
+                logger.info(`本地無 ${filename} 檔案，準備下載遠端檔案`);
+                await onlineDB_downloadFile(filename);
+                return;
+            };
+
+            return; // 如果成功完成，跳出函數
+
+        } catch (error) {
+            if (attempt < maxRetries) {
+                logger.info(`發生錯誤，重試中... (${attempt}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // 等待遞增的時間後重試
+            } else {
+                logger.error(`在 ${maxRetries} 次嘗試後仍然失敗: ${error.stack}`);
+                throw error;
+            };
         };
-    } else if (localContent && !remoteContent) {
-        console.log(`遠端無 ${filename} 檔案，準備上載本地檔案`);
-        await onlineDB_uploadFile(filename);
-    } else if (!localContent && remoteContent) {
-        console.log(`本地無 ${filename} 檔案，準備下載遠端檔案`);
-        await onlineDB_downloadFile(filename);
     };
 };
 
@@ -179,6 +204,7 @@ async function checkAllDatabaseFilesContent() {
     for (const file of DATABASE_FILES) {
         await onlineDB_checkFileContent(file);
     };
+    console.log("=".repeat(30));
 };
 
 // === 批量上載所有資料庫檔案 ===

@@ -1,7 +1,7 @@
 const { readJson, writeJson, existsSync, join } = require("./file.js");
 const { database_folder, DATABASE_FILES, DEFAULT_VALUES } = require("./config.js");
 const { get_logger } = require("./logger.js");
-const { wait_until_ready } = require("./wait_until_ready.js");
+const { wait_until_ready, client_ready } = require("./wait_until_ready.js");
 
 const logger = get_logger({ name: "check_db_files" });
 
@@ -11,7 +11,7 @@ async function checkDBFilesExists() {
         const filePath = join(database_folder, file);
         if (!existsSync(filePath) && defaultValue) {
             const default_value = await writeJson(filePath, defaultValue);
-            console.warn(`資料庫檔案 ${file} 不存在，已建立 (預設值為: ${default_value})`);
+            logger.warn(`資料庫檔案 ${file} 不存在，已建立 (預設值為: ${default_value})`);
         };
     };
 };
@@ -25,7 +25,7 @@ async function checkDBFilesDefault(client) {
     const files = DEFAULT_VALUES.user;
     if (Object.keys(files).length === 0) return;
 
-    wait_until_ready(client);
+    if (!client_ready(client)) wait_until_ready(client);
 
     const guildCollection = await client.guilds.fetch();
     const guildArray = [...guildCollection.values()];

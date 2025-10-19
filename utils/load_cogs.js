@@ -1,4 +1,3 @@
-const { time } = require("./time.js");
 const fs = require("fs");
 const path = require("path");
 const { get_logger } = require("./logger.js");
@@ -6,17 +5,21 @@ const { get_logger } = require("./logger.js");
 const load_skiplist = [];
 const logger = get_logger();
 
-function load_cog(client, cog) {
+function load_cog(client, cog, itemPath) {
+    async function run_execute(...args) {
+        await cog.execute(client, ...args);
+    };
+
     if (cog.name && cog.execute) {
-        // 新版
         const event_name = cog.name;
         const once = cog.once ?? false;
-        if (once) client.once(event_name, cog.execute);
-        else client.on(event_name, cog.execute);
+        if (once) client.once(event_name, run_execute);
+        else client.on(event_name, run_execute);
     } else {
-        console.warn(`[${time()}] 未找到 ${itemPath} 的 name 和 execute 屬性`);
+        logger.warn(`找不到 cog ${itemPath} 的 name 和 execute 屬性`);
         return 0;
     };
+
     return 1;
 };
 
@@ -34,9 +37,9 @@ function processDirectory(client, dirPath) {
         } else if (item.endsWith('.js')) {
             delete require.cache[require.resolve(itemPath)];
             const cog = require(itemPath);
-            const res = load_cog(client, cog);
+            const res = load_cog(client, cog, itemPath);
             if (!res) continue;
-            else logger.info(`${time()} cog ${item} 已加載`);
+            else logger.info(`cog ${item} 已加載`);
 
             loadedFiles++;
         };
@@ -45,7 +48,7 @@ function processDirectory(client, dirPath) {
     return loadedFiles;
 };
 
-function load_cogs(client, reload = false) {
+function load_cogs(client) {
     try {
         const { cogsFolder } = require("./config.js");
 

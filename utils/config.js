@@ -18,8 +18,19 @@ const DATABASE_FILES = [
 const DEFAULT_VALUES = {
     "user": {
         "database.json": {},
-        "rpg_database.json": {},
-        "rpg_shop.json": {},
+        "rpg_database.json": {
+            "money": 1000,
+            "hungry": 20,
+            "inventory": {},
+            "lastRunTimestamp": 0,
+            "transactions": [],
+            "count": {},
+            "privacy": [],
+        },
+        "rpg_shop.json": {
+            "status": false,
+            "items": {},
+        },
     },
     "single": {
         "serverIP.json": {
@@ -46,7 +57,7 @@ const warn_channel_id = "1423292323827159040"
 const error_channel_id = "1423292323827159040"
 
 const BotID = "1422212094274830470";
-const BotName = null; // 預設為 client.user.tag
+const BotName = "狗狗機器犬"; // 預設為 client.user.tag
 
 module.exports = {
     INDENT,

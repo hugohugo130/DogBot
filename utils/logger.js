@@ -90,11 +90,11 @@ class DiscordTransport extends winston.Transport {
                 .setTitle(`${info.level.toUpperCase()} - ${moduleName}`)
                 .setDescription(description)
                 .setColor(LEVEL_COLORS[info.level] || 0x000000)
-                .setTimestamp(info.timestamp);
+                .setTimestamp(Date.parse(info.timestamp));
 
             await channel.send({
                 embeds: [embed],
-                flags: MessageFlags.SuppressNotifications
+                flags: MessageFlags.SuppressNotifications,
             });
         } catch (error) {
             console.error('Failed to send log to Discord:', error);
