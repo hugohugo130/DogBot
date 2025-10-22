@@ -7,6 +7,7 @@ const { get_logger } = require('./utils/logger.js');
 const { loadslashcmd } = require('./utils/loadslashcmd.js');
 const { safeshutdown } = require('./utils/safeshutdown.js');
 const { get_areadline } = require('./utils/readline.js');
+const { check_item_data } = require('./utils/rpg.js');
 require("dotenv").config();
 
 const client = new Client({
@@ -37,6 +38,7 @@ client.once(Events.ClientReady, async () => {
     client.last_send_log = "";
     global._client = null;
     await checkAllDatabaseFilesContent();
+    check_item_data();
     logger.info("機器人正在啟動....");
     const cogs = load_cogs(client);
     logger.info(`已加載 ${cogs} 個程式碼`);
