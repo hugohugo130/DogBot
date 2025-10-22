@@ -1,4 +1,4 @@
-const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, BaseInteraction, ChatInputCommandInteraction, Message} = require("discord.js");
+const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, BaseInteraction, ChatInputCommandInteraction, Message } = require("discord.js");
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger } = require("../../utils/logger.js");
 
@@ -222,17 +222,16 @@ async function get_help_embed(category, client) {
 };
 
 async function get_emoji(client = global._client, name) {
-    if (client instanceof Client && (client != global._client || !global._client)) {
-        global._client = client;
-    };
-
     await client.application.fetch();
+
     let emojis = client.application.emojis.cache;
     let emoji = emojis.find(e => e.name === name);
+
     if (!emoji) {
         emojis = await client.application.emojis.fetch();
         emoji = emojis.find(e => e.name === name);
     };
+
     if (!emoji) throw new Error(`找不到名為${name}的emoji`);
     emoji = `<${emoji.animated ? 'a' : ''}:${emoji.name}:${emoji.id}>`;
     return emoji;
@@ -1948,13 +1947,14 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         for (let i = 0; i < buttons.length; i += 5) {
             const row = new ActionRowBuilder()
                 .addComponents(buttons.slice(i, i + 5));
+
             rows.push(row);
         };
 
         embed.setDescription(`你是不是指：\n${similarCommands.map(cmd => `- ${prefix}${cmd}`).join('\n')}`);
         if (rows.length > 5) {
             rows.length = 0; // 清空rows，等同於 rows = []
-            embed.setDescription("太多指令了 owo 我真的不知道你要用什麼指令(||其實是顯示不出來這麼多按鈕||)")
+            embed.setDescription("太多指令了 owo 我真的不知道你要用什麼指令 ||其實是顯示不出來這麼多按鈕|| ")
         };
 
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: rows };
