@@ -13,14 +13,13 @@ async function safeshutdown(client) {
 
     // 等待logger info成功發送discord
     await new Promise((resolve) => {
-        const maxWaitTime = 50000; // 最多等待50秒
+        const maxWaitTime = 20000; // 最多等待20秒
         const checkInterval = 100; // 每100ms檢查一次
         const startTime = Date.now();
 
         const checkLog = setInterval(() => {
             if (client.last_send_log && client.last_send_log.includes(shutdown_keyword)) {
                 clearInterval(checkLog);
-                logger.debug("✅ 關機訊息已成功發送至 Discord");
                 resolve();
             }
 
@@ -33,7 +32,7 @@ async function safeshutdown(client) {
         }, checkInterval);
     });
 
-    await shutdown(true);
+    await shutdown(true, 200);
 
     await client.destroy();
     process.exit(0);
