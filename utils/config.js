@@ -17,7 +17,6 @@ const DATABASE_FILES = [
 
 const DEFAULT_VALUES = {
     "user": {
-        "database.json": {},
         "rpg_database.json": {
             "money": 1000,
             "hungry": 20,
@@ -37,7 +36,12 @@ const DEFAULT_VALUES = {
             IP: DEFAULT_IP,
             PORT: DEFAULT_PORT,
         },
-    }
+    },
+    "guild": {
+        "database.json": {
+            "rpg": false,
+        },
+    },
 };
 
 const onlineDB_Files = [
@@ -46,8 +50,9 @@ const onlineDB_Files = [
     "rpg_shop.json",
 ];
 
-const rpg_database_file = join(cwd(), "rpg_database.json");
-const rpg_shop_file = join(cwd(), "rpg_database.json");
+const database_file = join(database_folder, "database.json")
+const rpg_database_file = join(database_folder, "rpg_database.json");
+const rpg_shop_file = join(database_folder, "rpg_database.json");
 const serverIPFile = join(database_folder, "serverIP.json");
 
 const cogsFolder = `${cwd()}/cogs`
@@ -61,11 +66,14 @@ const error_channel_id = "1423292323827159040"
 const BotID = "1422212094274830470";
 const BotName = "狗狗機器犬"; // 預設為 client.user.tag
 
+const prefix = "!";
+
 module.exports = {
     INDENT,
     database_folder,
     DATABASE_FILES,
     onlineDB_Files,
+    database_file,
     rpg_database_file,
     rpg_shop_file,
     serverIPFile,
@@ -81,4 +89,5 @@ module.exports = {
     scheduleEverymin,
     BotID,
     BotName,
+    prefix,
 };

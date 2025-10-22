@@ -1,8 +1,8 @@
 const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, BaseInteraction, ChatInputCommandInteraction, Message } = require("discord.js");
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger } = require("../../utils/logger.js");
+const { prefix } = require("../../utils/config.js");
 
-const prefix = "!";
 const max_hungry = 20;
 
 async function unlock_waiting_handler(lock_name) {
@@ -2089,5 +2089,4 @@ module.exports = {
     add_money,
     remove_money,
     ls_function,
-    prefix,
 };

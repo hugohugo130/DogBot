@@ -1,4 +1,5 @@
 const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { prefix } = require("../../utils/config.js");
 
 function show_transactions(userid) {
     const { load_rpg_data } = require("../../utils/file.js");
@@ -254,7 +255,7 @@ module.exports = {
         } else if (interaction.customId.startsWith('choose_command')) {
             await interaction.deferUpdate();
             const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-            const { get_emoji, setEmbedFooter, rpg_handler, MockMessage, prefix } = require("./msg_handler.js");
+            const { get_emoji, setEmbedFooter, rpg_handler, MockMessage } = require("./msg_handler.js");
 
             const [_, __, command] = interaction.customId.split('|');
 
@@ -266,7 +267,7 @@ module.exports = {
             await interaction.editReply(response);
         } else if (interaction.customId.startsWith('ls')) {
             await interaction.deferReply({ flags: MessageFlags.Ephemeral })
-            const { ls_function, MockMessage, prefix } = require("./msg_handler.js");
+            const { ls_function, MockMessage } = require("./msg_handler.js");
             const { load_rpg_data } = require("../../utils/file.js");
             const [_, userId] = interaction.customId.split("|");
             const message = new MockMessage(`${prefix}ls`, interaction.message.channel, interaction.user, interaction.guild);
