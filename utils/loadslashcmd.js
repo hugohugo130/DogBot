@@ -2,16 +2,23 @@ const { Collection } = require("discord.js");
 const fs = require('fs');
 const path = require('node:path');
 
+const { readdirSync } = require("./file");
+
 function processDirectory(bot, dirPath) {
     const commands = bot ? new Collection() : [];
-    const items = fs.readdirSync(dirPath);
+    const items = readdirSync(dirPath);
 
     for (const item of items) {
         const itemPath = path.join(dirPath, item);
         const stat = fs.statSync(itemPath);
 
         if (stat.isDirectory()) {
-            processDirectory(itemPath);
+            const subCommands = processDirectory(bot, itemPath);
+            if (bot) {
+                commands.set(item, subCommands);
+            } else {
+                commands.push(...subCommands);
+            };
         } else if (item.endsWith('.js')) {
             delete require.cache[require.resolve(itemPath)];
             const command = require(itemPath);
