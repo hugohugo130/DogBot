@@ -2,7 +2,10 @@ const { Collection } = require("discord.js");
 const fs = require('fs');
 const path = require('node:path');
 
-const { readdirSync } = require("./file");
+const { readdirSync } = require("./file.js");
+const { get_logger } = require("./logger.js");
+
+const logger = get_logger();
 
 function processDirectory(bot, dirPath) {
     const commands = bot ? new Collection() : [];
@@ -29,7 +32,7 @@ function processDirectory(bot, dirPath) {
                     commands.push(command.data.toJSON());
                 };
             } else {
-                console.warn(`[警告] ${itemPath} 中的指令缺少必要的 "data" 和 "execute" 屬性。`);
+                logger.warn(`[警告] ${itemPath} 中的指令缺少必要的 "data" 和 "execute" 屬性。`);
             };
         };
     };
