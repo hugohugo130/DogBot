@@ -3,7 +3,7 @@ const { database_folder, DATABASE_FILES, DEFAULT_VALUES } = require("./config.js
 const { get_logger } = require("./logger.js");
 const { wait_until_ready, client_ready } = require("./wait_until_ready.js");
 
-const logger = get_logger({ name: "check_db_files" });
+const logger = get_logger();
 
 async function checkDBFilesExists() {
     for (const file of DATABASE_FILES) {
