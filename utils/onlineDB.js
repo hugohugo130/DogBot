@@ -155,10 +155,22 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
                         console.log('1. 上載本地檔案到遠端');
                         console.log('2. 下載遠端檔案到本地');
                         console.log('3. 不做任何事');
+                        console.log('4. 查看本地檔案內容')
+                        console.log('5. 查看遠端檔案內容')
 
-                        answer = await rl.question('請選擇操作 (1/2/3): ');
-                        if (!['1', '2', '3'].includes(answer.trim())) {
-                            logger.info('請輸入有效的選項 (1/2/3)');
+                        answer = await rl.question('請選擇操作 (1/2/3/4/5): ');
+                        switch (answer.trim()) {
+                            case '4':
+                                console.log(localContent);
+                                break;
+                            case '5':
+                                console.log(remoteContent);
+                                break;
+                            default:
+                                break;
+                        };
+                        if (!['1', '2', '3', '4', '5'].includes(answer.trim())) {
+                            logger.info('請輸入有效的選項 (1/2/3/4/5)');
                         };
                     } while (!['1', '2', '3'].includes(answer.trim()));
 
