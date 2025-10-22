@@ -4,6 +4,7 @@ const path = require("path");
 
 const { INDENT, DATABASE_FILES, DEFAULT_VALUES } = require("./config.js");
 const { get_logger } = require("./logger.js");
+const { sleep } = require("./sleep.js");
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
@@ -163,6 +164,90 @@ function order_data(data, follow) {
 };
 
 /*
+██████╗  █████╗ ████████╗ █████╗ ██████╗  █████╗ ███████╗███████╗
+██╔══██╗██╔══██╗╚══██╔══╝██╔══██╗██╔══██╗██╔══██╗██╔════╝██╔════╝
+██║  ██║███████║   ██║   ███████║██████╔╝███████║███████╗█████╗  
+██║  ██║██╔══██║   ██║   ██╔══██║██╔══██╗██╔══██║╚════██║██╔══╝  
+██████╔╝██║  ██║   ██║   ██║  ██║██████╔╝██║  ██║███████║███████╗
+╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝
+*/
+
+function loadData(guildID = null, mode = 0) {
+    /*
+    mode: 0 取得伺服器資料, 1 取得所有資料
+    */
+    if (![0, 1].includes(mode)) {
+        throw new TypeError("Invalid mode");
+    };
+
+    const { database_file } = require("./config.js");
+    const database_emptyeg = find_default_value("database.json", {});
+
+    if (fs.existsSync(database_file)) {
+        const rawData = fs.readFileSync(database_file);
+        let data = JSON.parse(rawData);
+
+        if (mode == 0 && guildID) {
+            if (!data[guildID]) {
+                data[guildID] = database_emptyeg;
+                saveData(guildID, data[guildID]);
+            };
+
+            return data[guildID];
+        } else {
+            return data;
+        };
+    } else {
+        return {};
+    };
+};
+
+function saveData(guildID, guildData) {
+    const { database_file } = require("./config.js");
+    const database_emptyeg = find_default_value("database.json", {});
+
+    // let old_data = {};
+    // if (backup) {
+    //     old_data = loadData(null, 1);
+    // };
+
+    let data = {};
+
+    if (fs.existsSync(database_file)) {
+        const rawData = fs.readFileSync(database_file);
+        data = JSON.parse(rawData);
+    };
+
+    if (!data[guildID]) {
+        data[guildID] = database_emptyeg;
+    };
+
+    data[guildID] = { ...data[guildID], ...guildData };
+    data[guildID] = order_data(data[guildID], database_emptyeg)
+
+    // 增加重試機制
+    let retries = 3;
+    let lastError = null;
+
+    while (retries > 0) {
+        try {
+            writeJsonSync(database_file, data);
+            break;
+        } catch (error) {
+            lastError = error;
+            retries--;
+            if (retries > 0) {
+                sleep(1000);
+            };
+        };
+    };
+
+    if (retries === 0) {
+        throw lastError;
+    };
+};
+
+/*
 ██████╗ ██████╗  ██████╗ 
 ██╔══██╗██╔══██╗██╔════╝ 
 ██████╔╝██████╔╝██║  ███╗
@@ -170,6 +255,13 @@ function order_data(data, follow) {
 ██║  ██║██║     ╚██████╔╝
 ╚═╝  ╚═╝╚═╝      ╚═════╝ 
 */
+
+function setRPG(guildID, enable) {
+    if (![true, false].includes(enable)) throw new Error(`Invalid mode: ${enable}`)
+    const data = loadData(guildID);
+    data["rpg"] = enable;
+    saveData(guildID, data)
+}
 
 function load_rpg_data(userid) {
     const { rpg_database_file } = require("./config.js");
@@ -242,7 +334,7 @@ function load_shop_data(userid) {
 };
 
 function save_shop_data(userid, userData) {
-    const { rpg_shop_file: rpg_shop_file } = require("./config.js");
+    const { rpg_shop_file } = require("./config.js");
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
 
     let data = {};
@@ -290,7 +382,11 @@ module.exports = {
     // tools
     find_default_value,
     order_data,
+    // database
+    loadData,
+    saveData,
     // RPG
+    setRPG,
     load_rpg_data,
     save_rpg_data,
     load_shop_data,
