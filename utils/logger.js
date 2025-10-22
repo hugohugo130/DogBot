@@ -1,13 +1,16 @@
+const { EmbedBuilder, MessageFlags } = require('discord.js');
 const winston = require('winston');
 const path = require("path");
-const { EmbedBuilder, MessageFlags } = require('discord.js');
+
 const { time } = require('./time.js');
 const config = require('./config.js');
-const { client_ready, wait_until_ready } = require('./wait_until_ready.js');
+const { client_ready } = require('./wait_until_ready.js');
 
 // 全局管理器
 const loggerManager = new Map();
 global.sendQueue = [];
+
+const DEBUG = false;
 
 // 顏色映射
 const LEVEL_COLORS = {
@@ -27,18 +30,25 @@ const CHANNEL_MAPPING = {
     verbose: config.log_channel_id
 };
 
+
+function truncateContent(content, maxLength = 1500) {
+    if (content.length <= maxLength) return content;
+    return '...' + content.slice(-(maxLength - 3));
+};
+
 // 自定義 Discord Transport
-class DiscordTransport extends winston.Transport {
+class DiscordTransport extends winston.transport {
     constructor(opts) {
         super(opts);
         this.name = 'discord';
-        this.client = opts.client;
-        this.level = opts.level || 'warn'; // 默認只發送 warn 和 error
+        this.client = opts.client || global._client;
+        this.level = opts.level || 'info';
+        this.levels = winston.config.npm.levels;
         this.channels = new Map();
         this._isReady = false;
 
         // 检查客户端状态
-        if (this.client?.isReady?.()) {
+        if (client_ready(this.client)) {
             this._isReady = true;
         } else if (this.client) {
             this.client.once('ready', () => {
@@ -47,76 +57,15 @@ class DiscordTransport extends winston.Transport {
         };
     };
 
-    async _getChannel(level) {
-        const channelId = CHANNEL_MAPPING[level];
-        if (!this.channels.has(channelId)) {
-            try {
-                const channel = await this.client.channels.fetch(channelId);
-                this.channels.set(channelId, channel);
-            } catch (error) {
-                console.error(`Failed to fetch channel ${channelId}:`, error);
-                return null;
-            };
-        };
-        return this.channels.get(channelId);
-    };
-
-    _truncateContent(content, maxLength = 1000) {
-        if (content.length <= maxLength) return content;
-        return '...' + content.slice(-(maxLength - 3));
-    };
-
-    async _sendToDiscord(info) {
-        try {
-            const channel = await this._getChannel(info.level);
-            if (!channel) {
-                console.warn(`Channel for level ${info.level} not found`);
-                return;
-            };
-
-            const moduleName = info.module || 'unknown';
-            let description = info.message;
-
-            // 處理錯誤堆栈
-            if (info.stack) {
-                description = `\`\`\`${this._truncateContent(info.stack, 984)}\`\`\``;
-            } else if (info.message && info.message.length > 100) {
-                description = `\`\`\`${this._truncateContent(info.message, 984)}\`\`\``;
-            } else {
-                description = `\`\`\`${info.message}\`\`\``;
-            };
-
-            const embed = new EmbedBuilder()
-                .setTitle(`${info.level.toUpperCase()} - ${moduleName}`)
-                .setDescription(description)
-                .setColor(LEVEL_COLORS[info.level] || 0x000000)
-                .setTimestamp(Date.parse(info.timestamp));
-
-            await channel.send({
-                embeds: [embed],
-                flags: MessageFlags.SuppressNotifications,
-            });
-        } catch (error) {
-            console.error('Failed to send log to Discord:', error);
-        };
-    };
-
     log(info, callback) {
         setImmediate(() => {
             this.emit('logged', info);
         });
 
-        // 只在特定級別發送到 Discord
-        if (!['error', 'warn'].includes(info.level)) {
-            return callback();
-        };
+        if (DEBUG) console.debug(`[DEBUG] pushed info to sendQueue: ${JSON.stringify(info, null, 4)}`);
+        global.sendQueue.push(info);
 
-        // 如果客户端未就緒，加入隊列
-        if (!this._isReady) {
-            global.sendQueue.push(info);
-        } else {
-            this._sendToDiscord(info).finally(() => callback());
-        };
+        if (callback && this.levels[info.level] <= this.levels[this.level]) callback();
 
         return true;
     };
@@ -130,11 +79,15 @@ const consoleFormat = winston.format.combine(
     }),
 );
 
-async function send_msg(channel, level, color, logger_name, message) {
+async function send_msg(channel, level, color, logger_name, message, timestamp = null) {
+    message = message.replace("```", "");
+
     const embed = new EmbedBuilder()
-        .setTitle(`${level} - ${logger_name}`)
+        .setTitle(`${level.toUpperCase()} - ${path.basename(logger_name, ".js")}`)
         .setDescription(`\`\`\`\n${message}\n\`\`\``)
         .setColor(color);
+
+    if (timestamp) embed.setTimestamp(timestamp);
 
     return await channel.send({
         embeds: [embed],
@@ -198,19 +151,17 @@ function get_logger(options = {}) {
         options = { name: options };
     };
 
-    // console.debug(`options: ${options}, call from ${getCallerModuleName(4)}`);
-
     let {
         name = getCallerModuleName(4),
-        client = null,
+        client = undefined,
     } = options;
-
-    if (client_ready()) client = wait_until_ready();
 
     // 返回已存在的 logger
     if (loggerManager.has(name)) {
         return loggerManager.get(name);
     };
+
+    if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger, options: ${options}, call from ${getCallerModuleName(4)}`);
 
     // 創建 transports
     const transports = [
@@ -221,11 +172,9 @@ function get_logger(options = {}) {
     ];
 
     // 如果有 Discord client，添加 Discord transport
-    if (client) {
-        transports.push(new DiscordTransport({
-            client,
-        }));
-    };
+    transports.push(new DiscordTransport({
+        client: (client ?? global._client),
+    }));
 
     // 創建 logger
     const logger = winston.createLogger({
@@ -249,22 +198,29 @@ function get_logger(options = {}) {
 async function process_send_queue(client) {
     while (global.sendQueue.length > 0) {
         const info = global.sendQueue[0];
+        if (DEBUG) console.debug(`[DEBUG] [process_send_queue] handling send Queue ${JSON.stringify(info, null, 4)}`)
 
         try {
             const level = info.level.toUpperCase();
             const logger_name = info.module || 'unknown';
-            const message = info.stack || info.message;
+            let message = info.stack || info.message;
             const color = LEVEL_COLORS[info.level] || 0x000000;
             const channel_id = CHANNEL_MAPPING[info.level];
+            const timestamp = Date.parse(info.timestamp);
+
+            if (message.length >= 1000) {
+                message = truncateContent(info.message, 1484);
+            };
 
             const channel = await client.channels.fetch(channel_id);
             if (!channel) {
-                get_logger({ name: 'queue-processor', client }).warn(`channel id ${channel_id} not found, can't process send queue`);
+                console.warn(`[WARN] channel id ${channel_id} not found, can't process send queue`);
                 global.sendQueue.shift();
                 continue;
             };
 
-            await send_msg(channel, level, color, logger_name, message)
+            await send_msg(channel, level, color, logger_name, message, timestamp)
+            client.last_send_log = message;
             global.sendQueue.shift();
         } catch (error) {
             console.error('Failed to process queued message:', error);
@@ -273,20 +229,23 @@ async function process_send_queue(client) {
     };
 };
 
-async function shutdown() {
+/**
+ * 
+ * @param {boolean} quiet
+ */
+async function shutdown(quiet = false, wait = 1000) {
     for (const [name, logger] of loggerManager) {
         logger.end(() => {
-            console.log(`Logger ${name} closed`);
+            if (!quiet) console.log(`Logger ${name} closed`);
         });
     };
 
     // 等待所有傳輸完成
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, wait));
 };
 
 module.exports = {
     get_logger,
     process_send_queue,
     shutdown,
-    DiscordTransport
 };
