@@ -21,8 +21,8 @@ const DEFAULT_VALUES = {
         "rpg_database.json": {
             "money": 1000,
             "hungry": 20,
-            "inventory": {},
             "lastRunTimestamp": 0,
+            "inventory": {},
             "transactions": [],
             "count": {},
             "privacy": [],
@@ -46,6 +46,8 @@ const onlineDB_Files = [
     "rpg_shop.json",
 ];
 
+const rpg_database_file = join(cwd(), "rpg_database.json");
+const rpg_shop_file = join(cwd(), "rpg_database.json");
 const serverIPFile = join(database_folder, "serverIP.json");
 
 const cogsFolder = `${cwd()}/cogs`
@@ -64,6 +66,8 @@ module.exports = {
     database_folder,
     DATABASE_FILES,
     onlineDB_Files,
+    rpg_database_file,
+    rpg_shop_file,
     serverIPFile,
     DEFAULT_VALUES,
     BETA,

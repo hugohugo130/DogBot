@@ -275,7 +275,7 @@ module.exports = {
         } else if (interaction.customId.startsWith("sell")) {
             const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
             const { add_money, get_emoji, setEmbedFooter } = require("./msg_handler.js");
-            const { name } = require("../../rpg.js");
+            const { name } = require("../../utils/rpg.js");
             await interaction.deferUpdate();
 
             let [_, userId, item_id, price, amount] = customIdParts;
@@ -368,7 +368,7 @@ module.exports = {
                 load_rpg_data,
                 save_rpg_data
             } = require("../../utils/file.js");
-            const { bake, name, oven_slots } = require("../../rpg.js");
+            const { bake, name, oven_slots } = require("../../utils/rpg.js");
 
             await interaction.deferUpdate();
 
@@ -481,7 +481,7 @@ module.exports = {
                 load_rpg_data,
                 save_rpg_data
             } = require("../../utils/file.js");
-            const { smeltable_items, name, smelter_slots } = require("../../rpg.js");
+            const { smeltable_items, name, smelter_slots } = require("../../utils/rpg.js");
 
             await interaction.deferUpdate();
 
