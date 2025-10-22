@@ -182,7 +182,7 @@ function get_logger(options = {}) {
     const logger = winston.createLogger({
         level: "debug",
         format: winston.format.combine(
-            winston.format.errors({ stack: true }), // 捕获錯誤堆栈
+            winston.format.errors({ stack: true }), // 捕獲錯誤堆棧
             winston.format.timestamp(),
             winston.format.json()
         ),
