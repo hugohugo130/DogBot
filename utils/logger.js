@@ -175,6 +175,7 @@ function get_logger(options = {}) {
         }),
         new DiscordTransport({
             client: (client ?? global._client),
+            level: 'warn',
         })
     ];
 
