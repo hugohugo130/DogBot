@@ -41,20 +41,10 @@ class DiscordTransport extends winston.Transport {
     constructor(opts) {
         super(opts);
         this.name = 'discord';
-        this.client = opts.client;
         this.level = opts.level || 'info';
         this.levels = winston.config.npm.levels;
         this.channels = new Map();
         this._isReady = false;
-
-        // 检查客户端状态
-        if (client_ready(this.client)) {
-            this._isReady = true;
-        } else if (this.client) {
-            this.client.once('ready', () => {
-                this._isReady = true;
-            });
-        };
     };
 
     log(info, callback) {
@@ -174,7 +164,6 @@ function get_logger(options = {}) {
             level: 'debug' // 控制台显示所有級別
         }),
         new DiscordTransport({
-            client: (client ?? global._client),
             level: 'warn',
         })
     ];
