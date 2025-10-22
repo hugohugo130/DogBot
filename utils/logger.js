@@ -41,7 +41,7 @@ class DiscordTransport extends winston.Transport {
     constructor(opts) {
         super(opts);
         this.name = 'discord';
-        this.client = opts.client || global._client;
+        this.client = opts.client;
         this.level = opts.level || 'info';
         this.levels = winston.config.npm.levels;
         this.channels = new Map();
@@ -75,17 +75,21 @@ class DiscordTransport extends winston.Transport {
 const consoleFormat = winston.format.combine(
     winston.format.timestamp(),
     winston.format.printf(({ timestamp, level, message, module }) => {
-        return `${time()} [${path.basename(module, ".js")}] - ${level.toUpperCase()} - ${message}`;
+        return `${time()} [${path.basename(module, ".js")}] - ${level.toUpperCase()} - ${message.description ? `EMBED: ${message.description}` : message}`;
     }),
 );
 
-async function send_msg(channel, level, color, logger_name, message, timestamp = null) {
-    message = message.replace("```", "");
+async function send_msg(channel, level, color, logger_name, message, timestamp = null, embed = null) {
+    if (message) message = message.replace("```", "");
 
-    const embed = new EmbedBuilder()
-        .setTitle(`${level.toUpperCase()} - ${path.basename(logger_name, ".js")}`)
-        .setDescription(`\`\`\`\n${message}\n\`\`\``)
-        .setColor(color);
+    if (!embed) {
+        embed = new EmbedBuilder()
+            .setTitle(`${level.toUpperCase()} - ${path.basename(logger_name, ".js")}`)
+            .setDescription(`\`\`\`\n${message}\n\`\`\``)
+            .setColor(color);
+    } else {
+        embed.setColor(color);
+    };
 
     if (timestamp) embed.setTimestamp(timestamp);
 
@@ -168,13 +172,11 @@ function get_logger(options = {}) {
         new winston.transports.Console({
             format: consoleFormat,
             level: 'debug' // 控制台显示所有級別
+        }),
+        new DiscordTransport({
+            client: (client ?? global._client),
         })
     ];
-
-    // 如果有 Discord client，添加 Discord transport
-    transports.push(new DiscordTransport({
-        client: (client ?? global._client),
-    }));
 
     // 創建 logger
     const logger = winston.createLogger({
@@ -208,10 +210,6 @@ async function process_send_queue(client) {
             const channel_id = CHANNEL_MAPPING[info.level];
             const timestamp = Date.parse(info.timestamp);
 
-            if (message.length >= 1000) {
-                message = truncateContent(info.message, 1484);
-            };
-
             const channel = await client.channels.fetch(channel_id);
             if (!channel) {
                 console.warn(`[WARN] channel id ${channel_id} not found, can't process send queue`);
@@ -219,8 +217,17 @@ async function process_send_queue(client) {
                 continue;
             };
 
-            await send_msg(channel, level, color, logger_name, message, timestamp)
-            client.last_send_log = message;
+            if (message instanceof EmbedBuilder) {
+                await send_msg(channel, null, null, null, null, timestamp, message);
+            } else {
+                if (message.length >= 1000) {
+                    message = truncateContent(info.message, 1484);
+                };
+
+                await send_msg(channel, level, color, logger_name, message, timestamp);
+            };
+
+            client.last_send_log = message.description || message;
             global.sendQueue.shift();
         } catch (error) {
             console.error('Failed to process queued message:', error);
