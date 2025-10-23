@@ -5,7 +5,7 @@ const { BotName } = require("./config.js");
 const shutdown_keyword = "關機"
 
 async function safeshutdown(client) {
-    const logger = get_logger({ client });
+    const logger = get_logger();
     const success = await uploadAllDatabaseFiles();
 
     logger.info(success ? "已上載所有資料庫檔案" : "上載資料庫檔案失敗，下次請選擇上載資料庫檔案或無操作！");

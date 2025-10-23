@@ -22,7 +22,7 @@ const client = new Client({
     ],
 });
 
-const logger = get_logger({ client });
+const logger = get_logger();
 
 client.setMaxListeners(Infinity);
 

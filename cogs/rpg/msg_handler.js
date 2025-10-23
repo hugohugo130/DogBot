@@ -2059,7 +2059,7 @@ let lock = {
 module.exports = {
     name: Events.MessageCreate,
     execute: async function (client, message) {
-        const logger = get_logger({ client });
+        const logger = get_logger();
         try {
             if (lock.rpg_handler) {
                 await unlock_waiting_handler("rpg_handler");

@@ -10,7 +10,7 @@ module.exports = {
     execute: async function (client) {
         global._client = client;
         client.name = BotName || client.user.tag;
-        const logger = get_logger({ client });
+        const logger = get_logger();
 
         await checkDBFilesDefault(client);
         const schedules = await run_schedule(client);
