@@ -52,7 +52,7 @@ module.exports = {
             let finalOptions = getFinalOptions(interaction.options.data);
             let optionsStr = finalOptions.map(option => `${option.name}: ${option.value}`).join(', ');
 
-            logger.log(`${username} 正在執行斜線指令: ${fullCommand}${optionsStr ? `, 選項: ${optionsStr}` : ""}`);
+            logger.info(`${username} 正在執行斜線指令: ${fullCommand}${optionsStr ? `, 選項: ${optionsStr}` : ""}`);
 
             const embed = new EmbedBuilder()
                 .setTitle("指令執行")
@@ -60,7 +60,7 @@ module.exports = {
                 .addFields({ name: '指令名稱', value: fullCommand })
                 .addFields({ name: '選項', value: optionsStr ? optionsStr : '無' });
 
-            logger.log(embed);
+            logger.info(embed);
 
             await command.execute(interaction);
         } catch (error) {
