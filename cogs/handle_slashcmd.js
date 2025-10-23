@@ -36,7 +36,9 @@ module.exports = {
     name: Events.InteractionCreate,
     async execute(client, interaction) {
         if (!interaction.isChatInputCommand()) return;
-        const logger = get_logger({ client });
+        const logger = get_logger();
+        const backend_logger = get_logger({ log: true });
+
         const username = interaction.user.globalName || interaction.user.username;
 
         try {
@@ -60,7 +62,7 @@ module.exports = {
                 .addFields({ name: '指令名稱', value: fullCommand })
                 .addFields({ name: '選項', value: optionsStr ? optionsStr : '無' });
 
-            logger.info(embed);
+            backend_logger.info(embed);
 
             await command.execute(interaction);
         } catch (error) {

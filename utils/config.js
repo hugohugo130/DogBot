@@ -59,9 +59,10 @@ const cogsFolder = `${cwd()}/cogs`
 const scheduleEverysec = `${cwd()}/schedule/everysec`
 const scheduleEverymin = `${cwd()}/schedule/everymin`
 
-const log_channel_id = "1423292323827159040"
-const warn_channel_id = "1423292323827159040"
-const error_channel_id = "1423292323827159040"
+const backend_channel_id = "1430868819206864978"
+const log_channel_id = "1430868778433904691"
+const warn_channel_id = "1430868778433904691"
+const error_channel_id = "1430868778433904691"
 
 const BotID = "1422212094274830470";
 const BotName = "狗狗機器犬"; // 預設為 client.user.tag
@@ -85,6 +86,7 @@ module.exports = {
     DEFAULT_IP,
     DEFAULT_PORT,
     cogsFolder,
+    backend_channel_id,
     log_channel_id,
     warn_channel_id,
     error_channel_id,

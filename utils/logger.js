@@ -7,6 +7,7 @@ const config = require('./config.js');
 
 // 全局管理器
 const loggerManager = new Map();
+const loggerManager_log = new Map();
 global.sendQueue = [];
 
 const DEBUG = false;
@@ -42,8 +43,6 @@ class DiscordTransport extends winston.Transport {
         this.name = 'discord';
         this.level = opts.level || 'info';
         this.levels = winston.config.npm.levels;
-        this.channels = new Map();
-        this._isReady = false;
     };
 
     log(info, callback) {
@@ -51,7 +50,34 @@ class DiscordTransport extends winston.Transport {
             this.emit('logged', info);
         });
 
-        if (DEBUG) console.debug(`[DEBUG] pushed info to sendQueue: ${JSON.stringify(info, null, 4)}`);
+        if (DEBUG) console.debug(`[DEBUG] [DiscordTransport] pushed info to sendQueue: ${JSON.stringify(info, null, 4)}`);
+        global.sendQueue.push(info);
+
+        if (callback && this.levels[info.level] <= this.levels[this.level]) callback();
+
+        return true;
+    };
+};
+
+// 自定義 Backend Transport
+class BackendTransport extends winston.Transport {
+    constructor(opts) {
+        super(opts);
+        this.name = 'backend';
+        this.level = opts.level || 'info';
+        this.levels = winston.config.npm.levels;
+        this.channel_id = config.backend_channel_id;
+    };
+
+    log(info, callback) {
+        setImmediate(() => {
+            this.emit('logged', info);
+        });
+
+        // 設置 channel_id 到 info 物件
+        info.channel_id = this.channel_id;
+
+        if (DEBUG) console.debug(`[DEBUG] [BackendTransport] pushed info to sendQueue: ${JSON.stringify(info, null, 4)}`);
         global.sendQueue.push(info);
 
         if (callback && this.levels[info.level] <= this.levels[this.level]) callback();
@@ -63,8 +89,16 @@ class DiscordTransport extends winston.Transport {
 // 自定義控制台格式
 const consoleFormat = winston.format.combine(
     winston.format.timestamp(),
+    // 過濾掉 Embed 物件，不要在 console 顯示
+    winston.format((info) => {
+        if (info.message && typeof info.message === 'object' && info.message.data) {
+            return false; // 返回 false 表示過濾掉此日誌
+        };
+
+        return info;
+    })(),
     winston.format.printf(({ timestamp, level, message, module }) => {
-        return `${time()} [${path.basename(module, ".js")}] - ${level.toUpperCase()} - ${message.description ? `EMBED: ${message.description}` : message}`;
+        return `${time()} [${path.basename(module, ".js")}] - ${level.toUpperCase()} - ${message}`;
     }),
 );
 
@@ -138,23 +172,26 @@ function getCallerModuleName(depth = 4) {
  * @returns {winston.Logger}
  */
 function get_logger(options = {}) {
-    // 處理參數
-    if (typeof options === 'string') {
-        console.warn(`[get_logger] [DEPRECATED] options use string instead of object, module ${getCallerModuleName(4)}`)
-        options = { name: options };
-    };
-
     let {
         name = getCallerModuleName(4),
         client = undefined,
+        log = false,
     } = options;
 
-    // 返回已存在的 logger
-    if (loggerManager.has(name)) {
-        return loggerManager.get(name);
+    // 返回已存在的 logger (log 和非 log 的 logger 分開管理，不能混用)
+    if (log) {
+        if (loggerManager_log.has(name)) {
+            return loggerManager_log.get(name);
+        };
+    } else {
+        if (loggerManager.has(name)) {
+            return loggerManager.get(name);
+        };
     };
 
-    if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger, options: ${options}, call from ${getCallerModuleName(4)}`);
+    if (client) console.warn(`[get_logger] [DEPRECATED] get logger from module ${name} gave client args, that's not needed`);
+
+    if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger with log=${log}, name=${name}, call from ${getCallerModuleName(4)}`);
 
     // 創建 transports
     const transports = [
@@ -166,6 +203,13 @@ function get_logger(options = {}) {
             level: 'warn',
         })
     ];
+
+    if (log) {
+        transports.length = 0;
+        transports.push(new BackendTransport({
+            level: 'info',
+        }));
+    };
 
     // 創建 logger
     const logger = winston.createLogger({
@@ -180,7 +224,8 @@ function get_logger(options = {}) {
     });
 
     // 儲存 logger
-    loggerManager.set(name, logger);
+    if (log) loggerManager_log.set(name, logger);
+    else loggerManager.set(name, logger);
 
     return logger;
 };
@@ -192,11 +237,11 @@ async function process_send_queue(client) {
         if (DEBUG) console.debug(`[DEBUG] [process_send_queue] handling send Queue ${JSON.stringify(info, null, 4)}`)
 
         try {
-            const level = info.level.toUpperCase();
+            const level = info.level ? info.level.toUpperCase() : 'INFO';
             const logger_name = info.module || 'unknown';
             let message = info.stack || info.message;
             const color = LEVEL_COLORS[info.level] || 0x000000;
-            const channel_id = CHANNEL_MAPPING[info.level];
+            const channel_id = info.channel_id || CHANNEL_MAPPING[info.level];
             const timestamp = Date.parse(info.timestamp);
 
             const channel = await client.channels.fetch(channel_id);
@@ -206,17 +251,31 @@ async function process_send_queue(client) {
                 continue;
             };
 
-            if (message instanceof EmbedBuilder) {
-                await send_msg(channel, null, null, null, null, timestamp, message);
+            // 檢查 message 是否為 EmbedBuilder 實例
+            if (message && typeof message === 'object' && message.data) {
+                const embed = message;
+                if (!embed.data.color) {
+                    embed.setColor(color);
+                };
+
+                if (timestamp && !embed.data.timestamp) {
+                    embed.setTimestamp(timestamp);
+                };
+
+                await channel.send({
+                    embeds: [embed],
+                    flags: MessageFlags.SuppressNotifications
+                });
+                client.last_send_log = embed.data.description || embed.data.title || 'embed';
             } else {
-                if (message.length >= 1000) {
-                    message = truncateContent(info.message, 1484);
+                if (message && message.length >= 1000) {
+                    message = truncateContent(message, 1484);
                 };
 
                 await send_msg(channel, level, color, logger_name, message, timestamp);
+                client.last_send_log = message;
             };
 
-            client.last_send_log = message.description || message;
             global.sendQueue.shift();
         } catch (error) {
             console.error('Failed to process queued message:', error);
