@@ -68,6 +68,9 @@ const BotName = "狗狗機器犬"; // 預設為 client.user.tag
 
 const prefix = "!";
 
+const enable_auto_register_cmd = true;
+const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
+
 module.exports = {
     INDENT,
     database_folder,
@@ -90,4 +93,6 @@ module.exports = {
     BotID,
     BotName,
     prefix,
+    enable_auto_register_cmd,
+    auto_register_cmd_file
 };
