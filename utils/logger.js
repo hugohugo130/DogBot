@@ -4,7 +4,6 @@ const path = require("path");
 
 const { time } = require('./time.js');
 const config = require('./config.js');
-const { client_ready } = require('./wait_until_ready.js');
 
 // 全局管理器
 const loggerManager = new Map();
@@ -245,4 +244,5 @@ module.exports = {
     get_logger,
     process_send_queue,
     shutdown,
+    loggerManager,
 };
