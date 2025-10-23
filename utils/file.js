@@ -10,6 +10,7 @@ const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
 const readdir = fsp.readdir;
 const join = path.join;
+const full_path = path.resolve;
 const logger = get_logger();
 
 /**
@@ -63,16 +64,18 @@ function readSync(path) {
 };
 
 function writeSync(path, data) {
+    if (path.endsWith(".json")) return writeJsonSync(path, data);
     fs.writeFileSync(path, data);
 };
 
-async function read(path) {
+async function read(path, encoding = "utf-8") {
     return await fsp.readFile(path, {
-        encoding: "utf-8",
+        encoding,
     });
 };
 
 async function write(path, data) {
+    if (path.endsWith(".json")) return await writeJson(path, data);
     await fsp.writeFile(path, data);
 };
 
@@ -379,6 +382,7 @@ module.exports = {
     readScheduleSync,
     readSchedule,
     join,
+    full_path,
     // tools
     find_default_value,
     order_data,
