@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Events } = require('discord.js');
+const { Client, GatewayIntentBits, Events, Options } = require('discord.js');
 const { checkDBFilesExists } = require('./utils/check_db_files.js');
 const { checkAllDatabaseFilesContent } = require('./utils/onlineDB.js');
 const { load_cogs } = require("./utils/load_cogs.js");
@@ -20,6 +20,32 @@ const client = new Client({
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
     ],
+    rest: {
+        timeout: 15000,
+        retries: 3
+    },
+    allowedMentions: {
+        repliedUser: false,
+    },
+    sweepers: {
+        ...Options.DefaultMakeCacheSettings,
+        channels: {
+            interval: 3_600,
+            lifetime: 1_800,
+        },
+        guilds: {
+            interval: 3_600,
+            lifetime: 1_800,
+        },
+        users: {
+            interval: 3_600,
+            filter: () => user => user.bot && user.id !== user.client.user.id,
+        },
+        messages: {
+            interval: 3_600,
+            lifetime: 1_800,
+        },
+    },
 });
 
 const logger = get_logger();
