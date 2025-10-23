@@ -27,14 +27,14 @@ module.exports = {
         )
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
     async execute(interaction) {
-        const { setRPG } = require('../../utils/file.js');
+        const { setRPG } = require('../../../utils/file.js');
         await interaction.deferReply();
+        if (!interaction.guild) return interaction.editReply({ content: "你不在伺服器內執行這個指令！" })
         const enable = interaction.options.getBoolean("enable");
         const guildID = interaction.guildId;
 
         setRPG(guildID, enable);
 
-        const emoji = enable ? "✅" : "❌"
-        await interaction.editReply({ content: `${emoji} 已 ${enable ? "啟用" : "停用"} RPG遊戲` });
+        await interaction.editReply({ content: `已${enable ? "啟用" : "停用"}RPG遊戲` });
     },
 };
