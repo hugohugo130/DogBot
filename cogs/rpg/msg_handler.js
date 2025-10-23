@@ -1897,7 +1897,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
 
     const guildID = message.guild.id;
-    const rpg_data = load_rpg_data(userid);
+    const data = loadData(guildID);
     if (!data["rpg"]) return;
 
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
@@ -1961,7 +1961,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
     const execute = cmd_data[2];
     const userid = message.author.id;
-    const data = loadData(guildID);
+    const rpg_data = load_rpg_data(userid);
     const action = cmd_data[0];
 
     if (rpg_work.includes(command)) {
