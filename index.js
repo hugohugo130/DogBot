@@ -56,7 +56,7 @@ client.once(Events.ClientReady, async () => {
         slashcmd = await registcmd(false, get_logger({ name: full_path("utils/auto_register.js") }));
     };
 
-    logger.info(`已加載 ${(slashcmd ?? loadslashcmd(true)).size} 個斜線指令`);
+    logger.info(`已加載 ${(slashcmd ?? loadslashcmd()).length} 個斜線指令`);
 
     await checkDBFilesExists();
     client.serverIP = getServerIPSync(client);
