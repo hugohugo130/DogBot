@@ -2,9 +2,14 @@ const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonSty
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger } = require("../../utils/logger.js");
 const { prefix } = require("../../utils/config.js");
+const { wait_until_ready } = require("../../utils/wait_until_ready.js");
 
 const max_hungry = 20;
 const logger = get_logger();
+
+function BetterEval(obj) {
+    return Function(`"use strict";return ${obj}`)();
+};
 
 async function unlock_waiting_handler(lock_name) {
     await new Promise((resolve) => {
@@ -119,10 +124,6 @@ function get_random_number() {
  * @returns {EmbedBuilder}
  */
 function setEmbedFooter(interaction, embed, text = null, client = global._client) {
-    if (interaction instanceof Client || (client && client instanceof Client)) {
-        global._client = interaction;
-    };
-
     if (text) {
         text += "\n哈狗機器人 ∙ 由哈狗製作";
         text = text.trim();
@@ -223,7 +224,8 @@ async function get_help_embed(category, client) {
 };
 
 async function get_emoji(client = global._client, name) {
-    await client.application.fetch();
+    // await client.application.fetch();
+    wait_until_ready(client);
 
     let emojis = client.application.emojis.cache;
     let emoji = emojis.find(e => e.name === name);
@@ -256,7 +258,7 @@ async function get_cooldown_embed(remaining_time, client = global._client, actio
 };
 
 function get_cooldown_time(command_name, rpg_data) {
-    return eval(rpg_cooldown[command_name].replace("{c}", rpg_data.count[command_name]));
+    return BetterEval(rpg_cooldown[command_name].replace("{c}", rpg_data.count[command_name]));
 };
 
 /**
@@ -1897,15 +1899,14 @@ const privacy_data = {
 async function rpg_handler({ client, message, d, mode = 0 }) {
     const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
 
-    const guildID = message.guild.id;
-    const data = loadData(guildID);
-    if (!data["rpg"]) return;
-
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
 
     if (!d && message.author.bot) return;
 
-    if (!global._client) global._client = client;
+    const guildID = message.guild.id;
+    const data = loadData(guildID);
+    if (!data["rpg"]) return;
+
     let content = message.content.toLowerCase().trim()
     if (!content.startsWith(prefix)) return;
     content = content.replace(prefix, "").trim();
@@ -2001,6 +2002,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             if (!rpg_data.count[cmd]) {
                 rpg_data.count[cmd] = 0;
             };
+
             if (!rpg_data.lastRunTimestamp[cmd]) {
                 rpg_data.lastRunTimestamp[cmd] = 0;
             };
@@ -2072,6 +2074,7 @@ module.exports = {
             lock.rpg_handler = false;
         };
     },
+    BetterEval,
     rpg_commands,
     rpg_help,
     rpg_emojis,
