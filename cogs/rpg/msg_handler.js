@@ -446,16 +446,11 @@ rpg_cooldown: {
 */
 const rpg_cooldown = {
     // 單位: 秒
-    // mine: "150 + {c} * 30",
-    // hew: "150 + {c} * 30",
-    // herd: "150 + {c} * 30",
-    // brew: "150 + {c} * 30",
-    // fish: "150 + {c} * 30",
-    mine: "0",
-    hew: "0",
-    herd: "0",
-    brew: "0",
-    fish: "0",
+    mine: "150 + {c} * 30",
+    hew: "150 + {c} * 30",
+    herd: "150 + {c} * 30",
+    brew: "150 + {c} * 30",
+    fish: "150 + {c} * 30",
 };
 
 const rpg_actions = {
@@ -1900,11 +1895,14 @@ const privacy_data = {
  */
 async function rpg_handler({ client, message, d, mode = 0 }) {
     const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
+
+    const guildID = message.guild.id;
+    const rpg_data = load_rpg_data(userid);
+    if (!data["rpg"]) return;
+
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
 
-    if (!d) {
-        if (message.author.bot) return;
-    };
+    if (!d && message.author.bot) return;
 
     if (!global._client) global._client = client;
     let content = message.content.toLowerCase().trim()
@@ -1963,8 +1961,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
     const execute = cmd_data[2];
     const userid = message.author.id;
-    const rpg_data = load_rpg_data(userid);
-    const data = loadData(userid);
+    const data = loadData(guildID);
     const action = cmd_data[0];
 
     if (rpg_work.includes(command)) {
@@ -1982,7 +1979,6 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     };
 
     if (rpg_cooldown[command] || command === "cd") {
-        // if (false) {
         // 檢查上次執行時間是否為今天
         if (rpg_data.lastRunTimestamp && rpg_data.lastRunTimestamp[command]) {
             const lastRunDate = new Date(rpg_data.lastRunTimestamp[command]);
@@ -2034,6 +2030,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
                 break;
             };
         };
+
         if (found_food) {
             // 嘗試自動吃掉一個食物
             if (typeof rpg_commands.eat?.[2] === "function") {
