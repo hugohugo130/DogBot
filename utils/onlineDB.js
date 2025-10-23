@@ -7,7 +7,7 @@ const { isDeepStrictEqual } = require("node:util");
 const { getServerIPSync } = require("./getSeverIPSync.js");
 const { onlineDB_Files, DATABASE_FILES, database_folder } = require("./config.js");
 const { get_logger } = require("./logger.js");
-const { readFileSync, join } = require("./file.js");
+const { readFileSync, join, existsSync } = require("./file.js");
 const { get_areadline } = require("./readline.js");
 
 const { IP: serverIP, PORT } = getServerIPSync();
@@ -222,7 +222,7 @@ async function checkAllDatabaseFilesContent() {
 // === 批量上載所有資料庫檔案 ===
 async function uploadAllDatabaseFiles() {
     for (const file of DATABASE_FILES) {
-        if (fs.existsSync(file) && onlineDB_Files.includes(file)) {
+        if (existsSync(file) && onlineDB_Files.includes(file)) {
             await onlineDB_uploadFile(file);
         };
     };
@@ -235,12 +235,12 @@ async function downloadDatabaseFile(src, dst = null) {
     // 預設下載到 download/ 資料夾
     if (!dst) {
         const downloadDir = path.join(process.cwd(), 'download');
-        if (!fs.existsSync(downloadDir)) fs.mkdirSync(downloadDir);
+        if (!existsSync(downloadDir)) fs.mkdirSync(downloadDir);
         dst = path.join(downloadDir, path.basename(src));
     } else {
         // 若dst資料夾不存在則自動建立
         const dstDir = path.dirname(dst);
-        if (!fs.existsSync(dstDir)) fs.mkdirSync(dstDir, { recursive: true });
+        if (!existsSync(dstDir)) fs.mkdirSync(dstDir, { recursive: true });
     };
 
     await onlineDB_downloadFile(src, dst);
