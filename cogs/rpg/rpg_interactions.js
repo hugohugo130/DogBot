@@ -71,7 +71,7 @@ module.exports = {
             return;
         };
 
-        logger.log(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`);
+        logger.info(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`);
 
         if (interaction.customId.startsWith('rpg_transaction')) {
             await interaction.deferUpdate();
