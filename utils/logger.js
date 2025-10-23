@@ -2,7 +2,7 @@ const { EmbedBuilder, MessageFlags } = require('discord.js');
 const winston = require('winston');
 const path = require("path");
 
-const { time } = require('./time.js');
+const { time2 } = require('./time.js');
 const config = require('./config.js');
 
 // 全局管理器
@@ -89,7 +89,6 @@ class BackendTransport extends winston.Transport {
 // 自定義控制台格式
 const consoleFormat = winston.format.combine(
     winston.format.timestamp(),
-    // 過濾掉 Embed 物件，不要在 console 顯示
     winston.format((info) => {
         if (info.message && typeof info.message === 'object' && info.message.data) {
             return false; // 返回 false 表示過濾掉此日誌
@@ -98,7 +97,7 @@ const consoleFormat = winston.format.combine(
         return info;
     })(),
     winston.format.printf(({ timestamp, level, message, module }) => {
-        return `${time()} [${path.basename(module, ".js")}] - ${level.toUpperCase()} - ${message}`;
+        return `${time2()} [${path.basename(module, ".js")}] - ${level.toUpperCase()} - ${message}`;
     }),
 );
 
