@@ -1,6 +1,8 @@
-const { REST, Routes } = require("discord.js");
+const { REST, Routes, Collection } = require("discord.js");
 const { BotID } = require("./utils/config.js");
 const { loadslashcmd } = require("./utils/loadslashcmd.js");
+const { Logger } = require("winston");
+const { get_logger } = require("./utils/logger.js");
 
 function log(logger, message) {
     if (logger) logger.info(message);
@@ -12,8 +14,16 @@ function _error(logger, message) {
     else console.error(message);
 };
 
-async function registcmd(quiet = true, logger = null) {
+/**
+ * 
+ * @param {boolean} quiet 
+ * @param {boolean | Logger} logger 
+ * @returns {Promise<Collection>}
+ */
+async function registcmd(quiet = true, logger = false) {
     require("dotenv").config({ quiet: true });
+
+    if (logger === true) logger = get_logger();
 
     let commands = loadslashcmd();
     const rest = new REST().setToken(process.env.TOKEN);
@@ -35,7 +45,9 @@ async function registcmd(quiet = true, logger = null) {
 };
 
 if (require.main === module) {
-    registcmd(false);
+    (async () => {
+        await registcmd(false);
+    })();
 };
 
 module.exports = {

@@ -52,8 +52,8 @@ client.once(Events.ClientReady, async () => {
     logger.info(`已加載 ${cogs} 個程式碼`);
 
     let slashcmd;
-    if (should_register_cmd()) {
-        slashcmd = await registcmd(false, get_logger({ name: full_path("utils/auto_register.js") }));
+    if (await should_register_cmd()) {
+        slashcmd = await registcmd(false);
     };
 
     logger.info(`已加載 ${(slashcmd ?? loadslashcmd()).length} 個斜線指令`);

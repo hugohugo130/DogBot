@@ -1,8 +1,9 @@
-const fs = require("fs").promises;
 const path = require("path");
 const crypto = require("crypto");
 
 const { existsSync, read, readdir, write } = require("./file.js");
+
+const DEBUG = false;
 
 /**
  * 
@@ -40,17 +41,24 @@ async function read_all_files_in_dir(dir) {
     return file_datas;
 };
 
+/**
+ * @returns {Promise<boolean>}
+ */
 async function should_register_cmd() {
     const { enable_auto_register_cmd, auto_register_cmd_file } = require("./config.js");
 
     if (!enable_auto_register_cmd) return false;
 
     if (existsSync(auto_register_cmd_file)) {
-        const [length, hash] = (await read(auto_register_cmd_file)).split("|");
+        let [length, hash] = (await read(auto_register_cmd_file)).split("|");
+        length = parseInt(length);
 
         const file_datas_new = await read_all_files_in_dir("slashcmd");
         const [length_new, hash_new] = get_hash_of_datas(file_datas_new);
         const res = length !== length_new || hash !== hash_new;
+        if (DEBUG) console.debug(`length(${length}) !== length_new(${length_new}): ${length !== length_new}`)
+        if (DEBUG) console.debug(`hash(${hash}) !== hash_new(${hash_new}): ${hash !== hash_new}`);
+        if (DEBUG) console.debug(`res: ${res}`)
         if (res) await write(auto_register_cmd_file, `${length_new}|${hash_new}`);
         return res;
     } else {
