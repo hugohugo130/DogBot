@@ -28,9 +28,9 @@ module.exports = {
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
     async execute(interaction) {
         const { setRPG } = require('../../utils/file.js');
-        await interaction.response.defer();
+        await interaction.deferReply();
         const enable = interaction.options.getBoolean("enable");
-        const guildID = interaction.guild.id;
+        const guildID = interaction.guildId;
 
         setRPG(guildID, enable);
 
