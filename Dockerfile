@@ -24,11 +24,5 @@ fi
 
 RUN npm cache clean --force
 
-# 註冊指令
-ARG slashcmd = true
-RUN if ["$slashcmd" = "true"]; then \
-    node register_commands.js; \
-fi
-
 # 啟動
 CMD ["node", "index.js"]
