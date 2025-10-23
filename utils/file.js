@@ -63,8 +63,8 @@ function readSync(path) {
     });
 };
 
-function writeSync(path, data) {
-    if (path.endsWith(".json")) return writeJsonSync(path, data);
+function writeSync(path, data, p = false) {
+    if (path.endsWith(".json") && !p) return writeJsonSync(path, data);
     fs.writeFileSync(path, data);
 };
 
@@ -74,8 +74,8 @@ async function read(path, encoding = "utf-8") {
     });
 };
 
-async function write(path, data) {
-    if (path.endsWith(".json")) return await writeJson(path, data);
+async function write(path, data, p = false) {
+    if (path.endsWith(".json") && !p) return await writeJson(path, data);
     await fsp.writeFile(path, data);
 };
 
@@ -85,7 +85,7 @@ function readJsonSync(path) {
 
 function writeJsonSync(path, data, replacer = "") {
     data = stringify(data, replacer)
-    writeSync(path, data);
+    writeSync(path, data, true);
     return data;
 };
 
@@ -95,7 +95,7 @@ async function readJson(path) {
 
 async function writeJson(path, data, replacer = "") {
     data = stringify(data, replacer)
-    await write(path, data);
+    await write(path, data, true);
     return data;
 };
 
