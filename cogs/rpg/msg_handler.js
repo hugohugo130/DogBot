@@ -2037,9 +2037,11 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
                 await rpg_commands.eat[2]({ client, message, rpg_data, data, args: [found_food, "all"], mode });
             }
         } else {
+            const emoji_cross = await get_emoji(client, "crosS");
+
             const embed = new EmbedBuilder()
                 .setColor(0xF04A47)
-                .setTitle("你已經餓到沒有食物可以吃了！請先補充食物！");
+                .setTitle(`${emoji_cross} | 你已經餓到沒有食物可以吃了！請先補充食物！`);
 
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
