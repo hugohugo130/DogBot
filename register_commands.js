@@ -15,18 +15,18 @@ function _error(logger, message) {
 async function registcmd(quiet = true, logger = null) {
     require("dotenv").config({ quiet: true });
 
-    let commands = loadslashcmd(false);
+    let commands = loadslashcmd();
     const rest = new REST().setToken(process.env.TOKEN);
 
     try {
-        if (!quiet) log(logger, `正在註冊${commands.length}個斜線指令...`);
+        if (!quiet) log(logger, `正在註冊 ${commands.length} 個斜線指令...`);
 
         const data = await rest.put(
             Routes.applicationCommands(BotID),
             { body: commands },
         );
 
-        if (!quiet) log(logger, `已註冊${data.length}個斜線指令!`);
+        if (!quiet) log(logger, `已註冊 ${data.length} 個斜線指令!`);
 
         return commands;
     } catch (error) {
