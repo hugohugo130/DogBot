@@ -221,10 +221,8 @@ async function checkAllDatabaseFilesContent() {
 
 // === 批量上載所有資料庫檔案 ===
 async function uploadAllDatabaseFiles() {
-    for (const file of DATABASE_FILES) {
-        if (existsSync(file) && onlineDB_Files.includes(file)) {
-            await onlineDB_uploadFile(file);
-        };
+    for (const file of DATABASE_FILES.filter(e => existsSync(e) && onlineDB_Files.includes(e))) {
+        await onlineDB_uploadFile(file);
     };
 
     return true;
