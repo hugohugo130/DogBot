@@ -17,8 +17,11 @@ function processDirectory(bot, dirPath) {
 
         if (stat.isDirectory()) {
             const subCommands = processDirectory(bot, itemPath);
+
             if (bot) {
-                commands.set(item, subCommands);
+                for (const [name, command] of subCommands) {
+                    commands.set(name, command);
+                }
             } else {
                 commands.push(...subCommands);
             };
