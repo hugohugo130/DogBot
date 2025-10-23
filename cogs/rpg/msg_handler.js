@@ -4,6 +4,7 @@ const { get_logger } = require("../../utils/logger.js");
 const { prefix } = require("../../utils/config.js");
 
 const max_hungry = 20;
+const logger = get_logger();
 
 async function unlock_waiting_handler(lock_name) {
     await new Promise((resolve) => {
@@ -12,7 +13,7 @@ async function unlock_waiting_handler(lock_name) {
             if (!lock[lock_name]) {
                 resolve();
             } else if (Date.now() - startTime >= 20000) {
-                console.warn(`等待${lock_name}解鎖超時，已進行操作(強制解鎖)`);
+                logger.warn(`等待${lock_name}解鎖超時，已進行操作(強制解鎖)`);
                 resolve();
             } else {
                 setTimeout(checkLock, 100);
@@ -47,7 +48,7 @@ class MockMessage {
 
 function get_number_of_items(name, userid) {
     const { load_rpg_data } = require("../../utils/file.js");
-    const { name: name_list } = require("../../rpg.js");
+    const { name: name_list } = require("../../utils/rpg.js");
     const rpg_data = load_rpg_data(userid);
     const items = rpg_data.inventory;
 
@@ -358,7 +359,7 @@ async function ls_function({ client, message, rpg_data, data, args, mode, PASS }
         return await message.reply({ embeds: [embed], components: [row] });
     };
 
-    const { name, mine_gets, ingots, logs, foods_crops, foods_meat, fish, weapons_armor, wood_productions, brew, planks } = require("../../rpg.js");
+    const { name, mine_gets, ingots, logs, foods_crops, foods_meat, fish, weapons_armor, wood_productions, brew, planks } = require("../../utils/rpg.js");
     const emojiNames = ["bag", "ore", "farmer", "cow", "swords", "potion"];
     const [bag_emoji, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await Promise.all(
         emojiNames.map(name => get_emoji(client, name))
@@ -485,7 +486,7 @@ const redirect_data = {
 const rpg_commands = {
     mine: ["挖礦", "挖礦", async function ({ client, message, rpg_data, data, args, mode }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { mine_gets, name } = require("../../rpg.js");
+        const { mine_gets, name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const ore_list = Object.values(mine_gets);
@@ -518,7 +519,7 @@ const rpg_commands = {
     }],
     hew: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { logs, name } = require("../../rpg.js");
+        const { logs, name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const { show_amount, real_amount } = get_random_number();
@@ -557,7 +558,7 @@ const rpg_commands = {
     }],
     herd: ["放牧", "放牧或屠宰動物", async function ({ client, message, rpg_data, data, args, mode }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { animals, animal_products, name } = require("../../rpg.js");
+        const { animals, animal_products, name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const animal_list = Object.values(animals);
@@ -586,7 +587,7 @@ const rpg_commands = {
     }],
     brew: ["釀造", "釀造藥水", async function ({ client, message, rpg_data, data, args, mode }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { brew, name } = require("../../rpg.js");
+        const { brew, name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const brew_list = Object.values(brew);
@@ -612,7 +613,7 @@ const rpg_commands = {
     }],
     fish: ["抓魚", "魚魚: 漁夫!不要抓我~~~", async function ({ client, message, rpg_data, data, args, mode }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { fish, name } = require("../../rpg.js");
+        const { fish, name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const fish_list = Object.values(fish);
@@ -668,7 +669,7 @@ const rpg_commands = {
     }],
     shop: ["商店", "對你的商店進行任何操作", async function ({ client, message, rpg_data, data, args, mode }) {
         const { load_shop_data, save_shop_data, save_rpg_data } = require("../../utils/file.js");
-        const { name, mine_gets, ingots, foods, shop_lowest_price } = require("../../rpg.js");
+        const { name, mine_gets, ingots, foods, shop_lowest_price } = require("../../utils/rpg.js");
         const subcommand = args[0];
         switch (subcommand) {
             case "add": {
@@ -923,7 +924,7 @@ const rpg_commands = {
     }],
     buy: ["購買", "購買其他人上架的物品", async function ({ client, message, rpg_data, data, args, mode }) {
         const { load_shop_data } = require("../../utils/file.js");
-        const { name } = require("../../rpg.js");
+        const { name } = require("../../utils/rpg.js");
 
         const userid = message.author.id;
         const emoji_cross = await get_emoji(client, "crosS");
@@ -1424,7 +1425,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
     }],
     eat: ["吃東西", "吃東西回復飽食度", async function ({ client, message, rpg_data, data, args, mode }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { foods, name, food_data, foods_crops, foods_meat, fish } = require("../../rpg.js");
+        const { foods, name, food_data, foods_crops, foods_meat, fish } = require("../../utils/rpg.js");
 
         const user = message.author;
         const userid = user.id;
@@ -1465,11 +1466,11 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             if (!add) {
                 const embed = await get_loophole_embed(client, `food_data[${food_id}] is ${add}`)
 
-                console.warn(`食物${food_name} (${food_id})在food_data中沒有這個食物的數據`);
+                logger.warn(`食物${food_name} (${food_id})在food_data中沒有這個食物的數據`);
                 try {
                     throw new Error();
                 } catch (e) {
-                    console.warn(`called from: ${e.stack}`);
+                    logger.warn(`called from: ${e.stack}`);
                 };
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1583,7 +1584,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         };
     }],
     sell: ["出售", "出售物品給系統", async function ({ client, message, rpg_data, data, args, mode }) {
-        const { sell_data, name } = require("../../rpg.js");
+        const { sell_data, name } = require("../../utils/rpg.js");
 
         const item_name = name[args[0]] || args[0];
         const item_id = Object.keys(name).find(key => name[key] === item_name);
@@ -1777,7 +1778,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
     limited: ["???", "???", async function ({ client, message, rpg_data, data, args, mode }) {
         if (message.author.id !== "898836485397180426") return;
         const { load_rpg_data } = require("../../utils/file.js");
-        const { foods } = require("../../rpg.js");
+        const { foods } = require("../../utils/rpg.js");
         const amount = parseInt(args[0]) || 1;
         const msg = await message.reply("處理中...");
         const total = amount;
@@ -2021,7 +2022,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     };
 
     if (rpg_work.includes(command) && rpg_data.hungry === 0) {
-        const { foods } = require("../../rpg.js");
+        const { foods } = require("../../utils/rpg.js");
         const food_items = Object.keys(foods);
         let found_food = null;
         for (const food of food_items) {
@@ -2059,7 +2060,6 @@ let lock = {
 module.exports = {
     name: Events.MessageCreate,
     execute: async function (client, message) {
-        const logger = get_logger();
         try {
             if (lock.rpg_handler) {
                 await unlock_waiting_handler("rpg_handler");

@@ -1,5 +1,6 @@
 const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
 const { prefix } = require("../../utils/config.js");
+const { get_logger } = require("../../utils/logger.js");
 
 function show_transactions(userid) {
     const { load_rpg_data } = require("../../utils/file.js");
@@ -48,7 +49,7 @@ module.exports = {
         const { get_emoji } = require("./msg_handler.js");
         if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
         if (interaction.customId.startsWith("vote_")) return;
-        const { time } = require("../../module_time.js");
+        const logger = get_logger();
 
         const message = interaction.message;
         const user = interaction.user;
@@ -70,8 +71,7 @@ module.exports = {
             return;
         };
 
-        console.log(`[${time()}] ${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`);
-
+        logger.log(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`);
 
         if (interaction.customId.startsWith('rpg_transaction')) {
             await interaction.deferUpdate();
