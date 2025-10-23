@@ -1,5 +1,6 @@
 const { Events, EmbedBuilder, MessageFlags } = require('discord.js');
 const { get_logger } = require('../utils/logger');
+const { time } = require('../utils/time');
 
 
 function parseOptions(options) {
@@ -66,9 +67,9 @@ module.exports = {
             logger.error(`執行斜線指令時出錯：${error.stack}`);
 
             if (interaction.replied || interaction.deferred) {
-                await interaction.followUp({ content: `[${time()}] 我運行這個指令的時候遇到了錯誤 :|\n${error.stack}`, ephemeral: interaction.ephemeral || true });
+                await interaction.followUp({ content: `${time()} 我運行這個指令的時候遇到了錯誤 :|\n${error.stack}`, flags: MessageFlags.Ephemeral });
             } else {
-                await interaction.reply({ content: `[${time()}] 我運行這個指令的時候遇到了錯誤 :|\n${error.stack}`, ephemeral: interaction.ephemeral || true });
+                await interaction.reply({ content: `${time()} 我運行這個指令的時候遇到了錯誤 :|\n${error.stack}`, flags: MessageFlags.Ephemeral });
             };
         };
     },

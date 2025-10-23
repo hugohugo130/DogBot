@@ -55,8 +55,10 @@ client.once(Events.ClientReady, async () => {
     if (await should_register_cmd()) {
         slashcmd = await registcmd(false, true);
     };
+    slashcmd = slashcmd ?? loadslashcmd();
+    client.commands = structuredClone(slashcmd);
 
-    logger.info(`已加載 ${(slashcmd ?? loadslashcmd()).length} 個斜線指令`);
+    logger.info(`已加載 ${client.commands.length} 個斜線指令`);
 
     await checkDBFilesExists();
     client.serverIP = getServerIPSync(client);
