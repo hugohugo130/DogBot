@@ -10,7 +10,6 @@ const { get_areadline } = require('./utils/readline.js');
 const { check_item_data } = require('./utils/rpg.js');
 const { should_register_cmd } = require('./utils/auto_register.js');
 const { registcmd } = require('./register_commands.js');
-const { full_path } = require('./utils/file.js');
 require("dotenv").config();
 
 const client = new Client({
@@ -51,14 +50,10 @@ client.once(Events.ClientReady, async () => {
     const cogs = load_cogs(client);
     logger.info(`已加載 ${cogs} 個程式碼`);
 
-    let slashcmd;
-    if (await should_register_cmd()) {
-        slashcmd = await registcmd(false, true);
-    };
-    slashcmd = slashcmd ?? loadslashcmd();
-    client.commands = structuredClone(slashcmd);
+    if (await should_register_cmd()) await registcmd(false, true);
+    client.commands = loadslashcmd(true);
 
-    logger.info(`已加載 ${client.commands.length} 個斜線指令`);
+    logger.info(`已加載 ${client.commands.size} 個斜線指令`);
 
     await checkDBFilesExists();
     client.serverIP = getServerIPSync(client);

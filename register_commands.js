@@ -3,6 +3,7 @@ const { BotID } = require("./utils/config.js");
 const { loadslashcmd } = require("./utils/loadslashcmd.js");
 const { Logger } = require("winston");
 const { get_logger } = require("./utils/logger.js");
+const { should_register_cmd } = require("./utils/auto_register.js");
 
 function log(logger, message) {
     if (logger) logger.info(message);
@@ -46,7 +47,9 @@ async function registcmd(quiet = true, logger = false) {
 
 if (require.main === module) {
     (async () => {
-        await registcmd(false);
+        const res = await should_register_cmd();
+        console.log("should_register_cmd: " + res);
+        if (res) await registcmd(false);
     })();
 };
 
