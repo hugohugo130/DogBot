@@ -53,7 +53,7 @@ client.once(Events.ClientReady, async () => {
 
     let slashcmd;
     if (await should_register_cmd()) {
-        slashcmd = await registcmd(false);
+        slashcmd = await registcmd(false, true);
     };
 
     logger.info(`已加載 ${(slashcmd ?? loadslashcmd()).length} 個斜線指令`);
