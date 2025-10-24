@@ -178,26 +178,26 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
                     switch (answer.trim()) {
                         case '1':
                             await onlineDB_uploadFile(filename);
-                            return;
+                            return true;
                         case '2':
                             await onlineDB_downloadFile(filename);
-                            return;
+                            return true;
                         case '3':
                             console.log('未進行任何操作');
-                            return;
+                            return true;
                     };
                 };
             } else if (localContent && !remoteContent) {
                 logger.info(`遠端無 ${filename} 檔案，準備上載本地檔案`);
                 await onlineDB_uploadFile(filename);
-                return;
+                return true;
             } else if (!localContent && remoteContent) {
                 logger.info(`本地無 ${filename} 檔案，準備下載遠端檔案`);
                 await onlineDB_downloadFile(filename);
-                return;
+                return true;
             };
 
-            return; // 如果成功完成，跳出函數
+            return true; // 如果成功完成，跳出函數
 
         } catch (error) {
             if (attempt < maxRetries) {
@@ -213,15 +213,17 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
 
 // === 批量檢查所有資料庫檔案 ===
 async function checkAllDatabaseFilesContent() {
-    for (const file of DATABASE_FILES) {
-        await onlineDB_checkFileContent(file);
+    let executed = false;
+    for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
+        const res = await onlineDB_checkFileContent(file);
+        if (!executed && res) executed = true;
     };
-    console.log("=".repeat(30));
+    if (executed) console.log("=".repeat(30));
 };
 
 // === 批量上載所有資料庫檔案 ===
 async function uploadAllDatabaseFiles() {
-    for (const file of DATABASE_FILES.filter(e => existsSync(e) && onlineDB_Files.includes(e))) {
+    for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         await onlineDB_uploadFile(file);
     };
 
