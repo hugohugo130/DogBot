@@ -1,4 +1,4 @@
-const { process_send_queue } = require("../../utils/logger")
+const { process_send_queue } = require("../../utils/logger.js");
 
 module.exports = {
     execute: async function (client) {
