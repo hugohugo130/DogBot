@@ -24,7 +24,7 @@ RUN if ["$update" = "true"]; then \
     npm audit fix; \
 fi
 
-RUN npm cache clean
+RUN npm cache clean --force
 
 # 啟動
 CMD ["node", "--trace-deprecation", "--trace-warnings", "index.js"]
