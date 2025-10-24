@@ -169,33 +169,15 @@ module.exports = {
             const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
             const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
 
-            /*
-            mode:
-            'true': 第一次執行
-            'false': 取消
-            undefined: 不是第一次執行
-            - deprecated
-            */
-            // const [_, userId, mode] = interaction.customId.split('|');
             const [_, userId] = interaction.customId.split('|');
-            // if (mode === 'false') {
-            //     await interaction.message.delete();
-            //     await interaction.message.reference?.delete();
-            //     return;
-            // };
 
             const rpg_data = load_rpg_data(userId);
 
-            const emoji_shield = await get_emoji(interaction.client, "shield");
-            const emoji_backpack = await get_emoji(interaction.client, "bag");
-            const emoji_partner = await get_emoji(interaction.client, "partner");
-
-            // if (mode === undefined) { // 不是第一次執行
-            //     const privacy = interaction.values;
-            //     rpg_data.privacy = privacy;
-            //     console.debug(`received privacy: ${JSON.stringify(rpg_data.privacy)}`);
-            //     save_rpg_data(userId, rpg_data);
-            // };
+            const [emoji_shield, emoji_backpack, emoji_partner] = await Promise.all(
+                ["shield", "bag", "partner"].map(async (name) => {
+                    return await get_emoji(interaction.client, name);
+                }),
+            );
 
             const privacy = interaction.values;
             rpg_data.privacy = privacy;
@@ -205,11 +187,11 @@ module.exports = {
             });
             save_rpg_data(userId, rpg_data);
 
-            let text;
+            let text = "無";
             if (rpg_data.privacy.length > 0) {
                 text = rpg_data.privacy.join('、');
                 text = text.replace("money", "金錢").replace("backpack", "背包").replace("partner", "夥伴");
-            } else text = "無";
+            };
 
             const embed = new EmbedBuilder()
                 .setColor(0x00BBFF)
