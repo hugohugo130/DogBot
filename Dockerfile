@@ -25,4 +25,4 @@ fi
 RUN npm cache clean --force
 
 # 啟動
-CMD ["node", "index.js"]
+CMD ["node", "--trace-deprecation", "--trace-warnings", "index.js"]
