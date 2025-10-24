@@ -19,7 +19,7 @@ COPY . .
 
 # 更新
 ARG update=false
-RUN if ["$update" = "true"]; then \
+RUN if [ "$update" = "true" ]; then \
     npm update --save && \
     npm audit fix; \
 fi

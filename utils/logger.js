@@ -300,6 +300,7 @@ async function shutdown(quiet = false, wait = 1000) {
 
 module.exports = {
     get_logger,
+    getCallerModuleName,
     process_send_queue,
     shutdown,
     loggerManager,
