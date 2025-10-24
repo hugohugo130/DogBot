@@ -8,9 +8,12 @@ const { sleep } = require("./sleep.js");
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
+const mkdirSync = fs.mkdirSync;
+const mkdir = fsp.mkdir;
 const readdir = fsp.readdir;
 const join = path.join;
 const full_path = path.resolve;
+const dirname = path.dirname;
 const logger = get_logger();
 
 /**
@@ -65,6 +68,12 @@ function readSync(path) {
 
 function writeSync(path, data, p = false) {
     if (path.endsWith(".json") && !p) return writeJsonSync(path, data);
+
+    const dir = dirname(path);
+    if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+    };
+
     fs.writeFileSync(path, data);
 };
 
@@ -76,6 +85,12 @@ async function read(path, encoding = "utf-8") {
 
 async function write(path, data, p = false) {
     if (path.endsWith(".json") && !p) return await writeJson(path, data);
+
+    const dir = dirname(path);
+    if (!existsSync(dir)) {
+        mkdir(dir, { recursive: true });
+    };
+
     await fsp.writeFile(path, data);
 };
 
@@ -379,10 +394,13 @@ module.exports = {
     readFileSync,
     readdirSync,
     readdir,
+    mkdirSync,
+    mkdir,
     readScheduleSync,
     readSchedule,
     join,
     full_path,
+    dirname,
     // tools
     find_default_value,
     order_data,
