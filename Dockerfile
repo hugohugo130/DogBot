@@ -16,7 +16,7 @@ RUN npm install && \
 COPY . .
 
 # 更新
-ARG update = false
+ARG update=false
 RUN if ["$update" = "true"]; then \
     npm update --save && \
     npm audit fix; \
