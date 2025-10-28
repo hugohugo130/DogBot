@@ -440,9 +440,7 @@ async function ls_function({ client, message, rpg_data, data, args, mode, PASS }
 }
 
 /*
-rpg_cooldown: {
-    command_name: "{c} will be replaced with the command execution times"
-}
+command_name: "{c} will be replaced with the command execution times"
 */
 const rpg_cooldown = {
     // 單位: 秒
@@ -678,9 +676,9 @@ const rpg_commands = {
                 const shop_data = load_shop_data(userid);
                 const status = shop_data.status ? "營業中" : "打烊";
                 /*
-                指令: hr!shop add <商品名稱/ID> <數量> <售價>
-                範例: hr!shop add 鑽石礦 2 600
-                範例2: hr!shop add diamond_ore 2 600
+                指令: shop add <商品名稱/ID> <數量> <售價>
+                範例: shop add 鑽石礦 2 600
+                範例2: shop add diamond_ore 2 600
                 */
                 let [_, item_name, amount, price] = args;
                 item_name = get_name_of(item_name); // 物品名稱
@@ -1053,7 +1051,7 @@ const rpg_commands = {
             // return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
 
             // const msg = new MockMessage(
-            //     `hr!shop list ${target_user.id}`,
+            //     `!shop list ${target_user.id}`,
             //     message.channel,
             //     message.author,
             //     target_user,
