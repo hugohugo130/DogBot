@@ -682,9 +682,9 @@ const rpg_commands = {
                 */
                 let [_, item_name, amount, price] = args;
                 item_name = get_name_of(item_name); // 物品名稱
-                if (amount === "all") amount = get_number_of_items(item, userid); // 獲取所有物品數量
-
                 const item = Object.keys(name).find(key => name[key] === item_name); // 物品id
+
+                if (amount === "all") amount = get_number_of_items(item, userid); // 獲取所有物品數量
                 if (!Object.keys(name).includes(args[1]) && !Object.values(name).includes(args[1])) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -1156,7 +1156,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
         if (extrainfo) {
             const solderConfirmButton = new ButtonBuilder()
-                .setCustomId(`buyc|${message.author.id}|${target_user.id}|${amount}|${item_exist.price}|${item}`)
+                .setCustomId(`buyc|${target_user.id}|${target_user.id}|${amount}|${item_exist.price}|${item}`)
                 .setLabel('店主確認')
                 .setStyle(ButtonStyle.Primary);
 
