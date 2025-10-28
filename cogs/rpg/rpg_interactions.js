@@ -38,7 +38,7 @@ async function get_failed_embed(client = global._client) {
     const { setEmbedFooter, get_emoji } = require("./msg_handler.js");
     const emoji = await get_emoji(client, "crosS");
     const embed = new EmbedBuilder()
-        .setColor(embed_default_color)
+        .setColor(embed_error_color)
         .setTitle(`${emoji} | 沒事戳這顆按鈕幹嘛?`);
     return setEmbedFooter(client, embed, null, client);
 };
