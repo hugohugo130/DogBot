@@ -2028,7 +2028,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
                 // 如果不是同一天，重置計數
                 rpg_data.count = {};
-                rpg_data.lastRunTimestamp = {};
+                // rpg_data.lastRunTimestamp = {};
             };
         };
 
