@@ -174,11 +174,11 @@ function get_logger(options = {}) {
     let {
         name = getCallerModuleName(4),
         client = undefined,
-        log = false,
+        backend = false,
     } = options;
 
-    // 返回已存在的 logger (log 和非 log 的 logger 分開管理，不能混用)
-    if (log) {
+    // 返回已存在的 logger (backend 和非 backend 的 logger 分開管理)
+    if (backend) {
         if (loggerManager_log.has(name)) {
             return loggerManager_log.get(name);
         };
@@ -190,7 +190,7 @@ function get_logger(options = {}) {
 
     if (client) console.warn(`[get_logger] [DEPRECATED] get logger from module ${name} gave client args, that's not needed`);
 
-    if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger with log=${log}, name=${name}, call from ${getCallerModuleName(4)}`);
+    if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger with backend=${backend}, name=${name}, call from ${getCallerModuleName(4)}`);
 
     // 創建 transports
     const transports = [
@@ -203,7 +203,7 @@ function get_logger(options = {}) {
         })
     ];
 
-    if (log) {
+    if (backend) {
         transports.length = 0;
         transports.push(new BackendTransport({
             level: 'info',
@@ -223,7 +223,7 @@ function get_logger(options = {}) {
     });
 
     // 儲存 logger
-    if (log) loggerManager_log.set(name, logger);
+    if (backend) loggerManager_log.set(name, logger);
     else loggerManager.set(name, logger);
 
     return logger;

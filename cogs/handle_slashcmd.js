@@ -37,7 +37,7 @@ module.exports = {
     async execute(client, interaction) {
         if (!interaction.isChatInputCommand()) return;
         const logger = get_logger();
-        const backend_logger = get_logger({ log: true });
+        const backend_logger = get_logger({ backend: true });
 
         const username = interaction.user.globalName || interaction.user.username;
 
