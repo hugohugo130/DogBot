@@ -49,7 +49,9 @@ if (require.main === module) {
     (async () => {
         const res = await should_register_cmd();
         console.log("should_register_cmd: " + res);
-        if (res) await registcmd(false);
+        const force = true;
+        console.log(`force: ${true}`);
+        if (res || force) await registcmd(false);
     })();
 };
 
