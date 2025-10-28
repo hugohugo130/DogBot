@@ -67,7 +67,7 @@ const error_channel_id = "1430868778433904691"
 const BotID = "1422212094274830470";
 const BotName = "狗狗機器犬"; // 預設為 client.user.tag
 
-const prefix = "!";
+const prefix = "&";
 
 const enable_auto_register_cmd = true;
 const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
