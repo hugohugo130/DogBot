@@ -876,6 +876,7 @@ const rpg_commands = {
                 if (others) embed.addFields({ name: `其他`, value: others, inline: false });
 
                 if ((!minerals && !food && !others) || !shop_data.status) {
+                    embed.setColor(embed_error_color)
                     embed.setTitle(`${emoji_cross} | 商店裡沒有販賣任何東西`);
                     embed.setAuthor(null);
                 };
