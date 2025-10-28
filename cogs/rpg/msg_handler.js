@@ -53,15 +53,12 @@ class MockMessage {
 
 function get_number_of_items(name, userid) {
     const { load_rpg_data } = require("../../utils/file.js");
-    const { name: name_list } = require("../../utils/rpg.js");
+    const { get_name_of } = require("../../utils/rpg.js");
     const rpg_data = load_rpg_data(userid);
     const items = rpg_data.inventory;
 
     // 如果輸入的是中文名稱，找到對應的英文key
-    let item_key = name;
-    if (Object.values(name_list).includes(name)) {
-        item_key = Object.keys(name_list).find(key => name_list[key] === name);
-    };
+    let item_key = get_name_of(name);
 
     if (!item_key) return 0;
 
@@ -671,7 +668,7 @@ const rpg_commands = {
     }],
     shop: ["商店", "對你的商店進行任何操作", async function ({ client, message, rpg_data, data, args, mode }) {
         const { load_shop_data, save_shop_data, save_rpg_data } = require("../../utils/file.js");
-        const { name, mine_gets, ingots, foods, shop_lowest_price } = require("../../utils/rpg.js");
+        const { name, mine_gets, ingots, foods, shop_lowest_price, get_name_of } = require("../../utils/rpg.js");
         const subcommand = args[0];
         switch (subcommand) {
             case "add": {
@@ -685,7 +682,10 @@ const rpg_commands = {
                 範例: hr!shop add 鑽石礦 2 600
                 範例2: hr!shop add diamond_ore 2 600
                 */
-                const item_name = name[args[1]] || args[1]; // 物品名稱
+                let [_, item_name, amount, price] = args;
+                item_name = get_name_of(item_name); // 物品名稱
+                if (amount === "all") amount = get_number_of_items(item, userid); // 獲取所有物品數量
+
                 const item = Object.keys(name).find(key => name[key] === item_name); // 物品id
                 if (!Object.keys(name).includes(args[1]) && !Object.values(name).includes(args[1])) {
                     const embed = new EmbedBuilder()
@@ -695,9 +695,8 @@ const rpg_commands = {
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
+
                 const item_exist = shop_data.items[item];
-                let amount = args[2];
-                if (amount === "all") amount = get_number_of_items(item, userid);
                 amount = parseInt(amount);
                 if (isNaN(amount)) amount = 1;
                 if (amount < 1) {
@@ -709,8 +708,9 @@ const rpg_commands = {
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
+
                 // let price = parseInt(args[3]) || item_exist?.price || shop_lowest_price[item];
-                let price = parseInt(args[3]) || item_exist?.price;
+                price = parseInt(price) || item_exist?.price;
                 if (!price || price < 1 || price >= 1000000000) {
                     const emoji = await get_emoji(client, "crosS");
                     const embed = new EmbedBuilder()
@@ -720,6 +720,7 @@ const rpg_commands = {
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
+
                 if (price < shop_lowest_price[item]) {
                     const emoji = await get_emoji(client, "crosS");
                     const embed = new EmbedBuilder()
@@ -730,6 +731,7 @@ const rpg_commands = {
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
+
                 let inventory = rpg_data.inventory;
                 if (!inventory[item]) {
                     const embed = new EmbedBuilder()
@@ -739,6 +741,7 @@ const rpg_commands = {
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
+
                 if (inventory[item] < amount) {
                     const embed = new EmbedBuilder()
                         .setColor(0xF04A47)
@@ -747,6 +750,7 @@ const rpg_commands = {
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
+
                 inventory[item] -= amount;
                 save_rpg_data(userid, rpg_data);
                 if (item_exist) {
@@ -761,6 +765,7 @@ const rpg_commands = {
                         price,
                     };
                 };
+
                 amount = shop_data.items[item].amount;
                 price = shop_data.items[item].price;
                 save_shop_data(userid, shop_data);
@@ -823,9 +828,19 @@ const rpg_commands = {
                 const userid = user.id;
 
                 const emoji_cross = await get_emoji(client, "crosS");
+                const emoji_store = await get_emoji(client, "store");
                 const ore_emoji = await get_emoji(client, "ore");
                 const food_emoji = await get_emoji(client, "bread");
                 const shop_data = load_shop_data(userid);
+
+                if (!shop_data.status && user.id != message.author.id) {
+                    const embed = new EmbedBuilder()
+                        .setColor(0x00BBFF)
+                        .setTitle(`${emoji_store} | 該商店目前已經打烊了`);
+
+                    if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+                    return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+                };
 
                 const status = shop_data.status ? "營業中" : "已打烊";
 
