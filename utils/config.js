@@ -72,6 +72,18 @@ const prefix = "!";
 const enable_auto_register_cmd = true;
 const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
 
+/*
+https://discord.js.org/docs/packages/discord.js/14.24.0/ColorResolvable:TypeAlias
+- ColorResolvable -
+1. 'Color'
+2. 'Random'
+3. readonly [red: number, green: number, blue: number]
+4. number
+5. HexColorString
+*/
+const embed_default_color = 0x00BBFF;
+const embed_error_color = 0xF04A47;
+
 module.exports = {
     INDENT,
     database_folder,
@@ -96,5 +108,7 @@ module.exports = {
     BotName,
     prefix,
     enable_auto_register_cmd,
-    auto_register_cmd_file
+    auto_register_cmd_file,
+    embed_default_color,
+    embed_error_color,
 };

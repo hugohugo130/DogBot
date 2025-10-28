@@ -1,5 +1,5 @@
 const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
-const { prefix } = require("../../utils/config.js");
+const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { get_logger } = require("../../utils/logger.js");
 
 function show_transactions(userid) {
@@ -24,7 +24,7 @@ function get_transaction_embed(interaction) {
     const username = interaction.user.username;
     const transactions = show_transactions(userid);
     const embed = new EmbedBuilder()
-        .setColor(0x00BBFF)
+        .setColor(embed_default_color)
         .setAuthor({
             name: `${username} 的交易紀錄`,
             iconURL: interaction.user.displayAvatarURL({ dynamic: true }),
@@ -38,7 +38,7 @@ async function get_failed_embed(client = global._client) {
     const { setEmbedFooter, get_emoji } = require("./msg_handler.js");
     const emoji = await get_emoji(client, "crosS");
     const embed = new EmbedBuilder()
-        .setColor(0x00BBFF)
+        .setColor(embed_default_color)
         .setTitle(`${emoji} | 沒事戳這顆按鈕幹嘛?`);
     return setEmbedFooter(client, embed, null, client);
 };
@@ -102,7 +102,7 @@ module.exports = {
 
                 if (Date.now() - parseInt(timestamp) > 30000) {
                     const embed = new EmbedBuilder()
-                        .setColor(0x00BBFF)
+                        .setColor(embed_default_color)
                         .setTitle(`${emoji_cross} | 付款失敗`)
                         .setDescription(`付款確認已過期`);
 
@@ -128,14 +128,14 @@ module.exports = {
                 save_rpg_data(targetUserId, target_user_rpg_data);
 
                 const embed = new EmbedBuilder()
-                    .setColor(0x00BBFF)
+                    .setColor(embed_default_color)
                     .setTitle(`${emoji_top} | 付款成功`)
                     .setDescription(`你已成功付款 \`${parseInt(amount).toLocaleString()}$\` 給 <@${targetUserId}>`);
 
                 await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
             } else if (interaction.customId.startsWith('pay_cancel')) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 操作取消`);
 
                 await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
@@ -148,7 +148,7 @@ module.exports = {
             // const emoji_tick = get_emoji(interaction.client, "Tick");
             // const emoji_cross = get_emoji(interaction.client, "crosS");
             // const embed = new EmbedBuilder()
-            //     .setColor(0x00BBFF)
+            //     .setColor(embed_default_color)
             //     .setTitle(`${emoji_tick} | 語言設定成功`)
             //     .setDescription(`你已成功設定語言為 ${client.available_languages[language]}`);
 
@@ -158,7 +158,7 @@ module.exports = {
             //     rpg_data.language = language;
             //     save_rpg_data(interaction.user.id, rpg_data);
             // } else {
-            //     embed.setColor(0xF04A47);
+            //     embed.setColor(embed_error_color);
             //     embed.setTitle(`${emoji_cross} | 語言一樣`);
             //     embed.setDescription(`你選擇的語言和現在的語言一樣 :|`);
             // };
@@ -194,7 +194,7 @@ module.exports = {
             };
 
             const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 .setTitle(`${emoji_shield} | 隱私權設定`)
                 .setDescription(`
 為保護每個人的隱私，可以透過下拉選單來設定 **允許被公開的** 資訊
@@ -281,7 +281,7 @@ module.exports = {
 
             const emoji_trade = await get_emoji(interaction.client, "trade");
             const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 .setTitle(`${emoji_trade} | 成功售出了 ${amount} 個 ${name[item_id]}`);
 
             await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
@@ -292,7 +292,7 @@ module.exports = {
             const emoji_cross = await get_emoji(interaction.client, "crosS");
 
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 操作取消`);
 
             await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
@@ -316,7 +316,7 @@ module.exports = {
 
             if (targetUserShopData[item].amount < amount) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 沒有販賣這麼多物品`);
 
                 return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
@@ -350,7 +350,7 @@ module.exports = {
             });
 
             const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 .setTitle(`${emoji_store} | 購買成功`)
                 .setDescription(`你購買了 ${item_name} \`x${amount.toLocaleString()}\`，花費 \`${(total_price).toLocaleString()}$\`${isConfirm ? "，\n經店家同意" : ""}`);
 
@@ -379,7 +379,7 @@ module.exports = {
                 const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
                 const emoji_cross = await get_emoji(interaction.client, "crosS");
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 烘烤會話已過期`)
                     .setDescription(`請重新執行烘烤指令`);
 
@@ -413,7 +413,7 @@ module.exports = {
                 const emoji_cross = await get_emoji(interaction.client, "crosS");
                 const embed = new EmbedBuilder()
                     .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setDescription(`你缺少了 ${items.join("、")}`);
 
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
@@ -438,7 +438,7 @@ module.exports = {
 
             if (bake_data[userId].length >= oven_slots) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的烤箱已經滿了`);
 
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
@@ -461,7 +461,7 @@ module.exports = {
             const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
             const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
             const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 // .setTitle(`${emoji_drumstick} | 烘烤開始`)
                 // .setDescription(`已開始烘烤 \`${parsedAmount}\` 個 \`${name[item_id]}\`，預計 \`${parsedDuration / 60}\` 分鐘後完成`);
                 .setTitle(`${emoji_drumstick} | 成功放進烤箱烘烤 ${parsedAmount} 個 ${name[item_id]}`)
@@ -492,7 +492,7 @@ module.exports = {
                 const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
                 const emoji_cross = await get_emoji(interaction.client, "crosS");
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 熔鍊會話已過期`)
                     .setDescription(`請重新執行熔鍊指令`);
 
@@ -526,7 +526,7 @@ module.exports = {
                 const emoji_cross = await get_emoji(interaction.client, "crosS");
                 const embed = new EmbedBuilder()
                     .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setDescription(`你缺少了 ${items.join("、")}`);
 
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
@@ -551,7 +551,7 @@ module.exports = {
 
             if (smelt_data[userId].length >= smelter_slots) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的煉金爐已經滿了`);
 
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
@@ -575,7 +575,7 @@ module.exports = {
             const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
             const emoji_furnace = await get_emoji(interaction.client, "furnace");
             const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 .setTitle(`${emoji_furnace} | 成功放進煉金爐內`)
                 .setDescription(`等待至 <t:${end_time}:R>`);
 

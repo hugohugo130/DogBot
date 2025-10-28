@@ -1,7 +1,7 @@
 const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, BaseInteraction, ChatInputCommandInteraction, Message } = require("discord.js");
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger } = require("../../utils/logger.js");
-const { prefix } = require("../../utils/config.js");
+const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { wait_until_ready } = require("../../utils/wait_until_ready.js");
 
 const max_hungry = 20;
@@ -149,52 +149,52 @@ const rpg_emojis = {
 
 const rpg_help = {
     herd: {
-        color: 0x00BBFF,
+        color: embed_default_color,
         title: "放牧",
         description: `放牧或屠宰動物`
     },
     mine: {
-        color: 0x00BBFF,
+        color: embed_default_color,
         title: "挖礦",
         description: `獲得礦石，可以與其他玩家交易`
     },
     hew: {
-        color: 0x00BBFF,
+        color: embed_default_color,
         title: "伐木",
         description: `獲得木頭，合成出的木材可以與其他物品製作成武器和防具`
     },
     fell: {
-        color: 0x00BBFF,
+        color: embed_default_color,
         title: "伐木",
         description: `獲得木頭，合成出的木材可以與其他物品製作成武器和防具`
     },
     wood: {
-        color: 0x00BBFF,
+        color: embed_default_color,
         title: "伐木",
         description: `獲得木頭，合成出的木材可以與其他物品製作成武器和防具`
     },
     shop: {
-        color: 0x00BBFF,
+        color: embed_default_color,
         title: "商店",
         description: `商店可以購買物品`
     },
     ls: {
-        color: 0x00BBFF,
+        color: embed_default_color,
         title: "查看背包",
         description: `查看背包中的物品`
     },
     buy: {
-        color: 0x00BBFF,
+        color: embed_default_color,
         title: "購買",
         description: `購買物品`
     },
     sell: {
-        color: 0x00BBFF,
+        color: embed_default_color,
         title: "出售",
         description: `出售物品`
     },
     cd: {
-        color: 0x00BBFF,
+        color: embed_default_color,
         title: "冷卻",
         description: `查看冷卻時間`
     },
@@ -248,7 +248,7 @@ async function get_cooldown_embed(remaining_time, client = global._client, actio
     const noun = action[1];
 
     const embed = new EmbedBuilder()
-        .setColor(0xF04A47)
+        .setColor(embed_error_color)
         .setTitle(`${emoji} | 你過勞了！`)
         .setDescription(`你今天${verb}了 \`${count}\` 次${noun}，等待到 ${time} 可以繼續${action.join("")}`);
     return setEmbedFooter(client, embed);
@@ -327,7 +327,7 @@ async function get_loophole_embed(client = global._client, text = null) {
     };
 
     const embed = new EmbedBuilder()
-        .setColor(0xF04A47)
+        .setColor(embed_error_color)
         .setTitle(`${emoji_cross} | 你戳到了一個漏洞！`)
         .setDescription(text);
 
@@ -340,7 +340,7 @@ async function ls_function({ client, message, rpg_data, data, args, mode, PASS }
 
         let embed = new EmbedBuilder()
             .setTitle(`${bag_emoji} | 查看包包`)
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setDescription(`為保護包包內容隱私權，戳這顆按鈕來看你的包包，隱私權設定可以透過 \`${prefix}privacy\` 指令更改`);
 
         embed = setEmbedFooter(client, embed);
@@ -402,7 +402,7 @@ async function ls_function({ client, message, rpg_data, data, args, mode, PASS }
 
     // 創建嵌入訊息
     const embed = new EmbedBuilder()
-        .setColor(0x00BBFF)
+        .setColor(embed_default_color)
         .setTitle(`${bag_emoji} | 你的背包`);
 
     setEmbedFooter(client, embed);
@@ -431,7 +431,7 @@ async function ls_function({ client, message, rpg_data, data, args, mode, PASS }
 
     // 如果背包是空的
     if (Object.keys(rpg_data.inventory || {}).length === 0) {
-        embed.setColor(0xF04A47);
+        embed.setColor(embed_error_color);
         embed.setTitle(`${bag_emoji} | 你的背包裡沒有任何東西`);
     };
 
@@ -510,7 +510,7 @@ const rpg_commands = {
             description = `在洞口處發現了 \`${show_amount}\` 個${ore_name}！`;
         };
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle(`${emoji} | 挖礦`)
             .setDescription(description);
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] };
@@ -542,7 +542,7 @@ const rpg_commands = {
         const emoji = await get_emoji(client, rpg_emojis["hew"]);
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle(`${emoji} | ${random_log === "god_log" ? "是神?!" : "平常的一天"}`)
             .setDescription(description);
 
@@ -577,7 +577,7 @@ const rpg_commands = {
         const description = `你宰了一隻${animal_name}，獲得了 \`${show_amount}\` 個${product_name}！`;
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle(`${emoji} | 是${animal_name}`)
             .setDescription(description);
 
@@ -599,7 +599,7 @@ const rpg_commands = {
 
         const emoji_potion = await get_emoji(client, "potion");
         let embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle(`${emoji_potion} | 釀造`)
             .setDescription(`你研究了許久，獲得了 \`${show_amount}\` 個${potion_name}`);
         // .setTitle(`${emoji_potion} | 回復藥水可以幹嘛?`)
@@ -659,7 +659,7 @@ const rpg_commands = {
 
         const emoji = await get_emoji(client, "fisher");
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle(`${emoji} | ${fish_text}`)
             .setDescription(description);
 
@@ -689,7 +689,7 @@ const rpg_commands = {
                 const item = Object.keys(name).find(key => name[key] === item_name); // 物品id
                 if (!Object.keys(name).includes(args[1]) && !Object.values(name).includes(args[1])) {
                     const embed = new EmbedBuilder()
-                        .setColor(0xF04A47)
+                        .setColor(embed_error_color)
                         .setTitle(`${emoji} | 未知的物品`);
 
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -702,7 +702,7 @@ const rpg_commands = {
                 if (amount < 1) {
                     const emoji = await get_emoji(client, "crosS");
                     const embed = new EmbedBuilder()
-                        .setColor(0xF04A47)
+                        .setColor(embed_error_color)
                         .setTitle(`${emoji} | 錯誤的數量`);
 
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -714,7 +714,7 @@ const rpg_commands = {
                 if (!price || price < 1 || price >= 1000000000) {
                     const emoji = await get_emoji(client, "crosS");
                     const embed = new EmbedBuilder()
-                        .setColor(0xF04A47)
+                        .setColor(embed_error_color)
                         .setTitle(`${emoji} | 錯誤的價格`);
 
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -724,7 +724,7 @@ const rpg_commands = {
                 if (price < shop_lowest_price[item]) {
                     const emoji = await get_emoji(client, "crosS");
                     const embed = new EmbedBuilder()
-                        .setColor(0xF04A47)
+                        .setColor(embed_error_color)
                         .setTitle(`${emoji} | 價格低於最低價格`)
                         .setDescription(`請至少販賣一件 \`${shop_lowest_price[item].toLocaleString()}$\``);
 
@@ -735,7 +735,7 @@ const rpg_commands = {
                 let inventory = rpg_data.inventory;
                 if (!inventory[item]) {
                     const embed = new EmbedBuilder()
-                        .setColor(0xF04A47)
+                        .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你沒有這個物品`);
 
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -744,7 +744,7 @@ const rpg_commands = {
 
                 if (inventory[item] < amount) {
                     const embed = new EmbedBuilder()
-                        .setColor(0xF04A47)
+                        .setColor(embed_error_color)
                         .setTitle(`${emoji} | 你沒有足夠的物品`);
 
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -770,7 +770,7 @@ const rpg_commands = {
                 price = shop_data.items[item].price;
                 save_shop_data(userid, shop_data);
                 const embed = new EmbedBuilder()
-                    .setColor(0x00BBFF)
+                    .setColor(embed_default_color)
                     .setTitle(`${emoji} | 成功上架`)
                     .setDescription(`你的店面狀態為: \`${status}\`，現在架上有 \`${amount.toLocaleString()}\` 個 \`${item_name}\`，售價為 \`${price.toLocaleString()}$\``);
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -784,7 +784,7 @@ const rpg_commands = {
                 const item = args[1];
                 if (!item) {
                     const embed = new EmbedBuilder()
-                        .setColor(0xF04A47)
+                        .setColor(embed_error_color)
                         .setTitle(`${emoji} | 請輸入要下架的物品`);
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
@@ -794,7 +794,7 @@ const rpg_commands = {
                 const item_exist = shop_data.items[item_id];
                 if (!item_exist) {
                     const embed = new EmbedBuilder()
-                        .setColor(0xF04A47)
+                        .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你的商店沒有這個物品`);
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
@@ -804,7 +804,7 @@ const rpg_commands = {
                 const amount = remove_amount ? parseInt(remove_amount) : shop_data.items[item_id].amount;
                 if (amount > shop_data.items[item_id].amount) {
                     const embed = new EmbedBuilder()
-                        .setColor(0xF04A47)
+                        .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你沒有足夠的物品`);
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
@@ -817,7 +817,7 @@ const rpg_commands = {
                 };
                 save_shop_data(userid, shop_data);
                 const embed = new EmbedBuilder()
-                    .setColor(0x00BBFF)
+                    .setColor(embed_default_color)
                     .setTitle(`${emoji} | 成功下架了 \`${amount.toLocaleString()}\` 個 ${item_name}`);
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -835,7 +835,7 @@ const rpg_commands = {
 
                 if (!shop_data.status && user.id != message.author.id) {
                     const embed = new EmbedBuilder()
-                        .setColor(0x00BBFF)
+                        .setColor(embed_default_color)
                         .setTitle(`${emoji_store} | 該商店目前已經打烊了`);
 
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -845,7 +845,7 @@ const rpg_commands = {
                 const status = shop_data.status ? "營業中" : "已打烊";
 
                 const embed = new EmbedBuilder()
-                    .setColor(0x00BBFF)
+                    .setColor(embed_default_color)
                     .setAuthor({
                         name: `${user.username} 的商店 (${status})`,
                         iconURL: user.displayAvatarURL({ dynamic: true })
@@ -890,7 +890,7 @@ const rpg_commands = {
                 shop_data.status = true;
                 save_shop_data(userid, shop_data);
                 const embed = new EmbedBuilder()
-                    .setColor(0x00BBFF)
+                    .setColor(embed_default_color)
                     .setTitle(`${emoji} | 你的商店開始營業啦！`);
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -904,7 +904,7 @@ const rpg_commands = {
                 shop_data.status = false;
                 save_shop_data(userid, shop_data);
                 const embed = new EmbedBuilder()
-                    .setColor(0x00BBFF)
+                    .setColor(embed_default_color)
                     .setTitle(`${emoji} | 你拉下了商店鐵捲門`);
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -916,7 +916,7 @@ const rpg_commands = {
                 const shop_data = load_shop_data(userid);
                 const status = shop_data.status ? "營業中" : "打烊";
                 const embed = new EmbedBuilder()
-                    .setColor(0x00BBFF)
+                    .setColor(embed_default_color)
                     .setTitle(`${emoji} | 你的商店狀態為: ${status}`);
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -952,7 +952,7 @@ const rpg_commands = {
         const target_user = message.mentions.users.first();
         if (!target_user) {
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 錯誤的使用者`)
                 .setDescription(`
 購買指令: hr!buy <用戶提及/id> <物品> <數量>
@@ -993,7 +993,7 @@ const rpg_commands = {
         const shop_data = load_shop_data(target_user.id);
         if (shop_data.items.length === 0) {
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 商店裡沒有販賣任何東西`);
 
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1001,7 +1001,7 @@ const rpg_commands = {
         };
         if (!item) {
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 這個物品是什麼？我不認識`);
 
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1009,7 +1009,7 @@ const rpg_commands = {
         };
         if (target_user.id === userid) {
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 不能購買自己的物品`);
 
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1017,7 +1017,7 @@ const rpg_commands = {
         };
         // if (target_user.bot) {
         //     const embed = new EmbedBuilder()
-        //         .setColor(0xF04A47)
+        //         .setColor(embed_error_color)
         //         .setTitle(`${emoji_cross} | 不能購買機器人的物品`)
         //         .setFooter({
         //             text: `哈狗機器人 ∙ 讓 Discord 不再只是聊天軟體`,
@@ -1028,7 +1028,7 @@ const rpg_commands = {
         // };
         // if (shop_data.status === false) {
         //     const embed = new EmbedBuilder()
-        //         .setColor(0xF04A47)
+        //         .setColor(embed_error_color)
         //         .setTitle(`${emoji_store} | 該商店目前已經打烊了`);
 
         //     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1038,7 +1038,7 @@ const rpg_commands = {
         const item_exist = shop_data.items[item];
         if (!Object.values(name).includes(item_name)) {
             // const embed = new EmbedBuilder()
-            //     .setColor(0xF04A47)
+            //     .setColor(embed_error_color)
             //     .setTitle(`${emoji_cross} | 這是什麼東西？`)
             //     .setFooter({
             //         text: `哈狗機器人 ∙ 讓 Discord 不再只是聊天軟體`,
@@ -1062,7 +1062,7 @@ const rpg_commands = {
             // return await message.reply(args);
 
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 沒有販賣這項物品`);
 
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1080,7 +1080,7 @@ const rpg_commands = {
         if (isNaN(amount)) amount = 1;
         if (amount <= 0 || amount > item_exist.amount) {
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 錯誤的數量`);
 
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1088,7 +1088,7 @@ const rpg_commands = {
         };
         if (rpg_data.money < item_exist.price * amount) {
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 歐不！你沒錢了！`)
                 .setDescription(`你還差 \`${(item_exist.price * amount - rpg_data.money).toLocaleString()}$\``);
 
@@ -1119,7 +1119,7 @@ const rpg_commands = {
         // save_shop_data(target_user.id, shop_data);
 
         // const embed = new EmbedBuilder()
-        //     .setColor(0x00BBFF)
+        //     .setColor(embed_default_color)
         //     .setTitle(`${emoji_store} | 購買成功`)
         //     .setDescription(`你購買了 ${item_name} \`x${amount.toLocaleString()}\`，花費 \`${(item_exist.price * amount).toLocaleString()}$\``);
 
@@ -1133,7 +1133,7 @@ const rpg_commands = {
         const extrainfo = shop_data.status ? "，\n請等待店主同意該交易。" : null;
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle(`${emoji_store} | 購買確認`)
             .setDescription(`
 ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買 ${targetUserMention} 的 ${item_name} \`x${amount.toLocaleString()}\`${extrainfo}
@@ -1177,7 +1177,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             .addComponents(button);
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setAuthor({
                 name: message.author.username,
                 iconURL: message.author.displayAvatarURL({ dynamic: true }),
@@ -1197,7 +1197,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const filtered_lastRunTimestamp = Object.fromEntries(Object.entries(lastRunTimestamp).filter(([command, time]) => rpg_cooldown[command]));
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle("⏲️ | 冷卻剩餘時間");
 
         if (Object.keys(filtered_lastRunTimestamp).length === 0) {
@@ -1224,7 +1224,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const filtered_lastRunTimestamp = Object.fromEntries(Object.entries(lastRunTimestamp).filter(([command, time]) => rpg_cooldown[command]));
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle("⏲️ | 冷卻剩餘時間");
 
         if (Object.keys(filtered_lastRunTimestamp).length === 0) {
@@ -1253,7 +1253,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         };
         if (target_user.id === message.author.id) {
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 不能自己付款給自己啊www`);
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
@@ -1261,7 +1261,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         args = args.filter(arg => arg !== `<@${target_user.id}>` && arg !== `<@!${target_user.id}>`);
         if (target_user.bot) {
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 不能付款給機器人 還是你要把你的錢錢丟進大海`);
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
@@ -1269,14 +1269,14 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const amount = args[0];
         if (isNaN(amount) || amount <= 0) {
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 錯誤的數量`);
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
         if (rpg_data.money < amount) {
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 歐不!`)
                 .setDescription(`你還差 \`${(amount - rpg_data.money).toLocaleString()}$\``);
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1297,7 +1297,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             .addComponents(confirmButton, cancelButton);
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle(`${emoji_top} | 確認付款`)
             .setDescription(`你確定要付款 \`${amount.toLocaleString()}$\` 給 <@${target_user.id}> ?`)
             .setFooter({ text: `此確認將在 30 秒後過期` });
@@ -1336,7 +1336,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             .addComponents(selectMenu);
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setAuthor({
                 name: client.user.globalName || client.user.username,
                 iconURL: client.user.displayAvatarURL({ dynamic: true }),
@@ -1349,7 +1349,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         // const emoji_shield = await get_emoji(client, "shield");
 
         // const embed = new EmbedBuilder()
-        //     .setColor(0x00BBFF)
+        //     .setColor(embed_default_color)
         //     .setTitle(`${emoji_shield} | 隱私權設定`)
         //     .setDescription(`你確定要設定隱私權嗎？`);
 
@@ -1384,7 +1384,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle(`${emoji_shield} | 隱私權設定`)
             .setDescription(`
 為保護每個人的隱私，可以透過下拉選單來設定 **允許被公開的** 資訊
@@ -1446,7 +1446,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
             const embed = new EmbedBuilder()
                 .setTitle(`${emoji_cross} | 太懶了辣！`)
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 .setThumbnail("https://cdn.discordapp.com/emojis/1368436829371764867.webp?size=96")
                 .setDescription("你太懶了，所以我不給你用!lazy了 owo");
 
@@ -1477,7 +1477,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             let amount = get_amount(food_id, user, args[1]);
             if (amount < 1) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 錯誤的數量`);
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1486,7 +1486,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
             if (!foods[food_id]) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 這啥東西？不能吃欸`);
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1510,7 +1510,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
             if ((rpg_data.hungry + add) > max_hungry) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你已經吃太飽了`);
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1524,7 +1524,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
                 newadd = add * amount;
 
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你會吃太飽撐死!`)
                     .setDescription(`你想吃掉\`${old_amount.toLocaleString()}\` 個 \`${food_name}\` \n但你最多只能吃掉 \`${amount}\` 個 \`${food_name}\``);
 
@@ -1533,7 +1533,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
             if (!rpg_data.inventory[food_id]) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你沒有這個食物`);
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1545,7 +1545,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             save_rpg_data(userid, rpg_data);
 
             const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 .setTitle(`${drumstick_emoji} | 成功進食`)
                 .setDescription(`你吃下了 \`${amount}\` 個 \`${food_name}\`，你的體力值增加到了 \`${rpg_data.hungry}\``);
 
@@ -1555,7 +1555,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             return await message.reply({ embeds });
         } else {
             const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 .setTitle(`${drumstick_emoji} | 可以吃的東西`)
                 .setDescription(`體力值: ${rpg_data.hungry} / ${max_hungry} 點`);
 
@@ -1585,7 +1585,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
                 Object.keys(fish_items).length === 0
             ) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你沒有任何食物`);
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
@@ -1624,7 +1624,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             const emoji_cross = await get_emoji(client, "crosS");
 
             let embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 未知的物品`);
 
             embed = setEmbedFooter(client, embed);
@@ -1637,7 +1637,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             const emoji_cross = await get_emoji(client, "crosS");
 
             let embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你沒有這個物品哦`);
 
             embed = setEmbedFooter(client, embed);
@@ -1651,7 +1651,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             const emoji_cross = await get_emoji(client, "crosS");
 
             let embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你沒有這麼多的物品哦`);
 
             embed = setEmbedFooter(client, embed);
@@ -1684,7 +1684,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const emoji_trade = await get_emoji(client, "trade");
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle(`${emoji_trade} | 出售確認`)
             .setDescription(`你將要出售 \`${amount.toLocaleString()}\` 個 \`${item_name}\`，共獲得 \`${(price * amount).toLocaleString()}$\``);
 
@@ -1696,7 +1696,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
     //     const attachment = new AttachmentBuilder(`./f_images/cmdBlock.webp`, { name: "cmdBlock.webp" });
     //     const embed = new EmbedBuilder()
-    //         .setColor(0x00BBFF)
+    //         .setColor(embed_default_color)
     //         .setTitle(`⚙️ | 選擇指令`)
     //         .setDescription("PS: 需要參數的指令不行哦！")
     //         .setThumbnail("attachment://cmdBlock.webp");
@@ -1739,7 +1739,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const emoji_top = await get_emoji(client, "top");
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle(`${emoji_top} | 金錢排行榜 Top 10`)
 
         let description = "";
@@ -1783,7 +1783,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const emoji_decrease = await get_emoji(client, "decrease");
 
         const embed = new EmbedBuilder()
-            .setColor(0x00BBFF)
+            .setColor(embed_default_color)
             .setTitle(`${emoji_decrease} | 「倒數」金錢排行榜 Top 10`)
 
         let description = "";
@@ -1962,7 +1962,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         const similarCommands = commands.filter(cmd => cmd.startsWith(firstChar));
 
         const embed = new EmbedBuilder()
-            .setColor(0xF04A47)
+            .setColor(embed_error_color)
             .setTitle(`${cross_emoji} | 是不是打錯指令了？我找到了你可能想要的指令`);
 
         if (similarCommands.length === 0) {
@@ -2008,7 +2008,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
             const embed = setEmbedFooter(client, new EmbedBuilder()
                 .setTitle(`${emoji_cross} | 你的體力不足了！`)
-                .setColor(0xF04A47));
+                .setColor(embed_error_color));
 
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
@@ -2079,7 +2079,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             const emoji_cross = await get_emoji(client, "crosS");
 
             const embed = new EmbedBuilder()
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你已經餓到沒有食物可以吃了！請先補充食物！`);
 
             if (mode === 1) return { embeds: [embed] };
