@@ -297,7 +297,7 @@ module.exports = {
 
             await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
         } else if (interaction.customId.startsWith('buy') || interaction.customId.startsWith('buyc')) {
-            const { get_emoji, remove_money, add_money } = require("./msg_handler.js");
+            const { get_emoji, remove_money, add_money, setEmbedFooter } = require("./msg_handler.js");
             const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data } = require("../../utils/file.js");
             const { get_name_of } = require("../../utils/rpg.js");
 
@@ -313,6 +313,14 @@ module.exports = {
             const buyerRPGData = load_rpg_data(buyerUserId);
             const targetUserRPGData = load_rpg_data(targetUserId);
             const targetUserShopData = load_shop_data(targetUserId);
+
+            if (!targetUserShopData[item]) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 沒有販賣這個物品`);
+
+                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
+            };
 
             if (targetUserShopData[item].amount < amount) {
                 const embed = new EmbedBuilder()
