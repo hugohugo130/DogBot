@@ -121,7 +121,17 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
     });
 };
 
+/**
+ * 
+ * @param {number | null} depth 
+ * @returns {string}
+ */
 function getCallerModuleName(depth = 4) {
+    if (!depth) {
+        const err = new Error();
+        return err.stack || err;
+    };
+
     let res = 'unknown';
     try {
         const err = new Error();
