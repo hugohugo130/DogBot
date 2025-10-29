@@ -61,7 +61,7 @@ function stringify(data, replacer = "") {
 };
 
 function readSync(path) {
-    return fs.readFile(path, {
+    return fs.readFileSync(path, {
         encoding: "utf-8",
     });
 };
@@ -301,7 +301,7 @@ function load_rpg_data(userid) {
     };
 };
 
-function save_rpg_data(userid, userData) {
+function save_rpg_data(userid, rpgdata) {
     const { rpg_database_file } = require("./config.js");
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
@@ -315,7 +315,7 @@ function save_rpg_data(userid, userData) {
         data[userid] = rpg_emptyeg;
     };
 
-    data[userid] = { ...data[userid], ...userData };
+    data[userid] = { ...data[userid], ...rpgdata };
 
     // 檢查並清理 inventory 中數量為 0 或 null 的物品
     if (data[userid].inventory) {
@@ -351,7 +351,7 @@ function load_shop_data(userid) {
     };
 };
 
-function save_shop_data(userid, userData) {
+function save_shop_data(userid, shop_data) {
     const { rpg_shop_file } = require("./config.js");
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
 
@@ -365,7 +365,7 @@ function save_shop_data(userid, userData) {
         data[userid] = shop_emptyeg;
     };
 
-    data[userid] = { ...data[userid], ...userData };
+    data[userid] = { ...data[userid], ...shop_data };
 
     // 清除數量為0的物品
     if (data[userid].items) {
@@ -379,6 +379,16 @@ function save_shop_data(userid, userData) {
     data[userid] = order_data(data[userid], shop_emptyeg);
 
     writeJsonSync(rpg_shop_file, data);
+};
+
+function load_bake_data() {
+    const { bake_data_file } = require("./config.js");
+    return readJsonSync(bake_data_file);
+};
+
+function save_bake_data(data) {
+    const { bake_data_file } = require("./config.js");
+    writeJsonSync(bake_data_file, data);
 };
 
 module.exports = {
@@ -413,4 +423,6 @@ module.exports = {
     save_rpg_data,
     load_shop_data,
     save_shop_data,
+    load_bake_data,
+    save_bake_data,
 };
