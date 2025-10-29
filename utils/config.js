@@ -12,6 +12,7 @@ const DATABASE_FILES = [
     "database.json",
     "rpg_database.json",
     "rpg_shop.json",
+    "bake_db.json",
     "serverIP.json",
 ];
 
@@ -30,6 +31,7 @@ const DEFAULT_VALUES = {
             "status": false,
             "items": {},
         },
+        "bake_db.json": [],
     },
     "single": {
         "serverIP.json": {
@@ -48,11 +50,13 @@ const onlineDB_Files = [
     "database.json",
     "rpg_database.json",
     "rpg_shop.json",
+    "bake_db.json",
 ];
 
 const database_file = join(database_folder, "database.json")
 const rpg_database_file = join(database_folder, "rpg_database.json");
 const rpg_shop_file = join(database_folder, "rpg_database.json");
+const bake_data_file = join(database_folder, "./bake_db.json");
 const serverIPFile = join(database_folder, "serverIP.json");
 
 const cogsFolder = `${cwd()}/cogs`
@@ -92,6 +96,7 @@ module.exports = {
     database_file,
     rpg_database_file,
     rpg_shop_file,
+    bake_data_file,
     serverIPFile,
     DEFAULT_VALUES,
     BETA,
