@@ -1,3 +1,7 @@
+const { get_logger, getCallerModuleName } = require("./logger.js");
+
+const logger = get_logger();
+
 const mine_gets = {
     coal: "coal",
     diamond_ore: "diamond_ore",
@@ -811,7 +815,16 @@ function check_item_data() {
 };
 
 function get_name_of(id, default_value = id) {
+    logger.warn(`[get_name_of] [DEPRECAETD] use get_name_of_id instead. Called from\n${getCallerModuleName(null)}`);
+    return get_name_of_id(id, default_value);
+};
+
+function get_name_of_id(id, default_value = id) {
     return name[id] || default_value;
+};
+
+function get_id_of_name(id, default_value = id) {
+    return name_reverse[id] || default_value;
 };
 
 function get_number_of_items(name, userid) {
@@ -858,6 +871,8 @@ module.exports = {
     sell_data,
     check_item_data,
     get_name_of,
+    get_name_of_id,
+    get_id_of_name,
     get_number_of_items,
     oven_slots,
     smelter_slots,
