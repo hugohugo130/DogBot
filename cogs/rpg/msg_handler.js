@@ -53,12 +53,12 @@ class MockMessage {
 
 function get_number_of_items(name, userid) {
     const { load_rpg_data } = require("../../utils/file.js");
-    const { get_name_of } = require("../../utils/rpg.js");
+    const { get_name_of_id } = require("../../utils/rpg.js");
     const rpg_data = load_rpg_data(userid);
     const items = rpg_data.inventory;
 
     // 如果輸入的是中文名稱，找到對應的英文key
-    let item_key = get_name_of(name);
+    let item_key = get_name_of_id(name);
 
     if (!item_key) return 0;
 
@@ -507,6 +507,7 @@ const rpg_commands = {
         } else {
             description = `在洞口處發現了 \`${show_amount}\` 個${ore_name}！`;
         };
+
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${emoji} | 挖礦`)
@@ -666,7 +667,7 @@ const rpg_commands = {
     }],
     shop: ["商店", "對你的商店進行任何操作", async function ({ client, message, rpg_data, data, args, mode }) {
         const { load_shop_data, save_shop_data, save_rpg_data } = require("../../utils/file.js");
-        const { name, mine_gets, ingots, foods, shop_lowest_price, get_name_of } = require("../../utils/rpg.js");
+        const { name, mine_gets, ingots, foods, shop_lowest_price, get_name_of_id } = require("../../utils/rpg.js");
         const subcommand = args[0];
         switch (subcommand) {
             case "add": {
@@ -681,7 +682,7 @@ const rpg_commands = {
                 範例2: shop add diamond_ore 2 600
                 */
                 let [_, item_name, amount, price] = args;
-                item_name = get_name_of(item_name); // 物品名稱
+                item_name = get_name_of_id(item_name); // 物品名稱
                 const item = Object.keys(name).find(key => name[key] === item_name); // 物品id
 
                 if (amount === "all") amount = get_number_of_items(item, userid); // 獲取所有物品數量
@@ -888,6 +889,7 @@ const rpg_commands = {
                 const shop_data = load_shop_data(userid);
                 shop_data.status = true;
                 save_shop_data(userid, shop_data);
+
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
                     .setTitle(`${emoji} | 你的商店開始營業啦！`);
@@ -954,8 +956,8 @@ const rpg_commands = {
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 錯誤的使用者`)
                 .setDescription(`
-購買指令: hr!buy <用戶提及/id> <物品> <數量>
-範例: hr!buy @Hugo哈狗 鐵礦 10`
+購買指令: buy <用戶提及/id> <物品> <數量>
+範例: buy @Hugo哈狗 鐵礦 10`
                 );
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
@@ -1129,13 +1131,12 @@ const rpg_commands = {
         const targetUserMention = target_user.toString();
         const total_price = (item_exist.price * amount).toLocaleString();
         const pricePerOne = item_exist.price.toLocaleString();
-        const extrainfo = shop_data.status ? "，\n請等待店主同意該交易。" : null;
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${emoji_store} | 購買確認`)
             .setDescription(`
-${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買 ${targetUserMention} 的 ${item_name} \`x${amount.toLocaleString()}\`${extrainfo}
+${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買 ${targetUserMention} 的 ${item_name} \`x${amount.toLocaleString()}\`${shop_data.status ? "" : "，\n請等待店主同意該交易。"}
 
 請確認價格和商店正確，我們不處理購買糾紛，
 如果價格有誤請和賣家確認好。`);
@@ -1143,7 +1144,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const confirmButton = new ButtonBuilder()
             .setCustomId(`buy|${message.author.id}|${target_user.id}|${amount}|${item_exist.price}|${item}`)
             .setLabel('確認購買')
-            .setDisabled(Boolean(extrainfo))
+            .setDisabled(!shop_data.status)
             .setStyle(ButtonStyle.Success);
 
         const cancelButton = new ButtonBuilder()
@@ -1154,7 +1155,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const row = new ActionRowBuilder()
             .addComponents(confirmButton, cancelButton);
 
-        if (extrainfo) {
+        if (!shop_data.status) {
             const solderConfirmButton = new ButtonBuilder()
                 .setCustomId(`buyc|${target_user.id}|${target_user.id}|${amount}|${item_exist.price}|${item}`)
                 .setLabel('店主確認')
