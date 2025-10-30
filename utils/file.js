@@ -76,6 +76,8 @@ function writeSync(path, data, p = false) {
         mkdirSync(dir, { recursive: true });
     };
 
+    if (typeof data !== "string") logger.warn(`[writeSync] gave a ${typeof data} instead of string. Called from\n${getCallerModuleName(null)}`);
+
     fs.writeFileSync(path, data);
 };
 
