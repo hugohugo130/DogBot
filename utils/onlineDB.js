@@ -150,31 +150,31 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
                 if (!isDeepStrictEqual(localContent, remoteContent)) {
                     let answer;
                     do {
-                        logger.info("=".repeat(30));
-                        logger.info(`檔案 ${filename} 內容不同:`);
-                        logger.info('1. 上載本地檔案到遠端');
-                        logger.info('2. 下載遠端檔案到本地');
-                        logger.info('3. 不做任何事');
-                        logger.info('4. 查看本地檔案內容')
-                        logger.info('5. 查看遠端檔案內容')
+                        console.log("=".repeat(30));
+                        console.log(`檔案 ${filename} 內容不同:`);
+                        console.log('1. 上載本地檔案到遠端');
+                        console.log('2. 下載遠端檔案到本地');
+                        console.log('3. 不做任何事');
+                        console.log('4. 查看本地檔案內容')
+                        console.log('5. 查看遠端檔案內容')
 
                         answer = await rl.question('請選擇操作 (1/2/3/4/5): ');
                         switch (answer.trim()) {
                             case '4':
-                                logger.info(localContent);
+                                console.log(localContent);
                                 break;
                             case '5':
-                                logger.info(remoteContent);
+                                console.log(remoteContent);
                                 break;
                             default:
                                 break;
                         };
                         if (!['1', '2', '3', '4', '5'].includes(answer.trim())) {
-                            logger.info('請輸入有效的選項 (1/2/3/4/5)');
+                            console.log('請輸入有效的選項 (1/2/3/4/5)');
                         };
                     } while (!['1', '2', '3'].includes(answer.trim()));
 
-                    logger.info(`已選擇: ${answer.trim()}`);
+                    console.log(`已選擇: ${answer.trim()}`);
                     switch (answer.trim()) {
                         case '1':
                             await onlineDB_uploadFile(filename);
@@ -183,7 +183,7 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
                             await onlineDB_downloadFile(filename);
                             return true;
                         case '3':
-                            logger.info('未進行任何操作');
+                            console.log('未進行任何操作');
                             return true;
                     };
                 };
