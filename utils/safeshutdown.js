@@ -38,7 +38,7 @@ async function safeshutdown(client) {
         await shutdown(true, 200);
 
     } finally {
-        await client.destroy();
+        if (client?.destroy) await client.destroy();
         process.exit();
     }
 };
