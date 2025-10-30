@@ -2,9 +2,11 @@ const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
 
-const { INDENT, DATABASE_FILES, DEFAULT_VALUES } = require("./config.js");
+const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder } = require("./config.js");
 const { get_logger } = require("./logger.js");
 const { sleep } = require("./sleep.js");
+const { isDeepStrictEqual } = require("node:util");
+const { Logger } = require("winston");
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
@@ -26,7 +28,7 @@ function readFileSync(file_path, options = null) {
     const filename = path.basename(file_path);
 
     if (!existsSync(file_path) && DATABASE_FILES.includes(filename)) {
-        if (options?.return) return options.return;
+        if (typeof options === 'object' && options?.return) return options.return;
 
         const default_value = DEFAULT_VALUES.single[filename]
         const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
@@ -129,6 +131,20 @@ function readScheduleSync() {
     ];
 };
 
+/**
+ * 
+ * @param {string} filename 
+ * @returns {string}
+ */
+function join_db_folder(filename) {
+    const basename = path.basename(filename);
+    return join(database_folder, basename);
+};
+
+/**
+ * 
+ * @returns {Promise<{everysec: string[], everymin: string[]}>}
+ */
 async function readSchedule() {
     const { scheduleEverysec, scheduleEverymin } = require("./config.js");
     const everysec = await readdir(scheduleEverysec, { recursive: true })
@@ -144,6 +160,51 @@ async function readSchedule() {
         everysec,
         everymin,
     };
+};
+
+/**
+ * 
+ * @param {string} filename 
+ * @param {Logger} log 
+ * @param {number} maxRetries 
+ * @returns {Promise<{same: boolean, localContent: string, remoteContent: string}>}
+ */
+function compareLocalRemote(filename, log = logger, maxRetries = 3) {
+    let localContent;
+    let remoteContent;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+            localContent = readFileSync(join_db_folder(filename), {
+                encoding: "utf8",
+                return: null,
+            });
+        } catch (err) {
+            log.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
+            continue;
+        };
+
+        try {
+            remoteContent = readFileSync(filename, {
+                encoding: "utf8",
+                return: null,
+            });
+        } catch (err) {
+            if (err.response?.status === 404) {
+                log.error(`遠端檔案不存在: ${filename}`);
+            } else if (err.stack.includes("socket hang up")) continue;
+            else {
+                log.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
+                continue;
+            };
+
+            remoteContent = null;
+        };
+
+        break;
+    };
+
+    return [localContent && remoteContent && isDeepStrictEqual(localContent, remoteContent), localContent, remoteContent];
 };
 
 /**
@@ -409,6 +470,7 @@ module.exports = {
     full_path,
     dirname,
     // tools
+    compareLocalRemote,
     find_default_value,
     order_data,
     // database
