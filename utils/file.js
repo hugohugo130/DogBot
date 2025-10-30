@@ -470,6 +470,7 @@ module.exports = {
     full_path,
     dirname,
     // tools
+    join_db_folder,
     compareLocalRemote,
     find_default_value,
     order_data,
