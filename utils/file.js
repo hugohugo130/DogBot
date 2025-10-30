@@ -62,12 +62,6 @@ function stringify(data, replacer = "") {
     return JSON.stringify(data, replacer, INDENT);
 };
 
-function readSync(path) {
-    return fs.readFileSync(path, {
-        encoding: "utf-8",
-    });
-};
-
 function writeSync(path, data, p = false) {
     if (path.endsWith(".json") && !p) return writeJsonSync(path, data);
 
@@ -99,7 +93,7 @@ async function write(path, data, p = false) {
 };
 
 function readJsonSync(path) {
-    return JSON.parse(readSync(path));
+    return JSON.parse(readFileSync(path));
 };
 
 function writeJsonSync(path, data, replacer = "") {
@@ -206,7 +200,7 @@ function loadData(guildID = null, mode = 0) {
     const database_emptyeg = find_default_value("database.json", {});
 
     if (fs.existsSync(database_file)) {
-        const rawData = fs.readFileSync(database_file);
+        const rawData = readFileSync(database_file);
         let data = JSON.parse(rawData);
 
         if (mode == 0 && guildID) {
@@ -236,7 +230,7 @@ function saveData(guildID, guildData) {
     let data = {};
 
     if (fs.existsSync(database_file)) {
-        const rawData = fs.readFileSync(database_file);
+        const rawData = readFileSync(database_file);
         data = JSON.parse(rawData);
     };
 
@@ -290,7 +284,7 @@ function load_rpg_data(userid) {
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     if (fs.existsSync(rpg_database_file)) {
-        const rawData = fs.readFileSync(rpg_database_file);
+        const rawData = readFileSync(rpg_database_file);
         const data = JSON.parse(rawData);
 
         if (!data[userid]) {
@@ -311,7 +305,7 @@ function save_rpg_data(userid, rpgdata) {
 
     let data = {};
     if (fs.existsSync(rpg_database_file)) {
-        const rawData = fs.readFileSync(rpg_database_file);
+        const rawData = readFileSync(rpg_database_file);
         data = JSON.parse(rawData);
     };
 
@@ -340,7 +334,7 @@ function load_shop_data(userid) {
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
 
     if (fs.existsSync(rpg_shop_file)) {
-        const rawData = fs.readFileSync(rpg_shop_file);
+        const rawData = readFileSync(rpg_shop_file);
         const data = JSON.parse(rawData);
 
         if (!data[userid]) {
@@ -361,7 +355,7 @@ function save_shop_data(userid, shop_data) {
 
     let data = {};
     if (fs.existsSync(rpg_shop_file)) {
-        const rawData = fs.readFileSync(rpg_shop_file);
+        const rawData = readFileSync(rpg_shop_file);
         data = JSON.parse(rawData);
     };
 
@@ -396,7 +390,7 @@ function save_bake_data(data) {
 };
 
 module.exports = {
-    readSync,
+    readFileSync,
     writeSync,
     read,
     write,
@@ -405,7 +399,6 @@ module.exports = {
     readJson,
     writeJson,
     existsSync,
-    readFileSync,
     readdirSync,
     readdir,
     mkdirSync,
