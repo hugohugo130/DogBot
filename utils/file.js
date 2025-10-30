@@ -19,13 +19,15 @@ const logger = get_logger();
 /**
  * 
  * @param {fs.PathOrFileDescriptor} file_path 
- * @param {{encoding?: null | undefined, flag?: string | undefined} | null} options 
+ * @param {{encoding?: null | undefined, flag?: string | undefined, return?: any | undefined} | null} options 
  * @returns {NonSharedBuffer}
  */
 function readFileSync(file_path, options = null) {
-    const filename = path.basename(file_path)
+    const filename = path.basename(file_path);
 
     if (!existsSync(file_path) && DATABASE_FILES.includes(filename)) {
+        if (options?.return) return options.return;
+
         const default_value = DEFAULT_VALUES.single[filename]
         const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
             return acc || category[filename];

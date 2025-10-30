@@ -116,7 +116,9 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
             // 讀取本地檔案內容
             let localContent;
             try {
-                localContent = readFileSync(join_db_folder(filename), 'utf8');
+                localContent = readFileSync(join_db_folder(filename), {
+                    return: null,
+                });
             } catch (err) {
                 logger.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
                 localContent = null;
