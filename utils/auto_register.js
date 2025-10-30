@@ -28,7 +28,7 @@ function get_hash_of_datas(file_datas) {
 async function read_all_files_in_dir(dir) {
     const files = (await readdir(dir, {
         recursive: true,
-    })).filter(file => file.endsWith(".js"));
+    })).filter(file => file.endsWith(".js")).sort(); // 排序確保順序一致
 
     const file_datas = [];
 
@@ -42,6 +42,7 @@ async function read_all_files_in_dir(dir) {
 };
 
 /**
+ * 檢查是否需要註冊命令（不會更新 hash 文件）
  * @returns {Promise<boolean>}
  */
 async function should_register_cmd() {
@@ -59,17 +60,29 @@ async function should_register_cmd() {
         if (DEBUG) console.debug(`length(${length}) !== length_new(${length_new}): ${length !== length_new}`)
         if (DEBUG) console.debug(`hash(${hash}) !== hash_new(${hash_new}): ${hash !== hash_new}`);
         if (DEBUG) console.debug(`res: ${res}`)
-        if (res) await write(auto_register_cmd_file, `${length_new}|${hash_new}`);
         return res;
     } else {
-        const file_datas = await read_all_files_in_dir("slashcmd");
-        const [length, hash] = get_hash_of_datas(file_datas);
-        await write(auto_register_cmd_file, `${length}|${hash}`);
+        // 文件不存在時，需要註冊
         return true;
     };
+};
+
+/**
+ * 更新 hash 文件（應在成功註冊命令後調用）
+ * @returns {Promise<void>}
+ */
+async function update_cmd_hash() {
+    const { auto_register_cmd_file } = require("./config.js");
+    
+    const file_datas = await read_all_files_in_dir("slashcmd");
+    const [length, hash] = get_hash_of_datas(file_datas);
+    await write(auto_register_cmd_file, `${length}|${hash}`);
+    
+    if (DEBUG) console.debug(`已更新 hash 文件: ${length}|${hash}`);
 };
 
 
 module.exports = {
     should_register_cmd,
+    update_cmd_hash,
 }
