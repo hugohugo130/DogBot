@@ -26,5 +26,7 @@ fi
 
 RUN npm cache clean --force
 
+ENTRYPOINT [ "node", "utils/safeshutdown_exec.js" ]
+
 # 啟動
 CMD ["node", "--trace-deprecation", "--trace-warnings", "index.js"]
