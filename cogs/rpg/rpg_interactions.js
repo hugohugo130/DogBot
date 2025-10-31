@@ -371,9 +371,11 @@ module.exports = {
                 save_rpg_data
             } = require("../../utils/file.js");
             const { bake, name, oven_slots } = require("../../utils/rpg.js");
+            const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
 
             await interaction.deferUpdate();
 
+            // oven_bake|${userId}|${item_id}|${amount}|${coal_amount}|${duration}|${session_id}
             const [_, userId, item_id, amount, coal_amount, duration, session_id] = interaction.customId.split("|");
 
             // 確保所有數值都被正確解析為整數
@@ -395,6 +397,17 @@ module.exports = {
             };
 
             let rpg_data = load_rpg_data(userId)
+            let bake_data = load_bake_data();
+
+            if (bake_data[userId] && bake_data[userId].length >= oven_slots) {
+                const emoji_cross = get_emoji(client, "crosS");
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你的烤箱已經滿了`);
+
+                return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
+            };
 
             // ==================檢查物品==================
             let item_missing = [];
@@ -426,8 +439,7 @@ module.exports = {
 
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
             };
-            // ==================檢查物品==================
-
+            // ============================================
 
             for (const need_item of item_need) {
                 rpg_data.inventory[need_item.item] -= need_item.amount;
@@ -435,22 +447,12 @@ module.exports = {
 
             save_rpg_data(userId, rpg_data)
 
-            const output_item_id = bake[item_id];
-            const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
-
-            let bake_data = load_bake_data();
-
             if (!bake_data[userId]) {
                 bake_data[userId] = [];
             };
 
-            if (bake_data[userId].length >= oven_slots) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你的烤箱已經滿了`);
-
-                return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
-            };
+            const output_item_id = bake[item_id];
+            const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
 
             bake_data[userId].push({
                 userId,
@@ -466,12 +468,10 @@ module.exports = {
             // 清理 session 資料
             delete global.oven_sessions[session_id];
 
-            const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
             const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
+
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
-                // .setTitle(`${emoji_drumstick} | 烘烤開始`)
-                // .setDescription(`已開始烘烤 \`${parsedAmount}\` 個 \`${name[item_id]}\`，預計 \`${parsedDuration / 60}\` 分鐘後完成`);
                 .setTitle(`${emoji_drumstick} | 成功放進烤箱烘烤 ${parsedAmount} 個 ${name[item_id]}`)
                 .setDescription(`等待至 <t:${end_time}:R>`);
 

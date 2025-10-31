@@ -1,13 +1,15 @@
-const { readJson, writeJson, existsSync, join, find_default_value } = require("./file.js");
-const { database_folder, DATABASE_FILES, DEFAULT_VALUES } = require("./config.js");
+const { readJson, writeJson, existsSync, join, basename } = require("./file.js");
+const { database_folder, DATABASE_FILES, DEFAULT_VALUES, priorityUserIDs, priorityGuildIDs } = require("./config.js");
 const { get_logger } = require("./logger.js");
 const { wait_until_ready, client_ready } = require("./wait_until_ready.js");
 
 const logger = get_logger();
 
 async function checkDBFilesExists() {
-    for (const file of DATABASE_FILES) {
-        const defaultValue = find_default_value(file);
+    for (let file of DATABASE_FILES) {
+        file = basename(file);
+        const defaultValue = DEFAULT_VALUES?.single?.[file] || {};
+
         const filePath = join(database_folder, file);
         if (!existsSync(filePath) && defaultValue) {
             const default_value = await writeJson(filePath, defaultValue);
@@ -32,8 +34,8 @@ async function checkDBFilesDefault(client) {
 
     const guilds = (await Promise.all(guildArray.map(guild => guild.fetch())))
         .sort((a, b) => {
-            if (a.id === "1423961007729938556") return -1;
-            if (b.id === "1423961007729938556") return 1;
+            if (a.id.includes(priorityGuildIDs)) return -1;
+            if (b.id.includes(priorityGuildIDs)) return 1;
             if (a.id.length !== b.id.length) return a.id.length - b.id.length;
             return a.id.localeCompare(b.id);
         });
@@ -42,8 +44,8 @@ async function checkDBFilesDefault(client) {
         .flatMap(members => [...members.values()])
         .map(member => member.user)
         .sort((a, b) => {
-            if (a.id === "898836485397180426") return -1;
-            if (b.id === "898836485397180426") return 1;
+            if (a.id.includes(priorityUserIDs)) return -1;
+            if (b.id.includes(priorityUserIDs)) return 1;
             if (a.id.length !== b.id.length) return a.id.length - b.id.length;
             return a.id.localeCompare(b.id);
         });
