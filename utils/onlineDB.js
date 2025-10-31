@@ -2,18 +2,18 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const FormData = require('form-data');
-const { isDeepStrictEqual } = require("node:util");
 
 const { getServerIPSync } = require("./getSeverIPSync.js");
-const { onlineDB_Files, DATABASE_FILES, database_folder } = require("./config.js");
+const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
 const { get_logger } = require("./logger.js");
-const { readFileSync, join, existsSync, compareLocalRemote, join_db_folder } = require("./file.js");
+const { existsSync, compareLocalRemote, join_db_folder } = require("./file.js");
 const { get_areadline } = require("./readline.js");
 
 const { IP: serverIP, PORT } = getServerIPSync();
 const SERVER_URL = `http://${serverIP}:${PORT}`;
 
 const logger = get_logger();
+
 // 列出所有檔案
 async function onlineDB_listFiles() {
     try {
@@ -28,6 +28,7 @@ async function onlineDB_listFiles() {
 async function onlineDB_downloadFile(filename, savePath = null) {
     try {
         const res = await axios.get(`${SERVER_URL}/files/${filename}`, { responseType: 'stream' });
+
         if (savePath === null) savePath = join_db_folder(filename);
         const writer = fs.createWriteStream(savePath);
         res.data.pipe(writer);
@@ -35,6 +36,7 @@ async function onlineDB_downloadFile(filename, savePath = null) {
             writer.on('finish', resolve);
             writer.on('error', reject);
         });
+
         return savePath;
     } catch (err) {
         if (err.response.status === 404) {
@@ -105,8 +107,9 @@ async function onlineDB_deleteFile(filename) {
 
 async function onlineDB_checkFileContent(filename, maxRetries = 3) {
     const [same, localContent, remoteContent] = compareLocalRemote(filename, logger, maxRetries);
+    const rl = get_areadline();
 
-    if (same) {
+    if (!same) {
         let answer;
         do {
             console.log("=".repeat(30));
@@ -137,32 +140,34 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
         switch (answer.trim()) {
             case '1':
                 await onlineDB_uploadFile(filename);
-                return true;
+                return 1;
             case '2':
                 await onlineDB_downloadFile(filename);
-                return true;
+                return 2;
             case '3':
                 console.log('未進行任何操作');
-                return true;
+                return false;
         };
     } else if (localContent && !remoteContent) {
         logger.info(`遠端無 ${filename} 檔案，準備上載本地檔案`);
         await onlineDB_uploadFile(filename);
-        return true;
+        return 1;
     } else if (!localContent && remoteContent) {
         logger.info(`本地無 ${filename} 檔案，準備下載遠端檔案`);
         await onlineDB_downloadFile(filename);
-        return true;
+        return 2;
     };
 
-    return true;
+    return !same;
 };
 
 // === 批量檢查所有資料庫檔案 ===
 async function checkAllDatabaseFilesContent() {
     let executed = false;
+
     for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         const res = await onlineDB_checkFileContent(file);
+        logger.debug(`正在檢查資料庫檔案內容 - ${file} - ${res}`);
         if (!executed && res) executed = true;
     };
 
