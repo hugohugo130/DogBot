@@ -76,6 +76,9 @@ const prefix = "&";
 const enable_auto_register_cmd = true;
 const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
 
+const priorityUserIDs = ["898836485397180426", "1245902419750289538"];
+const priorityGuildIDs = ["1422545977226690683", "1218367644307034112"];
+
 /*
 https://discord.js.org/docs/packages/discord.js/14.24.0/ColorResolvable:TypeAlias
 - ColorResolvable -
@@ -116,4 +119,6 @@ module.exports = {
     auto_register_cmd_file,
     embed_default_color,
     embed_error_color,
+    priorityUserIDs,
+    priorityGuildIDs,
 };
