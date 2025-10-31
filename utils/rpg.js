@@ -801,15 +801,15 @@ function check_item_data() {
 
     for (const item_id of all_items) {
         if (!name[item_id]) {
-            console.warn(`[警告] 物品ID "${item_id}" 沒有對應的名稱`);
+            logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的名稱`);
         };
 
         if (!shop_lowest_price[item_id]) {
-            console.warn(`[警告] 物品ID "${item_id}" 沒有對應的最低上架價格`);
+            logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的最低上架價格`);
         };
 
         if (!sell_data[item_id]) {
-            console.warn(`[警告] 物品ID "${item_id}" 沒有對應的出售價格`);
+            logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的出售價格`);
         };
     };
 };
