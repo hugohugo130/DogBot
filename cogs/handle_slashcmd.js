@@ -1,6 +1,6 @@
 const { Events, EmbedBuilder, MessageFlags } = require('discord.js');
-const { get_logger } = require('../utils/logger');
-const { time } = require('../utils/time');
+const { get_logger } = require('../utils/logger.js');
+const { time } = require('../utils/time.js');
 
 
 function parseOptions(options) {
