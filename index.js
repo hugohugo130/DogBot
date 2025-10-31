@@ -66,6 +66,7 @@ client.once(Events.ClientReady, async () => {
 (async () => {
     client.last_send_log = "";
     global._client = null;
+    global.oven_sessions = {};
 
     await checkAllDatabaseFilesContent();
     check_item_data();
