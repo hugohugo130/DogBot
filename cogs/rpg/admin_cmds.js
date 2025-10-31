@@ -12,7 +12,7 @@ module.exports = {
     name: Events.MessageCreate,
     execute: async function (client, message) {
         const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-        const { get_name_of_id, get_id_of_name } = require("../../utils/rpg.js");
+        const { get_id_of_name } = require("../../utils/rpg.js");
 
         if (message.author.id !== "898836485397180426") return;
         if (!message.content.startsWith("!give ")) return;
