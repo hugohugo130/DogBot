@@ -96,10 +96,11 @@ module.exports = {
     async execute(interaction) {
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
+        const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
+        const { name, oven_slots } = require("../../../utils/rpg.js");
+        const { setEmbedFooter, get_emoji } = require("../../../cogs/rpg/msg_handler.js");
+
         if (subcommand === "bake") {
-            const { load_rpg_data, load_bake_data } = require("../../../utils/file.js");
-            const { name, oven_slots } = require("../../../utils/rpg.js");
-            const { setEmbedFooter, get_emoji } = require("../../../cogs/rpg/msg_handler.js");
             await interaction.deferReply();
 
             const emoji_cross = await get_emoji(interaction.client, "crosS");
@@ -137,12 +138,12 @@ module.exports = {
                 },
             ];
             let item_missing = [];
-
+            
             for (const need_item of item_need) {
                 const current_item_id = need_item.item;
                 const need_amount = need_item.amount;
                 const have_amount = (rpg_data.inventory[current_item_id] || 0);
-
+                
                 if (have_amount < need_amount) {
                     item_missing.push({
                         name: name[current_item_id] || need_item,
@@ -197,10 +198,6 @@ module.exports = {
 
             await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], components: [row] });
         } else if (subcommand === "info") {
-            const { load_bake_data } = require("../../../utils/file.js");
-            const { name, oven_slots, bake } = require("../../../utils/rpg.js");
-            const { setEmbedFooter, get_emoji } = require("../../../cogs/rpg/msg_handler.js");
-
             await interaction.deferReply();
 
             const bake_data = load_bake_data()[userId];
@@ -239,9 +236,6 @@ module.exports = {
 
             await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)] });
         } else if (subcommand === "get") {
-            const { load_bake_data, save_bake_data, load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
-            const { name } = require("../../../utils/rpg.js");
-            const { setEmbedFooter, get_emoji } = require("../../../cogs/rpg/msg_handler.js");
             await interaction.deferReply();
 
             const bake_data_all = load_bake_data();
