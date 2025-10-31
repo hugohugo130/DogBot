@@ -1,12 +1,12 @@
 const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
+const { isDeepStrictEqual } = require("node:util");
+const { Logger } = require("winston");
 
 const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder } = require("./config.js");
 const { get_logger } = require("./logger.js");
 const { sleep } = require("./sleep.js");
-const { isDeepStrictEqual } = require("node:util");
-const { Logger } = require("winston");
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
@@ -15,6 +15,7 @@ const mkdir = fsp.mkdir;
 const readdir = fsp.readdir;
 const join = path.join;
 const full_path = path.resolve;
+const basename = path.basename;
 const dirname = path.dirname;
 const logger = get_logger();
 
@@ -173,9 +174,11 @@ function compareLocalRemote(filename, log = logger, maxRetries = 3) {
     let localContent;
     let remoteContent;
 
+    filename = join_db_folder(filename);
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
-            localContent = readFileSync(join_db_folder(filename), {
+            localContent = readFileSync(filename, {
                 encoding: "utf8",
                 return: null,
             });
@@ -468,6 +471,7 @@ module.exports = {
     readSchedule,
     join,
     full_path,
+    basename,
     dirname,
     // tools
     join_db_folder,
