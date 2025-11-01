@@ -63,6 +63,17 @@ client.once(Events.ClientReady, async () => {
     });
 });
 
+// 處理 Docker 容器關閉信號
+process.on('SIGTERM', async () => {
+    logger.info('收到 SIGTERM 信號，準備安全關閉...');
+    await safeshutdown(client);
+});
+
+process.on('SIGINT', async () => {
+    logger.info('收到 SIGINT 信號，準備安全關閉...');
+    await safeshutdown(client);
+});
+
 (async () => {
     const split_line = "=".repeat(10);
 
