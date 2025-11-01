@@ -49,6 +49,9 @@ const client = new Client({
 
 const logger = get_logger();
 
+const split_line = "=".repeat(10);
+logger.info(`${split_line}機器人正在啟動....${split_line}`);
+
 client.setMaxListeners(Infinity);
 
 client.once(Events.ClientReady, async () => {
@@ -75,16 +78,12 @@ process.on('SIGINT', async () => {
 });
 
 (async () => {
-    const split_line = "=".repeat(10);
-
     client.last_send_log = "";
     global._client = null;
     global.oven_sessions = {};
 
     await checkAllDatabaseFilesContent();
     check_item_data();
-
-    logger.info(`${split_line}機器人正在啟動....${split_line}`);
 
     const cogs = load_cogs(client);
     logger.info(`已加載 ${cogs} 個程式碼`);
