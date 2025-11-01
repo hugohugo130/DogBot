@@ -2044,9 +2044,9 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             if (!rpg_data.lastRunTimestamp[cmd]) {
                 rpg_data.lastRunTimestamp[cmd] = 0;
             };
+            logger.debug(`count[${cmd}]: ${count[cmd]}`);
+            logger.debug(`lastRunTimestamp[cmd]: ${rpg_data.lastRunTimestamp[cmd]}`);
         };
-        logger.debug(`count[${cmd}]: ${count[cmd]}`);
-        logger.debug(`lastRunTimestamp[cmd]: ${rpg_data.lastRunTimestamp[cmd]}`);
 
         const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
         logger.debug(`is_finished: ${is_finished}`);
