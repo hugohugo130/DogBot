@@ -444,11 +444,11 @@ command_name: "{c} will be replaced with the command execution times"
 */
 const rpg_cooldown = {
     // 單位: 秒
-    mine: "150 + {c} * 30",
-    hew: "150 + {c} * 30",
-    herd: "150 + {c} * 30",
-    brew: "150 + {c} * 30",
-    fish: "150 + {c} * 30",
+    mine: "180 + {c} * 30",
+    hew: "180 + {c} * 30",
+    herd: "195 + {c} * 30",
+    brew: "145 + {c} * 25",
+    fish: "90 + {c} * 20",
 };
 
 const rpg_actions = {
