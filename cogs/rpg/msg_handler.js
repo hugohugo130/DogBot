@@ -2044,7 +2044,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             if (!rpg_data.lastRunTimestamp[cmd]) {
                 rpg_data.lastRunTimestamp[cmd] = 0;
             };
-            logger.debug(`count[${cmd}]: ${count[cmd]}`);
+            logger.debug(`count[${cmd}]: ${rpg_data.count[cmd]}`);
             logger.debug(`lastRunTimestamp[cmd]: ${rpg_data.lastRunTimestamp[cmd]}`);
         };
 
