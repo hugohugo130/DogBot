@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const { name, bake } = require("../../../utils/rpg.js");
+const { name, bake, oven_slots } = require("../../../utils/rpg.js");
 
 // 定義可烘烤的食材列表
 const bakeable_items = Object.fromEntries(
@@ -89,8 +89,14 @@ module.exports = {
             .addIntegerOption(option =>
                 option.setName("編號")
                     .setDescription("要取出的物品編號（1, 2, 3...）")
-                    .setRequired(true)
-                    .setMinValue(1),
+                    .setRequired(false)
+                    .setMinValue(1)
+                    .setMaxValue(oven_slots),
+            )
+            .addBooleanOption(option =>
+                option.setName("全部")
+                    .setDescription("取出所有烤好的食物")
+                    .setRequired(false),
             ),
         ),
     async execute(interaction) {
@@ -138,12 +144,12 @@ module.exports = {
                 },
             ];
             let item_missing = [];
-            
+
             for (const need_item of item_need) {
                 const current_item_id = need_item.item;
                 const need_amount = need_item.amount;
                 const have_amount = (rpg_data.inventory[current_item_id] || 0);
-                
+
                 if (have_amount < need_amount) {
                     item_missing.push({
                         name: name[current_item_id] || need_item,
@@ -252,36 +258,45 @@ module.exports = {
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
             };
 
-            const index = interaction.options.getInteger("編號") - 1;
-            if (index < 0 || index >= bake_data.length) {
+            const loop_times = interaction.options.getBoolean("全部") ? bake_data.length : 1;
+            const embeds = [];
+
+            for (let i = 0; i < loop_times; i++) {
+                const index = (interaction.options.getInteger("編號") ?? 1) - 1;
+
+                if (index < 0 || index >= bake_data.length) {
+                    const embed = new EmbedBuilder()
+                        .setColor(0xF04A47)
+                        .setTitle(`${emoji_cross} | 錯誤的物品編號`)
+                    return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                };
+
+                const item = bake_data[index];
+                const current_time = Math.floor(Date.now() / 1000);
+                if (current_time < item.end_time) {
+                    const embed = new EmbedBuilder()
+                        .setColor(0xF04A47)
+                        .setTitle(`${emoji_cross} | 烘烤還沒完成`)
+                    return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                };
+
+                // 將烘烤完成的物品加入背包
+                rpg_data.inventory[item.output_item_id] = (rpg_data.inventory[item.output_item_id] || 0) + item.amount;
+                // 從烤箱移除該物品
+                bake_data.splice(index, 1);
+                // 儲存資料
+                save_bake_data(bake_data_all);
+                save_rpg_data(userId, rpg_data);
+
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
-                    .setTitle(`${emoji_cross} | 錯誤的物品編號`)
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                    .setColor(0x00BBFF)
+                    .setTitle(`${emoji_drumstick} | 成功從烤箱取出了 ${name[item.output_item_id] || item.output_item_id}x${item.amount}`);
+
+                embeds.push(setEmbedFooter(interaction.client, embed));
+
             };
 
-            const item = bake_data[index];
-            const current_time = Math.floor(Date.now() / 1000);
-            if (current_time < item.end_time) {
-                const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
-                    .setTitle(`${emoji_cross} | 烘烤還沒完成`)
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
-            };
-
-            // 將烘烤完成的物品加入背包
-            rpg_data.inventory[item.output_item_id] = (rpg_data.inventory[item.output_item_id] || 0) + item.amount;
-            // 從烤箱移除該物品
-            bake_data.splice(index, 1);
-            // 儲存資料
-            save_bake_data(bake_data_all);
-            save_rpg_data(userId, rpg_data);
-
-            const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
-                .setTitle(`${emoji_drumstick} | 成功從烤箱取出了 ${name[item.output_item_id] || item.output_item_id}x${item.amount}`);
-
-            return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)] });
+            return interaction.editReply({ embeds });
         };
     },
 };
