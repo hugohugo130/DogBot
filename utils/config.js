@@ -21,7 +21,7 @@ const DEFAULT_VALUES = {
         "rpg_database.json": {
             "money": 1000,
             "hungry": 20,
-            "lastRunTimestamp": 0,
+            "lastRunTimestamp": {},
             "inventory": {},
             "transactions": [],
             "count": {},
