@@ -449,6 +449,7 @@ const rpg_cooldown = {
     herd: "195 + {c} * 30",
     brew: "145 + {c} * 25",
     fish: "90 + {c} * 20",
+    farm_water: "60 * 60 * 12" // 12小時
 };
 
 const rpg_actions = {
@@ -2111,6 +2112,8 @@ module.exports = {
         };
     },
     BetterEval,
+    rpg_cooldown,
+    rpg_work,
     rpg_commands,
     rpg_help,
     rpg_emojis,
