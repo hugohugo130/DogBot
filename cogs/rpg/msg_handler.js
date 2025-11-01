@@ -2045,7 +2045,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
                 rpg_data.lastRunTimestamp[cmd] = 0;
             };
             logger.debug(`count[${cmd}]: ${rpg_data.count[cmd]}`);
-            logger.debug(`lastRunTimestamp[cmd]: ${rpg_data.lastRunTimestamp[cmd]}`);
+            logger.debug(`lastRunTimestamp[${cmd}]: ${rpg_data.lastRunTimestamp[cmd]}`);
         };
 
         const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
@@ -2057,12 +2057,6 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             if (mode === 1) return { embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] };
             return await message.reply({ embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] });
         };
-
-        // 增加計數
-        rpg_data.count[command]++;
-
-        rpg_data.lastRunTimestamp[command] = Date.now();
-        save_rpg_data(userid, rpg_data);
     };
 
     logger.debug(`rpg_work.includes(${command}) && rpg_data.hungry(${rpg_data.hungry}) === 0: ${rpg_work.includes(command) && rpg_data.hungry === 0}`);
@@ -2095,6 +2089,21 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     };
 
     const result = await execute({ client, message, rpg_data, data, args, mode });
+    
+    // 指令執行成功後，更新冷卻時間和計數
+    if (rpg_cooldown[command]) {
+        const new_rpg_data = load_rpg_data(userid);
+        
+        // 增加計數
+        new_rpg_data.count[command]++;
+        
+        // 記錄執行時間
+        new_rpg_data.lastRunTimestamp[command] = Date.now();
+        
+        // 儲存更新後的資料
+        save_rpg_data(userid, new_rpg_data);
+    };
+    
     if (mode === 1) return result;
 };
 
