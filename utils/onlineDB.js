@@ -167,7 +167,7 @@ async function checkAllDatabaseFilesContent() {
 
     for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         const res = await onlineDB_checkFileContent(file);
-        logger.debug(`正在檢查資料庫檔案內容 - ${file} - ${res}`);
+        // logger.debug(`正在檢查資料庫檔案內容 - ${file} - ${res}`);
         if (!executed && res) executed = true;
     };
 
