@@ -1,4 +1,4 @@
-const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow } = require("discord.js");
 const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { get_logger } = require("../../utils/logger.js");
 
@@ -436,8 +436,14 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
                     .setColor(embed_error_color)
                     .setDescription(`你缺少了 ${items.join("、")}`);
+                
+                const TopLevelComponent = interaction.message.components;
+                if (TopLevelComponent instanceof ActionRow) {
+                    const components = TopLevelComponent.components;
+                    if (components.length === 2) components[0].setLabel("重試");
+                };
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], components: TopLevelComponent });
             };
             // ============================================
 
