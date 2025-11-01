@@ -67,6 +67,7 @@ module.exports = {
             const cmd = args.join(" ");
 
             try {
+                if (process.platform === "linux") {
                 message.reply(`執行指令: \`${cmd}\`\n請稍候...`);
 
                 const { stdout, stderr } = await execPromise(cmd, {
@@ -85,6 +86,9 @@ module.exports = {
                 }
 
                 return message.reply(response);
+            } else {
+                return message.reply("不支援的操作系統。");
+            }
             } catch (error) {
                 return message.reply(`**執行失敗:**\n\`\`\`\n${error.message}\`\`\``);
             };
