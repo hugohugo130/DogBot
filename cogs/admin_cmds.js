@@ -33,14 +33,11 @@ module.exports = {
             case "give":
                 await handleGiveCommand(message, commandArgs);
                 break;
-            
+
             case "run":
                 await handleRunCommand(message, commandArgs);
                 break;
-            
-            default:
-                return message.reply(`未知的指令: ${command}`);
-        }
+        };
 
         async function handleGiveCommand(message, args) {
             if (args.length < 3) {
@@ -60,7 +57,7 @@ module.exports = {
             save_rpg_data(user.id, rpg_data);
 
             return message.reply(`done adding user <@${user.id}> 's inventory: ${item}*${amount}`);
-        }
+        };
 
         async function handleRunCommand(message, args) {
             if (args.length === 0) {
@@ -68,21 +65,21 @@ module.exports = {
             }
 
             const cmd = args.join(" ");
-            
+
             try {
                 message.reply(`執行指令: \`${cmd}\`\n請稍候...`);
-                
+
                 const { stdout, stderr } = await execPromise(cmd, {
                     cwd: "/home/hugo/dogbot",
                     timeout: 30000 // 30秒超時
                 });
 
                 let response = "**執行結果:**\n";
-                
+
                 if (stdout) {
                     response += `\`\`\`\n${stdout.substring(0, 1800)}\`\`\``;
                 }
-                
+
                 if (stderr) {
                     response += `\n**錯誤輸出:**\n\`\`\`\n${stderr.substring(0, 1800)}\`\`\``;
                 }
@@ -90,7 +87,7 @@ module.exports = {
                 return message.reply(response);
             } catch (error) {
                 return message.reply(`**執行失敗:**\n\`\`\`\n${error.message}\`\`\``);
-            }
+            };
         }
     },
 }
