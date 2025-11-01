@@ -179,7 +179,7 @@ async function uploadAllDatabaseFiles() {
     for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         await onlineDB_uploadFile(file);
     };
-
+    
     return true;
 };
 
@@ -195,8 +195,15 @@ async function downloadDatabaseFile(src, dst = null) {
         const dstDir = path.dirname(dst);
         if (!existsSync(dstDir)) fs.mkdirSync(dstDir, { recursive: true });
     };
-
+    
     await onlineDB_downloadFile(src, dst);
+};
+
+async function downloadAllFiles() {
+    for (const filename of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
+        const res = await onlineDB_downloadFile(filename);
+        logger.debug(`downloaded ${filename}, saved to ${res}`);
+    };
 };
 
 async function uploadChangedDatabaseFiles() {
@@ -241,6 +248,7 @@ module.exports = {
     onlineDB_uploadFile,
     checkAllDatabaseFilesContent,
     uploadAllDatabaseFiles,
+    downloadAllFiles,
     downloadDatabaseFile,
     uploadChangedDatabaseFiles,
 }
