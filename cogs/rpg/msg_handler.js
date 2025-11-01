@@ -53,12 +53,12 @@ class MockMessage {
 
 function get_number_of_items(name, userid) {
     const { load_rpg_data } = require("../../utils/file.js");
-    const { get_name_of_id } = require("../../utils/rpg.js");
+    const { get_id_of_name } = require("../../utils/rpg.js");
     const rpg_data = load_rpg_data(userid);
     const items = rpg_data.inventory;
 
     // 如果輸入的是中文名稱，找到對應的英文key
-    let item_key = get_name_of_id(name);
+    let item_key = get_id_of_name(name);
 
     if (!item_key) return 0;
 
