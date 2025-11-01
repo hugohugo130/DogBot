@@ -78,6 +78,9 @@ process.on('SIGINT', async () => {
 });
 
 (async () => {
+    const { downloadAllFiles } = require('./utils/onlineDB.js');
+    // await downloadAllFiles();
+
     client.last_send_log = "";
     global._client = null;
     global.oven_sessions = {};
