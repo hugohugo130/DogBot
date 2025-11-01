@@ -2035,17 +2035,19 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             };
         };
 
-        for (const cmd of Object.keys(rpg_cooldown)) {
+        for (const cmd of rpg_work) {
             // 初始化計數器
             if (!rpg_data.count[cmd]) {
                 rpg_data.count[cmd] = 0;
             };
 
+            logger.debug(`!rpg_data.lastRunTimestamp[${cmd}]: ${!rpg_data.lastRunTimestamp[cmd]}`);
             if (!rpg_data.lastRunTimestamp[cmd]) {
+                logger.debug(`set rpg_data.lastRunTimestamp[${cmd}] to 0`);
                 rpg_data.lastRunTimestamp[cmd] = 0;
             };
             logger.debug(`count[${cmd}]: ${rpg_data.count[cmd]}`);
-            logger.debug(`lastRunTimestamp[cmd]: ${rpg_data.lastRunTimestamp[cmd]}`);
+            logger.debug(`rpg_data.lastRunTimestamp[${cmd}]: ${rpg_data.lastRunTimestamp[cmd]}`);
         };
 
         const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
