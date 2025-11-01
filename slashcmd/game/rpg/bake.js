@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const { name, bake, oven_slots } = require("../../../utils/rpg.js");
 
 // 定義可烘烤的食材列表
@@ -169,7 +169,7 @@ module.exports = {
                     .setColor(0xF04A47)
                     .setDescription(`你缺少了 ${items.join("、")}`);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };
 
             const embed = new EmbedBuilder()
@@ -255,7 +255,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(0xF04A47)
                     .setTitle(`${emoji_cross} | 你的烤箱是空的`);
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };
 
             const loop_times = interaction.options.getBoolean("全部") ? bake_data.length : 1;
@@ -268,7 +268,7 @@ module.exports = {
                     const embed = new EmbedBuilder()
                         .setColor(0xF04A47)
                         .setTitle(`${emoji_cross} | 錯誤的物品編號`)
-                    return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                    return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
                 };
 
                 const item = bake_data[index];
@@ -277,7 +277,7 @@ module.exports = {
                     const embed = new EmbedBuilder()
                         .setColor(0xF04A47)
                         .setTitle(`${emoji_cross} | 烘烤還沒完成`)
-                    return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                    return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
                 };
 
                 // 將烘烤完成的物品加入背包

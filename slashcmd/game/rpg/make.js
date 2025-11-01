@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require("discord.js");
 const { recipes, name } = require("../../../utils/rpg.js");
 
 module.exports = {
@@ -98,7 +98,7 @@ module.exports = {
                 .setColor(0xF04A47)
                 .setDescription(`你缺少了 ${items.join("、")}`);
 
-            return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+            return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
         };
 
         for (const need_item in item_need) {

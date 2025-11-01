@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const { smeltable_items, get_name_of_id, animal_products } = require("../../../utils/rpg.js");
 
 module.exports = {
@@ -121,7 +121,7 @@ module.exports = {
             const smelt_recipe = smeltable_items.find(item => item.input[0].item === item_id);
             if (!smelt_recipe) {
                 const embed = await get_loophole_embed(interaction.client, "找不到該熔鍊配方");
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             }
 
             if (allMats) {
@@ -168,7 +168,7 @@ module.exports = {
                     .setColor(0xF04A47)
                     .setDescription(`你缺少了 ${items.join("、")}`);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };
 
             const embed = new EmbedBuilder()
@@ -262,7 +262,7 @@ module.exports = {
                     .setColor(0xF04A47)
                     .setTitle(`${emoji_cross} | 你的煉金爐是空的`);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };
 
             const index = interaction.options.getInteger("編號") - 1;
@@ -271,7 +271,7 @@ module.exports = {
                     .setColor(0xF04A47)
                     .setTitle(`${emoji_cross} | 錯誤的物品編號`);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };
 
             const item = smelt_data[index];
@@ -282,7 +282,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 熔鍊還沒完成`)
                     .setFooter({ text: `等待至 <t:${item.end_time}:R>` });
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };
 
             // 將熔鍊完成的物品加入背包

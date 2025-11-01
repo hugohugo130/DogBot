@@ -437,7 +437,7 @@ module.exports = {
                     .setColor(embed_error_color)
                     .setDescription(`你缺少了 ${items.join("、")}`);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };
             // ============================================
 
@@ -537,7 +537,7 @@ module.exports = {
                     .setColor(embed_error_color)
                     .setDescription(`你缺少了 ${items.join("、")}`);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], ephemeral: true });
+                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };
             // ==================檢查物品==================
 
