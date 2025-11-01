@@ -64,6 +64,8 @@ client.once(Events.ClientReady, async () => {
 });
 
 (async () => {
+    const split_line = "=".repeat(10);
+
     client.last_send_log = "";
     global._client = null;
     global.oven_sessions = {};
@@ -71,7 +73,7 @@ client.once(Events.ClientReady, async () => {
     await checkAllDatabaseFilesContent();
     check_item_data();
 
-    logger.info("機器人正在啟動....");
+    logger.info(`${split_line}機器人正在啟動....${split_line}`);
 
     const cogs = load_cogs(client);
     logger.info(`已加載 ${cogs} 個程式碼`);
