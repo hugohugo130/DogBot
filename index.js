@@ -61,7 +61,7 @@ client.once(Events.ClientReady, async () => {
         if (input === "stop") {
             await safeshutdown(client);
         } else if (input === "logger") {
-            logger.log(`\n${loggerManager.keys().join("\n")}`);
+            logger.log(`\n${Object.keys(loggerManager).join("\n")}`);
         };
     });
 });
