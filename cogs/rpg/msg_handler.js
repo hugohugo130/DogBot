@@ -2107,7 +2107,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     };
 
     const {failed, random_item, amount} = get_random_result(command);
-    if (failed) {
+    if (failed && rpg_work.includes(command)) {
         if (mode === 1) return { embeds: [await get_failed_embed(client, random_item)] };
         return await message.reply({ embeds: [await get_failed_embed(client, rpg_data.count[command])] });
     };
