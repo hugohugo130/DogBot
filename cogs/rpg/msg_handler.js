@@ -278,6 +278,10 @@ async function get_failed_embed(client = global._client, failed_reason) {
         const emoji_bomb = await get_emoji(client, "bomb");
         title = `${emoji_bomb} | 蹦!`;
         description = `你以為挖到了鑽石，但其實是一顆從二戰就埋藏在那的炸彈！`;
+    } else if (failed_reason === "mouse") {
+        const emoji_wood = await get_emoji(client, "wood");
+        title = `${emoji_wood} | 山老鼠別跑`;
+        description = `你來到了森林發現有山老鼠把木材都偷走了！`;
     } else if (failed_reason === "collapse") {
         const emoji_bomb = await get_emoji(client, "bomb");
         title = `${emoji_bomb} | 快逃!!`;
@@ -636,7 +640,7 @@ const rpg_commands = {
     }],
     fish: ["抓魚", "魚魚: 漁夫!不要抓我~~~", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const {  name } = require("../../utils/rpg.js");
+        const { name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const { item, amount } = random_item;
@@ -2106,7 +2110,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         };
     };
 
-    const {failed, item, amount} = get_random_result(command);
+    const { failed, item, amount } = get_random_result(command);
     if (failed && rpg_work.includes(command)) {
         if (mode === 1) return { embeds: [await get_failed_embed(client, item)] };
         return await message.reply({ embeds: [await get_failed_embed(client, rpg_data.count[command])] });

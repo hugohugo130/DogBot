@@ -154,6 +154,7 @@ const embed_error_color = 0xF04A47;
 
 const failed = [
     "boom",
+    "mouse",
     "collapse",
     "storm",
     "shark",
@@ -170,6 +171,20 @@ const probabilities = {
         "coal": [40, 2, 3],
         "iron_ore": [30, 2, 3],
         "diamond_ore": [5, 1, 3],
+    },
+    "hew": {
+        "mouse": [10, 1, 1],
+        "acacia_wood": [8, 1, 1],
+        "birch_wood": [8, 1, 1],
+        "crimson_wood": [8, 1, 1],
+        "dark_oak_wood": [9, 1, 1],
+        "god_wood": [9, 1, 1],
+        "ha_wood": [9, 1, 1],
+        "jungle_wood": [9, 1, 1],
+        "oak_wood": [9, 1, 1],
+        "spruce_wood": [9, 1, 1],
+        "warped_wood": [9, 1, 1],
+        "god_wood": [3, 1, 1]
     },
     "herd": {
         "escape": [2, 1, 1],
