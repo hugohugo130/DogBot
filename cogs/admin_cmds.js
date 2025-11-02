@@ -32,8 +32,8 @@ function handleInvCommand(message, args) {
     const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
 
     const user = message.mentions.users.first();
-    const item = args[0];
-    const amount = parseInt(args[1]);
+    const item = args[1];
+    const amount = parseInt(args[2]);
 
     let argsshow = "";
     for (const arg of [user, item, amount]) {
