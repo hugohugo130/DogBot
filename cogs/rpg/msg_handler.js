@@ -2106,13 +2106,13 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         };
     };
 
-    const [failed, ...random_item] = get_random_result(command);
+    const {failed, random_item, amount} = get_random_result(command);
     if (failed) {
         if (mode === 1) return { embeds: [await get_failed_embed(client, random_item)] };
         return await message.reply({ embeds: [await get_failed_embed(client, rpg_data.count[command])] });
     };
 
-    const result = await execute({ client, message, rpg_data, data, args, mode, random_item, random_item });
+    const result = await execute({ client, message, rpg_data, data, args, mode, random_item, random_item: { item: random_item, amount } });
     if (mode === 1) return result;
 };
 
