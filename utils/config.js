@@ -164,37 +164,6 @@ const failed = [
 ]
 
 const probabilities = {
-    "mine": {
-        "boom": [2, 1, 1],
-        "collapse": [3, 1, 1],
-        "stone": [20, 1, 3],
-        "coal": [40, 2, 3],
-        "iron_ore": [30, 2, 3],
-        "diamond_ore": [5, 1, 3],
-    },
-    "hew": {
-        "mouse": [10, 1, 1],
-        "acacia_wood": [8, 1, 1],
-        "birch_wood": [8, 1, 1],
-        "crimson_wood": [8, 1, 1],
-        "dark_oak_wood": [9, 1, 1],
-        "god_wood": [9, 1, 1],
-        "ha_wood": [9, 1, 1],
-        "jungle_wood": [9, 1, 1],
-        "oak_wood": [9, 1, 1],
-        "spruce_wood": [9, 1, 1],
-        "warped_wood": [9, 1, 1],
-        "god_wood": [3, 1, 1]
-    },
-    "herd": {
-        "escape": [2, 1, 1],
-        "epidemic": [2, 1, 1],
-        "a_chicken": [25, 1, 2],
-        "pig": [20, 1, 1],
-        "cow": [20, 1, 1],
-        "a_duck": [20, 1, 1],
-        "a_sheep": [15, 1, 1],
-    },
     "farm": {
         // "acid_rain": [2, 1, 1],
         "wheat": [30, 1, 2],
@@ -210,6 +179,43 @@ const probabilities = {
         "shrimp": [35, 1, 2],
         "salmon": [30, 1, 1],
         "tuna": [30, 1, 1],
+    },
+    "herd": {
+        "escape": [2, 1, 1],
+        "epidemic": [2, 1, 1],
+        "a_chicken": [25, 1, 2],
+        "pig": [20, 1, 1],
+        "cow": [20, 1, 1],
+        "a_duck": [20, 1, 1],
+        "a_sheep": [15, 1, 1],
+    },
+    "mine": {
+        "boom": [2, 1, 1],
+        "collapse": [3, 1, 1],
+        "stone": [20, 1, 3],
+        "coal": [40, 2, 3],
+        "iron_ore": [30, 2, 3],
+        "diamond_ore": [5, 1, 3],
+    },
+    "cooky": {
+
+    },
+    "smelter": {
+
+    },
+    "hew": {
+        "mouse": [10, 1, 1],
+        "acacia_wood": [8, 1, 1],
+        "birch_wood": [8, 1, 1],
+        "crimson_wood": [8, 1, 1],
+        "dark_oak_wood": [9, 1, 1],
+        "god_wood": [9, 1, 1],
+        "ha_wood": [9, 1, 1],
+        "jungle_wood": [9, 1, 1],
+        "oak_wood": [9, 1, 1],
+        "spruce_wood": [9, 1, 1],
+        "warped_wood": [9, 1, 1],
+        "god_wood": [3, 1, 1]
     },
 };
 
