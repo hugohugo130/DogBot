@@ -32,14 +32,15 @@ function handleInvCommand(message, args) {
     const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
 
     const user = message.mentions.users.first();
-    const item = args[1];
-    const amount = parseInt(args[2]);
+    const item = args[0];
+    const amount = parseInt(args[1]);
 
     if (!item) return message.reply("請輸入物品名稱！");
     if (isNaN(amount)) return message.reply("amount must be a number");
     if (!user) return message.reply("請標記一個用戶！");
 
     const rpg_data = load_rpg_data(user.id);
+    if (!rpg_data.inventory) rpg_data.inventory = {};
     rpg_data.inventory[item] = amount;
     save_rpg_data(user.id, rpg_data);
 
