@@ -258,7 +258,7 @@ module.exports = {
         } else if (interaction.customId.startsWith("sell")) {
             const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
             const { add_money, get_emoji, setEmbedFooter } = require("./msg_handler.js");
-            const { name, get_name_of } = require("../../utils/rpg.js");
+            const { name, get_name_of_id } = require("../../utils/rpg.js");
             await interaction.deferUpdate();
 
             let [_, userId, item_id, price, amount] = customIdParts;
@@ -299,7 +299,7 @@ module.exports = {
         } else if (interaction.customId.startsWith('buy') || interaction.customId.startsWith('buyc')) {
             const { get_emoji, remove_money, add_money, setEmbedFooter } = require("./msg_handler.js");
             const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-            const { get_name_of } = require("../../utils/rpg.js");
+            const { get_name_of_id } = require("../../utils/rpg.js");
 
             const [_, buyerUserId, targetUserId, amount, price, item] = interaction.customId.split('|');
 
@@ -332,6 +332,7 @@ module.exports = {
                 return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
             };
 
+            const item_name = get_name_of_id(item);
             const total_price = price * amount;
 
             buyerRPGData.money = remove_money({
@@ -354,8 +355,8 @@ module.exports = {
             save_rpg_data(targetUserId, targetUserRPGData);
             save_shop_data(targetUserId, targetUserShopData);
 
-            if (!isConfirm) await interaction.followUp({
-                content: `${emoji_store} | 你同意了 <@${buyerUserId}> 以 \`${total_price}$\` 購買 ${get_name_of(item)} \`x${amount}\` 的交易`,
+            if (isConfirm) await interaction.followUp({
+                content: `${emoji_store} | 你同意了 <@${buyerUserId}> 以 \`${total_price}$\` 購買 ${item_name} \`x${amount}\` 的交易`,
                 flags: MessageFlags.Ephemeral
             });
 
