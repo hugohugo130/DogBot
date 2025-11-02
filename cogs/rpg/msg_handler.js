@@ -2150,7 +2150,7 @@ function get_random_result(category) {
     const { probabilities, failed } = require("../../utils/config.js");
     const datas = probabilities[category];
     if (!datas) return {
-        failed: undefined,
+        failed: true,
         item: null,
         amount: null
     };
@@ -2174,9 +2174,9 @@ function get_random_result(category) {
 
     const amount = get_random_number(data[1], data[2]);
 
-    const failed = failed.includes(item);
+    const is_failed = failed.includes(item);
 
-    return { failed, item, amount };
+    return { failed: is_failed, item, amount };
 };
 
 let lock = {
