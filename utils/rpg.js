@@ -786,6 +786,8 @@ const name_reverse = Object.entries(name).reduce((acc, [key, value]) => {
 }, {});
 
 function check_item_data() {
+    const { get_probability_of_id } = require("./file.js");
+
     const all_items = [
         ...Object.values(mine_gets),
         ...Object.values(ingots),
@@ -810,6 +812,10 @@ function check_item_data() {
 
         if (!sell_data[item_id]) {
             logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的出售價格`);
+        };
+
+        if (!get_probability_of_id(item_id)) {
+            logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的掉落機率，會導致無法獲取此物品、或是工作指令報錯`);
         };
     };
 };

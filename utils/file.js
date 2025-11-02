@@ -4,7 +4,7 @@ const path = require("path");
 const { isDeepStrictEqual } = require("node:util");
 const { Logger } = require("winston");
 
-const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder } = require("./config.js");
+const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder, probabilities } = require("./config.js");
 const { get_logger } = require("./logger.js");
 const { sleep } = require("./sleep.js");
 
@@ -220,9 +220,21 @@ function find_default_value(filename, default_return = undefined) {
     const basename = path.basename(filename);
 
     for (const categoryData of Object.values(DEFAULT_VALUES)) {
-        if (categoryData.hasOwnProperty(basename)) {
-            return categoryData[basename];
-        };
+        if (categoryData.hasOwnProperty(basename)) return categoryData[basename];
+    };
+
+    return default_return;
+};
+
+/**
+ * 
+ * @param {string} item 
+ * @param {any} default_return 
+ * @returns {[number, number, number] | any}
+ */
+function get_probability_of_id(item, default_return = undefined) {
+    for (const categoryData of Object.values(probabilities)) {
+        if (categoryData.hasOwnProperty(item)) return categoryData[item];
     };
 
     return default_return;
@@ -477,6 +489,7 @@ module.exports = {
     join_db_folder,
     compareLocalRemote,
     find_default_value,
+    get_probability_of_id,
     order_data,
     // database
     loadData,
