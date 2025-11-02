@@ -36,7 +36,7 @@ function handleInvCommand(message, args) {
     const amount = parseInt(args[1]);
 
     let argsshow = "";
-    for (const arg of args) {
+    for (const arg of [user, item, amount]) {
         argsshow += `${arg} (${typeof arg})\n`
     };
 
