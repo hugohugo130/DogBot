@@ -35,13 +35,6 @@ function handleInvCommand(message, args) {
     const item = args[1];
     const amount = parseInt(args[2]);
 
-    let argsshow = "";
-    for (const arg of [user, item, amount]) {
-        argsshow += `${arg} (${typeof arg})\n`
-    };
-
-    message.reply(`[DEBUG]\nargs:\n${argsshow.trim()}`)
-
     if (!item) return message.reply("請輸入物品名稱！");
     if (isNaN(amount)) return message.reply("amount must be a number");
     if (!user) return message.reply("請標記一個用戶！");
