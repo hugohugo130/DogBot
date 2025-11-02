@@ -2,52 +2,64 @@ const { get_logger, getCallerModuleName } = require("./logger.js");
 
 const logger = get_logger();
 
-const mine_gets = {
-    coal: "coal",
-    diamond_ore: "diamond_ore",
-    emerald_ore: "emerald_ore",
-    gold_ore: "gold_ore",
-    iron_ore: "iron_ore",
-    ruby_ore: "ruby_ore",
-    sapphire_ore: "sapphire_ore",
-    stone: "stone"
-};
+const mine_gets = [
+    "coal",
+    "diamond_ore",
+    "emerald_ore",
+    "gold_ore",
+    "iron_ore",
+    "ruby_ore",
+    "sapphire_ore",
+    "stone",
+].reduce((acc, cur) => {
+    acc[cur] = cur;
+    return acc;
+}, {});
 
-const ingots = {
-    diamond: "diamond",
-    emerald: "emerald",
-    gold: "gold",
-    iron: "iron",
-    ruby: "ruby",
-    sapphire: "sapphire",
-    steel: "steel",
-};
+const ingots = [
+    "diamond",
+    "emerald",
+    "gold",
+    "iron",
+    "ruby",
+    "sapphire",
+    "steel",
+].reduce((acc, cur) => {
+    acc[cur] = cur;
+    return acc;
+}, {});
 
-const logs = {
-    acacia_wood: "acacia_wood",
-    birch_wood: "birch_wood",
-    crimson_wood: "crimson_wood",
-    dark_oak_wood: "dark_oak_wood",
-    god_wood: "god_wood",
-    ha_wood: "ha_wood",
-    jungle_wood: "jungle_wood",
-    oak_wood: "oak_wood",
-    spruce_wood: "spruce_wood",
-    warped_wood: "warped_wood"
-};
+const logs = [
+    "acacia_wood",
+    "birch_wood",
+    "crimson_wood",
+    "dark_oak_wood",
+    "god_wood",
+    "ha_wood",
+    "jungle_wood",
+    "oak_wood",
+    "spruce_wood",
+    "warped_wood",
+].reduce((acc, cur) => {
+    acc[cur] = cur;
+    return acc;
+}, {});
 
-const planks = {
-    acacia_planks: "acacia_planks",
-    birch_planks: "birch_planks",
-    crimson_planks: "crimson_planks",
-    dark_oak_planks: "dark_oak_planks",
-    god_planks: "god_planks",
-    ha_planks: "ha_planks",
-    jungle_planks: "jungle_planks",
-    oak_planks: "oak_planks",
-    spruce_planks: "spruce_planks",
-    warped_planks: "warped_planks"
-}
+const planks = [
+    "acacia_planks",
+    "birch_planks",
+    "crimson_planks",
+    "dark_oak_planks",
+    "god_planks",
+    "ha_planks",
+    "jungle_planks",
+    "oak_planks",
+    "spruce_planks",
+    "warped_planks",
+].reduce((acc, cur) => {
+    acc[cur] = cur;
+    return acc;
+}, {});
 
 const wood_productions = {
     stick: "stick",
@@ -179,64 +191,73 @@ const tags = {
     "planks": Object.keys(planks),
 };
 
-const foods_crops = {
-    apple: "apple",
-    bread: "bread",
-    cake: "cake",
-    candy: "candy",
-    chocolate: "chocolate",
-    cookie: "cookie",
-    melon_slice: "melon_slice",
-    potato: "potato",
-    pumpkin_pie: "pumpkin_pie",
-    raw_potato: "raw_potato",
-};
+const foods_crops = [
+    "apple",
+    "bread",
+    "cake",
+    "candy",
+    "chocolate",
+    "cookie",
+    "melon_slice",
+    "potato",
+    "pumpkin_pie",
+    "raw_potato",
+].reduce((acc, cur) => {
+    acc[cur] = cur;
+    return acc;
+}, {});
 
-const foods_meat = {
-    anglerfish: "anglerfish",
-    beef: "beef",
-    catfish: "catfish",
-    chicken: "chicken",
-    clownfish: "clownfish",
-    cod: "cod",
-    crab: "crab",
-    duck: "duck",
-    eel: "eel",
-    enchanted_golden_apple: "enchanted_golden_apple",
-    golden_apple: "golden_apple",
-    golden_beef: "golden_beef",
-    golden_carrot: "golden_carrot",
-    goldfish: "goldfish",
-    jellyfish: "jellyfish",
-    koi: "koi",
-    lobster: "lobster",
-    mutton: "mutton",
-    octopus: "octopus",
-    pork: "pork",
-    pufferfish: "pufferfish",
-    raw_beef: "raw_beef",
-    raw_chicken: "raw_chicken",
-    raw_duck: "raw_duck",
-    raw_mutton: "raw_mutton",
-    raw_pork: "raw_pork",
-    raw_shrimp: "raw_shrimp",
-    salmon: "salmon",
-    shark: "shark",
-    shrimp: "shrimp",
-    squid: "squid",
-    swordfish: "swordfish",
-    tropical_fish: "tropical_fish",
-    tuna: "tuna",
-    whale: "whale",
-};
+const foods_meat = [
+    "anglerfish",
+    "beef",
+    "catfish",
+    "chicken",
+    "clownfish",
+    "cod",
+    "crab",
+    "duck",
+    "eel",
+    "enchanted_golden_apple",
+    "golden_apple",
+    "golden_beef",
+    "golden_carrot",
+    "goldfish",
+    "jellyfish",
+    "koi",
+    "lobster",
+    "mutton",
+    "octopus",
+    "pork",
+    "pufferfish",
+    "raw_beef",
+    "raw_chicken",
+    "raw_duck",
+    "raw_mutton",
+    "raw_pork",
+    "raw_shrimp",
+    "salmon",
+    "shark",
+    "shrimp",
+    "squid",
+    "swordfish",
+    "tropical_fish",
+    "tuna",
+    "whale",
+].reduce((acc, cur) => {
+    acc[cur] = cur;
+    return acc;
+}, {});
 
-const animals = {
-    a_chicken: "a_chicken",
-    a_duck: "a_duck",
-    a_sheep: "a_sheep",
-    cow: "cow",
-    pig: "pig",
-};
+const animals = [
+    "a_chicken",
+    "a_duck",
+    "a_sheep",
+    "cow",
+    "pig",
+].reduce((acc, cur) => {
+    acc[cur] = cur;
+    return acc;
+}, {});;
 
 const animal_products = {
     a_chicken: "raw_chicken",
@@ -785,6 +806,15 @@ const name_reverse = Object.entries(name).reduce((acc, [key, value]) => {
     return acc;
 }, {});
 
+const work_productions = [
+    ...animal_products,
+    ...Object.values(mine_gets),
+    // ...Object.values(ingots),
+    ...Object.values(logs),
+    ...Object.values(foods),
+    ...Object.keys(recipes),
+]
+
 function check_item_data() {
     const { get_probability_of_id } = require("./file.js");
 
@@ -793,8 +823,7 @@ function check_item_data() {
         ...Object.values(ingots),
         ...Object.values(logs),
         ...Object.values(planks),
-        ...Object.values(foods_crops),
-        ...Object.values(foods_meat),
+        ...Object.values(foods),
         ...Object.keys(recipes),
         ...Object.values(wood_productions),
         ...Object.keys(name).filter(item => !item.startsWith("#")),
@@ -814,10 +843,12 @@ function check_item_data() {
             logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的出售價格`);
         };
 
+    };
+
+    for (const item_id of work_productions)
         if (!get_probability_of_id(item_id)) {
             logger.debug(`[警告] 物品ID "${item_id}" 沒有對應的掉落機率，會導致無法獲取此物品、或是工作指令報錯`);
         };
-    };
 };
 
 function get_name_of(id, default_value = id) {
