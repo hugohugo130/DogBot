@@ -1451,7 +1451,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }],
     lazy: ["懶惰", "懶惰地遊玩這個遊戲", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        if (message.channel.id !== "1391989655490265191") return await message.reply("只能在 <#1391989655490265191> 中使用，正式機器人不支援！");
+        if (message.channel.id !== "1432642462840524853") return await message.reply("只能在 <#1432642462840524853> 中使用");
         // if (new Date().getMinutes() % 2 === 0) {
         if (true) {
             const embeds = []
