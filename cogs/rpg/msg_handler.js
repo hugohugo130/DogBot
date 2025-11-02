@@ -108,11 +108,6 @@ async function redirect({ client, message, command, mode = 0 }) {
     return await message.reply(message_args);
 };
 
-function get_random_number() {
-    const amount = Math.floor(Math.random() * 3) + 1; // 1~3個
-    return { amount, amount };
-};
-
 /**
  * 
  * @param {BaseInteraction | ChatInputCommandInteraction | Message | Client} interaction 
