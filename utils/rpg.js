@@ -806,15 +806,6 @@ const name_reverse = Object.entries(name).reduce((acc, [key, value]) => {
     return acc;
 }, {});
 
-const work_productions = [
-    ...animal_products,
-    ...Object.values(mine_gets),
-    // ...Object.values(ingots),
-    ...Object.values(logs),
-    ...Object.values(foods),
-    ...Object.keys(recipes),
-]
-
 function check_item_data() {
     const { get_probability_of_id } = require("./file.js");
 
@@ -826,7 +817,17 @@ function check_item_data() {
         ...Object.values(foods),
         ...Object.keys(recipes),
         ...Object.values(wood_productions),
+        ...Object.values(animal_products),
         ...Object.keys(name).filter(item => !item.startsWith("#")),
+    ].flat().filter(item => !Object.values(animals).includes(item));
+
+    const work_productions = [
+        ...Object.values(animal_products),
+        ...Object.values(mine_gets),
+        // ...Object.values(ingots),
+        ...Object.values(logs),
+        ...Object.values(foods),
+        ...Object.keys(recipes),
     ].flat().filter(item => !Object.values(animals).includes(item));
 
 
