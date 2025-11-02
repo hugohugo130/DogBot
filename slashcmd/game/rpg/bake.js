@@ -100,6 +100,7 @@ module.exports = {
             ),
         ),
     async execute(interaction) {
+        await interaction.deferReply();
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
         const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
@@ -107,8 +108,6 @@ module.exports = {
         const { setEmbedFooter, get_emoji } = require("../../../cogs/rpg/msg_handler.js");
 
         if (subcommand === "bake") {
-            await interaction.deferReply();
-
             const emoji_cross = await get_emoji(interaction.client, "crosS");
             const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
 
@@ -204,8 +203,6 @@ module.exports = {
 
             await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], components: [row] });
         } else if (subcommand === "info") {
-            await interaction.deferReply();
-
             const bake_data = load_bake_data()[userId];
             const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
 
@@ -242,8 +239,6 @@ module.exports = {
 
             await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)] });
         } else if (subcommand === "get") {
-            await interaction.deferReply();
-
             const bake_data_all = load_bake_data();
             const bake_data = bake_data_all[userId];
             const rpg_data = load_rpg_data(userId);
