@@ -9,7 +9,16 @@ function add_item(rpg_data, item, amount) {
     rpg_data.inventory[item] += amount;
 
     return rpg_data
-}
+};
+
+function handleMoneyCommand(message, rpg_data, amount) {
+    const { save_rpg_data } = require("../utils/file.js");
+    if (!typeof amount === "number") return message.reply("amount must be a number");
+
+    rpg_data.money += amount;
+    save_rpg_data(message.author.id, rpg_data);
+    return message.reply(`done adding <@${message.author.id}>'s money. +${amount}`);
+};
 
 module.exports = {
     name: Events.MessageCreate,
@@ -36,6 +45,10 @@ module.exports = {
 
             case "run":
                 await handleRunCommand(message, commandArgs);
+                break;
+            
+            case "money":
+                handleMoneyCommand(message, load_rpg_data(message.author.id), parseInt(commandArgs[0]));
                 break;
         };
 
@@ -68,27 +81,27 @@ module.exports = {
 
             try {
                 if (process.platform === "linux") {
-                message.reply(`執行指令: \`${cmd}\`\n請稍候...`);
+                    message.reply(`執行指令: \`${cmd}\`\n請稍候...`);
 
-                const { stdout, stderr } = await execPromise(cmd, {
-                    cwd: "/home/hugo/dogbot",
-                    timeout: 30000 // 30秒超時
-                });
+                    const { stdout, stderr } = await execPromise(cmd, {
+                        cwd: "/home/hugo/dogbot",
+                        timeout: 30000 // 30秒超時
+                    });
 
-                let response = "**執行結果:**\n";
+                    let response = "**執行結果:**\n";
 
-                if (stdout) {
-                    response += `\`\`\`\n${stdout.substring(0, 1800)}\`\`\``;
+                    if (stdout) {
+                        response += `\`\`\`\n${stdout.substring(0, 1800)}\`\`\``;
+                    }
+
+                    if (stderr) {
+                        response += `\n**錯誤輸出:**\n\`\`\`\n${stderr.substring(0, 1800)}\`\`\``;
+                    }
+
+                    return message.reply(response);
+                } else {
+                    return message.reply("不支援的操作系統。");
                 }
-
-                if (stderr) {
-                    response += `\n**錯誤輸出:**\n\`\`\`\n${stderr.substring(0, 1800)}\`\`\``;
-                }
-
-                return message.reply(response);
-            } else {
-                return message.reply("不支援的操作系統。");
-            }
             } catch (error) {
                 return message.reply(`**執行失敗:**\n\`\`\`\n${error.message}\`\`\``);
             };
