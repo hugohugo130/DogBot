@@ -31,12 +31,12 @@ function handleMoneyCommand(message, args) {
 function handleInvCommand(message, args) {
     const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
 
-    const item = args[0];
-    const amount = parseInt(args[1]);
     const user = message.mentions.users.first();
+    const item = args[1];
+    const amount = parseInt(args[2]);
 
     if (!item) return message.reply("請輸入物品名稱！");
-    if (!amount) return message.reply("amount must be a number");
+    if (isNaN(amount)) return message.reply("amount must be a number");
     if (!user) return message.reply("請標記一個用戶！");
 
     const rpg_data = load_rpg_data(user.id);
@@ -62,6 +62,7 @@ module.exports = {
 
         const command = args[0].substring(1); // 移除開頭的 '!'
         const commandArgs = args.slice(1); // 獲取所有參數
+        message.reply(`[DEBUG]\ncommand: ${command}\nargs: ${commandArgs.join(", ")}`)
 
         // 使用 switch 處理不同的指令
         switch (command) {
