@@ -40,7 +40,7 @@ async function get_failed_embed(client = global._client) {
     const embed = new EmbedBuilder()
         .setColor(embed_error_color)
         .setTitle(`${emoji} | 沒事戳這顆按鈕幹嘛?`);
-    return setEmbedFooter(client, embed, null, client);
+    return setEmbedFooter(client, embed);
 };
 
 module.exports = {
