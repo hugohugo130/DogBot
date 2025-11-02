@@ -314,20 +314,22 @@ module.exports = {
             const targetUserRPGData = load_rpg_data(targetUserId);
             const targetUserShopData = load_shop_data(targetUserId);
 
-            if (!targetUserShopData[item]) {
+            const item_data = targetUserShopData.items[item];
+
+            if (!item_data) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 沒有販賣這個物品`);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
+                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
             };
 
-            if (targetUserShopData[item].amount < amount) {
+            if (item_data.amount < amount) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 沒有販賣這麼多物品`);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
+                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
             };
 
             const total_price = price * amount;
@@ -362,7 +364,7 @@ module.exports = {
                 .setTitle(`${emoji_store} | 購買成功`)
                 .setDescription(`你購買了 ${item_name} \`x${amount.toLocaleString()}\`，花費 \`${(total_price).toLocaleString()}$\`${isConfirm ? "，\n經店家同意" : ""}`);
 
-            return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
+            return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
         } else if (interaction.customId.startsWith('oven_bake')) {
             const {
                 load_bake_data,
