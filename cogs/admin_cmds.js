@@ -11,13 +11,21 @@ function add_item(rpg_data, item, amount) {
     return rpg_data
 };
 
-function handleMoneyCommand(message, rpg_data, amount) {
-    const { save_rpg_data } = require("../utils/file.js");
-    if (!typeof amount === "number") return message.reply("amount must be a number");
+function handleMoneyCommand(message args) {
+    const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
+
+    const user = message.mentions.users.first();
+    const amount = parseInt(args[1]);
+
+    if (!user) return message.reply("請標記一個用戶！");
+    if (!amount) return message.reply("amount must be a number");
+    if (amount < 0) return message.reply("amount must be positive");
+
+    const rpg_data = load_rpg_data(user.id);
 
     rpg_data.money += amount;
-    save_rpg_data(message.author.id, rpg_data);
-    return message.reply(`done adding <@${message.author.id}>'s money. +${amount}`);
+    save_rpg_data(user.id, rpg_data);
+    return message.reply(`done adding <@${user.id}>'s money. +${amount}`);
 };
 
 module.exports = {
@@ -46,9 +54,9 @@ module.exports = {
             case "run":
                 await handleRunCommand(message, commandArgs);
                 break;
-            
+
             case "money":
-                handleMoneyCommand(message, load_rpg_data(message.author.id), parseInt(commandArgs[0]));
+                handleMoneyCommand(message, commandArgs);
                 break;
         };
 
