@@ -35,6 +35,13 @@ function handleInvCommand(message, args) {
     const item = args[0];
     const amount = parseInt(args[1]);
 
+    let argsshow = "";
+    for (const arg of args) {
+        argsshow += `${arg} (${typeof arg})\n`
+    };
+
+    message.reply(`[DEBUG]\nargs:\n${argsshow.trim()}`)
+
     if (!item) return message.reply("請輸入物品名稱！");
     if (isNaN(amount)) return message.reply("amount must be a number");
     if (!user) return message.reply("請標記一個用戶！");
@@ -63,12 +70,6 @@ module.exports = {
 
         const command = args[0].substring(1); // 移除開頭的 '!'
         const commandArgs = args.slice(1); // 獲取所有參數
-        let argsshow = "";
-        for (const arg of commandArgs) {
-            argsshow += `${arg} (${typeof arg})\n`
-        };
-
-        message.reply(`[DEBUG]\ncommand: ${command}\nargs:\n${argsshow.trim()}`)
 
         // 使用 switch 處理不同的指令
         switch (command) {
