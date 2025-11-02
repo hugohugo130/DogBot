@@ -526,6 +526,7 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
 
+        if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
         rpg_data.inventory[item] += amount;
         save_rpg_data(userid, rpg_data);
         const ore_name = name[item];
@@ -644,6 +645,8 @@ const rpg_commands = {
         const userid = message.author.id;
 
         const { item, amount } = random_item;
+
+        if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
         rpg_data.inventory[item] += amount;
         save_rpg_data(userid, rpg_data);
         const fish_name = name[item];
@@ -2010,10 +2013,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         };
 
         embed.setDescription(`你是不是指：\n${similarCommands.map(cmd => `- ${prefix}${cmd}`).join('\n')}`);
-        if (rows.length > 5) {
-            rows.length = 0; // 清空rows，等同於 rows = []
-            embed.setDescription("太多指令了 owo 我真的不知道你要用什麼指令 ||其實是顯示不出來這麼多按鈕|| ")
-        };
+        if (rows.length > 5) rows.length = 5;
 
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: rows };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: rows });

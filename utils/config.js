@@ -197,7 +197,7 @@ const probabilities = {
         "iron_ore": [30, 2, 3],
         "diamond_ore": [5, 1, 3],
     },
-    "cooky": {
+    "cook": {
 
     },
     "smelter": {
@@ -216,6 +216,24 @@ const probabilities = {
         "spruce_wood": [9, 1, 1],
         "warped_wood": [9, 1, 1],
         "god_wood": [3, 1, 1]
+    },
+    "brew": {
+        "cough_potion": [8, 1, 1],
+        "dizzy_potion": [8, 1, 1],
+        "eye_potion": [8, 1, 1],
+        "floating_potion": [8, 1, 1],
+        "gold_potion": [8, 1, 1],
+        "ha_potion": [8, 1, 1],
+        "hair_growth_potion": [8, 1, 1],
+        "invisibility_potion": [8, 1, 1],
+        "jump_potion": [8, 1, 1],
+        "lucky_potion": [8, 1, 1],
+        "mystery_potion": [8, 1, 1],
+        "nausea_potion": [8, 1, 1],
+        "poison_potion": [8, 1, 1],
+        "regen_potion": [8, 1, 1],
+        "revive_potion": [8, 1, 1],
+        "unlucky_potion": [8, 1, 1],
     },
 };
 
