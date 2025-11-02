@@ -91,6 +91,113 @@ https://discord.js.org/docs/packages/discord.js/14.24.0/ColorResolvable:TypeAlia
 const embed_default_color = 0x00BBFF;
 const embed_error_color = 0xF04A47;
 
+/*
+農夫 和漁夫是差不多辛勤的職業，不過在這個世界，農夫的收益比漁夫還要高
+使用 /farm 指令種田
+
+獲得    機率    數量    飽食度
+酸雨    2%    -    -
+小麥    30%    1~2            麵包 x1 (2)
+胡蘿蔔    20%    2~3    1
+馬鈴薯    15%      1~2               1
+番茄    10%            1                   1
+蘋果    10%            1                   1
+玉米    10%            1~2                 1
+*/
+/*
+
+
+漁夫 是個需要勞力的職業，你必須要努力勤奮的抓魚，才會獲得收益
+使用 &fish 指令捕魚
+
+獲得         機率         數量          飽食度
+暴風雨            2%                -                   -
+釣到鯊魚    3%                -              -
+生蝦            35%       1~2            1
+生鮭魚            30%       1                    1
+生鮪魚            30%       1                     1
+*/
+/*
+
+
+廚師 跟農夫以及漁夫購買食材，再透過烘烤食物並轉賣來獲得收益
+廚師可以透過 /bake 指令來烤生的食物，並且轉賣出去，
+
+每次燒烤 2 個食物會花費 1 個煤炭。
+*/
+/*
+
+礦工 在深不見底的洞窟裡挖礦，雖然可能沒有很好的收穫，不過有機會也可以挖到鑽石等好東西
+使用 &mine 指令挖礦
+
+獲得    機率    數量
+炸彈    2%              -
+坍塌    3%              -
+石頭    20%    1~3
+煤炭    40%    2~3
+鐵            30%    2~3
+鑽石    5%       1~3
+*/
+/*
+
+牧農 飼養各類的禽類豬雞牛等還獲得肉類
+使用 &herd 指令飼養禽類
+
+獲得    機率    數量
+跑掉了    2%               -
+瘟疫    3%               -
+雞肉    30%    1~2
+豬肉    25%    1
+牛肉    20%    1
+鴨肉    20%    1
+*/
+
+const failed = [
+    "boom",
+    "collapse",
+    "storm",
+    "shark",
+    // "acid_rain",
+    "escape",
+    "epidemic",
+]
+
+const probabilities = {
+    "mine": {
+        "boom": [2, 1, 1],
+        "collapse": [3, 1, 1],
+        "stone": [20, 1, 3],
+        "coal": [40, 2, 3],
+        "iron_ore": [30, 2, 3],
+        "diamond_ore": [5, 1, 3],
+    },
+    "herd": {
+        "escape": [2, 1, 1],
+        "epidemic": [2, 1, 1],
+        "a_chicken": [25, 1, 2],
+        "pig": [20, 1, 1],
+        "cow": [20, 1, 1],
+        "a_duck": [20, 1, 1],
+        "a_sheep": [15, 1, 1],
+    },
+    "farm": {
+        // "acid_rain": [2, 1, 1],
+        "wheat": [30, 1, 2],
+        "carrot": [20, 2, 3],
+        "potato": [15, 1, 2],
+        "tomato": [10, 1, 1],
+        "apple": [10, 1, 1],
+        "corn": [10, 1, 2],
+    },
+    "fish": {
+        "storm": [2, 1, 1],
+        "shark": [3, 1, 1],
+        "shrimp": [35, 1, 2],
+        "salmon": [30, 1, 1],
+        "tuna": [30, 1, 1],
+    },
+};
+
 module.exports = {
     INDENT,
     database_folder,
@@ -121,4 +228,6 @@ module.exports = {
     embed_error_color,
     priorityUserIDs,
     priorityGuildIDs,
+    failed,
+    probabilities,
 };

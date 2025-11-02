@@ -1,7 +1,7 @@
 const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, BaseInteraction, ChatInputCommandInteraction, Message } = require("discord.js");
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger } = require("../../utils/logger.js");
-const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
+const { prefix, embed_default_color, embed_error_color, failed } = require("../../utils/config.js");
 const { wait_until_ready } = require("../../utils/wait_until_ready.js");
 
 const max_hungry = 20;
@@ -109,22 +109,20 @@ async function redirect({ client, message, command, mode = 0 }) {
 };
 
 function get_random_number() {
-    const show_amount = real_amount = Math.floor(Math.random() * 3) + 1; // 1~3個
-    return { show_amount, real_amount };
+    const amount = Math.floor(Math.random() * 3) + 1; // 1~3個
+    return { amount, amount };
 };
 
 /**
  * 
  * @param {BaseInteraction | ChatInputCommandInteraction | Message | Client} interaction 
  * @param {EmbedBuilder} embed 
- * @param {string | null} text 
+ * @param {string} text 
  * @returns {EmbedBuilder}
  */
-function setEmbedFooter(interaction, embed, text = null, client = global._client) {
-    if (text) {
-        text += "\n哈狗機器人 ∙ 由哈狗製作";
-        text = text.trim();
-    } else text = "哈狗機器人 ∙ 由哈狗製作";
+function setEmbedFooter(client = global._client, embed, text = "") {
+    text += "\n哈狗機器人 ∙ 由哈狗製作";
+    text = text.trim();
 
     embed.setFooter({
         text,
@@ -276,6 +274,46 @@ function is_cooldown_finished(command_name, rpg_data) {
         remaining_time: cooldown_time - time_diff
     };
 };
+
+async function get_failed_embed(client = global._client, failed_reason) {
+    let title = "失敗";
+    let description = `${failed_reason}`;
+
+    if (failed_reason === "boom") {
+        const emoji_bomb = await get_emoji(client, "bomb");
+        title = `${emoji_bomb} | 蹦!`;
+        description = `你以為挖到了鑽石，但其實是一顆從二戰就埋藏在那的炸彈！`;
+    } else if (failed_reason === "collapse") {
+        const emoji_bomb = await get_emoji(client, "bomb");
+        title = `${emoji_bomb} | 快逃!!`;
+        description = `你努力地在暗黑的礦洞中尋找鑽石，但是別的同伴亂挖導致礦洞坍塌了！`;
+    } else if (failed_reason === "storm") {
+        const emoji_fisher = await get_emoji(client, "fisher");
+        title = `${emoji_fisher} | 搖到快吐了`;
+        description = `氣象明明說今天天氣很好怎麼會有暴風雨！`;
+    } else if (failed_reason === "shark") {
+        const emoji_fisher = await get_emoji(client, "fisher");
+        title = `${emoji_fisher} | a`;
+        description = `欸不是鯊魚 快跑`;
+        // } else if (failed_reason === "acid_rain") {
+
+    } else if (failed_reason === "escape") {
+        const emoji_cow = await get_emoji(client, "cow");
+        title = `${emoji_cow} | 給我回來!`;
+        description = `你放牧了一頭牛，結果一轉身他就不見了？！`;
+    } else if (failed_reason === "epidemic") {
+        const emoji_cow = await get_emoji(client, "cow");
+        title = `${emoji_cow} | 瘟疫在搞欸`;
+        description = `很不幸的最近禽類都染上瘟疫，導致動物都死光了`;
+    };
+
+    const embed = new EmbedBuilder()
+        .setColor(embed_error_color)
+        .setTitle(title)
+        .setDescription(description);
+
+    return setEmbedFooter(client, embed);
+}
 
 /**
  * 增加錢
@@ -482,31 +520,28 @@ const redirect_data = {
 };
 
 const rpg_commands = {
-    mine: ["挖礦", "挖礦", async function ({ client, message, rpg_data, data, args, mode }) {
+    mine: ["挖礦", "挖礦", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { mine_gets, name } = require("../../utils/rpg.js");
+        const { name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
-        const ore_list = Object.values(mine_gets);
-        const random_ore = ore_list[Math.floor(Math.random() * ore_list.length)];
-        if (!rpg_data.inventory[random_ore]) rpg_data.inventory[random_ore] = 0;
-        const { show_amount, real_amount } = get_random_number();
+        const { item, amount } = random_item;
 
-        rpg_data.inventory[random_ore] += real_amount;
+        rpg_data.inventory[item] += amount;
         save_rpg_data(userid, rpg_data);
-        const ore_name = name[random_ore];
+        const ore_name = name[item];
         const emoji = await get_emoji(client, rpg_emojis["mine"]);
 
         let description;
-        if (random_ore === "stone") {
-            description = `你尋找了很久，最終發現只有 \`${show_amount}\` 個${ore_name}。`;
-        } else if (random_ore === "diamond_ore") {
+        if (item === "stone") {
+            description = `你尋找了很久，最終發現只有 \`${amount}\` 個${ore_name}。`;
+        } else if (item === "diamond_ore") {
             const min = -64;
             const max = 16;
             const y_pos = Math.floor(Math.random() * (max - min + 1)) + min;
-            description = `你尋找了很久，最終在Y座標\`${y_pos}\` 發現了 \`${show_amount}\` 個${ore_name}。`;
+            description = `你尋找了很久，最終在Y座標\`${y_pos}\` 發現了 \`${amount}\` 個${ore_name}。`;
         } else {
-            description = `在洞口處發現了 \`${show_amount}\` 個${ore_name}！`;
+            description = `在洞口處發現了 \`${amount}\` 個${ore_name}！`;
         };
 
         const embed = new EmbedBuilder()
@@ -516,65 +551,61 @@ const rpg_commands = {
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] });
     }],
-    hew: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode }) {
+    hew: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { logs, name } = require("../../utils/rpg.js");
+        const { name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
-        const { show_amount, real_amount } = get_random_number();
-        const log_keys = Object.keys(logs);
-        const random_log = logs[log_keys[Math.floor(Math.random() * log_keys.length)]];
-        if (!rpg_data.inventory[random_log]) rpg_data.inventory[random_log] = 0;
-        const log_name = name[random_log];
-        if (!log_name) return await message.reply({ content: `ERROR: 找不到${random_log}的物品名稱: ${log_name}` });
+        const { item, amount } = random_item;
+
+        const log_name = name[item];
+        if (!log_name) return await message.reply({ content: `ERROR: 找不到${item}的物品名稱: ${log_name}` });
 
         let description;
-        if (random_log === "god_log") {
-            description = `本來是平常的一天，居然遇到了神木，於是你砍下了它並獲得了 \`${show_amount}\` 塊${log_name}！`;
+        if (item === "god_log") {
+            description = `本來是平常的一天，居然遇到了神木，於是你砍下了它並獲得了 \`${amount}\` 塊${log_name}！`;
         } else {
-            description = `你來到了森林，並且砍了 \`${show_amount}\` 塊${log_name}`;
+            description = `你來到了森林，並且砍了 \`${amount}\` 塊${log_name}`;
         };
 
-        if (!rpg_data.inventory[random_log]) rpg_data.inventory[random_log] = 0;
-        rpg_data.inventory[random_log] += real_amount;
+        if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
+        rpg_data.inventory[item] += amount;
         save_rpg_data(userid, rpg_data);
 
         const emoji = await get_emoji(client, rpg_emojis["hew"]);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
-            .setTitle(`${emoji} | ${random_log === "god_log" ? "是神?!" : "平常的一天"}`)
+            .setTitle(`${emoji} | ${item === "god_log" ? "是神?!" : "平常的一天"}`)
             .setDescription(description);
 
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] });
     }],
-    fell: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode }) {
+    fell: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
     }],
-    wood: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode }) {
+    wood: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
     }],
-    herd: ["放牧", "放牧或屠宰動物", async function ({ client, message, rpg_data, data, args, mode }) {
+    herd: ["放牧", "放牧或屠宰動物", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { animals, animal_products, name } = require("../../utils/rpg.js");
+        const { animal_products, name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
-        const animal_list = Object.values(animals);
-        const random_animal = animal_list[Math.floor(Math.random() * animal_list.length)];
+        const { item: random_animal, amount } = random_item;
         const product = animal_products[random_animal];
 
         if (!rpg_data.inventory[product]) rpg_data.inventory[product] = 0;
-        const { show_amount, real_amount } = get_random_number();
 
-        rpg_data.inventory[product] += real_amount;
+        rpg_data.inventory[product] += amount;
         save_rpg_data(userid, rpg_data);
 
         const product_name = name[product];
         const animal_name = product_name.replace("生", "").replace("肉", "");
         const emoji = await get_emoji(client, rpg_emojis["herd"]);
 
-        const description = `你宰了一隻${animal_name}，獲得了 \`${show_amount}\` 個${product_name}！`;
+        const description = `你宰了一隻${animal_name}，獲得了 \`${amount}\` 個${product_name}！`;
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
@@ -584,76 +615,66 @@ const rpg_commands = {
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] });
     }],
-    brew: ["釀造", "釀造藥水", async function ({ client, message, rpg_data, data, args, mode }) {
+    brew: ["釀造", "釀造藥水", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { brew, name } = require("../../utils/rpg.js");
+        const { name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
-        const brew_list = Object.values(brew);
-        const random_potion = brew_list[Math.floor(Math.random() * brew_list.length)];
-        if (!rpg_data.inventory[random_potion]) rpg_data.inventory[random_potion] = 0;
-        const potion_name = name[random_potion];
-        const { show_amount, real_amount } = get_random_number();
-        rpg_data.inventory[random_potion] += real_amount;
+        const { item, amount } = random_item;
+        if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
+        const potion_name = name[item];
+        rpg_data.inventory[item] += amount;
         save_rpg_data(userid, rpg_data);
 
         const emoji_potion = await get_emoji(client, "potion");
         let embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${emoji_potion} | 釀造`)
-            .setDescription(`你研究了許久，獲得了 \`${show_amount}\` 個${potion_name}`);
+            .setDescription(`你研究了許久，獲得了 \`${amount}\` 個${potion_name}`);
         // .setTitle(`${emoji_potion} | 回復藥水可以幹嘛?`)
-        // .setDescription(`你研究了許久，獲得了 \`${show_amount}\` 個${potion_name}\n\n之後推出的冒險可以用上`);
+        // .setDescription(`你研究了許久，獲得了 \`${amount}\` 個${potion_name}\n\n之後推出的冒險可以用上`);
 
         embed = setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`);
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
     }],
-    fish: ["抓魚", "魚魚: 漁夫!不要抓我~~~", async function ({ client, message, rpg_data, data, args, mode }) {
+    fish: ["抓魚", "魚魚: 漁夫!不要抓我~~~", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { fish, name } = require("../../utils/rpg.js");
+        const {  name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
-        const fish_list = Object.values(fish);
-        const random_fish = fish_list[Math.floor(Math.random() * fish_list.length)];
-        if (!rpg_data.inventory[random_fish]) rpg_data.inventory[random_fish] = 0;
-        const { show_amount, real_amount } = get_random_number();
-
-        rpg_data.inventory[random_fish] += real_amount;
+        const { item, amount } = random_item;
+        rpg_data.inventory[item] += amount;
         save_rpg_data(userid, rpg_data);
-        const fish_name = name[random_fish];
-        const fail = Math.floor(Math.random() * fish_list.length) + 1 === 1;
+        const fish_name = name[item];
 
         let fish_text;
         let description;
-        if (fail) {
-            fish_text = "搖到快吐了"
-            description = "靠腰！氣象明明說今天天氣很好怎麼會有暴風雨！"
-        } else if (random_fish === "raw_salmon") {
+        if (item === "raw_salmon") {
             fish_text = "🐢魚"
-            description = `你等待了幾個小時，獲得了 \`${show_amount}\` 條${fish_name}！`
-        } else if (random_fish === "raw_shrimp") {
+            description = `你等待了幾個小時，獲得了 \`${amount}\` 條${fish_name}！`
+        } else if (item === "raw_shrimp") {
             fish_text = "太蝦了吧"
-            description = `你打撈了一片蝦子上來，獲得了 \`${show_amount}\` 個${fish_name}！`
-        } else if (random_fish === "raw_tuna") {
+            description = `你打撈了一片蝦子上來，獲得了 \`${amount}\` 個${fish_name}！`
+        } else if (item === "raw_tuna") {
             fish_text = "呼"
-            description = `你等待了幾個小時，打撈到了 \`${show_amount}\` 條${fish_name}！`
-        } else if (random_fish === "raw_shark") {
+            description = `你等待了幾個小時，打撈到了 \`${amount}\` 條${fish_name}！`
+        } else if (item === "raw_shark") {
             if (Math.round(Math.random()) === 0) {
                 fish_text = "a";
                 description = "欸不是這鯊魚也太大了吧 快跑";
             } else {
                 fish_text = "小鯊魚";
-                description = `這鯊魚好小owo 先帶 \`${show_amount}\` 條 ${fish_name} 回家`;
+                description = `這鯊魚好小owo 先帶 \`${amount}\` 條 ${fish_name} 回家`;
             };
         } else {
             if (Math.round(Math.random()) === 0) {
                 fish_text = "好吃的魚魚！但要怎麼烤呢？"
-                description = `你等待了幾個小時，打撈到了 \`${show_amount}\` 條${fish_name}！`
+                description = `你等待了幾個小時，打撈到了 \`${amount}\` 條${fish_name}！`
             } else {
                 fish_text = "好欸！"
-                description = `有 \`${show_amount}\` 條 ${fish_name} 衝到岸上送魚到你手上了！`
+                description = `有 \`${amount}\` 條 ${fish_name} 衝到岸上送魚到你手上了！`
             };
         };
 
@@ -666,7 +687,7 @@ const rpg_commands = {
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] });
     }],
-    shop: ["商店", "對你的商店進行任何操作", async function ({ client, message, rpg_data, data, args, mode }) {
+    shop: ["商店", "對你的商店進行任何操作", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_shop_data, save_shop_data, save_rpg_data } = require("../../utils/file.js");
         const { name, mine_gets, ingots, foods, shop_lowest_price, get_name_of_id } = require("../../utils/rpg.js");
         const subcommand = args[0];
@@ -934,16 +955,16 @@ const rpg_commands = {
             };
         };
     }],
-    ls: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode }) {
-        return await ls_function({ client, message, rpg_data, data, args, mode })
+    ls: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        return await ls_function({ client, message, rpg_data, data, args, mode, random_item })
     }],
-    bag: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode }) {
+    bag: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
     }],
-    item: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode }) {
+    item: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
     }],
-    buy: ["購買", "購買其他人上架的物品", async function ({ client, message, rpg_data, data, args, mode }) {
+    buy: ["購買", "購買其他人上架的物品", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_shop_data } = require("../../utils/file.js");
         const { name } = require("../../utils/rpg.js");
 
@@ -1168,7 +1189,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }],
-    m: ["查看餘額", "查看自己的餘額", async function ({ client, message, rpg_data, data, args, mode }) {
+    m: ["查看餘額", "查看自己的餘額", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const button = new ButtonBuilder()
             .setCustomId(`rpg_transaction|${message.author.id}`)
             .setLabel('查看交易紀錄')
@@ -1187,13 +1208,13 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }],
-    mo: ["查看餘額", "查看自己的餘額", async function ({ client, message, rpg_data, data, args, mode }) {
+    mo: ["查看餘額", "查看自己的餘額", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
     }],
-    money: ["查看餘額", "查看自己的餘額", async function ({ client, message, rpg_data, data, args, mode }) {
+    money: ["查看餘額", "查看自己的餘額", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
     }],
-    cd: ["查看冷卻剩餘時間", "查看冷卻剩餘時間", async function ({ client, message, rpg_data, data, args, mode }) {
+    cd: ["查看冷卻剩餘時間", "查看冷卻剩餘時間", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const lastRunTimestamp = rpg_data.lastRunTimestamp;
         const filtered_lastRunTimestamp = Object.fromEntries(Object.entries(lastRunTimestamp).filter(([command, time]) => rpg_cooldown[command]));
 
@@ -1217,10 +1238,10 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             };
         };
 
-        if (mode === 1) return { embeds: [setEmbedFooter(client, embed, null, client)] };
-        return await message.reply({ embeds: [setEmbedFooter(client, embed, null, client)] });
+        if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+        return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
     }],
-    cdd: ["[簡易]查看冷卻剩餘時間", "查看冷卻剩餘時間，但是只顯示時間", async function ({ client, message, rpg_data, data, args, mode }) {
+    cdd: ["[簡易]查看冷卻剩餘時間", "查看冷卻剩餘時間，但是只顯示時間", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const lastRunTimestamp = rpg_data.lastRunTimestamp;
         const filtered_lastRunTimestamp = Object.fromEntries(Object.entries(lastRunTimestamp).filter(([command, time]) => rpg_cooldown[command]));
 
@@ -1242,10 +1263,10 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             };
         };
 
-        if (mode === 1) return { embeds: [setEmbedFooter(client, embed, null, client)] };
-        return await message.reply({ embeds: [setEmbedFooter(client, embed, null, client)] });
+        if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+        return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
     }],
-    pay: ["付款", "付款給其他用戶", async function ({ client, message, rpg_data, data, args, mode }) {
+    pay: ["付款", "付款給其他用戶", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const target_user = message.mentions.users.first();
         const emoji_cross = await get_emoji(client, "crosS");
         const emoji_top = await get_emoji(client, "top");
@@ -1306,7 +1327,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }],
-    help: ["查看指令", "查看指令", async function ({ client, message, rpg_data, data, args, mode }) {
+    help: ["查看指令", "查看指令", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`rpg_help_menu|${message.author.id}`)
             .setPlaceholder('選擇要查看的指令類別')
@@ -1346,7 +1367,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }],
-    privacy: ["隱私權", "修改隱私權", async function ({ client, message, rpg_data, data, args, mode }) {
+    privacy: ["隱私權", "修改隱私權", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         // const emoji_shield = await get_emoji(client, "shield");
 
         // const embed = new EmbedBuilder()
@@ -1427,7 +1448,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }],
-    lazy: ["懶惰", "懶惰地遊玩這個遊戲", async function ({ client, message, rpg_data, data, args, mode }) {
+    lazy: ["懶惰", "懶惰地遊玩這個遊戲", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         if (message.channel.id !== "1391989655490265191") return await message.reply("只能在 <#1391989655490265191> 中使用，正式機器人不支援！");
         // if (new Date().getMinutes() % 2 === 0) {
         if (true) {
@@ -1455,7 +1476,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             return await message.reply({ embeds: [embed] });
         };
     }],
-    eat: ["吃東西", "吃東西回復飽食度", async function ({ client, message, rpg_data, data, args, mode }) {
+    eat: ["吃東西", "吃東西回復飽食度", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
         const { foods, name, food_data, foods_crops, foods_meat, fish } = require("../../utils/rpg.js");
 
@@ -1615,7 +1636,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
     }],
-    sell: ["出售", "出售物品給系統", async function ({ client, message, rpg_data, data, args, mode }) {
+    sell: ["出售", "出售物品給系統", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { sell_data, name } = require("../../utils/rpg.js");
 
         const item_name = name[args[0]] || args[0];
@@ -1692,7 +1713,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }],
-    // cmd: ["通過按下按鈕來選擇指令", "PS: 需要參數的指令不行哦！", async function ({ client, message, rpg_data, data, args, mode }) {
+    // cmd: ["通過按下按鈕來選擇指令", "PS: 需要參數的指令不行哦！", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
     //     const commands = Object.keys(rpg_commands);;
 
     //     const attachment = new AttachmentBuilder(`./f_images/cmdBlock.webp`, { name: "cmdBlock.webp" });
@@ -1720,7 +1741,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
     //     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: rows, files: [attachment] };
     //     return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: rows, files: [attachment] });
     // }],
-    top: ["金錢排行榜", "who!誰是世界首富!是不是你!", async function ({ client, message, rpg_data, data, args, mode }) {
+    top: ["金錢排行榜", "who!誰是世界首富!是不是你!", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_rpg_data } = require("../../utils/file.js");
         const guild = message.guild;
 
@@ -1762,7 +1783,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
     }],
-    last: ['"倒數"金錢排行榜', "讓我們看看誰最窮!嘿嘿", async function ({ client, message, rpg_data, data, args, mode }) {
+    last: ['"倒數"金錢排行榜', "讓我們看看誰最窮!嘿嘿", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_rpg_data } = require("../../utils/file.js");
 
         const guild = message.guild;
@@ -1807,7 +1828,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
     }],
-    limited: ["???", "???", async function ({ client, message, rpg_data, data, args, mode }) {
+    limited: ["???", "???", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         if (message.author.id !== "898836485397180426") return;
         const { load_rpg_data } = require("../../utils/file.js");
         const { foods } = require("../../utils/rpg.js");
@@ -1919,13 +1940,14 @@ const privacy_data = {
     ls: "backpack"
 }
 
+
 /**
  * @param {Client} client 機器人客戶端
  * @param {Message} message 訊息
  * @param {boolean} d
  * @param {number} mode 請求模式 - 0: 預設模式 - 1: 取得訊息回傳參數
  * @returns {Promise<Message | MessagePayload | null>}
- */
+*/
 async function rpg_handler({ client, message, d, mode = 0 }) {
     const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
 
@@ -2048,7 +2070,8 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
 
         // 冷卻
-        if (!is_finished) {
+        // if (!is_finished) {
+        if (!is_finished && message.channel.id !== "1432642462840524853") {
             if (mode === 1) return { embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] };
             return await message.reply({ embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] });
         };
@@ -2088,8 +2111,72 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         };
     };
 
-    const result = await execute({ client, message, rpg_data, data, args, mode });
+    const [failed, ...random_item] = get_random_result(command);
+    if (failed) {
+        if (mode === 1) return { embeds: [await get_failed_embed(client, random_item)] };
+        return await message.reply({ embeds: [await get_failed_embed(client, rpg_data.count[command])] });
+    };
+
+    const result = await execute({ client, message, rpg_data, data, args, mode, random_item, random_item });
     if (mode === 1) return result;
+};
+
+/**
+ * 
+ * @param {Array<any>} array 
+ * @returns {any}
+ */
+function get_random_element(array) {
+    const randomIndex = Math.floor(Math.random() * array.length);
+    return array[randomIndex];
+};
+
+/**
+ * 
+ * @param {number} min 
+ * @param {number} max 
+ * @returns {number}
+ */
+function get_random_number(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+};
+
+/**
+ * 
+ * @param {string} category 
+ * @returns {{failed: boolean, item: string, times: number}}
+ */
+function get_random_result(category) {
+    const { probabilities, failed } = require("../../utils/config.js");
+    const datas = probabilities[category];
+    if (!datas) return {
+        failed: undefined,
+        item: null,
+        amount: null
+    };
+
+    /*
+    {
+        "key": [amount, ...],
+        "key2": [amount, ...],
+        ...
+    }
+
+    -> [key * amount, key2 * amount, ...]
+    */
+    const result = [];
+    for (const [key, value] of Object.entries(datas)) {
+        result.push(...Array(value[0]).fill(key));
+    };
+
+    const item = get_random_element(result);
+    const data = datas[item];
+
+    const amount = get_random_number(data[1], data[2]);
+
+    const failed = failed.includes(item);
+
+    return { failed, item, amount };
 };
 
 let lock = {
