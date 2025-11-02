@@ -63,7 +63,7 @@ module.exports = {
 
         const command = args[0].substring(1); // 移除開頭的 '!'
         const commandArgs = args.slice(1); // 獲取所有參數
-        const argsshow = "";
+        let argsshow = "";
         for (const arg of commandArgs) {
             argsshow += `${arg} (${typeof arg})\n`
         };
