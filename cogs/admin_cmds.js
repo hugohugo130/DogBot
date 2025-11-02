@@ -63,7 +63,12 @@ module.exports = {
 
         const command = args[0].substring(1); // 移除開頭的 '!'
         const commandArgs = args.slice(1); // 獲取所有參數
-        message.reply(`[DEBUG]\ncommand: ${command}\nargs:\n${commandArgs.join("\n")}`)
+        const argsshow = "";
+        for (const arg of commandArgs) {
+            argsshow += `${arg} (${typeof arg})\n`
+        };
+
+        message.reply(`[DEBUG]\ncommand: ${command}\nargs:\n${argsshow.trim()}`)
 
         // 使用 switch 處理不同的指令
         switch (command) {
