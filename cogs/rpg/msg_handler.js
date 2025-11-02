@@ -1458,9 +1458,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             const cmds = ["mine", "hew", "herd", "brew", "fish"];
             for (const cmd of cmds) {
                 const res = await redirect({ client, message, command: cmd, mode: 1 });
-                for (const embed of res.embeds) {
-                    embeds.push(embed);
-                };
+                embeds.push(...res.embeds);
             };
 
             if (mode === 1) return { embeds };
