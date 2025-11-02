@@ -11,7 +11,7 @@ function add_item(rpg_data, item, amount) {
     return rpg_data
 };
 
-function handleMoneyCommand(message args) {
+function handleMoneyCommand(message, args) {
     const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
 
     const user = message.mentions.users.first();
