@@ -19,13 +19,31 @@ function handleMoneyCommand(message, args) {
 
     if (!user) return message.reply("請標記一個用戶！");
     if (!amount) return message.reply("amount must be a number");
-    if (amount < 0) return message.reply("amount must be positive");
 
     const rpg_data = load_rpg_data(user.id);
 
     rpg_data.money += amount;
     save_rpg_data(user.id, rpg_data);
+
     return message.reply(`done adding <@${user.id}>'s money. +${amount}`);
+};
+
+function handleInvCommand(message, args) {
+    const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
+
+    const item = args[0];
+    const amount = parseInt(args[1]);
+    const user = message.mentions.users.first();
+
+    if (!item) return message.reply("請輸入物品名稱！");
+    if (!amount) return message.reply("amount must be a number");
+    if (!user) return message.reply("請標記一個用戶！");
+
+    const rpg_data = load_rpg_data(user.id);
+    rpg_data.inventory[item] = amount;
+    save_rpg_data(user.id, rpg_data);
+
+    return message.reply(`done setting <@${user.id}>'s ${item} to ${amount}`);
 };
 
 module.exports = {
@@ -57,6 +75,10 @@ module.exports = {
 
             case "money":
                 handleMoneyCommand(message, commandArgs);
+                break;
+
+            case "inv":
+                handleInvCommand(message, commandArgs);
                 break;
         };
 
