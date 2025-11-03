@@ -32,6 +32,7 @@ const DEFAULT_VALUES = {
             "items": {},
         },
         "bake_db.json": [],
+        "smelt_db.json": [],
     },
     "single": {
         "serverIP.json": {
@@ -79,6 +80,8 @@ const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
 
 const priorityUserIDs = ["898836485397180426", "1245902419750289538"];
 const priorityGuildIDs = ["1422545977226690683", "1218367644307034112"];
+
+const authorName = "哈狗";
 
 /*
 https://discord.js.org/docs/packages/discord.js/14.24.0/ColorResolvable:TypeAlias
@@ -267,6 +270,7 @@ module.exports = {
     prefix,
     enable_auto_register_cmd,
     auto_register_cmd_file,
+    authorName,
     embed_default_color,
     embed_error_color,
     priorityUserIDs,
