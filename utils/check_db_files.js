@@ -1,4 +1,4 @@
-const { readJson, writeJson, existsSync, join, basename } = require("./file.js");
+const { readJson, writeJson, existsSync, join, basename, join_db_folder } = require("./file.js");
 const { database_folder, DATABASE_FILES, DEFAULT_VALUES, priorityUserIDs, priorityGuildIDs } = require("./config.js");
 const { get_logger } = require("./logger.js");
 const { wait_until_ready, client_ready } = require("./wait_until_ready.js");
@@ -22,6 +22,9 @@ async function checkDBFilesExists() {
 async function checkDBFilesCorrupted() {
     let err = false;
     for (let file of DATABASE_FILES) {
+        const filepath = join_db_folder(file);
+        if (!existsSync(filepath)) continue;
+
         try {
             await readJson(file);
         } catch (err) {
