@@ -36,7 +36,7 @@ async function checkDBFilesCorrupted() {
         }
     };
 
-    if (err) return;
+    if (err) process.exit(1);
 };
 
 /**
