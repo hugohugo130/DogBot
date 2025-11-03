@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits, Events, Options } = require('discord.js');
-const { checkDBFilesExists } = require('./utils/check_db_files.js');
+const { checkDBFilesExists, checkDBFilesCorrupted } = require('./utils/check_db_files.js');
 const { checkAllDatabaseFilesContent } = require('./utils/onlineDB.js');
 const { load_cogs } = require("./utils/load_cogs.js");
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
@@ -78,13 +78,14 @@ process.on('SIGINT', async () => {
 });
 
 (async () => {
-    const { downloadAllFiles } = require('./utils/onlineDB.js');
+    // const { downloadAllFiles } = require('./utils/onlineDB.js');
     // await downloadAllFiles();
 
     client.last_send_log = "";
     global._client = null;
     global.oven_sessions = {};
 
+    await checkDBFilesCorrupted();
     await checkAllDatabaseFilesContent();
     check_item_data();
 

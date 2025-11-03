@@ -4,6 +4,7 @@ const { get_logger } = require("./logger.js");
 const { wait_until_ready, client_ready } = require("./wait_until_ready.js");
 
 const logger = get_logger();
+const logger_nodc = get_logger({ nodc: true });
 
 async function checkDBFilesExists() {
     for (let file of DATABASE_FILES) {
@@ -16,6 +17,23 @@ async function checkDBFilesExists() {
             logger.warn(`資料庫檔案 ${file} 不存在，已建立 (預設值為: ${default_value})`);
         };
     };
+};
+
+async function checkDBFilesCorrupted() {
+    let err = false;
+    for (let file of DATABASE_FILES) {
+        try {
+            await readJson(file);
+        } catch (err) {
+            // 如果含有 "SyntaxError: Expected property name"，則警告並且退出程式
+            if (err.message.includes("SyntaxError: Expected property name")) {
+                logger_nodc.error(`資料庫檔案 ${file} 已損毀，請檢查檔案內容！`);
+                err = true;
+            };
+        }
+    };
+
+    if (err) return;
 };
 
 /**
@@ -91,5 +109,6 @@ async function checkDBFilesDefault(client) {
 
 module.exports = {
     checkDBFilesExists,
+    checkDBFilesCorrupted,
     checkDBFilesDefault,
 };
