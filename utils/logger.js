@@ -8,6 +8,7 @@ const config = require('./config.js');
 // 全局管理器
 const loggerManager = new Map();
 const loggerManager_log = new Map();
+const loggerManager_nodc = new Map();
 global.sendQueue = [];
 
 const DEBUG = false;
@@ -177,30 +178,29 @@ function getCallerModuleName(depth = 4) {
 
 /**
  * 
- * @param {{name: string, client: object}} options
+ * @param {{name: string, backend: boolean, nodc: boolean}} options
  * @returns {winston.Logger}
  */
 function get_logger(options = {}) {
     let {
         name = getCallerModuleName(4),
-        client = undefined,
         backend = false,
+        nodc = false,
+        client = undefined,
     } = options;
 
     // 返回已存在的 logger (backend 和非 backend 的 logger 分開管理)
     if (backend) {
-        if (loggerManager_log.has(name)) {
-            return loggerManager_log.get(name);
-        };
+        if (loggerManager_log.has(name)) return loggerManager_log.get(name);
+    } else if (nodc) {
+        if (loggerManager_nodc.has(name)) return loggerManager_nodc.get(name);
     } else {
-        if (loggerManager.has(name)) {
-            return loggerManager.get(name);
-        };
+        if (loggerManager.has(name)) return loggerManager.get(name);
     };
 
     if (client) console.warn(`[get_logger] [DEPRECATED] get logger from module ${name} gave client args, that's not needed`);
 
-    if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger with backend=${backend}, name=${name}, call from ${getCallerModuleName(4)}`);
+    if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger with backend=${backend}, nodc=${nodc}, name=${name}, call from ${getCallerModuleName(4)}`);
 
     // 創建 transports
     const transports = [
@@ -208,10 +208,13 @@ function get_logger(options = {}) {
             format: consoleFormat,
             level: 'debug' // 控制台显示所有級別
         }),
-        new DiscordTransport({
-            level: 'warn',
-        })
     ];
+
+    if (!nodc) {
+        transports.push(new DiscordTransport({
+            level: 'warn',
+        }));
+    };
 
     if (backend) {
         transports.length = 0;
@@ -234,6 +237,7 @@ function get_logger(options = {}) {
 
     // 儲存 logger
     if (backend) loggerManager_log.set(name, logger);
+    else if (nodc) loggerManager_nodc.set(name, logger);
     else loggerManager.set(name, logger);
 
     return logger;
