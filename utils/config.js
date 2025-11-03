@@ -13,6 +13,7 @@ const DATABASE_FILES = [
     "rpg_database.json",
     "rpg_shop.json",
     "bake_db.json",
+    "smelt_db.json",
     "serverIP.json",
 ];
 
@@ -52,6 +53,7 @@ const onlineDB_Files = [
     "rpg_database.json",
     "rpg_shop.json",
     "bake_db.json",
+    "smelt_db.json",
 ];
 
 const database_file = join(database_folder, "database.json")
