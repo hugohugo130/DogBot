@@ -96,6 +96,7 @@ process.on('SIGINT', async () => {
 
     await checkDBFilesCorrupted();
     await checkAllDatabaseFilesContent();
+    await checkDBFilesExists();
     check_item_data();
 
     const cogs = load_cogs(client);
@@ -105,8 +106,7 @@ process.on('SIGINT', async () => {
     client.commands = loadslashcmd(true);
 
     logger.info(`已加載 ${client.commands.size} 個斜線指令`);
-    
-    await checkDBFilesExists();
+
     client.serverIP = getServerIPSync(client);
 
     await client.login(process.env.TOKEN);

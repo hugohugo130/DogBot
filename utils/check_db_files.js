@@ -1,5 +1,5 @@
 const { readJson, writeJson, existsSync, join, basename, join_db_folder } = require("./file.js");
-const { database_folder, DATABASE_FILES, DEFAULT_VALUES, priorityUserIDs, priorityGuildIDs } = require("./config.js");
+const { DATABASE_FILES, DEFAULT_VALUES, priorityUserIDs, priorityGuildIDs } = require("./config.js");
 const { get_logger } = require("./logger.js");
 const { wait_until_ready, client_ready } = require("./wait_until_ready.js");
 
