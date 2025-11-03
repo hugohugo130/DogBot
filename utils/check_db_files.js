@@ -11,7 +11,7 @@ async function checkDBFilesExists() {
         file = basename(file);
         const defaultValue = DEFAULT_VALUES?.single?.[file] || {};
 
-        const filePath = join(database_folder, file);
+        const filePath = join_db_folder(file);
         if (!existsSync(filePath) && defaultValue) {
             const default_value = await writeJson(filePath, defaultValue);
             logger.warn(`資料庫檔案 ${file} 不存在，已建立 (預設值為: ${default_value})`);
@@ -73,7 +73,9 @@ async function checkDBFilesDefault(client) {
 
     for (const [file, default_value] of Object.entries(user_files)) {
         let modified = false;
-        const filePath = join(database_folder, file);
+        const filePath = join_db_folder(file);
+        if (!existsSync(filePath)) continue;
+
         const data = await readJson(filePath);
         if (!default_value) {
             logger.warn(`警告：資料庫檔案 ${file} 缺失預設值，請及時補充。`);
@@ -92,7 +94,9 @@ async function checkDBFilesDefault(client) {
 
     for (const [file, default_value] of Object.entries(guild_files)) {
         let modified = false;
-        const filePath = join(database_folder, file);
+        const filePath = join_db_folder(file);
+        if (!existsSync(filePath)) continue;
+
         const data = await readJson(filePath);
         if (!default_value) {
             logger.warn(`警告：資料庫檔案 ${file} 缺失預設值，請及時補充。`);
