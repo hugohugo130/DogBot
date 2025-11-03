@@ -2,7 +2,7 @@ const { Events } = require("discord.js");
 const { get_logger } = require("../utils/logger.js");
 const { checkDBFilesDefault } = require("../utils/check_db_files.js");
 const { run_schedule } = require("../utils/run_schedule.js");
-const { BotName } = require("../utils/config.js");
+const { BotName, authorName } = require("../utils/config.js");
 
 module.exports = {
     name: Events.ClientReady,
@@ -10,6 +10,7 @@ module.exports = {
     execute: async function (client) {
         global._client = client;
         client.name = BotName || client.user.tag;
+        client.author = authorName || "哈狗";
         const logger = get_logger();
 
         await checkDBFilesDefault(client);
