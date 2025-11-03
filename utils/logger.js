@@ -318,4 +318,6 @@ module.exports = {
     process_send_queue,
     shutdown,
     loggerManager,
+    loggerManager_log,
+    loggerManager_nodc,
 };

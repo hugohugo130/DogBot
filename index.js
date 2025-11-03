@@ -3,7 +3,7 @@ const { checkDBFilesExists, checkDBFilesCorrupted } = require('./utils/check_db_
 const { checkAllDatabaseFilesContent } = require('./utils/onlineDB.js');
 const { load_cogs } = require("./utils/load_cogs.js");
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
-const { get_logger, loggerManager } = require('./utils/logger.js');
+const { get_logger, loggerManager, loggerManager_log, loggerManager_nodc } = require('./utils/logger.js');
 const { loadslashcmd } = require('./utils/loadslashcmd.js');
 const { safeshutdown } = require('./utils/safeshutdown.js');
 const { get_areadline } = require('./utils/readline.js');
@@ -60,8 +60,17 @@ client.once(Events.ClientReady, async () => {
     rl.on("line", async (input) => {
         if (input === "stop") {
             await safeshutdown(client);
-        } else if (input === "logger") {
-            logger.log(`\n${Object.keys(loggerManager).join("\n")}`);
+            if (input === "fstop") {
+                process.exit(0);
+            } else if (input === "logger") {
+                logger.log(`
+loggerManager:
+${Object.keys(loggerManager).join("\n")}
+loggerManager_log:
+${Object.keys(loggerManager_log).join("\n")}
+loggerManager_nodc:
+${Object.keys(loggerManager_nodc).join("\n")}`);
+            };
         };
     });
 });
