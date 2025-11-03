@@ -110,7 +110,7 @@ async function redirect({ client, message, command, mode = 0 }) {
 
 /**
  * 
- * @param {BaseInteraction | ChatInputCommandInteraction | Message | Client} interaction 
+ * @param {Client} client 
  * @param {EmbedBuilder} embed 
  * @param {string} text 
  * @returns {EmbedBuilder}
@@ -121,7 +121,24 @@ function setEmbedFooter(client = global._client, embed, text = "") {
 
     embed.setFooter({
         text,
-        iconURL: (client || global._client)?.user?.displayAvatarURL({ dynamic: true }),
+        iconURL: client?.user?.displayAvatarURL({ dynamic: true }),
+    });
+
+    return embed;
+};
+
+/**
+ * 
+ * @param {Client} client 
+ * @param {EmbedBuilder} embed 
+ * @param {string} author 
+ */
+function setEmbedAuthor(client = global._client, embed, author = "") {
+    if (!author) author = client.name;
+
+    embed.setAuthor({
+        name: author,
+        iconURL: client?.user?.displayAvatarURL({ dynamic: true }),
     });
 
     return embed;
@@ -196,7 +213,10 @@ const rpg_help = {
 // Object.assign(rpg_help.fell, rpg_help.hew);
 // Object.assign(rpg_help.wood, rpg_help.hew);
 
+
 async function get_help_embed(category, client) {
+    category = category.toLowerCase();
+
     if (!rpg_help[category]) return null;
 
     const embedData = rpg_help[category];
@@ -225,7 +245,8 @@ async function get_emoji(client = global._client, name) {
         emoji = emojis.find(e => e.name === name);
     };
 
-    if (!emoji) throw new Error(`找不到名為${name}的emoji`);
+    // if (!emoji) throw new Error(`找不到名為${name}的emoji`);
+    if (!emoji) return "";
     emoji = `<${emoji.animated ? 'a' : ''}:${emoji.name}:${emoji.id}>`;
     return emoji;
 };
@@ -1331,41 +1352,50 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
     }],
     help: ["查看指令", "查看指令", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId(`rpg_help_menu|${message.author.id}`)
-            .setPlaceholder('選擇要查看的指令類別')
+            .setCustomId(`help|${message.author.id}`)
+            .setPlaceholder(`指令教學`)
             .addOptions([
                 {
-                    label: '資源收集',
-                    description: '挖礦、伐木等資源收集指令',
-                    value: 'gathering'
+                    label: `一般`,
+                    description: `查詢類型的指令`,
+                    value: `general`,
                 },
                 {
-                    label: '商店系統',
-                    description: '商店相關指令',
-                    value: 'shop'
+                    label: `音樂`,
+                    description: `想要聽音樂的靠過來`,
+                    value: `music`,
                 },
                 {
-                    label: '背包系統',
-                    description: '背包相關指令',
-                    value: 'inventory'
+                    label: `rpg系統`,
+                    description: `找不到手游玩就來玩RPG`,
+                    value: `rpg`,
                 },
                 {
-                    label: '其他指令',
-                    description: '其他雜項指令',
-                    value: 'others'
-                }
+                    label: `特殊`,
+                    description: `特殊功能等你去挖掘`,
+                    value: `special`,
+                },
+                {
+                    label: `開發者使用`,
+                    description: `開發者使用`,
+                    value: `dev`,
+                },
             ]);
 
         const row = new ActionRowBuilder()
             .addComponents(selectMenu);
 
-        const embed = new EmbedBuilder()
+        let embed = new EmbedBuilder()
             .setColor(embed_default_color)
-            .setAuthor({
-                name: client.user.globalName || client.user.username,
-                iconURL: client.user.displayAvatarURL({ dynamic: true }),
-            })
-            .setDescription('請選擇要查看的指令類別');
+            .setDescription(`
+嗨嗨 d(･∀･)b 我是${client.name}，
+我的目標是讓你快速建立優質的中文 Discord 伺服器!
+
+${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
+-# 本機器犬是參考 YEE式機器龍 製作的，${client.author}不是機器龍的開發者owo`);
+        
+        embed = setEmbedAuthor(client, embed);
+
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }],
@@ -2207,6 +2237,7 @@ module.exports = {
     get_random_number,
     get_loophole_embed,
     setEmbedFooter,
+    setEmbedAuthor,
     unlock_waiting_handler,
     MockMessage,
     get_emoji,

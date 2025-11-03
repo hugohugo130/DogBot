@@ -43,6 +43,50 @@ async function get_failed_embed(client = global._client) {
     return setEmbedFooter(client, embed);
 };
 
+const help = {
+    name: {
+        general: "一般",
+        music: "音樂",
+        rpg: "RPG遊戲",
+        special: "特殊",
+        dev: "開發者使用",
+    },
+    group: {
+        general: [],
+        music: [],
+        rpg: [],
+        special: [],
+        dev: [],
+    },
+};
+
+function get_help_embed(category, client = global._client) {
+    const { setEmbedFooter } = require("./msg_handler.js");
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId("")
+
+    const embed = new EmbedBuilder()
+        .setColor(embed_default_color)
+        .setTitle(help.name[category])
+
+    return setEmbedFooter(client, embed);
+};
+
+function get_help_command(command, client = global._client) {
+    const { setEmbedFooter, setEmbedAuthor } = require("./msg_handler.js");
+
+    const embed = new EmbedBuilder()
+        .setColor(embed_default_color)
+        .setTitle(command.name)
+        .setDescription(command.description)
+        .addFields(
+            { name: "使用方式", value: command.usage },
+            { name: "權限", value: command.permissions.join(", ") },
+        )
+    return setEmbedFooter(client, embed);
+};
+
 module.exports = {
     name: Events.InteractionCreate,
     execute: async function (client, interaction) {
@@ -77,15 +121,14 @@ module.exports = {
             await interaction.deferUpdate();
             const embed = get_transaction_embed(interaction);
             await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
-        } else if (interaction.customId.startsWith('rpg_help_menu')) {
-            const { get_help_embed } = require("./msg_handler.js");
+        } else if (interaction.customId.startsWith('help')) {
             await interaction.deferUpdate();
 
             const category = interaction.values[0];
-            const newEmbed = await get_help_embed(category, client);
+            const embed = await get_help_embed(category, client);
 
             await interaction.followUp({
-                embeds: [newEmbed],
+                embeds: embed ? [embed] : [],
                 flags: MessageFlags.Ephemeral,
             });
         } else if (interaction.customId.startsWith('pay')) {
@@ -439,7 +482,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
                     .setColor(embed_error_color)
                     .setDescription(`你缺少了 ${items.join("、")}`);
-                
+
                 const TopLevelComponent = interaction.message.components;
                 if (TopLevelComponent instanceof ActionRow) {
                     const components = TopLevelComponent.components;
