@@ -105,7 +105,7 @@ process.on('SIGINT', async () => {
     client.commands = loadslashcmd(true);
 
     logger.info(`已加載 ${client.commands.size} 個斜線指令`);
-
+    
     await checkDBFilesExists();
     client.serverIP = getServerIPSync(client);
 
