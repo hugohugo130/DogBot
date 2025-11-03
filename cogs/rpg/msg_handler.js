@@ -1393,7 +1393,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
 ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 -# 本機器犬是參考 YEE式機器龍 製作的，${client.author}不是機器龍的開發者owo`);
-        
+
         embed = setEmbedAuthor(client, embed);
 
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
@@ -2124,8 +2124,14 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         if (found_food) {
             // 嘗試自動吃掉一個食物
             if (typeof rpg_commands.eat?.[2] === "function") {
-                await rpg_commands.eat[2]({ client, message, rpg_data, data, args: [found_food, "all"], mode });
-            }
+                const res = await rpg_commands.eat[2]({ client, message, rpg_data, data, args: [found_food, "all"], mode: 1 });
+                if (mode === 1) return res;
+                if (res.embeds && res.embeds.length > 1) {
+                    res.embeds.length = 1;
+                };
+
+                return await message.reply(res);
+            };
         } else {
             const emoji_cross = await get_emoji(client, "crosS");
 
