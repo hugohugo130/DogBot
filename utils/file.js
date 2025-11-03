@@ -457,12 +457,26 @@ function save_shop_data(userid, shop_data) {
 
 function load_bake_data() {
     const { bake_data_file } = require("./config.js");
+
     return readJsonSync(bake_data_file);
 };
 
 function save_bake_data(data) {
     const { bake_data_file } = require("./config.js");
+
     writeJsonSync(bake_data_file, data);
+};
+
+function load_smelt_data() {
+    const { smelt_data_file } = require("./config.js");
+
+    return readJsonSync(smelt_data_file);
+};
+
+function save_smelt_data(data) {
+    const { smelt_data_file } = require("./config.js");
+
+    writeJsonSync(smelt_data_file, data);
 };
 
 module.exports = {
@@ -502,4 +516,6 @@ module.exports = {
     save_shop_data,
     load_bake_data,
     save_bake_data,
+    load_smelt_data,
+    save_smelt_data,
 };

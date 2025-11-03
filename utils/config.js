@@ -58,6 +58,7 @@ const rpg_database_file = join(database_folder, "rpg_database.json");
 const rpg_shop_file = join(database_folder, "rpg_database.json");
 const bake_data_file = join(database_folder, "./bake_db.json");
 const serverIPFile = join(database_folder, "serverIP.json");
+const smelt_data_file = join(database_folder, "smelt_db.json");
 
 const cogsFolder = `${cwd()}/cogs`
 const scheduleEverysec = `${cwd()}/schedule/everysec`
@@ -242,11 +243,14 @@ module.exports = {
     database_folder,
     DATABASE_FILES,
     onlineDB_Files,
+
     database_file,
     rpg_database_file,
     rpg_shop_file,
     bake_data_file,
     serverIPFile,
+    smelt_data_file,
+
     DEFAULT_VALUES,
     BETA,
     DEFAULT_IP,
