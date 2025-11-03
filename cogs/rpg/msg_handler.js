@@ -133,10 +133,10 @@ const rpg_emojis = {
     fell: "wood",
     wood: "wood",
     mine: "ore",
-    shop: "shop",
+    shop: "store",
     ls: "backpack",
-    buy: "coin",
-    sell: "coin",
+    buy: "store",
+    sell: "trade",
     cd: "timer",
 };
 
@@ -1642,6 +1642,8 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const item_name = name[args[0]] || args[0];
         const item_id = Object.keys(name).find(key => name[key] === item_name);
 
+        const emoji_trade = await get_emoji(client, "trade");
+
         if (!name[item_id]) {
             const emoji_cross = await get_emoji(client, "crosS");
 
@@ -1702,8 +1704,6 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
         const row = new ActionRowBuilder()
             .addComponents(cancel_button, confirm_button);
-
-        const emoji_trade = await get_emoji(client, "trade");
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
