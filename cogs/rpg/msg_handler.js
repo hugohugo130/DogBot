@@ -502,11 +502,16 @@ command_name: "{c} will be replaced with the command execution times"
 */
 const rpg_cooldown = {
     // 單位: 秒
-    mine: "180 + {c} * 30",
-    hew: "180 + {c} * 30",
-    herd: "195 + {c} * 30",
-    brew: "145 + {c} * 25",
-    fish: "90 + {c} * 20",
+    // mine: "180 + {c} * 30",
+    // hew: "180 + {c} * 30",
+    // herd: "195 + {c} * 30",
+    // brew: "145 + {c} * 25",
+    // fish: "90 + {c} * 20",
+    mine: "5",
+    hew: "5",
+    herd: "5",
+    brew: "5",
+    fish: "5",
     farm_water: "60 * 60 * 12" // 12小時
 };
 
@@ -2097,8 +2102,8 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
 
         // 冷卻
-        // if (!is_finished) {
-        if (!is_finished && message.channel.id !== "1432642462840524853") {
+        if (!is_finished) {
+        // if (!is_finished && message.channel.id !== "1432642462840524853") {
             if (mode === 1) return { embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] };
             return await message.reply({ embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] });
         };
