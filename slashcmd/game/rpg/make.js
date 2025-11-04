@@ -102,11 +102,13 @@ module.exports = {
         };
 
         for (const need_item in item_need) {
+            if (!rpg_data.inventory[need_item]) rpg_data.inventory[need_item] = 0;
             rpg_data.inventory[need_item] -= item_need[need_item];
         };
 
         const output_amount = recipes[item_id].amount * amount;
 
+        if (!rpg_data.inventory[item_id]) rpg_data.inventory[item_id] = 0;
         rpg_data.inventory[item_id] += output_amount;
         save_rpg_data(userid, rpg_data);
 
