@@ -124,13 +124,13 @@ module.exports = {
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             }
 
-            if (allMats) {
-                amount = Math.floor((rpg_data.inventory[item_id] || amount) / input_amount);
-            };
-
             const input_amount = smelt_recipe.input[0].amount * amount;
             const output_amount = smelt_recipe.amount * amount;
             const duration = 5 * 60 * amount;
+
+            if (allMats) {
+                amount = Math.floor((rpg_data.inventory[item_id] || amount) / input_amount);
+            };
 
             let item_need = [
                 {
