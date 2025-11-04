@@ -87,6 +87,8 @@ module.exports = {
             };
         };
 
+        await interaction.followUp({ content: `BEFORE_REDUCE_ITEM_COUNT\nrpg_data.inventory\n${JSON.stringify(rpg_data.inventory)}` })
+
         if (item_missing.length > 0) {
             const items = [];
             for (const missing of item_missing) {
@@ -108,9 +110,13 @@ module.exports = {
 
         const output_amount = recipes[item_id].amount * amount;
 
+        await interaction.followUp({ content: `AFTER_REDUCE_ITEM_COUNT\nrpg_data.inventory\n${JSON.stringify(rpg_data.inventory)}` })
+
         if (!rpg_data.inventory[item_id]) rpg_data.inventory[item_id] = 0;
         rpg_data.inventory[item_id] += output_amount;
         save_rpg_data(userid, rpg_data);
+
+        await interaction.followUp({ content: `AFTER_ADD_ITEM_COUNT(done making)\nrpg_data.inventory\n${JSON.stringify(rpg_data.inventory)}` })
 
         const emoji = await get_emoji(interaction.client, "toolbox")
         const embed = new EmbedBuilder()
