@@ -206,7 +206,7 @@ const probabilities = {
     "cook": {
 
     },
-    "smelter": {
+    "smelt": {
 
     },
     "hew": {
