@@ -1,4 +1,4 @@
-const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, BaseInteraction, ChatInputCommandInteraction, Message } = require("discord.js");
+const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message } = require("discord.js");
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger } = require("../../utils/logger.js");
 const { prefix, embed_default_color, embed_error_color, failed } = require("../../utils/config.js");
