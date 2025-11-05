@@ -18,5 +18,6 @@ module.exports = {
         logger.info(`已加載 ${schedules} 個排程`);
 
         logger.info(`機器人 ${client.name} 啟動成功`);
+        logger.info(`好欸！已經有${client.guilds.cache.size}個伺服器在使用${client.name}了！`)
     },
 }
