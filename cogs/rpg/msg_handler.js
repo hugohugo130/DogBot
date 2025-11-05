@@ -436,7 +436,7 @@ async function ls_function({ client, message, rpg_data, data, args, mode, random
     for (const [item, amount] of Object.entries(rpg_data.inventory || {})) {
         if (amount <= 0) continue;
 
-        if (Object.keys(mine_gets).includes(item) && Object.keys(ingots).includes(item)) {
+        if (Object.keys(mine_gets).includes(item) || Object.keys(ingots).includes(item)) {
             ores[item] = amount;
         } else if (Object.keys(logs).includes(item) || Object.keys(planks).includes(item) || Object.keys(wood_productions).includes(item)) {
             log_items[item] = amount;
