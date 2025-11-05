@@ -60,17 +60,16 @@ client.once(Events.ClientReady, async () => {
     rl.on("line", async (input) => {
         if (input === "stop") {
             await safeshutdown(client);
-            if (input === "fstop") {
-                process.exit(0);
-            } else if (input === "logger") {
-                logger.log(`
+        } else if (input === "fstop") {
+            process.exit(0);
+        } else if (input === "logger") {
+            logger.log(`
 loggerManager:
 ${Object.keys(loggerManager).join("\n")}
 loggerManager_log:
 ${Object.keys(loggerManager_log).join("\n")}
 loggerManager_nodc:
 ${Object.keys(loggerManager_nodc).join("\n")}`);
-            };
         };
     });
 });
