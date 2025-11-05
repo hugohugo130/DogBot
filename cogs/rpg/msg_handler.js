@@ -393,6 +393,8 @@ async function get_loophole_embed(client = global._client, text = null) {
 };
 
 async function ls_function({ client, message, rpg_data, data, args, mode, random_item, PASS }) {
+    const { name, mine_gets, ingots, logs, foods_crops, foods_meat, fish, weapons_armor, wood_productions, brew, planks } = require("../../utils/rpg.js");
+
     if (!rpg_data.privacy.includes(privacy_data["ls"]) && !PASS) {
         const bag_emoji = await get_emoji(client, "bag");
 
@@ -416,7 +418,6 @@ async function ls_function({ client, message, rpg_data, data, args, mode, random
         return await message.reply({ embeds: [embed], components: [row] });
     };
 
-    const { name, mine_gets, ingots, logs, foods_crops, foods_meat, fish, weapons_armor, wood_productions, brew, planks } = require("../../utils/rpg.js");
     const emojiNames = ["bag", "ore", "farmer", "cow", "swords", "potion"];
     const [bag_emoji, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await Promise.all(
         emojiNames.map(name => get_emoji(client, name))
