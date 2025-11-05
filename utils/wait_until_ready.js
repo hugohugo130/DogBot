@@ -7,7 +7,7 @@ function wait_until_ready(client = global._client, timeout = 10) {
     const start = Date.now() / 1000;
 
     while (true) {
-        if (client_ready(client) || start + 10 >= Date.now()) break;
+        if (client_ready(client) || start + timeout >= Date.now()) break;
     };
 
     return client_ready(client) ? client : null;;
