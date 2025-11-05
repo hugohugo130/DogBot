@@ -392,7 +392,7 @@ async function get_loophole_embed(client = global._client, text = null) {
     return setEmbedFooter(client, embed)
 };
 
-async function ls_function({ client, message, rpg_data, data, args, mode, PASS }) {
+async function ls_function({ client, message, rpg_data, data, args, mode, random_item, PASS }) {
     if (!rpg_data.privacy.includes(privacy_data["ls"]) && !PASS) {
         const bag_emoji = await get_emoji(client, "bag");
 
