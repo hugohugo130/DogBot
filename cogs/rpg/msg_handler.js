@@ -424,7 +424,6 @@ async function ls_function({ client, message, rpg_data, data, args, mode, PASS }
 
     // 分類物品
     const ores = {};
-    const ingot_items = {};
     const log_items = {};
     const food_crops_items = {};
     const food_meat_items = {}
@@ -437,10 +436,8 @@ async function ls_function({ client, message, rpg_data, data, args, mode, PASS }
     for (const [item, amount] of Object.entries(rpg_data.inventory || {})) {
         if (amount <= 0) continue;
 
-        if (Object.keys(mine_gets).includes(item)) {
+        if (Object.keys(mine_gets).includes(item) && Object.keys(ingots).includes(item)) {
             ores[item] = amount;
-        } else if (Object.keys(ingots).includes(item)) {
-            ingot_items[item] = amount;
         } else if (Object.keys(logs).includes(item) || Object.keys(planks).includes(item) || Object.keys(wood_productions).includes(item)) {
             log_items[item] = amount;
         } else if (Object.keys(foods_crops).includes(item)) {
@@ -468,7 +465,6 @@ async function ls_function({ client, message, rpg_data, data, args, mode, PASS }
     // 使用循環添加各類物品欄位
     const categories = [
         { items: ores, name: `${ore_emoji} 礦物` },
-        { items: ingot_items, name: '🔨 金屬錠' },
         { items: log_items, name: '🪵 木材' },
         { items: food_crops_items, name: `${farmer_emoji} 農作物` },
         { items: food_meat_items, name: `${cow_emoji} 肉類` },
@@ -478,20 +474,22 @@ async function ls_function({ client, message, rpg_data, data, args, mode, PASS }
         { items: other_items, name: '📦 其他物品' }
     ];
 
-    for (const category of categories) {
-        if (Object.keys(category.items).length > 0) {
-            const itemsText = Object.entries(category.items)
-                .map(([item, amount]) => `${name[item]} \`x${amount.toLocaleString()}\``)
-                .join('\n');
-            embed.addFields({ name: category.name, value: itemsText, inline: true });
-        };
-    };
-
     // 如果背包是空的
     if (Object.keys(rpg_data.inventory || {}).length === 0) {
         embed.setColor(embed_error_color);
         embed.setTitle(`${bag_emoji} | 你的背包裡沒有任何東西`);
+    } else {
+
+        for (const category of categories) {
+            if (Object.keys(category.items).length > 0) {
+                const itemsText = Object.entries(category.items)
+                    .map(([item, amount]) => `${name[item]} \`x${amount.toLocaleString()}\``)
+                    .join('\n');
+                embed.addFields({ name: category.name, value: itemsText, inline: true });
+            };
+        };
     };
+
 
     if (mode === 1) return { embeds: [embed] };
     return await message.reply({ embeds: [embed] });
@@ -2103,7 +2101,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
         // 冷卻
         if (!is_finished) {
-        // if (!is_finished && message.channel.id !== "1432642462840524853") {
+            // if (!is_finished && message.channel.id !== "1432642462840524853") {
             if (mode === 1) return { embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] };
             return await message.reply({ embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] });
         };
