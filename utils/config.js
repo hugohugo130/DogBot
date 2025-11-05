@@ -64,6 +64,7 @@ const serverIPFile = join(database_folder, "serverIP.json");
 const smelt_data_file = join(database_folder, "smelt_db.json");
 
 const cogsFolder = `${cwd()}/cogs`
+const musicFileFolder = `${cwd()}/music`
 const scheduleEverysec = `${cwd()}/schedule/everysec`
 const scheduleEverymin = `${cwd()}/schedule/everymin`
 
@@ -260,13 +261,16 @@ module.exports = {
     BETA,
     DEFAULT_IP,
     DEFAULT_PORT,
+
     cogsFolder,
+    musicFileFolder,
+    scheduleEverysec,
     backend_channel_id,
+    scheduleEverymin,
+
     log_channel_id,
     warn_channel_id,
     error_channel_id,
-    scheduleEverysec,
-    scheduleEverymin,
     BotID,
     BotName,
     prefix,

@@ -12,6 +12,7 @@ const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
 const mkdirSync = fs.mkdirSync;
 const mkdir = fsp.mkdir;
+const createWriteStream = fs.createWriteStream;
 const readdir = fsp.readdir;
 const join = path.join;
 const full_path = path.resolve;
@@ -493,6 +494,7 @@ module.exports = {
     readdir,
     mkdirSync,
     mkdir,
+    createWriteStream,
     readScheduleSync,
     readSchedule,
     join,
