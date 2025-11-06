@@ -78,14 +78,15 @@ function get_help_embed(category, user, client = global._client) {
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(`help#group|${user.id}`)
         .setPlaceholder(`指令教學`)
-        .addOptions(...entries.flatMap(([name, _]) => {
-            const info = name.split("|");
-            return [{
-                label: info[0],
-                description: info[1],
-                value: info[0],
-            }];
-        }));
+        .addOptions(...Object.entries(help.group[category])
+            .flatMap(([name, _]) => {
+                const info = name.split("|");
+                return [{
+                    label: info[0],
+                    description: info[1],
+                    value: info[0],
+                }];
+            }));
 
     const row = new ActionRowBuilder()
         .addComponents(selectMenu);
