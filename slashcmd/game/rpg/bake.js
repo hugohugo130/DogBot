@@ -252,7 +252,7 @@ module.exports = {
                 amounts = rpg_data.inventory[item_id] || amounts;
             } else if (auto_amount) {
                 if (auto_amount === "amount") {
-                    amounts = divide(rpg_data.inventory[item_id], oven_remain_slots);
+                    amounts = divide(rpg_data.inventory[items[0]], oven_remain_slots);
                 } else {
                     let inventory = structuredClone(rpg_data.inventory);
 
@@ -266,7 +266,7 @@ module.exports = {
                 };
             };
 
-            const loop_times = auto_amount ? oven_remain_slots : 1;
+            const loop_times = auto_amount === "foods" ? oven_remain_slots : 1;
 
             for (let i = 0; i < loop_times; i++) {
                 const item_id = items[i];
