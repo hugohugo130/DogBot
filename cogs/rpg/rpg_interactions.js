@@ -108,10 +108,7 @@ module.exports = {
         if (user.id !== originalUserId) {
             try {
                 await interaction.followUp({ embeds: [await get_failed_embed(client)], flags: MessageFlags.Ephemeral });
-            } catch (error) {
-                await interaction.deferUpdate();
-                await interaction.followUp({ embeds: [await get_failed_embed(client)], flags: MessageFlags.Ephemeral });
-            };
+            } catch (error) {};
             return;
         };
 
