@@ -251,6 +251,7 @@ const animals = [
     "a_chicken",
     "a_duck",
     "a_sheep",
+    "a_hugo",
     "cow",
     "pig",
 ].reduce((acc, cur) => {
@@ -262,6 +263,7 @@ const animal_products = {
     a_chicken: "raw_chicken",
     a_duck: "raw_duck",
     a_sheep: "raw_mutton",
+    a_hugo: "raw_hugo",
     cow: "raw_beef",
     pig: "raw_pork",
 };
@@ -324,6 +326,7 @@ const shop_lowest_price = {
     duck: 50,
     eel: 55,
     shark: 12345,
+    hugo: 30000,
     enchanted_golden_apple: 50,
     golden_apple: 50,
     golden_beef: 50,
@@ -365,6 +368,7 @@ const shop_lowest_price = {
     raw_tuna: 55,
     raw_whale: 55,
     raw_shark: 10000,
+    raw_hugo: 10,
     salmon: 55,
     shrimp: 50,
     squid: 55,
@@ -458,6 +462,7 @@ const sell_data = {
     duck: 50,
     eel: 50,
     shark: 11110,
+    hugo: 27000,
     goldfish: 50,
     jellyfish: 50,
     koi: 50,
@@ -495,6 +500,7 @@ const sell_data = {
     raw_tuna: 50,
     raw_whale: 50,
     raw_shark: 9000,
+    raw_hugo: 9,
     salmon: 50,
     shrimp: 50,
     squid: 50,
@@ -584,6 +590,8 @@ const food_data = {
     tropical_fish: 2,
     tuna: 3,
     whale: 4,
+    raw_hugo: 20,
+    hugo: 100,
 };
 
 const brew = {
@@ -717,12 +725,15 @@ const name = {
     raw_pork: "生豬肉",
     raw_potato: "馬鈴薯",
     raw_shrimp: "生蝦",
+    raw_hugo: "生哈狗",
+    hugo: "哈哈哈熱狗",
     shrimp: "烤蝦",
     wheat: "小麥",
     // ==============動物==============
     a_chicken: "雞",
     a_duck: "鴨",
     a_sheep: "羊",
+    a_hugo: "哈狗",
     cow: "牛",
     pig: "豬",
     // ==============藥水==============

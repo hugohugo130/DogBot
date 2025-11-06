@@ -211,6 +211,7 @@ const probabilities = {
         "cow": [20, 1, 1],
         "a_duck": [20, 1, 1],
         "a_sheep": [15, 1, 1],
+        "a_hugo": [1, 1, 1]
     },
     "mine": {
         "boom": [2, 1, 1],
