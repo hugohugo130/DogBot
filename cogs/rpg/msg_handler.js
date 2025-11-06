@@ -435,7 +435,7 @@ async function ls_function({ client, message, rpg_data, data, args, mode, random
 
     // 遍歷背包中的物品並分類
     for (const [item, amount] of Object.entries(rpg_data.inventory || {})) {
-        if (amount === 0) continue;
+        if (!amount) continue;
 
         if (Object.keys(mine_gets).includes(item) || Object.keys(ingots).includes(item)) {
             ores[item] = amount;
