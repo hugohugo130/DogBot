@@ -21,6 +21,38 @@ const bakeable_items = Object.fromEntries(
     ])
 );
 
+function divide(amount, by) {
+    // 檢查 amount 和 by 是否為整數（沒有小數點）
+    if (!Number.isInteger(amount) || !Number.isInteger(by)) {
+        throw new Error('amount 和 by 必須是整數');
+    }
+
+    // 檢查 by 是否為 0
+    if (by === 0) {
+        throw new Error('by 不能為 0');
+    };
+
+    // 如果 amount 可以被 by 整除
+    if (amount % by === 0) {
+        const value = amount / by;
+        return Array(by).fill(value);
+    };
+
+    // 如果不能整除
+    const baseValue = Math.floor(amount / by);
+    const remainder = amount % by;
+
+    // 創建結果陣列，先全部填充基礎值
+    const result = Array(by).fill(baseValue);
+
+    // 將餘數分配到最後幾個元素（每個加 1）
+    for (let i = result.length - 1; i >= result.length - remainder; i--) {
+        result[i]++;
+    }
+
+    return result;
+};
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("bake")
@@ -99,6 +131,31 @@ module.exports = {
                         "en-US": "Bake all selected foods",
                     })
                     .setRequired(false),
+            )
+            .addStringOption(option => option
+                .setName("auto_dispense_food")
+                .setNameLocalizations({
+                    "zh-TW": "自動分配食物",
+                    "zh-CN": "自动分配食物",
+                    "en-US": "auto_dispense_food",
+                })
+                .setDescription("Smartly distribute food or amount of food to the oven")
+                .setDescriptionLocalizations({
+                    "zh-TW": "智能分配食物或食物的數量到烤箱中",
+                    "zh-CN": "智能分配食物或食物的数量到烤箱中",
+                    "en-US": "Smartly distribute food or amount of food to the oven",
+                })
+                .setRequired(false)
+                .addChoices(
+                    {
+                        name: `物品數量`,
+                        value: `amount`,
+                    },
+                    {
+                        name: `食物`,
+                        value: `foods`,
+                    },
+                ),
             ),
         )
         .addSubcommand(new SlashCommandSubcommandBuilder() // info
@@ -175,7 +232,11 @@ module.exports = {
 
             let rpg_data = load_rpg_data(userId);
             const bake_data = load_bake_data()[userId];
-            if (bake_data && bake_data.length >= oven_slots) {
+
+            const oven_remain_slots = oven_slots - (bake_data?.length || 0);
+            const auto_amount = interaction.options.getBoolean("auto_dispense_food") ?? false;
+
+            if (oven_remain_slots <= 0) {
                 const embed = new EmbedBuilder()
                     .setColor(0xF04A47)
                     .setTitle(`${emoji_cross} | 你的烤箱已經滿了`);
@@ -183,87 +244,113 @@ module.exports = {
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
             };
 
-            let item_id = interaction.options.getString("food");
-            let amount = interaction.options.getInteger("amount") ?? 1;
+            let items = [interaction.options.getString("food")];
+            let amounts = [interaction.options.getInteger("amount") ?? 1];
             const allFoods = interaction.options.getBoolean("all") ?? false;
 
-            if (allFoods) {
-                amount = rpg_data.inventory[item_id] || amount;
-            };
-            const duration = 60 * amount;
+            if (allFoods && !auto_amount) {
+                amounts = rpg_data.inventory[item_id] || amounts;
+            } else if (auto_amount) {
+                if (auto_amount === "amount") {
+                    amounts = divide(rpg_data.inventory[item_id], oven_remain_slots);
+                } else {
+                    let inventory = structuredClone(rpg_data.inventory);
 
-            const coal_amount = Math.ceil(amount / 2);
+                    const entries = Object.entries(inventory)
+                        .filter(([key]) => key in bake)
+                        .sort(([, valueA], [, valueB]) => valueA - valueB);
 
-            let item_need = [
-                {
-                    item: item_id,
-                    amount,
-                },
-                {
-                    item: "coal",
-                    amount: coal_amount,
-                },
-            ];
-            let item_missing = [];
+                    inventory = Object.fromEntries(entries);
 
-            for (const need_item of item_need) {
-                const current_item_id = need_item.item;
-                const need_amount = need_item.amount;
-                const have_amount = (rpg_data.inventory[current_item_id] || 0);
-
-                if (have_amount < need_amount) {
-                    item_missing.push({
-                        name: name[current_item_id] || need_item,
-                        amount: need_amount - have_amount,
-                    });
+                    items = inventory.slice(0, oven_remain_slots);
                 };
             };
 
-            if (item_missing.length > 0) {
-                const items = [];
-                for (const missing of item_missing) {
-                    items.push(`${missing.name} \`x${missing.amount}\`個`);
+            const loop_times = auto_amount ? oven_remain_slots : 1;
+
+            for (let i = 0; i < loop_times; i++) {
+                const item_id = items[i];
+                const amount = amounts[i];
+
+                const duration = 60 * amount;
+
+                const coal_amount = Math.ceil(amount / 2);
+
+                let item_need = [
+                    {
+                        item: item_id,
+                        amount,
+                    },
+                    {
+                        item: "coal",
+                        amount: coal_amount,
+                    },
+                ];
+                let item_missing = [];
+
+                for (const need_item of item_need) {
+                    const current_item_id = need_item.item;
+                    const need_amount = need_item.amount;
+                    const have_amount = (rpg_data.inventory[current_item_id] || 0);
+
+                    if (have_amount < need_amount) {
+                        item_missing.push({
+                            name: name[current_item_id] || need_item,
+                            amount: need_amount - have_amount,
+                        });
+                    };
+                };
+
+                if (item_missing.length > 0) {
+                    const items = [];
+                    for (const missing of item_missing) {
+                        items.push(`${missing.name} \`x${missing.amount}\`個`);
+                    };
+
+                    const embed = new EmbedBuilder()
+                        .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
+                        .setColor(0xF04A47)
+                        .setDescription(`你缺少了 ${items.join("、")}`);
+
+                    return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
                 };
 
                 const embed = new EmbedBuilder()
-                    .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
-                    .setColor(0xF04A47)
-                    .setDescription(`你缺少了 ${items.join("、")}`);
-
-                return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
-            };
-
-            const embed = new EmbedBuilder()
-                .setColor(0x0099ff)
-                .setTitle(`${emoji_drumstick} | 烘烤確認`)
-                .setDescription(
-                    `將要烘烤 \`${amount}\` 個 \`${name[item_id]}\`
+                    .setColor(0x0099ff)
+                    .setTitle(`${emoji_drumstick} | 烘烤確認`)
+                    .setDescription(
+                        `將要烘烤 \`${amount}\` 個 \`${name[item_id]}\`
 花費 \`${coal_amount}\` 個煤炭
 預估時間：\`${duration / 60}\` 分鐘`);
 
-            // 生成一個簡短的識別碼來代替完整的 item_need JSON
-            const session_id = `${userId}_${Date.now()}`;
+                // 生成一個簡短的識別碼來代替完整的 item_need JSON
+                const session_id = `${userId}_${Date.now()}`;
 
-            // 將 item_need 資料儲存在全域變數或快取中
-            if (!global.oven_sessions) {
-                global.oven_sessions = {};
+                // 將 item_need 資料儲存在全域變數或快取中
+                if (!global.oven_sessions) {
+                    global.oven_sessions = {};
+                };
+                global.oven_sessions[session_id] = item_need;
+
+                const confirm_button = new ButtonBuilder()
+                    .setCustomId(`oven_bake|${userId}|${item_id}|${amount}|${coal_amount}|${duration}|${session_id}`)
+                    .setLabel("確認")
+                    .setStyle(ButtonStyle.Success);
+
+                const cancel_button = new ButtonBuilder()
+                    .setCustomId(`cancel|${userId}`)
+                    .setLabel("取消")
+                    .setStyle(ButtonStyle.Danger);
+
+                const row = new ActionRowBuilder()
+                    .addComponents(confirm_button, cancel_button);
+
+                if (i === 0) {
+                    await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], components: [row] });
+                } else {
+                    await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)], components: [row] })
+                };
             };
-            global.oven_sessions[session_id] = item_need;
-
-            const confirm_button = new ButtonBuilder()
-                .setCustomId(`oven_bake|${userId}|${item_id}|${amount}|${coal_amount}|${duration}|${session_id}`)
-                .setLabel("確認")
-                .setStyle(ButtonStyle.Success);
-
-            const cancel_button = new ButtonBuilder()
-                .setCustomId(`cancel|${userId}`)
-                .setLabel("取消")
-                .setStyle(ButtonStyle.Danger);
-
-            const row = new ActionRowBuilder()
-                .addComponents(confirm_button, cancel_button);
-
-            await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], components: [row] });
         } else if (subcommand === "info") {
             const bake_data = load_bake_data()[userId];
             const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
