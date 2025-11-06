@@ -1,7 +1,19 @@
 const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const { name, bake, oven_slots } = require("../../../utils/rpg.js");
 
-// 定義可烘烤的食材列表
+/*
+{
+    raw_beef: '生牛肉',
+    raw_chicken: '生雞肉',
+    raw_duck: '生鴨肉',
+    raw_mutton: '生羊肉',
+    raw_pork: '生豬肉',
+    raw_potato: '馬鈴薯',
+    raw_salmon: '生鮭魚',
+    raw_shrimp: '生蝦',
+    raw_tuna: '生鮪魚',
+    wheat: '小麥'
+*/
 const bakeable_items = Object.fromEntries(
     Object.entries(bake).map(([key, value]) => [
         key,
@@ -23,7 +35,7 @@ module.exports = {
             "zh-CN": "烤箱相关指令",
             "en-US": "Oven related commands",
         })
-        .addSubcommand(new SlashCommandSubcommandBuilder()
+        .addSubcommand(new SlashCommandSubcommandBuilder() // bake
             .setName("bake")
             .setNameLocalizations({
                 "zh-TW": "烘烤",
@@ -59,7 +71,7 @@ module.exports = {
                     .setRequired(false),
             ),
         )
-        .addSubcommand(new SlashCommandSubcommandBuilder()
+        .addSubcommand(new SlashCommandSubcommandBuilder() // info
             .setName("info")
             .setNameLocalizations({
                 "zh-TW": "資訊",
@@ -73,7 +85,7 @@ module.exports = {
                 "en-US": "View current oven status",
             })
         )
-        .addSubcommand(new SlashCommandSubcommandBuilder()
+        .addSubcommand(new SlashCommandSubcommandBuilder() // get
             .setName("get")
             .setNameLocalizations({
                 "zh-TW": "取出",
