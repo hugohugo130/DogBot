@@ -1,4 +1,4 @@
-const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow } = require("discord.js");
+const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, Client } = require("discord.js");
 const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { get_logger } = require("../../utils/logger.js");
 
@@ -52,38 +52,101 @@ const help = {
         dev: "開發者使用",
     },
     group: {
-        general: [],
-        music: [],
-        rpg: [],
-        special: [],
-        dev: [],
+        general: {
+            "brew|藥劑師研發藥水使用": {
+                usage: [],
+                format: `${prefix}brew`,
+            },
+        },
+        music: {},
+        rpg: {},
+        special: {},
+        dev: {},
     },
 };
 
-function get_help_embed(category, client = global._client) {
-    const { setEmbedFooter } = require("./msg_handler.js");
-
-    const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId("")
-
-    const embed = new EmbedBuilder()
-        .setColor(embed_default_color)
-        .setTitle(help.name[category])
-
-    return setEmbedFooter(client, embed);
-};
-
-function get_help_command(command, client = global._client) {
+/**
+ * 
+ * @param {string} category 
+ * @param {User} user 
+ * @param {Client} client 
+ * @returns {[EmbedBuilder, ActionRowBuilder]}
+ */
+function get_help_embed(category, user, client = global._client) {
     const { setEmbedFooter, setEmbedAuthor } = require("./msg_handler.js");
 
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`help#group|${user.id}`)
+        .setPlaceholder(`指令教學`)
+        .addOptions(...help.group[category].map((name, info) => ({
+            label: name.split("|")[0],
+            description: name.split("|")[1],
+            value: name.split("|")[0],
+        })));
+
+    const row = new ActionRowBuilder()
+        .addComponents(selectMenu);
+
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
-        .setTitle(command.name)
-        .setDescription(command.description)
+        .setTitle(help.name[category]);
+
+    setEmbedAuthor(client, embed);
+
+    return [setEmbedFooter(client, embed), row];
+};
+
+/**
+ * 
+ * @param {string} command_name 
+ * @param {Client} client 
+ * @returns {EmbedBuilder}
+ */
+function get_help_command(command_name, client = global._client) {
+    const { setEmbedFooter, setEmbedAuthor, find_redirect_targets_from_id } = require("./msg_handler.js");
+
+    const command_data = help.group[command_name];
+    if (!command_data) return [new EmbedBuilder().setTitle("指令不存在"), []];
+
+    /*
+    Field name: 使用方法
+    Field value:
+    如果 data.usage?.length > 0
+        for (const info of data.usage) {
+            value += `${i+1}. ${info.name}\n\`\`\`${info.value}\`\`\`\n`;
+        };
+    否則
+        value = `${client.author}很懶 他沒有留下任何使用方法owo`;
+    value.trim()
+    */
+    const usage = command_data.usage?.length > 0
+        ? command_data.usage.map((info, i) => `${i + 1}. ${info.name}\n\`\`\`${info.value}\`\`\``).join("\n")
+        : `${client.author}很懶 他沒有留下任何使用方法owo`;
+
+    /*
+    Field name: 格式
+    Field value:
+    `<>`是一定要填的參數 `[]`是選填的參數
+    ```
+    ${format}
+    ```
+    */
+    const format = command_data.format ?? `${client.author}很懶 他沒有留下任何格式owo`;
+
+    const alias = find_redirect_targets_from_id(command_name).map(name => `\`${name}\``).join("、");
+
+    const embed = new EmbedBuilder()
+        .setColor(embed_default_color)
+        .setTitle(command_data.name)
+        .setDescription(command_data.description)
         .addFields(
-            { name: "使用方式", value: command.usage },
-            { name: "權限", value: command.permissions.join(", ") },
-        )
+            { name: "使用方式", value: usage },
+            { name: "格式", value: `\`<>\`是一定要填的參數 \`[]\`是選填的參數\n\`\`\`${format}\`\`\`` },
+            { name: "別名", value: alias }
+        );
+
+    setEmbedAuthor(client, embed);
+
     return setEmbedFooter(client, embed);
 };
 
@@ -108,7 +171,7 @@ module.exports = {
         if (user.id !== originalUserId) {
             try {
                 await interaction.followUp({ embeds: [await get_failed_embed(client)], flags: MessageFlags.Ephemeral });
-            } catch (error) {};
+            } catch (error) { };
             return;
         };
 
@@ -118,14 +181,24 @@ module.exports = {
             await interaction.deferUpdate();
             const embed = get_transaction_embed(interaction);
             await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
-        } else if (interaction.customId.startsWith('help')) {
+        } else if (interaction.customId.startsWith('help') || interaction.customId.startsWith('help#group')) {
+            const iscommandhelp = interaction.customId.startsWith('help#group');
+
             await interaction.deferUpdate();
 
             const category = interaction.values[0];
-            const embed = await get_help_embed(category, client);
+            let embed;
+            let row;
+
+            if (iscommandhelp) {
+                embed = get_help_command(client, interaction, category);
+            } else {
+                [embed, row] = get_help_embed(category, user, client);
+            };
 
             await interaction.followUp({
                 embeds: embed ? [embed] : [],
+                components: row ? [row] : [],
                 flags: MessageFlags.Ephemeral,
             });
         } else if (interaction.customId.startsWith('pay')) {

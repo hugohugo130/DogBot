@@ -543,6 +543,11 @@ const redirect_data = {
     l: "lazy",
 };
 
+const redirect_data_reverse = Object.entries(redirect_data).reduce((acc, [key, value]) => {
+    acc[value] = key;
+    return acc;
+}, {});
+
 const rpg_commands = {
     mine: ["挖礦", "挖礦", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
@@ -1968,6 +1973,17 @@ const privacy_data = {
     ls: "backpack"
 }
 
+function find_redirect_targets_from_id(id) {
+    const targets = [];
+    for (const [key, value] of Object.entries(redirect_targets)) {
+        if (value === id) {
+            targets.push(key);
+        };
+    };
+
+    return targets;
+
+};
 
 /**
  * @param {Client} client 機器人客戶端
@@ -2236,6 +2252,8 @@ module.exports = {
     rpg_commands,
     rpg_help,
     rpg_emojis,
+    redirect_data,
+    redirect_data_reverse,
     get_help_embed,
     redirect,
     get_number_of_items,
@@ -2250,4 +2268,5 @@ module.exports = {
     add_money,
     remove_money,
     ls_function,
+    find_redirect_targets_from_id,
 };
