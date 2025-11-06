@@ -2130,11 +2130,12 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             if (typeof rpg_commands.eat?.[2] === "function") {
                 const res = await rpg_commands.eat[2]({ client, message, rpg_data, data, args: [found_food, "all"], mode: 1 });
                 if (mode === 1) return res;
+
                 if (res.embeds && res.embeds.length > 1) {
                     res.embeds.length = 1;
                 };
 
-                return await message.reply(res);
+                await message.reply(res);
             };
         } else {
             const emoji_cross = await get_emoji(client, "crosS");
