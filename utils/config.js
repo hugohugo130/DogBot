@@ -183,9 +183,9 @@ const probabilities = {
     "fish": {
         "storm": [2, 1, 1],
         "shark": [3, 1, 1],
-        "shrimp": [35, 1, 2],
-        "salmon": [30, 1, 1],
-        "tuna": [30, 1, 1],
+        "raw_shrimp": [35, 1, 2],
+        "raw_salmon": [30, 1, 1],
+        "raw_tuna": [30, 1, 1],
     },
     "herd": {
         "escape": [2, 1, 1],
