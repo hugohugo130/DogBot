@@ -93,7 +93,7 @@ module.exports = {
                         "zh-CN": "需要烘烤的食物",
                         "en-US": "Food that needs to be baked.",
                     })
-                    .setRequired(true)
+                    .setRequired(false)
                     .addChoices(
                         ...Object.entries(bakeable_items).map(([key, value]) => ({
                             name: value,
@@ -244,16 +244,33 @@ module.exports = {
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
             };
 
-            let items = [interaction.options.getString("food")];
+            const first_food = interaction.options.getString("food");
+            let items = first_food ? [first_food] : [];
             let amounts = [interaction.options.getInteger("amount") ?? 1];
             const allFoods = interaction.options.getBoolean("all") ?? false;
 
+            if (!first_food && !amounts[0] && !allFoods && !auto_amount) {
+                const embed = new EmbedBuilder()
+                    .setColor(0xF04A47)
+                    .setTitle(`${emoji_cross} | 洗勒烤 🤔 你什麼也不選`);
+
+                return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
+            };
+
+            if (first_food && auto_amount === "foods") {
+                const embed = new EmbedBuilder()
+                    .setColor(0xF04A47)
+                    .setTitle(`${emoji_cross} | 什麼拉🤣 你選了食物又選了自動選擇食物 那我要選什麼阿`);
+
+                return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
+            };
+
             if (allFoods && !auto_amount) {
-                amounts = rpg_data.inventory[item_id] || amounts;
+                amounts = rpg_data.inventory[first_food] || amounts;
             } else if (auto_amount) {
                 if (auto_amount === "amount") {
-                    amounts = divide(rpg_data.inventory[items[0]], oven_remain_slots);
-                } else {
+                    amounts = divide(rpg_data.inventory[first_food], oven_remain_slots);
+                } else { // auto_amount === "foods"
                     let inventory = structuredClone(rpg_data.inventory);
 
                     const entries = Object.entries(inventory)
