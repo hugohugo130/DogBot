@@ -836,8 +836,8 @@ function check_item_data() {
         ...Object.values(mine_gets),
         // ...Object.values(ingots),
         ...Object.values(logs),
-        ...Object.values(foods),
-        ...Object.keys(recipes),
+        ...Object.values(foods_crops),
+        ...Object.values(foods_meat).filter(e => e.startsWith("raw_")),
     ].flat().filter(item => !Object.values(animals).includes(item));
 
 
@@ -856,10 +856,10 @@ function check_item_data() {
 
     };
 
-    for (const item_id of work_productions)
-        if (!get_probability_of_id(item_id)) {
-            logger.debug(`[警告] 物品ID "${item_id}" 沒有對應的掉落機率，會導致無法獲取此物品、或是工作指令報錯`);
-        };
+    for (const item_id of work_productions) {
+        if (get_probability_of_id(item_id) || animal_products[item_id]) continue;
+        logger.debug(`[警告] 物品ID "${item_id}" 沒有對應的掉落機率，會導致無法獲取此物品、或是工作指令報錯`);
+    };
 };
 
 function get_name_of(id, default_value = id) {
