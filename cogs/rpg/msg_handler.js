@@ -1347,6 +1347,8 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }],
     help: ["查看指令", "查看指令", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        const emoji_slash = await get_emoji(client, "slash")
+
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`help|${message.author.id}`)
             .setPlaceholder(`指令教學`)
