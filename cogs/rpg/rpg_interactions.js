@@ -77,7 +77,7 @@ function get_help_embed(category, user, client = global._client) {
     const { setEmbedFooter, setEmbedAuthor } = require("./msg_handler.js");
 
     const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`help#group|${user.id}`)
+        .setCustomId(`help|${user.id}|${category}`)
         .setPlaceholder(`指令教學`)
         .addOptions(...Object.entries(help.group[category])
             .flatMap(([name, data]) => {
@@ -183,19 +183,17 @@ module.exports = {
             await interaction.deferUpdate();
             const embed = get_transaction_embed(interaction);
             await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
-        } else if (interaction.customId.startsWith('help') || interaction.customId.startsWith('help#group')) {
-            const iscommandhelp = interaction.customId.startsWith('help#group');
+        } else if (interaction.customId.startsWith('help')) {
+            const [_, __, category] = interaction.customId.split('|');
 
             await interaction.deferUpdate();
-
-            const category = interaction.values[0];
             let embed;
             let row;
 
-            if (iscommandhelp) {
-                embed = get_help_command(category, interaction.values[0]);
+            if (category) {
+                embed = get_help_command(category, interaction.values[0], client);
             } else {
-                [embed, row] = get_help_embed(category, user, client);
+                [embed, row] = get_help_embed(interaction.values[0], user, client);
             };
 
             await interaction.followUp({
