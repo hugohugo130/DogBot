@@ -106,7 +106,7 @@ function get_help_command(command_name, client = global._client) {
     const { setEmbedFooter, setEmbedAuthor, find_redirect_targets_from_id } = require("./msg_handler.js");
 
     const command_data = help.group[command_name];
-    if (!command_data) return [new EmbedBuilder().setTitle("指令不存在"), []];
+    if (!command_data) return new EmbedBuilder().setTitle("指令不存在");
 
     /*
     Field name: 使用方法
