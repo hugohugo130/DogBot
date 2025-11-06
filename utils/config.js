@@ -198,7 +198,6 @@ const probabilities = {
         'raw_lobster': [15, 1, 2],
         'raw_octopus': [15, 1, 2],
         'raw_pufferfish': [15, 1, 2],
-        'raw_shark': [15, 1, 2],
         'raw_squid': [15, 1, 2],
         'raw_swordfish': [15, 1, 2],
         'raw_tropical_fish': [15, 1, 2],
