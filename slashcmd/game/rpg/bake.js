@@ -234,7 +234,7 @@ module.exports = {
             const bake_data = load_bake_data()[userId];
 
             const oven_remain_slots = oven_slots - (bake_data?.length || 0);
-            const auto_amount = interaction.options.getBoolean("auto_dispense_food") ?? false;
+            const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
 
             if (oven_remain_slots <= 0) {
                 const embed = new EmbedBuilder()
