@@ -242,6 +242,8 @@ const foods_meat = [
     "tropical_fish",
     "tuna",
     "whale",
+    "raw_hugo",
+    "hugo",
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
