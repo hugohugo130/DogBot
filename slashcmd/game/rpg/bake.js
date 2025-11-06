@@ -49,8 +49,18 @@ module.exports = {
                 "en-US": "bake delicious food",
             })
             .addStringOption(option =>
-                option.setName("食材")
-                    .setDescription("需要烘烤的食材")
+                option.setName("food")
+                    .setNameLocalizations({
+                        "zh-TW": "食物",
+                        "zh-CN": "食物",
+                        "en-US": "food",
+                    })
+                    .setDescription("Food that needs to be baked.")
+                    .setDescriptionLocalizations({
+                        "zh-TW": "需要烘烤的食物",
+                        "zh-CN": "需要烘烤的食物",
+                        "en-US": "Food that needs to be baked.",
+                    })
                     .setRequired(true)
                     .addChoices(
                         ...Object.entries(bakeable_items).map(([key, value]) => ({
@@ -60,14 +70,34 @@ module.exports = {
                     ),
             )
             .addIntegerOption(option =>
-                option.setName("數量")
-                    .setDescription("烘烤數量")
+                option.setName("amount")
+                    .setNameLocalizations({
+                        "zh-TW": "數量",
+                        "zh-CN": "数量",
+                        "en-US": "amount",
+                    })
+                    .setDescription("Baking quantity")
+                    .setDescriptionLocalizations({
+                        "zh-TW": "烘烤數量",
+                        "zh-CN": "烘烤数量",
+                        "en-US": "Baking quantity",
+                    })
                     .setMinValue(1)
                     .setRequired(false),
             )
             .addBooleanOption(option =>
-                option.setName("全部")
-                    .setDescription("烘焙全部選擇的食材")
+                option.setName("all")
+                    .setNameLocalizations({
+                        "zh-TW": "全部",
+                        "zh-CN": "全部",
+                        "en-US": "all",
+                    })
+                    .setDescription("Bake all selected foods")
+                    .setDescriptionLocalizations({
+                        "zh-TW": "烘焙全部選擇的食材",
+                        "zh-CN": "烘焙全部选择的食材",
+                        "en-US": "Bake all selected foods",
+                    })
                     .setRequired(false),
             ),
         )
@@ -99,15 +129,35 @@ module.exports = {
                 "en-US": "Take food out from oven",
             })
             .addIntegerOption(option =>
-                option.setName("編號")
-                    .setDescription("要取出的物品編號（1, 2, 3...）")
+                option.setName("id")
+                    .setNameLocalizations({
+                        "zh-TW": "編號",
+                        "zh-CN": "编号",
+                        "en-US": "id",
+                    })
+                    .setDescription("The item id to be retrieved (1, 2, 3...)")
+                    .setDescriptionLocalizations({
+                        "zh-TW": "要取出的物品編號 (1, 2, 3...)",
+                        "zh-CN": "要取出的物品编号 (1, 2, 3...)",
+                        "en-US": "The item id to be retrieved (1, 2, 3...)",
+                    })
                     .setRequired(false)
                     .setMinValue(1)
                     .setMaxValue(oven_slots),
             )
             .addBooleanOption(option =>
-                option.setName("全部")
-                    .setDescription("取出所有烤好的食物")
+                option.setName("all")
+                    .setNameLocalizations({
+                        "zh-TW": "全部",
+                        "zh-CN": "全部",
+                        "en-US": "all",
+                    })
+                    .setDescription("Bake all selected foods")
+                    .setDescriptionLocalizations({
+                        "zh-TW": "烘焙全部選擇的食材",
+                        "zh-CN": "烘焙全部选择的食材",
+                        "en-US": "Bake all selected foods",
+                    })
                     .setRequired(false),
             ),
         ),
@@ -133,9 +183,9 @@ module.exports = {
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
             };
 
-            let item_id = interaction.options.getString("食材");
-            let amount = interaction.options.getInteger("數量") ?? 1;
-            const allFoods = interaction.options.getBoolean("全部") ?? false;
+            let item_id = interaction.options.getString("food");
+            let amount = interaction.options.getInteger("amount") ?? 1;
+            const allFoods = interaction.options.getBoolean("all") ?? false;
 
             if (allFoods) {
                 amount = rpg_data.inventory[item_id] || amount;
@@ -265,11 +315,11 @@ module.exports = {
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };
 
-            const loop_times = interaction.options.getBoolean("全部") ? bake_data.length : 1;
+            const loop_times = interaction.options.getBoolean("all") ? bake_data.length : 1;
             const embeds = [];
 
             for (let i = 0; i < loop_times; i++) {
-                const index = (interaction.options.getInteger("編號") ?? 1) - 1;
+                const index = (interaction.options.getInteger("id") ?? 1) - 1;
 
                 if (index < 0 || index >= bake_data.length) {
                     const embed = new EmbedBuilder()
