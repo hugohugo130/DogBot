@@ -53,7 +53,8 @@ const help = {
     },
     group: {
         general: {
-            "brew|藥劑師研發藥水使用": {
+            "brew": {
+                desc: "藥劑師研發藥水使用",
                 usage: [],
                 format: `${prefix}brew`,
             },
@@ -79,12 +80,11 @@ function get_help_embed(category, user, client = global._client) {
         .setCustomId(`help#group|${user.id}`)
         .setPlaceholder(`指令教學`)
         .addOptions(...Object.entries(help.group[category])
-            .flatMap(([name, _]) => {
-                const info = name.split("|");
+            .flatMap(([name, data]) => {
                 return [{
-                    label: info[0],
-                    description: info[1],
-                    value: info[0],
+                    label: name,
+                    description: data.desc,
+                    value: name,
                 }];
             }));
 
@@ -107,7 +107,7 @@ function get_help_embed(category, user, client = global._client) {
  * @returns {EmbedBuilder}
  */
 function get_help_command(command_name, client = global._client) {
-    const { setEmbedFooter, setEmbedAuthor, find_redirect_targets_from_id } = require("./msg_handler.js");
+    const { setEmbedFooter, find_redirect_targets_from_id } = require("./msg_handler.js");
 
     const command_data = help.group[command_name];
     if (!command_data) return new EmbedBuilder().setTitle("指令不存在");
@@ -142,14 +142,12 @@ function get_help_command(command_name, client = global._client) {
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
         .setTitle(command_data.name)
-        .setDescription(command_data.description)
+        .setDescription(command_data.desc)
         .addFields(
             { name: "使用方式", value: usage },
             { name: "格式", value: `\`<>\`是一定要填的參數 \`[]\`是選填的參數\n\`\`\`${format}\`\`\`` },
             { name: "別名", value: alias }
         );
-
-    setEmbedAuthor(client, embed);
 
     return setEmbedFooter(client, embed);
 };
