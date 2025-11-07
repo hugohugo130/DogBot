@@ -34,7 +34,7 @@ module.exports = {
 
         if (!interaction.guild) return interaction.editReply({ content: "你不在伺服器內執行這個指令！" })
 
-        const channel = interaction.options.getChannel("vchannel");
+        const channel = interaction.options.getChannel("vchannel") ?? false;
         const guildID = interaction.guildId;
 
         setDynamicVoice(guildID, channel);
