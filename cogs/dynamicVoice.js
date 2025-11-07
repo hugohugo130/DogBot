@@ -53,8 +53,6 @@ module.exports = {
                     });
                 };
 
-
-
                 await newState.setChannel(channel);
 
                 client.dvoice[channel.id] = {
@@ -69,7 +67,7 @@ module.exports = {
             }
         }
         // 成員離開語音頻道
-        else if (oldChannel && oldChannel.id !== mainchannelID) {
+        else if (oldChannel) {
             const data = client.dvoice[oldChannel.id];
             if (!data) return;
 
