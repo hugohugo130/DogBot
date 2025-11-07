@@ -32,8 +32,8 @@ async function checkDBFilesCorrupted() {
             if (err.message.includes("SyntaxError: Expected property name")) {
                 logger_nodc.error(`資料庫檔案 ${file} 已損毀，請檢查檔案內容！`);
                 err = true;
-            };
-        }
+            } else throw err;
+        };
     };
 
     if (err) process.exit(1);
