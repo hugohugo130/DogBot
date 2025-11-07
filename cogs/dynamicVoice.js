@@ -67,12 +67,12 @@ module.exports = {
             if (oldChannel.members.size === 0) {
                 try {
                     await oldChannel.delete();
-                    client.dvoice.delete(oldChannel.id);
+                    delete client.dvoice[oldChannel.id];
                 } catch (error) {
                     logger.error(`[動態語音] 刪除頻道失敗: ${error.message}`);
                     // 即使刪除失敗也要清理記錄
-                    client.dvoice.delete(oldChannel.id);
-                }
+                    delete client.dvoice[oldChannel.id];
+                };
             };
         }
     },
