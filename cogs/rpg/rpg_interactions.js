@@ -126,7 +126,7 @@ function get_help_command(category, command_name, client = global._client) {
     */
     const usage = command_data.usage?.length > 0
         ? command_data.usage.map((info, i) => `${i + 1}. ${info.name}\n\`\`\`${info.value}\`\`\``).join("\n")
-        : `${client.author}很懶 他沒有留下任何使用方法owo`;
+        : `\`${client.author}很懶 他沒有留下任何使用方法owo\``;
 
     /*
     Field name: 格式
