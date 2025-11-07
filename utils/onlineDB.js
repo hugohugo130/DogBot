@@ -71,7 +71,7 @@ async function onlineDB_uploadFile(filepath) {
             await axios.post(`${SERVER_URL}/copy`, { src: filename, dst: backupFile });
         } catch (err) {
             if (err.response?.status === 404) {
-                console.warn(`[警告] 備份遠端檔案時: 來源文件 ${filename} 不存在`);
+                logger.warn(`[警告] 備份遠端檔案時: 來源文件 ${filename} 不存在`);
             } else {
                 throw err;
             };
@@ -214,7 +214,7 @@ async function uploadChangedDatabaseFiles() {
                 localContent = fs.readFileSync(file, 'utf8');
                 localContent = JSON.stringify(JSON.parse(localContent)); // 格式化本地內容
             } catch (err) {
-                console.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
+                logger.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
                 continue;
             }
 
@@ -227,7 +227,7 @@ async function uploadChangedDatabaseFiles() {
                     logger.info(`遠端無 ${file} 檔案準備上傳本地檔案`);
                     await onlineDB_uploadFile(file);
                 } else {
-                    console.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
+                    logger.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
                 }
                 continue;
             }
