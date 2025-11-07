@@ -54,6 +54,7 @@ const help = {
     group: {
         general: {
             "brew": {
+                emoji: "💊💧",
                 desc: "藥劑師研發藥水使用",
                 usage: [],
                 format: `${prefix}brew`,
@@ -139,9 +140,11 @@ function get_help_command(category, command_name, client = global._client) {
 
     const alias = find_redirect_targets_from_id(command_name).map(name => `\`${name}\``).join("、");
 
+    const emoji = command_data.emoji || "";
+
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
-        .setTitle(command_data.name)
+        .setTitle(`${emoji} | ${command_name} 指令`)
         .setDescription(command_data.desc)
         .addFields(
             { name: "使用方式", value: usage },
