@@ -147,7 +147,7 @@ function get_help_command(category, command_name, client = global._client) {
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
         .setTitle(`${emoji} | ${command_name} 指令`)
-        .setDescription(command_data.desc)
+        .setDescription(command_data.desc || null)
         .addFields(
             { name: "使用方式", value: usage },
             { name: "格式", value: `\`<>\`是一定要填的參數 \`[]\`是選填的參數\n\`\`\`${format}\`\`\`` },
