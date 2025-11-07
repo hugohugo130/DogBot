@@ -67,6 +67,7 @@ const cogsFolder = `${cwd()}/cogs`
 const musicFileFolder = `${cwd()}/music`
 const scheduleEverysec = `${cwd()}/schedule/everysec`
 const scheduleEverymin = `${cwd()}/schedule/everymin`
+const scheduleEvery5min = `${cwd()}/schedule/every5min`
 
 const backend_channel_id = "1430868819206864978"
 const log_channel_id = "1430868778433904691"
@@ -288,9 +289,10 @@ module.exports = {
 
     cogsFolder,
     musicFileFolder,
-    scheduleEverysec,
     backend_channel_id,
+    scheduleEverysec,
     scheduleEverymin,
+    scheduleEvery5min,
 
     log_channel_id,
     warn_channel_id,

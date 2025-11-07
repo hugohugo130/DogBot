@@ -72,7 +72,7 @@ async function scheduleFunc(client, file, per) {
 async function run_schedule(client) {
     const { readScheduleSync } = require("./file.js");
 
-    const [everysec, everymin] = readScheduleSync();
+    const [everysec, everymin, every5min] = readScheduleSync();
 
     for (const file of everysec) {
         await setup_schedule(1, scheduleFunc, client, file, "秒");
@@ -82,7 +82,11 @@ async function run_schedule(client) {
         await setup_schedule(60, scheduleFunc, client, file, "分鐘");
     };
 
-    return everysec.length + everymin.length;
+    for (const file of every5min) {
+        await setup_schedule(300, scheduleFunc, client, file, "5分鐘");
+    };
+
+    return everysec.length + everymin.length + every5min.length;
 };
 
 module.exports = {
