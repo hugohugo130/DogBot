@@ -26,7 +26,7 @@ async function checkDBFilesCorrupted() {
         if (!existsSync(filepath)) continue;
 
         try {
-            await readJson(file);
+            await readJson(filepath);
         } catch (err) {
             // 如果含有 "SyntaxError: Expected property name"，則警告並且退出程式
             if (err.message.includes("SyntaxError: Expected property name")) {
