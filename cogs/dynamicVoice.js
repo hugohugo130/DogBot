@@ -33,17 +33,27 @@ module.exports = {
                     return;
                 };
 
-                const channel = await guild.channels.create({
-                    name: `${member.user.username}`,
-                    type: ChannelType.GuildVoice,
-                    parent: newChannel.parent,
-                    permissionOverwrites: [
-                        {
-                            id: member.id,
-                            allow: [PermissionFlagsBits.Connect, PermissionFlagsBits.Speak, PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels],
-                        },
-                    ],
-                });
+                let channel;
+                const data = client.dvoice[newChannel.id];
+                if (data) {
+                    channel = data.channel || newChannel;
+                };
+
+                if (!data) {
+                    channel = await guild.channels.create({
+                        name: `${member.user.username}`,
+                        type: ChannelType.GuildVoice,
+                        parent: newChannel.parent,
+                        permissionOverwrites: [
+                            {
+                                id: member.id,
+                                allow: [PermissionFlagsBits.Connect, PermissionFlagsBits.Speak, PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels],
+                            },
+                        ],
+                    });
+                };
+
+
 
                 await newState.setChannel(channel);
 
