@@ -16,8 +16,8 @@ module.exports = {
             option.setName("vchannel")
                 .setDescription("Create a temp voice channel when member joined this voice channel")
                 .setNameLocalizations({
-                    "zh-CN": "語音频道",
-                    "zh-TW": "语音頻道",
+                    "zh-CN": "语音频道",
+                    "zh-TW": "語音頻道",
                 })
                 .setDescriptionLocalizations({
                     "zh-CN": "当成员加入这个语音频道时，创建一个临时语音频道",
