@@ -37,9 +37,11 @@ function get_transaction_embed(interaction) {
 async function get_failed_embed(client = global._client) {
     const { setEmbedFooter, get_emoji } = require("./msg_handler.js");
     const emoji = await get_emoji(client, "crosS");
+
     const embed = new EmbedBuilder()
         .setColor(embed_error_color)
         .setTitle(`${emoji} | 沒事戳這顆按鈕幹嘛?`);
+
     return setEmbedFooter(client, embed);
 };
 
@@ -57,7 +59,7 @@ const help = {
                 emoji: "💊💧",
                 desc: "藥劑師研發藥水使用",
                 usage: [],
-                format: `${prefix}brew`,
+                format: `{cmd}`,
             },
         },
         music: {},
@@ -136,7 +138,7 @@ function get_help_command(category, command_name, client = global._client) {
     ${format}
     ```
     */
-    const format = command_data.format ?? `\`${client.author}很懶 他沒有留下任何格式owo\``;
+    const format = command_data.format.replace("cmd", `${prefix}brew`) ?? `\`${client.author}很懶 他沒有留下任何格式owo\``;
 
     const alias = find_redirect_targets_from_id(command_name).map(name => `\`${name}\``).join("、");
 
