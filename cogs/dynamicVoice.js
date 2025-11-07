@@ -60,7 +60,7 @@ module.exports = {
         }
         // 成員離開語音頻道
         else if (oldChannel && oldChannel.id !== mainchannelID) {
-            const data = client.dvoice.get(oldChannel.id);
+            const data = client.dvoice[oldChannel.id];
             if (!data) return;
 
             // 檢查頻道是否為空
