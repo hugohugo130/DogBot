@@ -3,6 +3,7 @@ const fsp = fs.promises;
 const path = require("path");
 const { isDeepStrictEqual } = require("node:util");
 const { Logger } = require("winston");
+const { VoiceChannel } = require("discord.js");
 
 const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder, probabilities } = require("./config.js");
 const { get_logger } = require("./logger.js");
@@ -493,13 +494,25 @@ function save_smelt_data(data) {
 ██║     ███████╗██║  ██║   ██║   ╚██████╔╝██║  ██║███████╗███████║
 ╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝
 */
+
+/**
+ * 
+ * @param {string} guildID 
+ * @param {VoiceChannel} channel 
+ */
 function setDynamicVoice(guildID, channel) {
     const data = loadData(guildID);
-    data["dynamicVoice"] = channel;
+    data["dynamicVoice"] = channel.id;
 
     saveData(guildID, data);
 };
 
+
+/**
+ * 
+ * @param {string} guildID 
+ * @returns {string}
+ */
 function getDynamicVoice(guildID) {
     const data = loadData(guildID);
     return data["dynamicVoice"];
