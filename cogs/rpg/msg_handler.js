@@ -1974,15 +1974,7 @@ const privacy_data = {
 }
 
 function find_redirect_targets_from_id(id) {
-    const targets = [];
-    for (const [key, value] of Object.entries(redirect_targets)) {
-        if (value === id) {
-            targets.push(key);
-        };
-    };
-
-    return targets;
-
+    return Object.entries(redirect_data).filter(([key, value]) => value === id).map(([key, value]) => key);
 };
 
 /**
