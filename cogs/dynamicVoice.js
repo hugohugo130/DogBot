@@ -49,11 +49,11 @@ module.exports = {
 
                 await newState.setChannel(channel);
 
-                client.dvoice.set(channel.id, {
+                client.dvoice[channel.id] = {
                     owner: member.id,
                     channel: channel,
                     guild: guild.id
-                });
+                };
 
             } catch (error) {
                 logger.error(`[動態語音] 建立頻道失敗: ${error.message}`);

@@ -487,6 +487,27 @@ function save_smelt_data(data) {
 };
 
 /*
+██████╗ ██╗   ██╗ ██████╗ ██╗ ██████╗███████╗
+██╔══██╗██║   ██║██╔═══██╗██║██╔════╝██╔════╝
+██║  ██║██║   ██║██║   ██║██║██║     █████╗  
+██║  ██║╚██╗ ██╔╝██║   ██║██║██║     ██╔══╝  
+██████╔╝ ╚████╔╝ ╚██████╔╝██║╚██████╗███████╗
+╚═════╝   ╚═══╝   ╚═════╝ ╚═╝ ╚═════╝╚══════╝
+*/
+
+function loadDvoiceData() {
+    const { dvoice_data_file } = require("./config.js");
+
+    return readJsonSync(dvoice_data_file);
+};
+
+function saveDvoiceData(data) {
+    const { dvoice_data_file } = require("./config.js");
+
+    writeJsonSync(dvoice_data_file, data);
+};
+
+/*
 ███████╗███████╗ █████╗ ████████╗██╗   ██╗██████╗ ███████╗███████╗
 ██╔════╝██╔════╝██╔══██╗╚══██╔══╝██║   ██║██╔══██╗██╔════╝██╔════╝
 █████╗  █████╗  ███████║   ██║   ██║   ██║██████╔╝█████╗  ███████╗
@@ -558,6 +579,9 @@ module.exports = {
     save_bake_data,
     load_smelt_data,
     save_smelt_data,
+    // dvoice
+    loadDvoiceData,
+    saveDvoiceData,
     // features
     setDynamicVoice,
     getDynamicVoice,

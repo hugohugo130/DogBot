@@ -10,6 +10,7 @@ const { get_areadline } = require('./utils/readline.js');
 const { check_item_data } = require('./utils/rpg.js');
 const { should_register_cmd } = require('./utils/auto_register.js');
 const { registcmd } = require('./register_commands.js');
+const { loadDvoiceData } = require('./utils/file.js');
 require("dotenv").config();
 
 const client = new Client({
@@ -91,7 +92,7 @@ process.on('SIGINT', async () => {
     // await downloadAllFiles();
 
     client.last_send_log = "";
-    client.dvoice = new Collection();
+    client.dvoice = loadDvoiceData();
     global._client = null;
     global.oven_sessions = {};
 
