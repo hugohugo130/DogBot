@@ -4,16 +4,14 @@ const { recipes, name } = require("../../../utils/rpg.js");
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("make")
-        .setDescription("合成製作武器和物品")
+        .setDescription("Craft items and weapons")
         .setNameLocalizations({
             "zh-TW": "製作",
-            "zh-CN": "製作",
-            "en-US": "make",
+            "zh-CN": "制作",
         })
         .setDescriptionLocalizations({
-            "zh-TW": "合成物品",
-            "zh-CN": "合成物品",
-            "en-US": "Craft items",
+            "zh-TW": "合成製作武器和物品",
+            "zh-CN": "合成制造武器和物品",
         })
         .addStringOption(option =>
             option.setName("物品")
