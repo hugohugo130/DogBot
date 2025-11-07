@@ -65,9 +65,10 @@ module.exports = {
                 logger.error(`[動態語音] 建立頻道失敗: ${error.message}`);
                 console.error(error);
             }
-        }
+        };
+
         // 成員離開語音頻道
-        else if (oldChannel) {
+        if (oldChannel && oldChannel.id !== mainchannelID) {
             const data = client.dvoice[oldChannel.id];
             if (!data) return;
 
