@@ -61,7 +61,16 @@ async function checkDBFilesDefault(client) {
             return a.id.localeCompare(b.id);
         });
 
-    const users = (await Promise.all(guilds.map(guild => guild.members.fetch())))
+    let users;
+    try {
+        users = await Promise.all(guilds.map(guild => guild.members.fetch()));
+    } catch (err) {
+        // use cache if rate limited [GuildMembersTimeout]
+        if (!err.message.includes("GuildMembersTimeout")) throw err;
+        users = guilds.map(guild => guild.members.cache);
+    };
+
+    users = users
         .flatMap(members => [...members.values()])
         .map(member => member.user)
         .sort((a, b) => {
