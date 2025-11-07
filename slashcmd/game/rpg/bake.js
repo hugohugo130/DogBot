@@ -266,20 +266,18 @@ module.exports = {
             };
 
             if (allFoods && !auto_amount) {
-                amounts = rpg_data.inventory[first_food] || amounts;
+                amounts = [rpg_data.inventory[first_food] || amounts[0]];
             } else if (auto_amount) {
                 if (auto_amount === "amount") {
                     amounts = divide(rpg_data.inventory[first_food], oven_remain_slots);
                 } else { // auto_amount === "foods"
-                    let inventory = structuredClone(rpg_data.inventory);
-
-                    const entries = Object.entries(inventory)
+                    const entries = Object.entries(rpg_data.inventory)
                         .filter(([key]) => key in bake)
-                        .sort(([, valueA], [, valueB]) => valueA - valueB);
+                        .sort(([, valueA], [, valueB]) => valueA - valueB)
+                        .slice(0, oven_remain_slots);
 
-                    inventory = Object.fromEntries(entries);
-
-                    items = inventory.slice(0, oven_remain_slots);
+                    items = entries.map(([key]) => key);
+                    amounts = entries.map(([, value]) => value);
                 };
             };
 
