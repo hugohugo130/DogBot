@@ -136,7 +136,7 @@ function get_help_command(category, command_name, client = global._client) {
     ${format}
     ```
     */
-    const format = command_data.format ?? `${client.author}很懶 他沒有留下任何格式owo`;
+    const format = command_data.format ?? `\`${client.author}很懶 他沒有留下任何格式owo\``;
 
     const alias = find_redirect_targets_from_id(command_name).map(name => `\`${name}\``).join("、");
 
@@ -149,8 +149,9 @@ function get_help_command(category, command_name, client = global._client) {
         .addFields(
             { name: "使用方式", value: usage },
             { name: "格式", value: `\`<>\`是一定要填的參數 \`[]\`是選填的參數\n\`\`\`${format}\`\`\`` },
-            { name: "別名", value: alias }
         );
+
+    if (alias?.length) embed.addFields({ name: "別名", value: alias });
 
     return setEmbedFooter(client, embed);
 };
