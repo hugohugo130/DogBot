@@ -25,8 +25,6 @@ module.exports = {
 
         // 成員加入語音頻道
         if (newChannel && newChannel.id === mainchannelID) {
-            logger.info(`[動態語音] ${member.user.username} 加入主頻道`);
-
             try {
                 // 檢查機器人權限
                 const botMember = await guild.members.fetch(client.user.id);
