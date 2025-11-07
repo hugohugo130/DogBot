@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Events, Options } = require('discord.js');
+const { Client, GatewayIntentBits, Events, Options, Collection } = require('discord.js');
 const { checkDBFilesExists, checkDBFilesCorrupted } = require('./utils/check_db_files.js');
 const { checkAllDatabaseFilesContent } = require('./utils/onlineDB.js');
 const { load_cogs } = require("./utils/load_cogs.js");
@@ -90,6 +90,7 @@ process.on('SIGINT', async () => {
     // await downloadAllFiles();
 
     client.last_send_log = "";
+    client.dvoice = new Collection();
     global._client = null;
     global.oven_sessions = {};
 

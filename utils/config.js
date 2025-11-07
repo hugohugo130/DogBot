@@ -44,6 +44,7 @@ const DEFAULT_VALUES = {
     "guild": {
         "database.json": {
             "rpg": false,
+            "dynamicVoice": false,
         },
     },
 };

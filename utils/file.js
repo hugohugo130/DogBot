@@ -485,6 +485,26 @@ function save_smelt_data(data) {
     writeJsonSync(smelt_data_file, data);
 };
 
+/*
+███████╗███████╗ █████╗ ████████╗██╗   ██╗██████╗ ███████╗███████╗
+██╔════╝██╔════╝██╔══██╗╚══██╔══╝██║   ██║██╔══██╗██╔════╝██╔════╝
+█████╗  █████╗  ███████║   ██║   ██║   ██║██████╔╝█████╗  ███████╗
+██╔══╝  ██╔══╝  ██╔══██║   ██║   ██║   ██║██╔══██╗██╔══╝  ╚════██║
+██║     ███████╗██║  ██║   ██║   ╚██████╔╝██║  ██║███████╗███████║
+╚═╝     ╚══════╝╚═╝  ╚═╝   ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝
+*/
+function setDynamicVoice(guildID, channel) {
+    const data = loadData(guildID);
+    data["dynamicVoice"] = channel;
+
+    saveData(guildID, data);
+};
+
+function getDynamicVoice(guildID) {
+    const data = loadData(guildID);
+    return data["dynamicVoice"];
+};
+
 module.exports = {
     readFileSync,
     writeSync,
@@ -525,4 +545,7 @@ module.exports = {
     save_bake_data,
     load_smelt_data,
     save_smelt_data,
+    // features
+    setDynamicVoice,
+    getDynamicVoice,
 };
