@@ -291,7 +291,7 @@ function is_cooldown_finished(command_name, rpg_data) {
     };
 };
 
-async function get_failed_embed(client = global._client, failed_reason) {
+async function get_failed_embed(client = global._client, failed_reason, rpg_data) {
     let title = "失敗";
     let description = `${failed_reason}`;
 
@@ -332,7 +332,7 @@ async function get_failed_embed(client = global._client, failed_reason) {
         .setTitle(title)
         .setDescription(description);
 
-    return setEmbedFooter(client, embed);
+    return setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`);
 }
 
 /**
@@ -2171,8 +2171,10 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
     const { failed, item, amount } = get_random_result(command);
     if (failed && rpg_work.includes(command)) {
-        if (mode === 1) return { embeds: [await get_failed_embed(client, item)] };
-        return await message.reply({ embeds: [await get_failed_embed(client, item)] });
+        rpg_data.hungry += 1;
+        save_rpg_data(userid, rpg_data);
+        if (mode === 1) return { embeds: [await get_failed_embed(client, item, rpg_data)] };
+        return await message.reply({ embeds: [await get_failed_embed(client, item, rpg_data)] });
     };
 
     const result = await execute({ client, message, rpg_data, data, args, mode, random_item: { item, amount } });
