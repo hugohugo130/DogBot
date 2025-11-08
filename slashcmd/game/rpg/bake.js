@@ -379,7 +379,7 @@ module.exports = {
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
             };
 
-            if (!first_food && amount) {
+            if (!first_food && amounts[0] && !allFoods && !auto_amount) {
                 const embed = new EmbedBuilder()
                     .setColor(0xF04A47)
                     .setTitle(`${emoji_cross} | 洗勒烤 🤔 你選了數量但沒選食物`);
@@ -393,6 +393,12 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 什麼拉🤣 你選了食物又選了自動選擇食物 那我要選什麼阿`);
 
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
+            };
+
+            if (allFoods && auto_amount) {
+                const embed = new EmbedBuilder()
+                    .setColor(0xF04A47)
+                    .setTitle(`${emoji_cross} | 什麼拉🤣 你選了全部食物又選了自動選擇食物 那我要選什麼阿`);
             };
 
             if (allFoods && !auto_amount) {
