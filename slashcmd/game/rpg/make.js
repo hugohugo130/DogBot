@@ -41,6 +41,7 @@ module.exports = {
         const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
         const { name, tags } = require("../../../utils/rpg.js");
         const { setEmbedFooter, get_emoji } = require("../../../cogs/rpg/msg_handler.js");
+        const { embed_error_color } = require("../../../utils/config.js");
         await interaction.deferReply();
 
         const userid = interaction.user.id;
@@ -93,7 +94,7 @@ module.exports = {
 
             const embed = new EmbedBuilder()
                 .setTitle("你沒有足夠的材料")
-                .setColor(0xF04A47)
+                .setColor(embed_error_color)
                 .setDescription(`你缺少了 ${items.join("、")}`);
 
             return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });

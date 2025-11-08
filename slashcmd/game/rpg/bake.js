@@ -66,6 +66,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const { load_rpg_data, load_bake_data } = require("../../../utils/file.js");
     const { name, oven_slots } = require("../../../utils/rpg.js");
     const { setEmbedFooter, get_emoji } = require("../../../cogs/rpg/msg_handler.js");
+    const { embed_error_color } = require("../../../utils/config.js");
 
     if (![1, 2].includes(mode)) throw new Error("mode must be 1 or 2");
 
@@ -79,7 +80,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
 
     if (oven_remain_slots <= 0) {
         const embed = new EmbedBuilder()
-            .setColor(0xF04A47)
+            .setColor(embed_error_color)
             .setTitle(`${emoji_cross} | 你的烤箱已經滿了`);
 
         return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
@@ -127,7 +128,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
 
         const embed = new EmbedBuilder()
             .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
-            .setColor(0xF04A47)
+            .setColor(embed_error_color)
             .setDescription(`你缺少了 ${items.join("、")}`);
 
         await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
@@ -348,6 +349,7 @@ module.exports = {
         const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
         const { name, oven_slots } = require("../../../utils/rpg.js");
         const { setEmbedFooter, get_emoji } = require("../../../cogs/rpg/msg_handler.js");
+        const { embed_error_color } = require("../../../utils/config.js");
 
         if (subcommand === "bake") {
             const emoji_cross = await get_emoji(interaction.client, "crosS");
@@ -360,7 +362,7 @@ module.exports = {
 
             if (oven_remain_slots <= 0) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的烤箱已經滿了`);
 
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
@@ -373,7 +375,7 @@ module.exports = {
 
             if (!first_food && !amounts[0] && !allFoods && !auto_amount) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 洗勒烤 🤔 你什麼也不選`);
 
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
@@ -381,7 +383,7 @@ module.exports = {
 
             if (!first_food && amounts[0] && !allFoods && !auto_amount) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 洗勒烤 🤔 你選了數量但沒選食物`);
 
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
@@ -389,7 +391,7 @@ module.exports = {
 
             if (first_food && auto_amount === "foods") {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 什麼拉🤣 你選了食物又選了自動選擇食物 那我要選什麼阿`);
 
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
@@ -397,8 +399,18 @@ module.exports = {
 
             if (allFoods && auto_amount) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 什麼拉🤣 你選了全部食物又選了自動選擇食物 那我要選什麼阿`);
+
+                return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
+            };
+
+            if (!first_food && auto_amount === "amount") {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你選了自動選擇數量但沒選食物 蛤？`);
+
+                return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
             };
 
             if (allFoods && !auto_amount) {
@@ -469,7 +481,7 @@ module.exports = {
 
             if (!bake_data || bake_data.length === 0) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的烤箱是空的`);
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };
@@ -482,7 +494,7 @@ module.exports = {
 
                 if (index < 0 || index >= bake_data.length) {
                     const embed = new EmbedBuilder()
-                        .setColor(0xF04A47)
+                        .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 錯誤的物品編號`)
                     return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
                 };
@@ -491,7 +503,7 @@ module.exports = {
                 const current_time = Math.floor(Date.now() / 1000);
                 if (current_time < item.end_time) {
                     const embed = new EmbedBuilder()
-                        .setColor(0xF04A47)
+                        .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 烘烤還沒完成`)
                     return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
                 };

@@ -98,6 +98,7 @@ module.exports = {
             const { load_rpg_data, load_smelt_data } = require("../../../utils/file.js");
             const { name, smelter_slots, smeltable_items } = require("../../../utils/rpg.js");
             const { setEmbedFooter, get_emoji, get_loophole_embed } = require("../../../cogs/rpg/msg_handler.js");
+            const {embed_error_color} = require("../../../utils/config.js");
             await interaction.deferReply();
 
             const emoji_cross = await get_emoji(interaction.client, "crosS");
@@ -107,7 +108,7 @@ module.exports = {
             const smelt_data = load_smelt_data()[userId];
             if (smelt_data && smelt_data.length >= smelter_slots) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的煉金爐已經滿了`);
 
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
@@ -165,7 +166,7 @@ module.exports = {
 
                 const embed = new EmbedBuilder()
                     .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setDescription(`你缺少了 ${items.join("、")}`);
 
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
@@ -259,7 +260,7 @@ module.exports = {
 
             if (!smelt_data || smelt_data.length === 0) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的煉金爐是空的`);
 
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
@@ -268,7 +269,7 @@ module.exports = {
             const index = interaction.options.getInteger("編號") - 1;
             if (index < 0 || index >= smelt_data.length) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 錯誤的物品編號`);
 
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
@@ -278,7 +279,7 @@ module.exports = {
             const current_time = Math.floor(Date.now() / 1000);
             if (current_time < item.end_time) {
                 const embed = new EmbedBuilder()
-                    .setColor(0xF04A47)
+                    .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 熔鍊還沒完成`)
                     .setFooter({ text: `等待至 <t:${item.end_time}:R>` });
 
