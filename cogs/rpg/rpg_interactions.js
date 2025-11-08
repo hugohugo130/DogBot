@@ -300,7 +300,7 @@ function get_help_command(category, command_name, client = global._client) {
     ${format}
     ```
     */
-    const format = command_data.format ? command_data.format.replace("cmd", `${prefix}${command_name}`) : `\`${client.author}很懶 他沒有留下任何格式owo\``;
+    const format = command_data.format ? command_data.format.replace("{cmd}", `${prefix}${command_name}`) : `\`${client.author}很懶 他沒有留下任何格式owo\``;
 
     const alias = find_redirect_targets_from_id(command_name).map(name => `\`${name}\``).join("、");
 
