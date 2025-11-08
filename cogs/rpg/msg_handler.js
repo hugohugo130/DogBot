@@ -987,17 +987,17 @@ const rpg_commands = {
             };
         };
     }],
-    ls: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        return await ls_function({ client, message, rpg_data, data, args, mode, random_item })
-    }],
     bag: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
     }],
     item: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
     }],
-    items: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+    ls: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
+    }],
+    items: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        return await ls_function({ client, message, rpg_data, data, args, mode, random_item })
     }],
     buy: ["購買", "購買其他人上架的物品", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_shop_data } = require("../../utils/file.js");
