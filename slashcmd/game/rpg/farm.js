@@ -5,7 +5,7 @@ const { get_id_of_name } = require("../../../utils/rpg.js");
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("farm")
-        .setDescription("農田相關指令")
+        .setDescription("farm related commands")
         .setNameLocalizations({
             "zh-TW": "種田",
             "zh-CN": "種田",
@@ -58,7 +58,7 @@ module.exports = {
                 "en-US": "Use a hoe to plant crops",
             })
             .addStringOption(option =>
-                option.setName("鋤頭")
+                option.setName("hoe")
                     .setNameLocalizations({
                         "zh-TW": "鋤頭",
                         "zh-CN": "锄头",
