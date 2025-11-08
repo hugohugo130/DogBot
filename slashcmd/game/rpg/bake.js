@@ -88,7 +88,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const allFoods = interaction.options.getBoolean("all") ?? false;
 
     // if (allFoods && !auto_amount) amount = rpg_data.inventory[first_food] || 0;
-    if (allFoods) amount = rpg_data.inventory[first_food] || 0;
+    if (allFoods) amount = rpg_data.inventory[item_id] || 0;
 
     const duration = 60 * amount;
 
