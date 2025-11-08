@@ -144,7 +144,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     // 生成一個簡短的識別碼來代替完整的 item_need JSON
     const min = 1000000000;
     const max = 9999999999;
-    const random10DigitNumber = Math.floor(randomNumber * (max - min + 1)) + min;
+    const random10DigitNumber = Math.floor(Math.random() * (max - min + 1)) + min;
     const session_id = `${userId}_${Date.now()}_${random10DigitNumber}`;
 
     // 將 item_need 資料儲存在全域變數或快取中
