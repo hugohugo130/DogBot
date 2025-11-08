@@ -30,7 +30,7 @@ const DEFAULT_VALUES = {
             "privacy": [],
         },
         "rpg_shop.json": {
-            "status": false,
+            "status": true,
             "items": {},
         },
         "bake_db.json": [],
