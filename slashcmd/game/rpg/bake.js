@@ -352,11 +352,11 @@ module.exports = {
         if (subcommand === "bake") {
             const emoji_cross = await get_emoji(interaction.client, "crosS");
 
-            // let rpg_data = load_rpg_data(userId);
+            let rpg_data = load_rpg_data(userId);
             const bake_data = load_bake_data()[userId];
 
             const oven_remain_slots = oven_slots - (bake_data?.length || 0);
-            // const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
+            const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
 
             if (oven_remain_slots <= 0) {
                 const embed = new EmbedBuilder()
@@ -367,13 +367,11 @@ module.exports = {
             };
 
             const first_food = interaction.options.getString("food");
-            // let items = first_food ? [first_food] : [];
-            // let amounts = [interaction.options.getInteger("amount") ?? 1];
-            const amount = interaction.options.getInteger("amount") ?? 1;
+            let items = first_food ? [first_food] : [];
+            let amounts = [interaction.options.getInteger("amount") ?? 1];
             const allFoods = interaction.options.getBoolean("all") ?? false;
 
-            // if (!first_food && !amounts[0] && !allFoods && !auto_amount) {
-            if (!first_food && !amount && !allFoods) {
+            if (!first_food && !amounts[0] && !allFoods && !auto_amount) {
                 const embed = new EmbedBuilder()
                     .setColor(0xF04A47)
                     .setTitle(`${emoji_cross} | 洗勒烤 🤔 你什麼也不選`);
@@ -389,31 +387,36 @@ module.exports = {
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
             };
 
-            await bake_bake(interaction, userId, first_food, amount);
+            if (first_food && auto_amount === "foods") {
+                const embed = new EmbedBuilder()
+                    .setColor(0xF04A47)
+                    .setTitle(`${emoji_cross} | 什麼拉🤣 你選了食物又選了自動選擇食物 那我要選什麼阿`);
 
-            // if (first_food && auto_amount === "foods") {
-            //     const embed = new EmbedBuilder()
-            //         .setColor(0xF04A47)
-            //         .setTitle(`${emoji_cross} | 什麼拉🤣 你選了食物又選了自動選擇食物 那我要選什麼阿`);
+                return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
+            };
 
-            //     return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
-            // };
+            if (allFoods && !auto_amount) {
+                amounts = [rpg_data.inventory[first_food] || 1];
+            } else if (auto_amount) {
+                if (auto_amount === "amount") {
+                    amounts = divide(rpg_data.inventory[first_food], oven_remain_slots);
+                } else { // auto_amount === "foods"
+                    const entries = Object.entries(rpg_data.inventory)
+                        .filter(([key]) => key in bake)
+                        .sort(([, valueA], [, valueB]) => valueA - valueB)
+                        .slice(0, oven_remain_slots);
 
-            // if (allFoods && !auto_amount) {
-            //     amounts = [rpg_data.inventory[first_food] || amounts[0]];
-            // } else if (auto_amount) {
-            //     if (auto_amount === "amount") {
-            //         amounts = divide(rpg_data.inventory[first_food], oven_remain_slots);
-            //     } else { // auto_amount === "foods"
-            //         const entries = Object.entries(rpg_data.inventory)
-            //             .filter(([key]) => key in bake)
-            //             .sort(([, valueA], [, valueB]) => valueA - valueB)
-            //             .slice(0, oven_remain_slots);
+                    items = entries.map(([key]) => key);
+                    amounts = entries.map(([, value]) => value);
+                };
+            };
 
-            //         items = entries.map(([key]) => key);
-            //         amounts = entries.map(([, value]) => value);
-            //     };
-            // };
+            for (const [index, item] of items.entries()) {
+                const amount = amounts[index];
+                if (amount === 0) continue;
+
+                await bake_bake(interaction, userId, item, amount, index === 0 ? 1 : 2);
+            };
         } else if (subcommand === "info") {
             const bake_data = load_bake_data()[userId];
             const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
