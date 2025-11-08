@@ -41,7 +41,7 @@ module.exports = {
 
                 if (!data) {
                     channel = await guild.channels.create({
-                        name: `${member.user.username}`,
+                        name: `└[${member.user.username}] 的頻道`,
                         type: ChannelType.GuildVoice,
                         parent: newChannel.parent,
                         permissionOverwrites: [
