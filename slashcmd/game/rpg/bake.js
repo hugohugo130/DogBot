@@ -370,7 +370,8 @@ module.exports = {
             // let amounts = [interaction.options.getInteger("amount") ?? 1];
             const allFoods = interaction.options.getBoolean("all") ?? false;
 
-            if (!first_food && !interaction.options.getInteger("amount") && !allFoods && !auto_amount) {
+            // if (!first_food && !interaction.options.getInteger("amount") && !allFoods && !auto_amount) {
+            if (!first_food && !interaction.options.getInteger("amount") && !allFoods) {
                 const embed = new EmbedBuilder()
                     .setColor(0xF04A47)
                     .setTitle(`${emoji_cross} | 洗勒烤 🤔 你什麼也不選`);
