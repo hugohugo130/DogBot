@@ -131,7 +131,12 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
             .setColor(embed_error_color)
             .setDescription(`你缺少了 ${items.join("、")}`);
 
-        await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
+        if (mode === 0) {
+            await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], components: [], flags: MessageFlags.Ephemeral });
+        } else {
+            await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)], components: [], flags: MessageFlags.Ephemeral });
+        };
+
         return 1;
     };
 
@@ -427,6 +432,17 @@ module.exports = {
                     items = entries.map(([key]) => key);
                     amounts = entries.map(([, value]) => value);
                 };
+            };
+
+            const total_need_coal = Math.ceil(amounts.reduce((sum, amount) => sum + amount, 0) / 2);
+            const coal_amount = rpg_data.inventory["coal"] || 0;
+            if (coal_amount < total_need_coal) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你的煤炭不夠喔！`)
+                    .setDescription(`你需要 \`${total_need_coal}\` 顆煤炭，但你只有 \`${coal_amount}\` 顆煤炭`);
+
+                return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
             };
 
             for (const [index, item] of items.entries()) {
