@@ -480,7 +480,6 @@ async function ls_function({ client, message, rpg_data, data, args, mode, random
         embed.setColor(embed_error_color);
         embed.setTitle(`${bag_emoji} | 你的背包裡沒有任何東西`);
     } else {
-
         for (const category of categories) {
             if (Object.keys(category.items).length > 0) {
                 const itemsText = Object.entries(category.items)
@@ -533,10 +532,12 @@ const rpg_actions = {
 const rpg_work = Object.keys(rpg_cooldown);
 
 const redirect_data = {
-    fell: "hew",
-    wood: "hew",
-    bag: "ls",
-    item: "ls",
+    hew: "fell",
+    wood: "fell",
+    ls: "items",
+    bag: "items",
+    item: "items",
+    food: "eat",
     money: "m",
     store: "shop",
     mo: "m",
@@ -581,7 +582,7 @@ const rpg_commands = {
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] });
     }],
-    hew: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+    fell: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
         const { name } = require("../../utils/rpg.js");
         const userid = message.author.id;
@@ -612,7 +613,7 @@ const rpg_commands = {
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] });
     }],
-    fell: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+    hew: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
     }],
     wood: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
@@ -986,6 +987,9 @@ const rpg_commands = {
 
     }],
     item: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+
+    }],
+    items: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
     }],
     buy: ["購買", "購買其他人上架的物品", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
@@ -1668,6 +1672,9 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
+    }],
+    food: ["吃東西", "吃東西回復飽食度", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+
     }],
     sell: ["出售", "出售物品給系統", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { sell_data, name } = require("../../utils/rpg.js");
