@@ -425,9 +425,9 @@ module.exports = {
                     amounts = divide(rpg_data.inventory[first_food], oven_remain_slots);
                 } else { // auto_amount === "foods"
                     const entries = Object.entries(rpg_data.inventory)
-                        .filter(([key]) => key in bake)
-                        .sort(([, valueA], [, valueB]) => valueA - valueB)
-                        .slice(0, oven_remain_slots);
+                        .filter(([key]) => key in bake) // 過濾掉不可烘烤的物品
+                        .sort(([, valueA], [, valueB]) => valueB - valueA) // 按數量降序排序
+                        .slice(0, oven_remain_slots); // 取前 {oven_remain_slots} 個物品
 
                     items = entries.map(([key]) => key);
                     amounts = entries.map(([, value]) => value);
