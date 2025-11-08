@@ -244,7 +244,7 @@ const probabilities = {
     "smelt": {
 
     },
-    "hew": {
+    "fell": {
         "mouse": [10, 1, 1],
         "acacia_wood": [8, 1, 1],
         "birch_wood": [8, 1, 1],
