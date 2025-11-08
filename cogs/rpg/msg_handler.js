@@ -621,7 +621,7 @@ const rpg_commands = {
     }],
     herd: ["放牧", "放牧或屠宰動物", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
-        const { animal_products, name } = require("../../utils/rpg.js");
+        const { animal_products, name, get_name_of_id } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const { item: random_animal, amount } = random_item;
@@ -630,13 +630,20 @@ const rpg_commands = {
         if (!rpg_data.inventory[product]) rpg_data.inventory[product] = 0;
 
         rpg_data.inventory[product] += amount;
-        save_rpg_data(userid, rpg_data);
 
         const product_name = name[product];
         const animal_name = product_name.replace("生", "").replace("肉", "");
         const emoji = await get_emoji(client, rpg_emojis["herd"]);
 
-        const description = `你宰了一隻${animal_name}，獲得了 \`${amount}\` 個${product_name}！`;
+        let description = `你宰了一隻${animal_name}，獲得了 \`${amount}\` 個${product_name}！`;
+        if (product === "a_chicken") {
+            const egg_amount = get_random_number(1, 3);
+            description += `不僅如此！你還發現了${egg_amount}顆${get_name_of_id("egg")}！`
+            if (!rpg_data.inventory["egg"]) rpg_data.inventory["egg"] = 0;
+            rpg_data.inventory["egg"] += egg_amount;
+        };
+
+        save_rpg_data(userid, rpg_data);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)

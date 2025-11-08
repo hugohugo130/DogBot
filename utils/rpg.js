@@ -311,6 +311,8 @@ const shop_lowest_price = {
     stick: 55,
     warped_planks: 50,
     warped_wood: 55,
+    //==============材料==============
+    egg: 50,
     // ==============食物(烤魚類也是食物)==============
     anglerfish: 55,
     apple: 85,
@@ -447,6 +449,8 @@ const sell_data = {
     stick: 50,
     warped_planks: 50,
     warped_wood: 45,
+    //==============材料==============
+    egg: 45,
     // ==============食物(烤魚類也是食物)==============
     anglerfish: 50,
     apple: 85,
@@ -594,6 +598,7 @@ const food_data = {
     whale: 4,
     raw_hugo: 20,
     hugo: 100,
+    egg: 1,
 };
 
 const brew = {
@@ -701,6 +706,8 @@ const name = {
     stick: "木棒",
     warped_planks: "凋零木板",
     warped_wood: "凋零木",
+    // ==============材料==============
+    egg: "雞蛋",
     // ==============食物==============
     apple: "蘋果",
     beef: "烤牛肉",
