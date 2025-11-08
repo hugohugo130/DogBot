@@ -101,7 +101,7 @@ https://discord.js.org/docs/packages/discord.js/14.24.0/ColorResolvable:TypeAlia
 4. number
 5. HexColorString
 */
-const embed_default_color = "random";
+const embed_default_color = "Random";
 const embed_error_color = 0xF04A47;
 
 /*
