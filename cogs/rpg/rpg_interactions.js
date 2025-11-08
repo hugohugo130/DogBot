@@ -880,4 +880,6 @@ module.exports = {
             await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
         };
     },
+    get_help_embed,
+    get_help_command,
 };

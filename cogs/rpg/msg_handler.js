@@ -995,6 +995,7 @@ const rpg_commands = {
     buy: ["購買", "購買其他人上架的物品", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_shop_data } = require("../../utils/file.js");
         const { name } = require("../../utils/rpg.js");
+        const { get_help_command } = require("./rpg_interactions.js");
 
         const userid = message.author.id;
         const emoji_cross = await get_emoji(client, "crosS");
@@ -1025,10 +1026,21 @@ const rpg_commands = {
         };
         args = args_.slice();
 
+        if (target_user?.id && target_user.id === userid) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 不能購買自己的物品`);
+
+            if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+            return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+        };
+
         if (args.length === 0 && target_user) {
             return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
         } else if (args.length === 0) {
-            return await redirect({ client, message, command: `help`, mode });
+            return await message.reply({
+                embeds: [get_help_command("rpg", "buy", client)],
+            });
         };
 
         let item = args[0];
@@ -1054,14 +1066,6 @@ const rpg_commands = {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 這個物品是什麼？我不認識`);
-
-            if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
-            return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
-        };
-        if (target_user.id === userid) {
-            const embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 不能購買自己的物品`);
 
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
