@@ -55,17 +55,169 @@ const help = {
     },
     group: {
         general: {
+        },
+        music: {
+
+        },
+        rpg: {
             "brew": {
                 emoji: "💊💧",
                 desc: "藥劑師研發藥水使用",
                 usage: [],
                 format: `{cmd}`,
             },
+            "buy": {
+                emoji: "",
+                desc: "購買商店裡的商品",
+                usage: [
+                    {
+                        name: "向{author}購買 `2` 個麵包",
+                        value: "&buy @{author} bread 2"
+                    }
+                ],
+                format: "{cmd} @使用者 商品ID 數量",
+            },
+            "eat": {
+                emoji: "",
+                desc: "吃東西回復飽食度",
+                usage: [
+                    {
+                        name: "顯示所有可以食用的食物",
+                        value: "&eat"
+                    },
+                    {
+                        name: "吃一個麵包",
+                        value: "&eat bread"
+                    },
+                    {
+                        name: "吃三個牛肉",
+                        value: "&eat beef 3"
+                    }
+                ],
+                format: "{cmd} [食物ID] [數量]",
+            },
+            // "feed": {
+
+            // },
+            "fell": {
+                emoji: "",
+                desc: "伐木工砍伐木頭使用",
+                usage: [],
+                format: "{cmd}",
+            },
+            // "fightjob": {
+
+            // },
+            "fish": {
+                emoji: "",
+                desc: "漁夫捕魚使用",
+                usage: [],
+                format: "{cmd}",
+            },
+            "herd": {
+                emoji: "",
+                desc: "牧農放牧指令",
+                usage: [],
+                format: "{cmd}",
+            },
+            "items": {
+                emoji: "",
+                desc: "取得你的背包裡有多少東西",
+                usage: [
+                    {
+                        name: "取得你的背包清單",
+                        value: "&items"
+                    }
+                ],
+                format: "{cmd}",
+            },
+            // "job": {
+
+            // },
+            "last": {
+                emoji: "",
+                desc: '"倒數"金錢排行榜',
+                usage: [
+                    {
+                        name: "顯示倒數金錢排行榜",
+                        value: "&last"
+                    }
+                ],
+                format: "{cmd}",
+            },
+            // "make": {
+
+            // },
+            // "marry": {
+
+            // },
+            "mine": {
+                emoji: "",
+                desc: "礦工挖礦使用指令",
+                usage: [],
+                format: "{cmd}",
+            },
+            // "partner": {
+
+            // },
+            "money": {
+                emoji: "",
+                desc: "查看金錢及使用方法",
+                usage: [
+                    {
+                        name: "查看金錢",
+                        value: "&money"
+                    },
+                    {
+                        name: "付給{author} 1000$",
+                        value: "&pay @{author} 1000"
+                    }
+                ],
+                format: "{cmd}",
+            },
+            "pay": {
+                emoji: "",
+                desc: "付款給其他使用者",
+                usage: [
+                    {
+                        name: "付1000塊給{author}",
+                        value: "&pay @{author} 1000"
+                    }
+                ],
+                format: "{cmd} <使用者> <數量>",
+            },
+            "privacy": {
+                emoji: "",
+                desc: "切換隱私權控制開關",
+                usage: [],
+                format: "{cmd}",
+            },
+            "sell": {
+                emoji: "",
+                desc: "出售東西並換取金錢",
+                usage: [
+                    {
+                        name: "出售2個小麥",
+                        value: "&sell 小麥 2"
+                    },
+                    {
+                        name: "出售所有小麥",
+                        value: "&sell 小麥 all"
+                    },
+                    {
+                        name: "出售所有麵包(英文)",
+                        value: "&sell bread all"
+                    }
+                ],
+                format: "{cmd} <物品ID> [數量]",
+            },
         },
-        music: {},
-        rpg: {},
-        special: {},
-        dev: {},
+        special: {
+
+        },
+        dev: {
+
+        },
     },
 };
 
@@ -127,7 +279,11 @@ function get_help_command(category, command_name, client = global._client) {
     value.trim()
     */
     const usage = command_data.usage?.length > 0
-        ? command_data.usage.map((info, i) => `${i + 1}. ${info.name}\n\`\`\`${info.value}\`\`\``).join("\n")
+        ? command_data.usage.map((info, i) => {
+            const value = info.value.replace(/{author}/g, client.author);
+            const name = info.name.replace(/{author}/g, client.author);
+            return `${i + 1}. ${name}\n\`\`\`${value}\`\`\``;
+        }).join("\n")
         : `\`${client.author}很懶 他沒有留下任何使用方法owo\``;
 
     /*
@@ -138,7 +294,7 @@ function get_help_command(category, command_name, client = global._client) {
     ${format}
     ```
     */
-    const format = command_data.format.replace("cmd", `${prefix}brew`) ?? `\`${client.author}很懶 他沒有留下任何格式owo\``;
+    const format = command_data.format ? command_data.format.replace("cmd", `${prefix}${command_name}`) : `\`${client.author}很懶 他沒有留下任何格式owo\``;
 
     const alias = find_redirect_targets_from_id(command_name).map(name => `\`${name}\``).join("、");
 
