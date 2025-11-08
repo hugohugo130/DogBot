@@ -62,7 +62,7 @@ function divide(amount, by) {
  * @param {number} mode 1 = interaction.editReply, 2 = interaction.followUp
  * @returns {Promise<number>}
  */
-async function bake_bake(interaction, userId, item_id, amount, mode) {
+async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const { load_rpg_data, load_bake_data } = require("../../../utils/file.js");
     const { name, oven_slots } = require("../../../utils/rpg.js");
     const { setEmbedFooter, get_emoji } = require("../../../cogs/rpg/msg_handler.js");
@@ -368,16 +368,19 @@ module.exports = {
             const first_food = interaction.options.getString("food");
             // let items = first_food ? [first_food] : [];
             // let amounts = [interaction.options.getInteger("amount") ?? 1];
+            const amount = interaction.options.getInteger("amount") ?? 1;
             const allFoods = interaction.options.getBoolean("all") ?? false;
 
-            // if (!first_food && !interaction.options.getInteger("amount") && !allFoods && !auto_amount) {
-            if (!first_food && !interaction.options.getInteger("amount") && !allFoods) {
+            // if (!first_food && !amounts[0] && !allFoods && !auto_amount) {
+            if (!first_food && !allFoods) {
                 const embed = new EmbedBuilder()
                     .setColor(0xF04A47)
                     .setTitle(`${emoji_cross} | 洗勒烤 🤔 你什麼也不選`);
 
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
             };
+
+            await bake_bake(interaction, userId, first_food, amount);
 
             // if (first_food && auto_amount === "foods") {
             //     const embed = new EmbedBuilder()
