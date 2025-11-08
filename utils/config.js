@@ -34,9 +34,7 @@ const DEFAULT_VALUES = {
             "status": true,
             "items": {},
         },
-        "rpg_farm.json": {
-
-        },
+        "rpg_farm.json": [],
         "bake_db.json": [],
         "smelt_db.json": [],
     },

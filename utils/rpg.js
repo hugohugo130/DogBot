@@ -899,6 +899,7 @@ function get_number_of_items(name, userid) {
 };
 
 const oven_slots = 3;
+const farm_slots = 4;
 const smelter_slots = 3;
 
 module.exports = {
@@ -930,5 +931,6 @@ module.exports = {
     get_id_of_name,
     get_number_of_items,
     oven_slots,
+    farm_slots,
     smelter_slots,
 };
