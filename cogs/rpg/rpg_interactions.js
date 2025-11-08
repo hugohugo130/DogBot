@@ -231,20 +231,26 @@ const help = {
 function get_help_embed(category, user, client = global._client) {
     const { setEmbedFooter, setEmbedAuthor } = require("./msg_handler.js");
 
-    const selectMenu = new StringSelectMenuBuilder()
-        .setCustomId(`help|${user.id}|${category}`)
-        .setPlaceholder(`指令教學`)
-        .addOptions(...Object.entries(help.group[category])
-            .flatMap(([name, data]) => {
-                return [{
-                    label: name,
-                    description: data.desc,
-                    value: name,
-                }];
-            }));
+    const options = Object.entries(help.group[category])
+        .flatMap(([name, data]) => {
+            return [{
+                label: name,
+                description: data.desc,
+                value: name,
+            }];
+        });
 
-    const row = new ActionRowBuilder()
-        .addComponents(selectMenu);
+    let row;
+
+    if (options.length > 0) {
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(`help|${user.id}|${category}`)
+            .setPlaceholder(`指令教學`)
+            .addOptions(...options);
+
+        row = new ActionRowBuilder()
+            .addComponents(selectMenu);
+    };
 
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
