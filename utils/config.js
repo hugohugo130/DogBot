@@ -16,6 +16,7 @@ const DATABASE_FILES = [
     "smelt_db.json",
     "serverIP.json",
     "dvoice_db.json",
+    "rpg_farm.json",
 ];
 
 const DEFAULT_VALUES = {
@@ -32,6 +33,9 @@ const DEFAULT_VALUES = {
         "rpg_shop.json": {
             "status": true,
             "items": {},
+        },
+        "rpg_farm.json": {
+
         },
         "bake_db.json": [],
         "smelt_db.json": [],
@@ -58,6 +62,7 @@ const onlineDB_Files = [
     "bake_db.json",
     "smelt_db.json",
     "dvoice_db.json",
+    "rpg_farm.json",
 ];
 
 const database_file = join(database_folder, "database.json")
@@ -67,6 +72,7 @@ const bake_data_file = join(database_folder, "./bake_db.json");
 const serverIPFile = join(database_folder, "serverIP.json");
 const smelt_data_file = join(database_folder, "smelt_db.json");
 const dvoice_data_file = join(database_folder, "dvoice_db.json");
+const rpg_farm_file = join(database_folder, "rpg_farm.json");
 
 const cogsFolder = `${cwd()}/cogs`
 const musicFileFolder = `${cwd()}/music`
@@ -287,6 +293,7 @@ module.exports = {
     serverIPFile,
     smelt_data_file,
     dvoice_data_file,
+    rpg_farm_file,
 
     DEFAULT_VALUES,
     BETA,

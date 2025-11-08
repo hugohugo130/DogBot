@@ -95,7 +95,7 @@ module.exports = {
         return interaction.reply("該功能還沒完善！敬請期待！");
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
-        const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
+        const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data} = require("../../../utils/file.js");
         const { name, oven_slots } = require("../../../utils/rpg.js");
         const { setEmbedFooter, get_emoji, rpg_cooldown } = require("../../../cogs/rpg/msg_handler.js");
 

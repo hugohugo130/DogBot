@@ -462,6 +462,52 @@ function save_shop_data(userid, shop_data) {
     writeJsonSync(rpg_shop_file, data);
 };
 
+function load_farm_data(userid) {
+    const { rpg_farm_file } = require("./config.js");
+    const farm_emptyeg = find_default_value("rpg_farm.json", {});
+
+    const rawData = readFileSync(rpg_farm_file);
+
+    const data = JSON.parse(rawData);
+
+    if (!data[userid]) {
+        save_shop_data(userid, farm_emptyeg);
+        return farm_emptyeg;
+    };
+
+    return order_data(data[userid], farm_emptyeg);
+};
+
+function save_farm_data(userid, farm_data) {
+    const { rpg_farm_file } = require("./config.js");
+    const farm_emptyeg = find_default_value("rpg_farm.json", {});
+
+    let data = {};
+    if (fs.existsSync(rpg_farm_file)) {
+        const rawData = readFileSync(rpg_farm_file);
+        data = JSON.parse(rawData);
+    };
+
+    if (!data[userid]) {
+        data[userid] = farm_emptyeg;
+    };
+
+    data[userid] = { ...data[userid], ...farm_data };
+
+    // 清除數量為0的物品
+    if (data[userid].items) {
+        for (const [item, itemData] of Object.entries(data[userid].items)) {
+            if (itemData.amount <= 0) {
+                delete data[userid].items[item];
+            };
+        };
+    };
+
+    data[userid] = order_data(data[userid], shop_emptyeg);
+
+    writeJsonSync(rpg_farm_file, data);
+};
+
 function load_bake_data() {
     const { bake_data_file } = require("./config.js");
 
@@ -575,6 +621,8 @@ module.exports = {
     save_rpg_data,
     load_shop_data,
     save_shop_data,
+    load_farm_data,
+    save_farm_data,
     load_bake_data,
     save_bake_data,
     load_smelt_data,
