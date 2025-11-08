@@ -373,10 +373,18 @@ module.exports = {
             const allFoods = interaction.options.getBoolean("all") ?? false;
 
             // if (!first_food && !amounts[0] && !allFoods && !auto_amount) {
-            if (!first_food && !allFoods) {
+            if (!first_food && !amount && !allFoods) {
                 const embed = new EmbedBuilder()
                     .setColor(0xF04A47)
                     .setTitle(`${emoji_cross} | 洗勒烤 🤔 你什麼也不選`);
+
+                return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
+            };
+
+            if (!first_food && amount) {
+                const embed = new EmbedBuilder()
+                    .setColor(0xF04A47)
+                    .setTitle(`${emoji_cross} | 洗勒烤 🤔 你選了數量但沒選食物`);
 
                 return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
             };
