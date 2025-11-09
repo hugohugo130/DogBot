@@ -880,7 +880,6 @@ module.exports = {
             await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
         } else if (interaction.customId.startsWith("farm")) {
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
-            await interaction.deferUpdate();
 
             const [embed, row] = await get_farm_info_embed(user, client);
             await interaction.update({ embeds: [embed], components: [row] });
