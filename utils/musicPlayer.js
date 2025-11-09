@@ -1,22 +1,11 @@
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, getVoiceConnection } = require('@discordjs/voice');
-const { Innertube } = require('youtubei.js');
+const play = require('play-dl');
 const yts = require('yt-search');
 const { get_music_data, update_music_data, delete_music_data } = require('./file.js');
 
 class MusicPlayer {
     constructor() {
         this.players = new Map();
-        this.youtube = null;
-        this.initializeYouTube();
-    }
-
-    async initializeYouTube() {
-        try {
-            this.youtube = await Innertube.create();
-            console.log('YouTubei.js 初始化成功');
-        } catch (error) {
-            console.error('YouTubei.js 初始化失敗:', error);
-        }
     }
 
     async joinVoiceChannel(voiceChannel, textChannel) {
@@ -104,26 +93,21 @@ class MusicPlayer {
 
     async createSongFromUrl(url, requestedBy) {
         try {
-            // 等待 YouTube 客戶端初始化
-            if (!this.youtube) {
-                await this.initializeYouTube();
-            }
-
-            // 使用 youtubei.js 獲取影片資訊
-            const info = await this.youtube.getInfo(url);
-            const videoDetails = info.basic_info;
+            // 使用 play-dl 驗證並獲取影片資訊
+            const info = await play.video_basic_info(url);
+            const videoDetails = info.video_details;
 
             return {
                 url: url,
                 title: videoDetails.title || '未知標題',
-                duration: this.formatDuration(videoDetails.duration || 0),
+                duration: this.formatDuration(videoDetails.durationInSec || 0),
                 requestedBy: requestedBy,
-                thumbnail: this.getBestThumbnail(info.thumbnail?.thumbnails),
+                thumbnail: videoDetails.thumbnails[0]?.url || '',
                 addedAt: new Date().toISOString()
             };
         } catch (error) {
             console.error('從 URL 創建歌曲失敗:', error);
-            // 如果 youtubei.js 失敗，回退到 yt-search
+            // 如果 play-dl 失敗，回退到 yt-search
             return await this.createSongFromSearch(url, requestedBy);
         }
     }
@@ -189,16 +173,12 @@ class MusicPlayer {
         console.log('準備播放歌曲:', song.title, 'URL:', song.url);
 
         try {
-            // 使用 ytdl-core 作為最後的手段
-            const ytdl = require('ytdl-core');
+            // 使用 play-dl 的替代方法
+            const stream = await this.getAudioStream(song.url);
 
-            const stream = ytdl(song.url, {
-                filter: 'audioonly',
-                quality: 'highestaudio',
-                highWaterMark: 1 << 25
+            const resource = createAudioResource(stream, {
+                inputType: stream.type
             });
-
-            const resource = createAudioResource(stream);
 
             guildPlayer.audioPlayer.play(resource);
 
@@ -219,6 +199,37 @@ class MusicPlayer {
             console.error('播放失敗:', error);
             // 嘗試跳過當前歌曲並播放下一首
             this.handlePlaybackEnd(guildId);
+        }
+    }
+
+    async getAudioStream(url) {
+        try {
+            // 方法1: 使用 play-dl 的 stream 函數
+            return await play.stream(url, {
+                quality: 0,
+                discordPlayerCompatibility: true
+            });
+        } catch (error) {
+            console.error('play-dl stream 失敗:', error);
+
+            try {
+                // 方法2: 使用 play-dl 的 download 函數
+                const audioStream = await play.stream(url, {
+                    quality: 0,
+                    discordPlayerCompatibility: false
+                });
+                return audioStream;
+            } catch (error2) {
+                console.error('play-dl 下載失敗:', error2);
+
+                // 方法3: 使用 ytdl-core 作為最後手段
+                const ytdl = require('ytdl-core');
+                return ytdl(url, {
+                    filter: 'audioonly',
+                    quality: 'highestaudio',
+                    highWaterMark: 1 << 25
+                });
+            }
         }
     }
 
@@ -290,13 +301,6 @@ class MusicPlayer {
         const minutes = Math.floor(seconds / 60);
         const remainingSeconds = seconds % 60;
         return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-    }
-
-    getBestThumbnail(thumbnails) {
-        if (!thumbnails || thumbnails.length === 0) return '';
-
-        // 返回最高質量的縮圖
-        return thumbnails[thumbnails.length - 1].url;
     }
 
     isInVoiceChannel(guildId) {
