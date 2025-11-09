@@ -304,7 +304,7 @@ function is_cooldown_finished(command_name, rpg_data) {
         is_finished: time_diff >= cooldown_time,
         remaining_time: cooldown_time - time_diff,
         endsAtms: lastRunTimestamp + cooldown_time,
-        endsAts: Math.floor(lastRunTimestamp + cooldown_time),
+        endsAts: Math.floor((lastRunTimestamp + cooldown_time) / 1000),
     };
 };
 
