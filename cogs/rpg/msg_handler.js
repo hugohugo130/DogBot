@@ -666,7 +666,7 @@ const rpg_commands = {
             .setColor(embed_default_color)
             .setTitle(`${emoji} | 是${animal_name}`)
             .setDescription(description);
-        
+
         if (product === "raw_duck") {
             embed.setTitle(`${emoji} | 呱!`);
             embed.setDescription(`呱呱呱呱呱，呱呱呱呱 \`${amount}\` 呱呱呱！`);
@@ -1897,6 +1897,64 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         };
 
         embed.setDescription(description);
+
+        if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+        return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+    }],
+    name: ["顯示物品名稱", "透過物品ID顯示物品名稱", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        const { get_name_of_id } = require("../../utils/rpg.js");
+        const item_id = args[0];
+
+        if (!args[0]) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_default_color)
+                .setTitle("❌ | 請輸入物品ID")
+                .setDescription("請輸入物品ID以顯示物品名稱");
+            return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+        };
+
+        const item_name = get_name_of_id(item_id, null);
+        if (!item_name) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_default_color)
+                .setTitle("❌ | 物品ID不存在")
+                .setDescription("請輸入正確的物品ID以顯示物品名稱");
+            return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+        };
+
+        const embed = new EmbedBuilder()
+            .setColor(embed_default_color)
+            .setTitle("📝 | 物品名稱")
+            .setDescription(`物品ID: \`${item_id}\`\n物品名稱: \`${item_name}\``);
+
+        if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+        return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+    }],
+    id: ["顯示物品ID", "透過物品名稱顯示物品ID", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        const { get_id_of_name } = require("../../utils/rpg.js");
+        const item_name = args.join(" ");
+
+        if (!args[0]) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_default_color)
+                .setTitle("❌ | 請輸入物品名稱")
+                .setDescription("請輸入物品名稱以顯示物品ID");
+            return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+        };
+
+        const item_id = get_id_of_name(item_name, null);
+        if (!item_id) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_default_color)
+                .setTitle("❌ | 物品名稱不存在")
+                .setDescription("請輸入正確的物品名稱以顯示物品ID");
+            return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+        };
+
+        const embed = new EmbedBuilder()
+            .setColor(embed_default_color)
+            .setTitle("📝 | 物品ID")
+            .setDescription(`物品名稱: \`${item_name}\`\n物品ID: \`${item_id}\``);
 
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
