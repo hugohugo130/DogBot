@@ -1,6 +1,7 @@
 const { Events, EmbedBuilder } = require('discord.js');
 const { get_logger } = require('../utils/logger.js');
 const { time } = require('../utils/time.js');
+const { get_loophole_embed } = require('./rpg/msg_handler.js');
 
 function parseOptions(options) {
     if (!options || options.length === 0) return '';
@@ -66,7 +67,9 @@ module.exports = {
             await command.execute(interaction);
         } catch (error) {
             logger.error(`執行斜線指令時出錯：${error.stack}`);
-            await interaction.followUp({ content: `${time()} 我運行這個指令的時候遇到了錯誤 :|\n${error.stack}`});
+
+            const embed = await get_loophole_embed(interaction.client, error.stack);
+            await interaction.followUp({ embeds: [embed] });
         };
     },
 };
