@@ -1,7 +1,7 @@
 const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message } = require("discord.js");
 const { get_members_of_guild } = require("../../utils/discord.js");
-const { get_logger } = require("../../utils/logger.js");
-const { prefix, embed_default_color, embed_error_color, failed } = require("../../utils/config.js");
+const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
+const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { wait_until_ready } = require("../../utils/wait_until_ready.js");
 
 const max_hungry = 20;
@@ -115,7 +115,19 @@ async function redirect({ client, message, command, mode = 0 }) {
  * @param {string} text 
  * @returns {EmbedBuilder}
  */
-function setEmbedFooter(client = global._client, embed, text = "") {
+function setEmbedFooter(client = global._client, embed, text = "", rpg_data = null) {
+    const { load_rpg_data } = require("../../utils/file.js");
+    let data;
+    if (rpg_data) {
+        if (rpg_data instanceof string) { // userid
+            data = load_rpg_data(rpg_data);
+        } else if (rpg_data instanceof Object) { // rpg_data
+            data = rpg_data;
+        };
+    };
+
+    if (data) text += `飽食度剩餘 ${data.hungry}`;
+    if (text.includes("飽食度剩餘")) logger.warn(`[DEPRECATED] give rpg_data or user id instead add to the text\ncalled from ${getCallerModuleName(null)}`)
     text += "\n哈狗機器人 ∙ 由哈狗製作";
     text = text.trim();
 
@@ -315,7 +327,7 @@ async function get_failed_embed(client = global._client, failed_reason, rpg_data
         const emoji_fisher = await get_emoji(client, "fisher");
         title = `${emoji_fisher} | a`;
         description = `欸不是鯊魚 快跑`;
-        // } else if (failed_reason === "acid_rain") {
+    } else if (failed_reason === "acid_rain") {
 
     } else if (failed_reason === "escape") {
         const emoji_cow = await get_emoji(client, "cow");
@@ -332,7 +344,7 @@ async function get_failed_embed(client = global._client, failed_reason, rpg_data
         .setTitle(title)
         .setDescription(description);
 
-    return setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`);
+    return setEmbedFooter(client, embed, '', rpg_data);
 }
 
 /**
@@ -579,8 +591,8 @@ const rpg_commands = {
             .setColor(embed_default_color)
             .setTitle(`${emoji} | 挖礦`)
             .setDescription(description);
-        if (mode === 1) return { embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] };
-        return await message.reply({ embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] });
+        if (mode === 1) return { embeds: [setEmbedFooter(client, embed, '', rpg_data)] };
+        return await message.reply({ embeds: [setEmbedFooter(client, embed, '', rpg_data)] });
     }],
     fell: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
@@ -610,8 +622,8 @@ const rpg_commands = {
             .setTitle(`${emoji} | ${item === "god_log" ? "是神?!" : "平常的一天"}`)
             .setDescription(description);
 
-        if (mode === 1) return { embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] };
-        return await message.reply({ embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] });
+        if (mode === 1) return { embeds: [setEmbedFooter(client, embed, '', rpg_data)] };
+        return await message.reply({ embeds: [setEmbedFooter(client, embed, '', rpg_data)] });
     }],
     hew: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
 
@@ -650,8 +662,8 @@ const rpg_commands = {
             .setTitle(`${emoji} | 是${animal_name}`)
             .setDescription(description);
 
-        if (mode === 1) return { embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] };
-        return await message.reply({ embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] });
+        if (mode === 1) return { embeds: [setEmbedFooter(client, embed, '', rpg_data)] };
+        return await message.reply({ embeds: [setEmbedFooter(client, embed, '', rpg_data)] });
     }],
     brew: ["釀造", "釀造藥水", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
@@ -672,7 +684,7 @@ const rpg_commands = {
         // .setTitle(`${emoji_potion} | 回復藥水可以幹嘛?`)
         // .setDescription(`你研究了許久，獲得了 \`${amount}\` 個${potion_name}\n\n之後推出的冒險可以用上`);
 
-        embed = setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`);
+        embed = setEmbedFooter(client, embed, '', rpg_data);
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -716,8 +728,8 @@ const rpg_commands = {
             .setTitle(`${emoji} | ${fish_text}`)
             .setDescription(description);
 
-        if (mode === 1) return { embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] };
-        return await message.reply({ embeds: [setEmbedFooter(client, embed, `飽食度剩餘 ${rpg_data.hungry}`)] });
+        if (mode === 1) return { embeds: [setEmbedFooter(client, embed, '', rpg_data)] };
+        return await message.reply({ embeds: [setEmbedFooter(client, embed, '', rpg_data)] });
     }],
     shop: ["商店", "對你的商店進行任何操作", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_shop_data, save_shop_data, save_rpg_data } = require("../../utils/file.js");
