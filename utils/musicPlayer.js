@@ -56,14 +56,21 @@ class MusicPlayer {
             let url = input;
             let songInfo;
 
-            // 直接檢查是否為 YouTube URL，如果是則跳過 yt-search
+            // 檢查是否為有效的 YouTube URL
             if (this.isValidYouTubeUrl(input)) {
-                console.log('檢測到 YouTube URL，直接使用 ytdl-core 處理');
+                // 如果是 YouTube URL，直接使用 ytdl-core 獲取資訊
                 const info = await ytdl.getInfo(input);
                 songInfo = info.videoDetails;
+            } else if (this.isValidUrl(input)) {
+                // 如果是其他類型的 URL，直接使用
+                url = input;
+                songInfo = {
+                    title: '未知標題',
+                    lengthSeconds: 0,
+                    thumbnails: []
+                };
             } else {
-                // 只有非 URL 才使用 yt-search
-                console.log('檢測到關鍵字，使用 yt-search 搜索');
+                // 如果是關鍵字，使用 yt-search 進行搜索
                 const searchResult = await yts(input);
                 if (!searchResult.videos || searchResult.videos.length === 0) {
                     throw new Error('沒有找到相關影片');
@@ -230,14 +237,7 @@ class MusicPlayer {
     isValidYouTubeUrl(string) {
         try {
             const url = new URL(string);
-            const hostname = url.hostname.toLowerCase();
-            return (
-                hostname === 'youtube.com' ||
-                hostname === 'www.youtube.com' ||
-                hostname === 'm.youtube.com' ||
-                hostname === 'youtu.be' ||
-                hostname === 'www.youtu.be'
-            );
+            return (url.hostname === 'youtube.com' || url.hostname === 'www.youtube.com' || url.hostname === 'm.youtube.com' || url.hostname === 'youtu.be');
         } catch (_) {
             return false;
         }
