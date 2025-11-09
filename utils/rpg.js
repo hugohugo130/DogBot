@@ -850,7 +850,6 @@ function check_item_data() {
     ].flat().filter(item => !Object.values(animals).includes(item));
 
     const work_productions = [
-        ...Object.values(animal_products),
         ...Object.values(mine_gets),
         // ...Object.values(ingots),
         ...Object.values(logs),
@@ -878,7 +877,7 @@ function check_item_data() {
     };
 
     for (const item_id of work_productions) {
-        if (get_probability_of_id(item_id) || animal_products[item_id] || Object.values(animal_products)[item_id]) continue;
+        if (get_probability_of_id(item_id)) continue;
         logger.debug(`[警告] 物品ID "${item_id}" 沒有對應的掉落機率，會導致無法獲取此物品、或是工作指令報錯`);
     };
 };
