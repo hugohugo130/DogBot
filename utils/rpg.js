@@ -879,7 +879,7 @@ function check_item_data() {
 
     for (const item_id of work_productions) {
         if (get_probability_of_id(item_id)) continue;
-        logger.debug(`[警告] 物品ID "${item_id}" 沒有對應的掉落機率，會導致無法獲取此物品、或是工作指令報錯`);
+        logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的掉落機率，會導致無法獲取此物品、或是工作指令報錯`);
     };
 };
 
