@@ -20,7 +20,7 @@ async function get_farm_info_embed(user, client = global._client) {
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
         .setTitle(`${emoji_farmer} | ${user.username} 的農田`)
-        .setDescription(`農田等級：${farm_data.lvl} | 上次澆水：<t:${farm_data.waterAt}:R>`);
+        .setDescription(`農田等級：${farm_data.lvl} | 上次澆水：${farm_data.waterAt ? `<t:${farm_data.waterAt}:R>` : "無");
 
     for (const data of (farm_data.farms || [])) {
         const index = farm_data.farms.indexOf(data);
