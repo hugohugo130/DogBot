@@ -298,9 +298,6 @@ module.exports = {
 
             const { is_finished, endsAt } = is_cooldown_finished("farm_water", rpg_data);
 
-            const { get_logger } = require("../../../utils/logger.js");
-            get_logger().warn(`is_finished: ${is_finished}\nendsAt: ${endsAt}`);
-
             if (!is_finished) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
