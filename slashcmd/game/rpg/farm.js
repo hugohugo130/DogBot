@@ -191,7 +191,6 @@ module.exports = {
             })
         ),
     async execute(interaction) {
-        // return interaction.reply("該功能還沒完善！敬請期待！");
         await interaction.deferReply();
 
         const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
