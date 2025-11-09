@@ -857,9 +857,9 @@ function check_item_data() {
         ...Object.values(foods_crops),
         ...Object.values(foods_meat).filter(e => e.startsWith("raw_")),
     ]
-        .flat()
         .filter(item => !Object.values(animals).includes(item))
-        .filter(item => !Object.values(bake).includes(item));
+        .filter(item => !Object.values(bake).includes(item))
+        .flat();
 
 
     for (const item_id of all_items) {
@@ -878,7 +878,7 @@ function check_item_data() {
     };
 
     for (const item_id of work_productions) {
-        if (get_probability_of_id(item_id) || animal_products[item_id]) continue;
+        if (get_probability_of_id(item_id) || animal_products[item_id] || Object.values(animal_products)[item_id]) continue;
         logger.debug(`[警告] 物品ID "${item_id}" 沒有對應的掉落機率，會導致無法獲取此物品、或是工作指令報錯`);
     };
 };
