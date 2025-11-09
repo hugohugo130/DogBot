@@ -294,7 +294,9 @@ module.exports = {
 
             return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
         } else if (subcommand === "water") {
-            const { is_finished, endsAt } = is_cooldown_finished(command, rpg_data);
+            const rpg_data = load_rpg_data(userId);
+
+            const { is_finished, endsAt } = is_cooldown_finished("farm_water", rpg_data);
 
             if (!is_finished) {
                 const embed = new EmbedBuilder()
