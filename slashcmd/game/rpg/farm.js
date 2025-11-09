@@ -210,6 +210,7 @@ module.exports = {
         const emoji_check = await get_emoji(client, "check");
 
         if (subcommand === "plant") {
+            const rpg_data = load_rpg_data(userId);
             const amount = interaction.options.getInteger("amount") ?? 1;
             const hoe = interaction.options.getString("hoe");
 
@@ -249,8 +250,6 @@ module.exports = {
             };
 
             save_farm_data(userId, farm_data);
-
-            const rpg_data = load_rpg_data(userId);
 
             const success_embed = new EmbedBuilder()
                 .setColor(embed_default_color)
