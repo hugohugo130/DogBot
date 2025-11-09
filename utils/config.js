@@ -192,7 +192,7 @@ const probabilities = {
         // "acid_rain": [2, 1, 1],
         "wheat": [30, 1, 2],
         "carrot": [20, 2, 3],
-        "potato": [15, 1, 2],
+        "raw_potato": [15, 1, 2],
         "tomato": [10, 1, 1],
         "apple": [10, 1, 1],
         "corn": [10, 1, 2],
