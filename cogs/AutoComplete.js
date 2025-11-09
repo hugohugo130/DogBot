@@ -9,7 +9,9 @@ module.exports = {
         if (interaction.commandName === "play") {
             const focusedValue = interaction.options.getFocused();
             const choices = await searchVideos(focusedValue);
-            await interaction.respond(choices);
+            try {
+                await interaction.respond(choices);
+            } catch (_) { };
         };
     },
 };
