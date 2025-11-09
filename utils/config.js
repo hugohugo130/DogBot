@@ -34,7 +34,12 @@ const DEFAULT_VALUES = {
             "status": true,
             "items": {},
         },
-        "rpg_farm.json": [],
+        "rpg_farm.json": {
+            "exp": 0,
+            "lvl": 0,
+            "waterAt": 0,
+            "farms": [],
+        },
         "bake_db.json": [],
         "smelt_db.json": [],
     },
@@ -93,6 +98,8 @@ const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
 
 const priorityUserIDs = ["898836485397180426", "1245902419750289538"];
 const priorityGuildIDs = ["1422545977226690683", "1218367644307034112"];
+
+const rpg_lvlUp_per = 50;
 
 const authorName = "哈狗";
 
@@ -318,6 +325,7 @@ module.exports = {
     embed_error_color,
     priorityUserIDs,
     priorityGuildIDs,
+    rpg_lvlUp_per,
     failed,
     probabilities,
 };
