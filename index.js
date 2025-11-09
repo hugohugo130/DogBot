@@ -90,8 +90,6 @@ process.on('SIGINT', async () => {
 (async () => {
     // const { downloadAllFiles } = require('./utils/onlineDB.js');
     // await downloadAllFiles();
-    const {generateDependencyReport} = require("@discordjs/voice");
-    console.log(generateDependencyReport());
 
     client.last_send_log = "";
     client.dvoice = loadDvoiceData();
