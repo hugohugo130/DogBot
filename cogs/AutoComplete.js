@@ -6,7 +6,7 @@ module.exports = {
     execute: async function (client, interaction) {
         if (!interaction.isAutocomplete()) return;
 
-        if (interaction.commandName === '播放音樂') {
+        if (interaction.commandName === "play") {
             const focusedValue = interaction.options.getFocused();
             const choices = await searchVideos(focusedValue);
             await interaction.respond(choices);
