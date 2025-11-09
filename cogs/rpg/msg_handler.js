@@ -120,6 +120,7 @@ async function redirect({ client, message, command, mode = 0 }) {
  */
 function setEmbedFooter(client = global._client, embed, text = "", rpg_data = null) {
     const { load_rpg_data } = require("../../utils/file.js");
+    if (text.includes("飽食度剩餘")) logger.warn(`[DEPRECATED] give rpg_data or user id instead add to the text\ncalled from ${getCallerModuleName(null)}`)
     let data;
     if (rpg_data) {
         if (rpg_data instanceof String) { // userid
@@ -130,7 +131,6 @@ function setEmbedFooter(client = global._client, embed, text = "", rpg_data = nu
     };
 
     if (data) text += `飽食度剩餘 ${data.hungry}`;
-    if (text.includes("飽食度剩餘")) logger.warn(`[DEPRECATED] give rpg_data or user id instead add to the text\ncalled from ${getCallerModuleName(null)}`)
     text += "\n哈狗機器人 ∙ 由哈狗製作";
     text = text.trim();
 
