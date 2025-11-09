@@ -878,7 +878,7 @@ module.exports = {
                 .setDescription(`等待至 <t:${end_time}:R>`);
 
             await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
-        } else if (interaction.customId === "farm") {
+        } else if (interaction.customId.startsWith("farm")) {
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
             await interaction.deferUpdate();
 
