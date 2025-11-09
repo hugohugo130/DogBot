@@ -17,6 +17,7 @@ const DATABASE_FILES = [
     "serverIP.json",
     "dvoice_db.json",
     "rpg_farm.json",
+    "music.json",
 ];
 
 const DEFAULT_VALUES = {
