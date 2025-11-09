@@ -317,6 +317,7 @@ module.exports = {
             };
 
             rpg_data.lastRunTimestamp[cooldown_key] = Date.now();
+            farm_data.waterAt = Date.now();
 
             save_rpg_data(userId, rpg_data);
             save_farm_data(userId, farm_data);
