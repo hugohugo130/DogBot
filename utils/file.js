@@ -598,6 +598,99 @@ function getDynamicVoice(guildID) {
     return data["dynamicVoice"];
 };
 
+/*
+███╗   ███╗██╗   ██╗███████╗██╗ ██████╗
+████╗ ████║██║   ██║██╔════╝██║██╔════╝
+██╔████╔██║██║   ██║███████╗██║██║     
+██║╚██╔╝██║██║   ██║╚════██║██║██║     
+██║ ╚═╝ ██║╚██████╔╝███████║██║╚██████╗
+╚═╝     ╚═╝ ╚═════╝ ╚══════╝╚═╝ ╚═════╝
+*/
+
+function load_music_data() {
+    const { music_data_file } = require("./config.js");
+    const music_emptyeg = find_default_value("music.json", {});
+
+    if (!existsSync(music_data_file)) {
+        writeJsonSync(music_data_file, music_emptyeg);
+        return music_emptyeg;
+    };
+
+    return readJsonSync(music_data_file);
+};
+
+function save_music_data(data) {
+    const { music_data_file } = require("./config.js");
+
+    // 確保每個語音頻道的資料結構完整
+    for (const [voiceChannelId, channelData] of Object.entries(data)) {
+        if (!channelData.queue) channelData.queue = [];
+        if (typeof channelData.currentIndex !== 'number') channelData.currentIndex = 0;
+        if (typeof channelData.isPlaying !== 'boolean') channelData.isPlaying = false;
+        if (typeof channelData.volume !== 'number') channelData.volume = 1.0;
+        if (!channelData.loopMode) channelData.loopMode = "off";
+        if (!channelData.textChannelId) channelData.textChannelId = "";
+
+        // 確保 queue 中的每首歌都有必要的欄位
+        channelData.queue = channelData.queue.map(song => ({
+            url: song.url || "",
+            title: song.title || "未知標題",
+            duration: song.duration || "0:00",
+            requestedBy: song.requestedBy || "",
+            thumbnail: song.thumbnail || "",
+            addedAt: song.addedAt || new Date().toISOString(),
+            ...song
+        }));
+    };
+
+    writeJsonSync(music_data_file, data);
+};
+
+function get_music_data(voiceChannelId) {
+    const musicData = load_music_data();
+    const music_emptyeg = find_default_value("music.json", {});
+    const channel_emptyeg = music_emptyeg[Object.keys(music_emptyeg)[0]] || {
+        queue: [],
+        currentIndex: 0,
+        isPlaying: false,
+        volume: 1.0,
+        loopMode: "off",
+        textChannelId: ""
+    };
+
+    if (!musicData[voiceChannelId]) {
+        musicData[voiceChannelId] = { ...channel_emptyeg };
+        save_music_data(musicData);
+    };
+
+    return musicData[voiceChannelId];
+};
+
+function update_music_data(voiceChannelId, newData) {
+    const musicData = load_music_data();
+
+    if (!musicData[voiceChannelId]) {
+        musicData[voiceChannelId] = {};
+    };
+
+    musicData[voiceChannelId] = { ...musicData[voiceChannelId], ...newData };
+    save_music_data(musicData);
+
+    return musicData[voiceChannelId];
+};
+
+function delete_music_data(voiceChannelId) {
+    const musicData = load_music_data();
+
+    if (musicData[voiceChannelId]) {
+        delete musicData[voiceChannelId];
+        save_music_data(musicData);
+        return true;
+    };
+
+    return false;
+};
+
 module.exports = {
     readFileSync,
     writeSync,
@@ -646,4 +739,10 @@ module.exports = {
     // features
     setDynamicVoice,
     getDynamicVoice,
+    // music
+    load_music_data,
+    save_music_data,
+    get_music_data,
+    update_music_data,
+    delete_music_data,
 };

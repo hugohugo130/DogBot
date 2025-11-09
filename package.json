@@ -2,9 +2,12 @@
   "main": "index.js",
   "type": "commonjs",
   "dependencies": {
+    "@discordjs/opus": "^0.10.0",
+    "@discordjs/voice": "^0.19.0",
     "axios": "^1.12.2",
     "discord.js": "^14.21.0",
     "dotenv": "^17.2.1",
+    "libsodium-wrappers": "^0.7.15",
     "winston": "^3.18.3",
     "ytdl-core": "^4.11.5"
   }

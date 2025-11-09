@@ -49,6 +49,16 @@ const DEFAULT_VALUES = {
             PORT: DEFAULT_PORT,
         },
         "dvoice_db.json": {},
+        "music.json": {
+            "default": {
+                queue: [],
+                currentIndex: 0,
+                isPlaying: false,
+                volume: 1.0,
+                loopMode: "off",
+                textChannelId: ""
+            }
+        },
     },
     "guild": {
         "database.json": {
@@ -76,6 +86,7 @@ const serverIPFile = join(database_folder, "serverIP.json");
 const smelt_data_file = join(database_folder, "smelt_db.json");
 const dvoice_data_file = join(database_folder, "dvoice_db.json");
 const rpg_farm_file = join(database_folder, "rpg_farm.json");
+const music_data_file = join(database_folder, "music.json");
 
 const cogsFolder = `${cwd()}/cogs`
 const musicFileFolder = `${cwd()}/music`
@@ -300,6 +311,7 @@ module.exports = {
     smelt_data_file,
     dvoice_data_file,
     rpg_farm_file,
+    music_data_file,
 
     DEFAULT_VALUES,
     BETA,
