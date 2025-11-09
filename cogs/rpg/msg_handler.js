@@ -394,7 +394,7 @@ function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
     return rpg_data.money;
 };
 
-async function get_loophole_embed(client = global._client, text = null) {
+async function get_loophole_embed(client = global._client, text = "") {
     const emoji_cross = await get_emoji(client, "crosS");
 
     if (text && !text.includes("```")) {
