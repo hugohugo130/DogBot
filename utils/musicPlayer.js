@@ -56,10 +56,7 @@ class MusicPlayer {
             let url = input;
             let songInfo;
 
-            console.log(`輸入內容: "${input}"`);
-            console.log(`是 YouTube URL 嗎? ${this.isValidYouTubeUrl(input)}`);
-
-            // 使用正則表達式檢查是否為 YouTube URL
+            // 直接檢查是否為 YouTube URL，如果是則跳過 yt-search
             if (this.isValidYouTubeUrl(input)) {
                 console.log('檢測到 YouTube URL，直接使用 ytdl-core 處理');
                 const info = await ytdl.getInfo(input);
@@ -231,9 +228,19 @@ class MusicPlayer {
     }
 
     isValidYouTubeUrl(string) {
-        // 使用正則表達式檢測 YouTube URL
-        const youtubeRegex = /^((?:https?:)?\/\/)?((?:www|m)\.)?((?:youtube(-nocookie)?\.com|youtu\.be))(\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(\S+)?$/;
-        return youtubeRegex.test(string);
+        try {
+            const url = new URL(string);
+            const hostname = url.hostname.toLowerCase();
+            return (
+                hostname === 'youtube.com' ||
+                hostname === 'www.youtube.com' ||
+                hostname === 'm.youtube.com' ||
+                hostname === 'youtu.be' ||
+                hostname === 'www.youtu.be'
+            );
+        } catch (_) {
+            return false;
+        }
     }
 }
 
