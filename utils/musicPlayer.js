@@ -1,5 +1,6 @@
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, getVoiceConnection } = require('@discordjs/voice');
 const ytdl = require('ytdl-core');
+const yts = require('yt-search');
 const { get_music_data, update_music_data, delete_music_data } = require('./file.js');
 
 class MusicPlayer {
