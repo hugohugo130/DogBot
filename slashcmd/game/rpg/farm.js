@@ -297,13 +297,13 @@ module.exports = {
             const rpg_data = load_rpg_data(userId);
             const cooldown_key = `farm_water`;
 
-            const { is_finished, endsAt } = is_cooldown_finished(cooldown_key, rpg_data);
+            const { is_finished, endsAts } = is_cooldown_finished(cooldown_key, rpg_data);
 
             if (!is_finished) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你已經澆過水了`)
-                    .setDescription(`請在 <t:${endsAt}:R> 再繼續澆水`);
+                    .setDescription(`請在 <t:${endsAts}:R> 再繼續澆水`);
                 
                 return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], flags: MessageFlags.Ephemeral });
             };
@@ -317,7 +317,7 @@ module.exports = {
             };
 
             rpg_data.lastRunTimestamp[cooldown_key] = Date.now();
-            
+
             save_rpg_data(userId, rpg_data);
             save_farm_data(userId, farm_data);
 
