@@ -194,14 +194,11 @@ const tags = {
 const foods_crops = [
     "apple",
     "bread",
-    "cake",
-    "candy",
-    "chocolate",
-    "cookie",
-    "melon_slice",
-    "potato",
-    "pumpkin_pie",
     "raw_potato",
+    "tomato",
+    "carrot",
+    "corn",
+    "potato",
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
@@ -344,6 +341,9 @@ const shop_lowest_price = {
     octopus: 55,
     pork: 50,
     potato: 50,
+    tomato: 50,
+    carrot: 50,
+    corn: 50,
     pufferfish: 55,
     pumpkin_pie: 50,
     raw_anglerfish: 55,
@@ -378,6 +378,8 @@ const shop_lowest_price = {
     squid: 55,
     swordfish: 55,
     tomato: 50,
+    carrot: 50,
+    corn: 50,
     tropical_fish: 55,
     tuna: 55,
     whale: 55,
@@ -478,6 +480,9 @@ const sell_data = {
     octopus: 50,
     pork: 50,
     potato: 117,
+    tomato: 45,
+    carrot: 45,
+    corn: 45,
     pufferfish: 50,
     pumpkin_pie: 50,
     raw_anglerfish: 50,
@@ -579,6 +584,9 @@ const food_data = {
     octopus: 4,
     pork: 4,
     potato: 2,
+    tomato: 1,
+    carrot: 1,
+    corn: 1,
     pufferfish: 2,
     pumpkin_pie: 3,
     raw_beef: 1,
@@ -726,6 +734,9 @@ const name = {
     mutton: "烤羊肉",
     pork: "烤豬肉",
     potato: "烤馬鈴薯",
+    tomato: "番茄",
+    carrot: "紅蘿蔔",
+    corn: "玉米",
     pumpkin_pie: "南瓜派",
     raw_beef: "生牛肉",
     raw_chicken: "生雞肉",
@@ -845,7 +856,10 @@ function check_item_data() {
         ...Object.values(logs),
         ...Object.values(foods_crops),
         ...Object.values(foods_meat).filter(e => e.startsWith("raw_")),
-    ].flat().filter(item => !Object.values(animals).includes(item));
+    ]
+        .flat()
+        .filter(item => !Object.values(animals).includes(item))
+        .filter(item => !Object.values(bake).includes(item));
 
 
     for (const item_id of all_items) {
