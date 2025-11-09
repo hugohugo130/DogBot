@@ -12,7 +12,7 @@
     "libsodium-wrappers": "^0.7.15",
     "opusscript": "^0.0.8",
     "winston": "^3.18.3",
-    "yt-search": "^2.13.1",
-    "ytdl-core": "^4.11.5"
+    "yt-dlp-wrap": "^2.3.12",
+    "yt-search": "^2.13.1"
   }
 }

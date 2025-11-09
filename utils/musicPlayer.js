@@ -1,7 +1,15 @@
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, getVoiceConnection } = require('@discordjs/voice');
-const ytdl = require('ytdl-core');
+const { YTDlpWrap } = require('yt-dlp-wrap');
 const yts = require('yt-search');
 const { get_music_data, update_music_data, delete_music_data } = require('./file.js');
+
+// 初始化 yt-dlp-wrap
+let ytdl;
+try {
+    ytdl = new YTDlpWrap();
+} catch (error) {
+    console.error('初始化 yt-dlp-wrap 失敗:', error);
+}
 
 class MusicPlayer {
     constructor() {
@@ -58,9 +66,13 @@ class MusicPlayer {
 
             // 檢查是否為有效的 YouTube URL
             if (this.isValidYouTubeUrl(input)) {
-                // 如果是 YouTube URL，直接使用 ytdl-core 獲取資訊
-                const info = await ytdl.getInfo(input);
-                songInfo = info.videoDetails;
+                // 使用 yt-dlp-wrap 獲取影片資訊
+                const info = await ytdl.getVideoInfo(input);
+                songInfo = {
+                    title: info.title || '未知標題',
+                    lengthSeconds: info.duration || 0,
+                    thumbnails: info.thumbnails || []
+                };
             } else if (this.isValidUrl(input)) {
                 // 如果是其他類型的 URL，直接使用
                 url = input;
@@ -134,11 +146,12 @@ class MusicPlayer {
         const song = musicData.queue[musicData.currentIndex];
 
         try {
-            const stream = ytdl(song.url, {
-                filter: 'audioonly',
-                quality: 'highestaudio',
-                highWaterMark: 1 << 25
-            });
+            // 使用 yt-dlp-wrap 創建音訊流
+            const stream = await ytdl.execStream([
+                song.url,
+                '-f', 'bestaudio',
+                '--no-playlist'
+            ]);
 
             const resource = createAudioResource(stream);
             guildPlayer.audioPlayer.play(resource);
