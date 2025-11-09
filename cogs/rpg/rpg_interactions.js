@@ -882,7 +882,7 @@ module.exports = {
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
             await interaction.deferUpdate();
 
-            const [embed, row] = get_farm_info_embed(user, client);
+            const [embed, row] = await get_farm_info_embed(user, client);
             await interaction.update({ embeds: [embed], components: [row] });
         };
     },

@@ -5,7 +5,7 @@ const { get_id_of_name } = require("../../../utils/rpg.js");
  * 
  * @param {User} user 
  * @param {Client} client 
- * @returns {EmbedBuilder}
+ * @returns {Promise<EmbedBuilder>}
  */
 async function get_farm_info_embed(user, client = global._client) {
     const { load_farm_data } = require("../../../utils/file.js");
@@ -259,7 +259,7 @@ module.exports = {
 
             return await interaction.editReply({ embeds: [setEmbedFooter(client, success_embed, '', rpg_data)] });
         } else if (subcommand === "info") {
-            const [embed, row] = get_farm_info_embed(user, client);
+            const [embed, row] = await get_farm_info_embed(user, client);
 
             return await interaction.editReply({ embeds: [embed], components: [row] });
         } else if (subcommand === "get") {
