@@ -3,6 +3,8 @@ const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
 const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { wait_until_ready } = require("../../utils/wait_until_ready.js");
+const { randint, choice } = require("../../utils/random.js");
+
 
 const max_hungry = 20;
 const logger = get_logger();
@@ -649,7 +651,7 @@ const rpg_commands = {
 
         let description = `你宰了一隻${animal_name}，獲得了 \`${amount}\` 個${product_name}！`;
         if (product === "a_chicken") {
-            const egg_amount = get_random_number(1, 3);
+            const egg_amount = randint(1, 3);
             description += `不僅如此！你還發現了${egg_amount}顆${get_name_of_id("egg")}！`
             if (!rpg_data.inventory["egg"]) rpg_data.inventory["egg"] = 0;
             rpg_data.inventory["egg"] += egg_amount;
@@ -2195,26 +2197,6 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
 /**
  * 
- * @param {Array<any>} array 
- * @returns {any}
- */
-function get_random_element(array) {
-    const randomIndex = Math.floor(Math.random() * array.length);
-    return array[randomIndex];
-};
-
-/**
- * 
- * @param {number} min 
- * @param {number} max 
- * @returns {number}
- */
-function get_random_number(min, max) {
-    return Math.floor(Math.random() * (max - min + 1)) + min;
-};
-
-/**
- * 
  * @param {string} category 
  * @returns {{failed: boolean, item: string, times: number}}
  */
@@ -2241,10 +2223,10 @@ function get_random_result(category) {
         result.push(...Array(value[0]).fill(key));
     };
 
-    const item = get_random_element(result);
+    const item = choice(result);
     const data = datas[item];
 
-    const amount = get_random_number(data[1], data[2]);
+    const amount = randint(data[1], data[2]);
 
     const is_failed = failed.includes(item);
 
@@ -2281,7 +2263,7 @@ module.exports = {
     get_help_embed,
     redirect,
     get_number_of_items,
-    get_random_number,
+    randint,
     get_loophole_embed,
     setEmbedFooter,
     setEmbedAuthor,
