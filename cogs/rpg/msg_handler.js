@@ -666,6 +666,11 @@ const rpg_commands = {
             .setColor(embed_default_color)
             .setTitle(`${emoji} | 是${animal_name}`)
             .setDescription(description);
+        
+        if (product === "raw_duck") {
+            embed.setTitle(`${emoji} | 呱!`);
+            embed.setDescription(`呱呱呱呱呱，呱呱呱呱 \`${amount}\` 呱呱呱！`);
+        };
 
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed, '', rpg_data)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed, '', rpg_data)] });
