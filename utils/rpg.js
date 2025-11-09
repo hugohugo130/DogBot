@@ -883,11 +883,6 @@ function check_item_data() {
     };
 };
 
-function get_name_of(id, default_value = id) {
-    logger.warn(`[get_name_of] [DEPRECAETD] use get_name_of_id instead. Called from\n${getCallerModuleName(null)}`);
-    return get_name_of_id(id, default_value);
-};
-
 function get_name_of_id(id, default_value = id) {
     return name[id] || default_value;
 };
@@ -940,7 +935,6 @@ module.exports = {
     bake,
     sell_data,
     check_item_data,
-    get_name_of,
     get_name_of_id,
     get_id_of_name,
     get_number_of_items,
