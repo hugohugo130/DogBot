@@ -28,6 +28,7 @@ module.exports = {
                 .setAutocomplete(true),
         ),
     async execute(interaction) {
+        return
         const { embed_error_color } = require("../../utils/config.js");
         await interaction.deferReply();
 
