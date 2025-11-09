@@ -1,15 +1,7 @@
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, getVoiceConnection } = require('@discordjs/voice');
-const { YTDlpWrap } = require('yt-dlp-wrap');
+const play = require('play-dl');
 const yts = require('yt-search');
 const { get_music_data, update_music_data, delete_music_data } = require('./file.js');
-
-// 初始化 yt-dlp-wrap
-let ytdl;
-try {
-    ytdl = new YTDlpWrap();
-} catch (error) {
-    console.error('初始化 yt-dlp-wrap 失敗:', error);
-}
 
 class MusicPlayer {
     constructor() {
@@ -66,12 +58,12 @@ class MusicPlayer {
 
             // 檢查是否為有效的 YouTube URL
             if (this.isValidYouTubeUrl(input)) {
-                // 使用 yt-dlp-wrap 獲取影片資訊
-                const info = await ytdl.getVideoInfo(input);
+                // 使用 play-dl 獲取影片資訊
+                const info = await play.video_info(input);
                 songInfo = {
-                    title: info.title || '未知標題',
-                    lengthSeconds: info.duration || 0,
-                    thumbnails: info.thumbnails || []
+                    title: info.video_details.title || '未知標題',
+                    lengthSeconds: info.video_details.durationInSec || 0,
+                    thumbnails: info.video_details.thumbnails || []
                 };
             } else if (this.isValidUrl(input)) {
                 // 如果是其他類型的 URL，直接使用
@@ -146,14 +138,16 @@ class MusicPlayer {
         const song = musicData.queue[musicData.currentIndex];
 
         try {
-            // 使用 yt-dlp-wrap 創建音訊流
-            const stream = await ytdl.execStream([
-                song.url,
-                '-f', 'bestaudio',
-                '--no-playlist'
-            ]);
+            // 使用 play-dl 創建音訊流
+            const stream = await play.stream(song.url, {
+                quality: 0, // 最高品質
+                discordPlayerCompatibility: true // 確保與 Discord.js 兼容
+            });
 
-            const resource = createAudioResource(stream);
+            const resource = createAudioResource(stream.stream, {
+                inputType: stream.type
+            });
+
             guildPlayer.audioPlayer.play(resource);
 
             // 更新當前播放索引
