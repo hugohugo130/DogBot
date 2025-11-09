@@ -31,7 +31,7 @@ module.exports = {
         const { embed_error_color } = require("../../utils/config.js");
         await interaction.deferReply();
 
-        const keywordOrUrl = interaction.options.getString('關鍵字或連結');
+        const keywordOrUrl = interaction.options.getString("keyword_or_url");
         const voiceChannel = interaction.member.voice.channel;
 
         if (!voiceChannel) {
