@@ -114,14 +114,15 @@ async function redirect({ client, message, command, mode = 0 }) {
  * 
  * @param {Client} client 
  * @param {EmbedBuilder} embed 
- * @param {string} text 
+ * @param {string} [text=""]
+ * @param {object | string | null} [rpg_data=null] 顯示飽食度，傳入rpg_data或user id
  * @returns {EmbedBuilder}
  */
 function setEmbedFooter(client = global._client, embed, text = "", rpg_data = null) {
     const { load_rpg_data } = require("../../utils/file.js");
     let data;
     if (rpg_data) {
-        if (rpg_data instanceof string) { // userid
+        if (rpg_data instanceof String) { // userid
             data = load_rpg_data(rpg_data);
         } else if (rpg_data instanceof Object) { // rpg_data
             data = rpg_data;
