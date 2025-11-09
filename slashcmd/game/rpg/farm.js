@@ -195,7 +195,7 @@ module.exports = {
 
         const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
         const { farm_slots, get_name_of_id } = require("../../../utils/rpg.js");
-        const { setEmbedFooter, get_emoji, randint } = require("../../../cogs/rpg/msg_handler.js");
+        const { setEmbedFooter, get_emoji, randint, is_cooldown_finished } = require("../../../cogs/rpg/msg_handler.js");
         const { embed_default_color, embed_error_color, rpg_lvlUp_per } = require("../../../utils/config.js");
 
         const client = interaction.client;
@@ -294,6 +294,17 @@ module.exports = {
 
             return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
         } else if (subcommand === "water") {
+            const { is_finished, endsAt } = is_cooldown_finished(command, rpg_data);
+
+            if (!is_finished) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你已經澆過水了`)
+                    .setDescription(`請在 <t:${endsAt}:R> 再繼續澆水`);
+                
+                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], flags: MessageFlags.Ephemeral });
+            };
+
             const get_exp = randint(50, 74);
             farm_data.exp += get_exp;
             if (farm_data.exp >= rpg_lvlUp_per) {

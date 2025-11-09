@@ -301,7 +301,8 @@ function is_cooldown_finished(command_name, rpg_data) {
 
     return {
         is_finished: time_diff >= cooldown_time,
-        remaining_time: cooldown_time - time_diff
+        remaining_time: cooldown_time - time_diff,
+        endsAt: lastRunTimestamp + cooldown_time,
     };
 };
 
@@ -2275,4 +2276,5 @@ module.exports = {
     remove_money,
     ls_function,
     find_redirect_targets_from_id,
+    is_cooldown_finished,
 };
