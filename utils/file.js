@@ -6,7 +6,7 @@ const { Logger } = require("winston");
 const { VoiceChannel } = require("discord.js");
 
 const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder, probabilities } = require("./config.js");
-const { get_logger } = require("./logger.js");
+const { get_logger, getCallerModuleName } = require("./logger.js");
 const { sleep } = require("./sleep.js");
 
 const existsSync = fs.existsSync;
@@ -254,6 +254,11 @@ function get_probability_of_id(item, default_return = undefined) {
  * @returns {object}
  */
 function order_data(data, follow) {
+    if (data instanceof Array) {
+        logger.warn(`list cannot be ordered, called from ${getCallerModuleName(null)}`);
+        return data;
+    };
+
     const orderedData = {};
     for (const key of Object.keys(follow)) {
         orderedData[key] = data[key] ?? follow[key];
@@ -462,6 +467,11 @@ function save_shop_data(userid, shop_data) {
     writeJsonSync(rpg_shop_file, data);
 };
 
+/**
+ * 
+ * @param {string} userid 
+ * @returns {Array}
+ */
 function load_farm_data(userid) {
     const { rpg_farm_file } = require("./config.js");
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
@@ -475,9 +485,14 @@ function load_farm_data(userid) {
         return farm_emptyeg;
     };
 
-    return order_data(data[userid], farm_emptyeg);
+    return data[userid];
 };
 
+/**
+ * 
+ * @param {string} userid 
+ * @param {Array} farm_data 
+ */
 function save_farm_data(userid, farm_data) {
     const { rpg_farm_file } = require("./config.js");
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
@@ -502,8 +517,6 @@ function save_farm_data(userid, farm_data) {
             };
         };
     };
-
-    data[userid] = order_data(data[userid], shop_emptyeg);
 
     writeJsonSync(rpg_farm_file, data);
 };
