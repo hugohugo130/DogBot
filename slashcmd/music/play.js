@@ -3,32 +3,61 @@ const musicPlayer = require('../../utils/musicPlayer.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('播放音樂')
-        .setDescription('播放音樂')
+        .setName('play')
+        .setNameLocalizations({
+            'zh-TW': '播放',
+            'zh-CN': '播放',
+        })
+        .setDescription("Play music using keywords or third-party links")
+        .setDescriptionLocalizations({
+            'zh-TW': '使用關鍵字搜尋音樂、支持第三方連結播放',
+            'zh-CN': '使用关键字搜索音乐、支持第三方链接播放',
+        })
         .addStringOption(option =>
-            option.setName('關鍵字或連結')
-                .setDescription('使用關鍵字來搜尋音樂、支持第三方連結播放')
+            option.setName("keyword_or_url")
+                .setNameLocalizations({
+                    'zh-TW': '關鍵字或連結',
+                    'zh-CN': '关键字或链接',
+                })
+                .setDescription("Enter a keyword or URL to search for music`")
+                .setDescriptionLocalizations({
+                    'zh-TW': '使用關鍵字來搜尋音樂、支持第三方連結播放',
+                    'zh-CN': '使用关键字来搜索音乐、支持第三方链接播放',
+                })
                 .setRequired(true)
                 .setAutocomplete(true),
         ),
     async execute(interaction) {
+        const { embed_error_color } = require("../../utils/config.js");
         await interaction.deferReply();
 
         const keywordOrUrl = interaction.options.getString('關鍵字或連結');
         const voiceChannel = interaction.member.voice.channel;
 
         if (!voiceChannel) {
-            return interaction.editReply('❌ 請先加入一個語音頻道！');
-        }
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setDescription('❌ 請先加入一個語音頻道！');
+
+            return interaction.editReply({ embeds: [embed] });
+        };
 
         // 檢查權限
         if (!voiceChannel.joinable) {
-            return interaction.editReply('❌ 我沒有權限加入這個語音頻道！');
-        }
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setDescription('❌ 我沒有權限加入這個語音頻道！');
+
+            return interaction.editReply({ embeds: [embed] });
+        };
 
         if (!voiceChannel.speakable) {
-            return interaction.editReply('❌ 我沒有權限在這個語音頻道說話！');
-        }
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setDescription('❌ 我沒有權限在這個語音頻道說話！');
+
+            return interaction.editReply({ embeds: [embed] });
+        };
 
         try {
             const song = await musicPlayer.playMusic(
@@ -50,6 +79,6 @@ module.exports = {
             }
 
             await interaction.editReply(errorMessage);
-        }
+        };
     },
 }
