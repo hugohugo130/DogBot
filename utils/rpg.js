@@ -850,15 +850,16 @@ function check_item_data() {
     ].flat().filter(item => !Object.values(animals).includes(item));
 
     const work_productions = [
+        ...Object.keys(animal_products),
         ...Object.values(mine_gets),
         // ...Object.values(ingots),
         ...Object.values(logs),
         ...Object.values(foods_crops),
         ...Object.values(foods_meat).filter(e => e.startsWith("raw_")),
     ]
-        .filter(item => !Object.values(animals).includes(item))
-        .filter(item => !Object.values(bake).includes(item))
-        .flat();
+        .flat()
+        .filter(item => !Object.values(animal_products).includes(item))
+        .filter(item => !Object.values(bake).includes(item));
 
 
     for (const item_id of all_items) {
