@@ -653,7 +653,7 @@ const rpg_commands = {
         const emoji = await get_emoji(client, rpg_emojis["herd"]);
 
         let description = `你宰了一隻${animal_name}，獲得了 \`${amount}\` 個${product_name}！`;
-        if (product === "a_chicken") {
+        if (product === "raw_chicken") {
             const egg_amount = randint(1, 3);
             description += `不僅如此！你還發現了${egg_amount}顆${get_name_of_id("egg")}！`
             if (!rpg_data.inventory["egg"]) rpg_data.inventory["egg"] = 0;
