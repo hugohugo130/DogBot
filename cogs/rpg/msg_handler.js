@@ -728,7 +728,7 @@ const rpg_commands = {
                 description = `你等待了幾個小時，打撈到了 \`${amount}\` 條${fish_name}！`
             } else {
                 fish_text = "好欸！"
-                description = `有 \`${amount}\` 條 ${fish_name} 衝到岸上送魚到你手上了！`
+                description = `有 \`${amount}\` 條 ${fish_name} 衝到岸上送到你手上了！`
             };
         };
 
