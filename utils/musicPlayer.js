@@ -1,5 +1,5 @@
 const { joinVoiceChannel, createAudioPlayer, createAudioResource, AudioPlayerStatus, getVoiceConnection } = require('@discordjs/voice');
-const play = require('play-dl');
+const ytdl = require('ytdl-core');
 const yts = require('yt-search');
 const { get_music_data, update_music_data, delete_music_data } = require('./file.js');
 
@@ -18,6 +18,15 @@ class MusicPlayer {
 
             const audioPlayer = createAudioPlayer();
             connection.subscribe(audioPlayer);
+
+            // 設置錯誤處理
+            audioPlayer.on('error', error => {
+                console.error('音訊播放器錯誤:', error);
+            });
+
+            connection.on('error', error => {
+                console.error('語音連接錯誤:', error);
+            });
 
             // 保存播放器狀態
             this.players.set(voiceChannel.guild.id, {
@@ -53,21 +62,44 @@ class MusicPlayer {
                 throw new Error('播放器未初始化');
             }
 
-            let song;
+            let url = input;
+            let songInfo;
 
             // 檢查是否為有效的 URL
             if (this.isValidUrl(input)) {
-                // 如果是 URL，直接使用
-                song = await this.createSongFromUrl(input, requestedBy);
+                // 如果是 URL，直接使用 ytdl-core 獲取資訊
+                try {
+                    const info = await ytdl.getInfo(input);
+                    songInfo = info.videoDetails;
+                } catch (error) {
+                    console.error('ytdl-core 獲取資訊失敗:', error);
+                    // 如果 ytdl-core 失敗，回退到搜索
+                    const searchResult = await yts(input);
+                    if (searchResult.videos && searchResult.videos.length > 0) {
+                        url = searchResult.videos[0].url;
+                        songInfo = searchResult.videos[0];
+                    } else {
+                        throw new Error('無法獲取影片資訊');
+                    }
+                }
             } else {
-                // 如果是關鍵字，進行搜索
-                song = await this.createSongFromSearch(input, requestedBy);
+                // 如果是關鍵字，使用 yt-search 進行搜索
+                const searchResult = await yts(input);
+                if (!searchResult.videos || searchResult.videos.length === 0) {
+                    throw new Error('沒有找到相關影片');
+                }
+                url = searchResult.videos[0].url;
+                songInfo = searchResult.videos[0];
             }
 
-            // 確保歌曲 URL 有效
-            if (!song || !song.url) {
-                throw new Error('無法獲取有效的歌曲 URL');
-            }
+            const song = {
+                url: url,
+                title: songInfo.title || '未知標題',
+                duration: this.formatDuration(parseInt(songInfo.lengthSeconds || songInfo.duration?.seconds || 0)),
+                requestedBy: requestedBy,
+                thumbnail: songInfo.thumbnail || songInfo.thumbnails?.[0]?.url || '',
+                addedAt: new Date().toISOString()
+            };
 
             // 更新隊列
             const musicData = get_music_data(voiceChannel.id);
@@ -87,52 +119,6 @@ class MusicPlayer {
             return song;
         } catch (error) {
             console.error('播放音樂失敗:', error);
-            throw error;
-        }
-    }
-
-    async createSongFromUrl(url, requestedBy) {
-        try {
-            // 使用 play-dl 驗證並獲取影片資訊
-            const info = await play.video_basic_info(url);
-            const videoDetails = info.video_details;
-
-            return {
-                url: url,
-                title: videoDetails.title || '未知標題',
-                duration: this.formatDuration(videoDetails.durationInSec || 0),
-                requestedBy: requestedBy,
-                thumbnail: videoDetails.thumbnails[0]?.url || '',
-                addedAt: new Date().toISOString()
-            };
-        } catch (error) {
-            console.error('從 URL 創建歌曲失敗:', error);
-            // 如果 play-dl 失敗，回退到 yt-search
-            return await this.createSongFromSearch(url, requestedBy);
-        }
-    }
-
-    async createSongFromSearch(query, requestedBy) {
-        try {
-            // 使用 yt-search 進行搜索
-            const searchResult = await yts(query);
-
-            if (!searchResult.videos || searchResult.videos.length === 0) {
-                throw new Error('沒有找到相關影片');
-            }
-
-            const video = searchResult.videos[0];
-
-            return {
-                url: video.url,
-                title: video.title || '未知標題',
-                duration: video.timestamp || this.formatDuration(video.duration?.seconds || 0),
-                requestedBy: requestedBy,
-                thumbnail: video.thumbnail || '',
-                addedAt: new Date().toISOString()
-            };
-        } catch (error) {
-            console.error('從搜索創建歌曲失敗:', error);
             throw error;
         }
     }
@@ -173,11 +159,29 @@ class MusicPlayer {
         console.log('準備播放歌曲:', song.title, 'URL:', song.url);
 
         try {
-            // 使用 play-dl 的替代方法
-            const stream = await this.getAudioStream(song.url);
+            // 使用 @distube/ytdl-core 創建音訊流
+            const stream = ytdl(song.url, {
+                filter: 'audioonly',
+                quality: 'highestaudio',
+                highWaterMark: 1 << 25,
+                requestOptions: {
+                    headers: {
+                        // 添加一些頭部信息來繞過限制
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                        'Accept': '*/*',
+                        'Accept-Language': 'en-US,en;q=0.9',
+                        'Accept-Encoding': 'gzip, deflate, br'
+                    }
+                }
+            });
+
+            stream.on('error', error => {
+                console.error('音訊流錯誤:', error);
+                this.handlePlaybackEnd(guildId);
+            });
 
             const resource = createAudioResource(stream, {
-                inputType: stream.type
+                inlineVolume: true
             });
 
             guildPlayer.audioPlayer.play(resource);
@@ -197,39 +201,7 @@ class MusicPlayer {
             return song;
         } catch (error) {
             console.error('播放失敗:', error);
-            // 嘗試跳過當前歌曲並播放下一首
             this.handlePlaybackEnd(guildId);
-        }
-    }
-
-    async getAudioStream(url) {
-        try {
-            // 方法1: 使用 play-dl 的 stream 函數
-            return await play.stream(url, {
-                quality: 0,
-                discordPlayerCompatibility: true
-            });
-        } catch (error) {
-            console.error('play-dl stream 失敗:', error);
-
-            try {
-                // 方法2: 使用 play-dl 的 download 函數
-                const audioStream = await play.stream(url, {
-                    quality: 0,
-                    discordPlayerCompatibility: false
-                });
-                return audioStream;
-            } catch (error2) {
-                console.error('play-dl 下載失敗:', error2);
-
-                // 方法3: 使用 ytdl-core 作為最後手段
-                const ytdl = require('ytdl-core');
-                return ytdl(url, {
-                    filter: 'audioonly',
-                    quality: 'highestaudio',
-                    highWaterMark: 1 << 25
-                });
-            }
         }
     }
 
