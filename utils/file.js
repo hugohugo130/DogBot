@@ -470,7 +470,7 @@ function save_shop_data(userid, shop_data) {
 /**
  * 
  * @param {string} userid 
- * @returns {{lvl: number, exp: number, farms: Array<Object}}
+ * @returns {{lvl: number, exp: number, waterAt: number, farms: Array<Object}}
  */
 function load_farm_data(userid) {
     const { rpg_farm_file } = require("./config.js");
