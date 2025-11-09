@@ -295,8 +295,9 @@ module.exports = {
             return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
         } else if (subcommand === "water") {
             const rpg_data = load_rpg_data(userId);
+            const cooldown_key = `farm_water`;
 
-            const { is_finished, endsAt } = is_cooldown_finished("farm_water", rpg_data);
+            const { is_finished, endsAt } = is_cooldown_finished(cooldown_key, rpg_data);
 
             if (!is_finished) {
                 const embed = new EmbedBuilder()
@@ -315,6 +316,9 @@ module.exports = {
                 farm_data.exp -= rpg_lvlUp_per * lvlUp;
             };
 
+            rpg_data.lastRunTimestamp[cooldown_key] = Date.now();
+            
+            save_rpg_data(userId, rpg_data);
             save_farm_data(userId, farm_data);
 
             const embed = new EmbedBuilder()
