@@ -1,4 +1,4 @@
-const { EmbedBuilder, MessageFlags } = require('discord.js');
+const { EmbedBuilder, MessageFlags, Embed } = require('discord.js');
 const winston = require('winston');
 const path = require("path");
 
@@ -265,7 +265,14 @@ async function process_send_queue(client) {
             };
 
             // 檢查 message 是否為 EmbedBuilder 實例
-            if (message && typeof message === 'object' && message.data) {
+            if (
+                message
+                && (
+                    (typeof message === 'object' && message.data)
+                    || message instanceof EmbedBuilder
+                    || message instanceof Embed
+                )
+            ) {
                 const embed = message;
                 if (!embed.data.color) {
                     embed.setColor(color);
