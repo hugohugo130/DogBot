@@ -17,10 +17,17 @@ async function get_farm_info_embed(user, client = global._client) {
     const emoji_update = await get_emoji(client, "update");
     const farm_data = load_farm_data(user.id);
 
+    let waterAt = farm_data.waterAt;
+
+    // 判斷water at是秒還是毫秒，毫秒轉換成秒
+    if (waterAt > 1e12) {
+        waterAt = Math.floor(waterAt / 1000);
+    };
+
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
         .setTitle(`${emoji_farmer} | ${user.username} 的農田`)
-        .setDescription(`農田等級：${farm_data.lvl} | 上次澆水：${farm_data.waterAt > 0 ? `<t:${farm_data.waterAt}:R>` : "無"}`);
+        .setDescription(`農田等級：${farm_data.lvl} | 上次澆水：${waterAt > 0 ? `<t:${waterAt}:R>` : "無"}`);
 
     for (const data of (farm_data.farms || [])) {
         const index = farm_data.farms.indexOf(data);
