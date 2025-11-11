@@ -10,6 +10,7 @@ const { get_id_of_name } = require("../../../utils/rpg.js");
 async function get_farm_info_embed(user, client = global._client) {
     const { load_farm_data } = require("../../../utils/file.js");
     const { get_emoji, setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
+    const { get_name_of_id } = require("../../../utils/rpg.js");
     const { embed_default_color } = require("../../../utils/config.js");
 
     const emoji_farmer = await get_emoji(client, "farmer");
@@ -41,7 +42,7 @@ async function get_farm_info_embed(user, client = global._client) {
         const progress = Math.min(100, Math.max(0, (elapsed_time / total_duration) * 100))
 
         embed.addFields({
-            name: `${index + 1}. ${hoe}x${amount}`,
+            name: `${index + 1}. ${get_name_of_id(hoe)}x${amount}`,
             value: `${emoji_hoe} 完成度: ${Math.round(progress)}% (<t:${endsAt}:R>)`
         });
     };
@@ -223,7 +224,8 @@ module.exports = {
 
             const need_hunger = 5 * amount;
             const insert_amount = hoe === get_id_of_name("鐵鋤", "iron_hoe") ? amount : 1;
-            const endsAt = 20 * 60;
+            const duration = 20 * 60;
+            const endsAt = Math.floor(Date.now() / 1000) + duration;
 
             if (farm_data.length + amount >= farm_slots) {
                 const embed = new EmbedBuilder()
@@ -313,7 +315,7 @@ module.exports = {
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你已經澆過水了`)
                     .setDescription(`請在 <t:${endsAts}:R> 再繼續澆水`);
-                
+
                 return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], flags: MessageFlags.Ephemeral });
             };
 
