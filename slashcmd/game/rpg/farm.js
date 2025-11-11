@@ -11,6 +11,7 @@ async function get_farm_info_embed(user, client = global._client) {
     const { load_farm_data } = require("../../../utils/file.js");
     const { get_emoji, setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
     const { get_name_of_id } = require("../../../utils/rpg.js");
+    const { convertToSecond, DateNowSecond } = require("../../../utils/timestamp.js");
     const { embed_default_color } = require("../../../utils/config.js");
 
     const emoji_farmer = await get_emoji(client, "farmer");
@@ -21,9 +22,7 @@ async function get_farm_info_embed(user, client = global._client) {
     let waterAt = farm_data.waterAt;
 
     // 判斷water at是秒還是毫秒，毫秒轉換成秒
-    if (waterAt > 1e12) {
-        waterAt = Math.floor(waterAt / 1000);
-    };
+    waterAt = convertToSecond(waterAt);
 
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
@@ -37,7 +36,7 @@ async function get_farm_info_embed(user, client = global._client) {
         const start = data.start;
         const endsAt = data.endsAt;
 
-        const elapsed_time = Date.now() - start;
+        const elapsed_time = DateNowSecond() - start;
         const total_duration = endsAt - start;
         const progress = Math.min(100, Math.max(0, (elapsed_time / total_duration) * 100))
 
@@ -204,6 +203,7 @@ module.exports = {
         const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
         const { farm_slots, get_name_of_id } = require("../../../utils/rpg.js");
         const { setEmbedFooter, get_emoji, randint, is_cooldown_finished } = require("../../../cogs/rpg/msg_handler.js");
+        const { DateNowSecond } = require("../../../utils/timestamp.js");
         const { embed_default_color, embed_error_color, rpg_lvlUp_per } = require("../../../utils/config.js");
 
         const client = interaction.client;
@@ -225,7 +225,7 @@ module.exports = {
             const need_hunger = 5 * amount;
             const insert_amount = hoe === get_id_of_name("鐵鋤", "iron_hoe") ? amount : 1;
             const duration = 20 * 60;
-            const endsAt = Math.floor(Date.now() / 1000) + duration;
+            const endsAt = DateNowSecond() + duration;
 
             if (farm_data.length + amount >= farm_slots) {
                 const embed = new EmbedBuilder()
@@ -251,7 +251,7 @@ module.exports = {
                 const farm = {
                     amount: insert_amount === amount ? 1 : amount, // 同等 hoe === get_id_of_name("鐵鋤", "iron_hoe") ? 1 : amount
                     hoe,
-                    start: Date.now(),
+                    start: DateNowSecond(),
                     endsAt,
                 };
 
@@ -273,7 +273,7 @@ module.exports = {
 
             return await interaction.editReply({ embeds: [embed], components: [row] });
         } else if (subcommand === "get") {
-            const completed_farms = farm_data.farms.filter(farm => Date.now() >= farm.start + farm.endsAt * 1000);
+            const completed_farms = farm_data.farms.filter(farm => DateNowSecond() >= farm.start + farm.endsAt * 1000);
             if (completed_farms.length === 0) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
@@ -327,8 +327,8 @@ module.exports = {
                 farm_data.exp -= rpg_lvlUp_per * lvlUp;
             };
 
-            rpg_data.lastRunTimestamp[cooldown_key] = Date.now();
-            farm_data.waterAt = Date.now();
+            rpg_data.lastRunTimestamp[cooldown_key] = DateNowSecond();
+            farm_data.waterAt = DateNowSecond();
 
             save_rpg_data(userId, rpg_data);
             save_farm_data(userId, farm_data);
