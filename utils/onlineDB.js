@@ -106,7 +106,7 @@ async function onlineDB_deleteFile(filename) {
 };
 
 async function onlineDB_checkFileContent(filename, maxRetries = 3) {
-    const [same, localContent, remoteContent] = compareLocalRemote(filename, logger, maxRetries);
+    const [same, localContent, remoteContent] = await compareLocalRemote(filename, logger, maxRetries);
     const rl = get_areadline();
 
     if (!same) {

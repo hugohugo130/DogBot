@@ -4,6 +4,7 @@ const path = require("path");
 const { isDeepStrictEqual } = require("node:util");
 const { Logger } = require("winston");
 const { VoiceChannel } = require("discord.js");
+const axios = require("axios");
 
 const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder, probabilities } = require("./config.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
@@ -177,44 +178,71 @@ async function readSchedule() {
  * @param {number} maxRetries 
  * @returns {Promise<{same: boolean, localContent: string, remoteContent: string}>}
  */
-function compareLocalRemote(filename, log = logger, maxRetries = 3) {
+async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
+    const { getServerIPSync } = require("./getSeverIPSync.js");
+
     let localContent;
     let remoteContent;
 
-    filename = join_db_folder(filename);
+    const basename_filename = path.basename(filename);
+    const local_filepath = join_db_folder(basename_filename);
+
+    // 獲取遠端伺服器地址
+    const { IP: serverIP, PORT } = getServerIPSync();
+    const SERVER_URL = `http://${serverIP}:${PORT}`;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        // 讀取本地檔案
         try {
-            localContent = readFileSync(filename, {
-                encoding: "utf8",
-                return: null,
-            });
+            if (existsSync(local_filepath)) {
+                localContent = readFileSync(local_filepath, {
+                    encoding: "utf8",
+                    return: null,
+                });
+                // 嘗試解析並格式化 JSON 以便比較
+                try {
+                    localContent = JSON.stringify(JSON.parse(localContent));
+                } catch (e) {
+                    // 不是 JSON 格式，保持原樣
+                }
+            } else {
+                localContent = null;
+            }
         } catch (err) {
             log.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
-            continue;
+            localContent = null;
         };
 
+        // 從遠端伺服器獲取檔案
         try {
-            remoteContent = readFileSync(filename, {
-                encoding: "utf8",
-                return: null,
-            });
+            const response = await axios.get(`${SERVER_URL}/files/${basename_filename}`);
+            remoteContent = JSON.stringify(response.data);
         } catch (err) {
             if (err.response?.status === 404) {
-                log.error(`遠端檔案不存在: ${filename}`);
-            } else if (err.stack.includes("socket hang up")) continue;
-            else {
+                log.warn(`遠端檔案不存在: ${basename_filename}`);
+                remoteContent = null;
+            } else if (err.code === 'ECONNRESET' || err.message?.includes("socket hang up")) {
+                if (attempt < maxRetries) {
+                    log.warn(`連接遠端伺服器時中斷，正在重試 (${attempt}/${maxRetries})...`);
+                    sleep(1000);
+                    continue;
+                } else {
+                    log.error(`獲取遠端檔案內容時遇到錯誤: ${err.message}`);
+                    remoteContent = null;
+                };
+            } else {
                 log.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
-                continue;
+                remoteContent = null;
             };
-
-            remoteContent = null;
         };
 
         break;
     };
 
-    return [localContent && remoteContent && isDeepStrictEqual(localContent, remoteContent), localContent, remoteContent];
+    // 比較內容
+    const same = localContent && remoteContent && isDeepStrictEqual(localContent, remoteContent);
+
+    return [same, localContent, remoteContent];
 };
 
 /**
