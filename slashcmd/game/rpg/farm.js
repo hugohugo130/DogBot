@@ -201,7 +201,7 @@ module.exports = {
         await interaction.deferReply();
 
         const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
-        const { farm_slots, get_name_of_id } = require("../../../utils/rpg.js");
+        const { farm_slots, get_name_of_id, userHaveEnoughItems, notEnoughItemEmbed } = require("../../../utils/rpg.js");
         const { setEmbedFooter, get_emoji, randint, is_cooldown_finished } = require("../../../cogs/rpg/msg_handler.js");
         const { DateNowSecond } = require("../../../utils/timestamp.js");
         const { embed_default_color, embed_error_color, rpg_lvlUp_per } = require("../../../utils/config.js");
@@ -240,6 +240,12 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的體力不足了`);
+
+                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], flags: MessageFlags.Ephemeral });
+            };
+
+            if (!userHaveEnoughItems(userId, hoe, amount)) {
+                const embed = notEnoughItemEmbed([{ name: get_name_of_id(hoe), amount }]);
 
                 return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], flags: MessageFlags.Ephemeral });
             };
