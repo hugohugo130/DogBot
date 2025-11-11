@@ -288,7 +288,7 @@ module.exports = {
             }).reduce((pre, cur) => pre + cur, 0);
 
             const items = get_harvest_items(farmlands);
-            const items_str = Object.entries(items).map(([item, amount]) => `${amount} 個${get_name_of_id(item)}`).join(" ");
+            const items_str = Object.entries(items).map(([item, amount]) => `${amount} 個${get_name_of_id(item)}`).join("、");
             const rpg_data = load_rpg_data(userId);
             for (const [item, amount] of Object.entries(items)) {
                 if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
