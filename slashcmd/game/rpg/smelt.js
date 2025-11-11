@@ -96,7 +96,7 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
         if (subcommand === "smelt") {
             const { load_rpg_data, load_smelt_data } = require("../../../utils/file.js");
-            const { name, smelter_slots, smeltable_items } = require("../../../utils/rpg.js");
+            const { notEnoughItemEmbed, name, smelter_slots, smeltable_items } = require("../../../utils/rpg.js");
             const { setEmbedFooter, get_emoji, get_loophole_embed } = require("../../../cogs/rpg/msg_handler.js");
             const {embed_error_color} = require("../../../utils/config.js");
             await interaction.deferReply();
@@ -159,15 +159,7 @@ module.exports = {
             };
 
             if (item_missing.length > 0) {
-                const items = [];
-                for (const missing of item_missing) {
-                    items.push(`${missing.name} \`x${missing.amount}\`個`);
-                };
-
-                const embed = new EmbedBuilder()
-                    .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
-                    .setColor(embed_error_color)
-                    .setDescription(`你缺少了 ${items.join("、")}`);
+                const embed = notEnoughItemEmbed(item_missing);
 
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };

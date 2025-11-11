@@ -666,7 +666,7 @@ module.exports = {
                 load_rpg_data,
                 save_rpg_data
             } = require("../../utils/file.js");
-            const { bake, name, oven_slots } = require("../../utils/rpg.js");
+            const { notEnoughItemEmbed, bake, name, oven_slots } = require("../../utils/rpg.js");
             const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
 
             await interaction.deferUpdate();
@@ -727,11 +727,7 @@ module.exports = {
                     items.push(`${missing.name} \`x${missing.amount}\`個`);
                 };
 
-                const emoji_cross = await get_emoji(interaction.client, "crosS");
-                const embed = new EmbedBuilder()
-                    .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
-                    .setColor(embed_error_color)
-                    .setDescription(`你缺少了 ${items.join("、")}`);
+                const embed = await notEnoughItemEmbed(items)
 
                 const TopLevelComponent = interaction.message.components;
                 if (TopLevelComponent instanceof ActionRow) {
@@ -785,7 +781,7 @@ module.exports = {
                 load_rpg_data,
                 save_rpg_data
             } = require("../../utils/file.js");
-            const { smeltable_items, name, smelter_slots } = require("../../utils/rpg.js");
+            const { userHaveEnoughItems, notEnoughItemEmbed, smeltable_items, name, smelter_slots } = require("../../utils/rpg.js");
 
             await interaction.deferUpdate();
 
@@ -819,7 +815,7 @@ module.exports = {
                 const need_amount = need_item.amount;
                 const have_amount = (rpg_data.inventory[current_item_id] || 0);
 
-                if (have_amount < need_amount) {
+                if (userHaveEnoughItems(userId, current_item_id, need_amount)) {
                     item_missing.push({
                         name: name[current_item_id] || need_item,
                         amount: need_amount - have_amount,
@@ -828,16 +824,7 @@ module.exports = {
             };
 
             if (item_missing.length > 0) {
-                const items = [];
-                for (const missing of item_missing) {
-                    items.push(`${missing.name} \`x${missing.amount}\`個`);
-                };
-
-                const emoji_cross = await get_emoji(interaction.client, "crosS");
-                const embed = new EmbedBuilder()
-                    .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
-                    .setColor(embed_error_color)
-                    .setDescription(`你缺少了 ${items.join("、")}`);
+                const embed = await notEnoughItemEmbed(item_missing);
 
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };

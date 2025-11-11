@@ -1,3 +1,4 @@
+const { EmbedBuilder } = require("discord.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
 
 const logger = get_logger();
@@ -904,6 +905,45 @@ function get_number_of_items(name, userid) {
     return items[item_key];
 };
 
+/**
+ * 
+ * @param {string} userid 
+ * @param {string} item 
+ * @param {number} item_amount 
+ * @returns {boolean} 如果玩家有足夠的物品，回傳true
+ */
+function userHaveEnoughItems(userid, item, item_amount) {
+    const { load_rpg_data } = require("./file.js");
+
+    const rpg_data = load_rpg_data(userid);
+    const items = rpg_data.inventory;
+
+    return items?.[item] && items[item] >= item_amount;
+};
+
+/**
+ * 
+ * @param {Array<{item: string, amount: number}> | Array<string>} item_datas 
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function notEnoughItemEmbed(item_datas, client = global._client) {
+    const { setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
+    if (item_datas?.length <= 0) throw new Error("item_datas is empty");
+
+    const items_str = item_datas.map(item_data => {
+        if (typeof item_data === "string") return item_data;
+        return `${name[item_data.item]} \`x${item_data.amount}\`個`;
+    }).join("、");
+
+    const emoji_cross = await get_emoji(client, "crosS");
+    const embed = new EmbedBuilder()
+        .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
+        .setColor(embed_error_color)
+        .setDescription(`你缺少了 ${items_str}`);
+
+    return setEmbedFooter(client, embed);
+};
+
 const oven_slots = 3;
 const farm_slots = 4;
 const smelter_slots = 3;
@@ -935,6 +975,8 @@ module.exports = {
     get_name_of_id,
     get_id_of_name,
     get_number_of_items,
+    userHaveEnoughItems,
+    notEnoughItemEmbed,
     oven_slots,
     farm_slots,
     smelter_slots,
