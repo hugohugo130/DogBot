@@ -273,7 +273,7 @@ module.exports = {
 
             return await interaction.editReply({ embeds: [embed], components: [row] });
         } else if (subcommand === "get") {
-            const completed_farms = farm_data.farms.filter(farm => DateNowSecond() >= farm.start + farm.endsAt * 1000);
+            const completed_farms = farm_data.farms.filter(farm => DateNowSecond() >= farm.endsAt);
             if (completed_farms.length === 0) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
