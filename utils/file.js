@@ -201,7 +201,7 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
                 });
                 // 嘗試解析並格式化 JSON 以便比較
                 try {
-                    localContent = JSON.stringify(JSON.parse(localContent));
+                    localContent = stringify(JSON.parse(localContent));
                 } catch (e) {
                     // 不是 JSON 格式，保持原樣
                 }
@@ -216,7 +216,7 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
         // 從遠端伺服器獲取檔案
         try {
             const response = await axios.get(`${SERVER_URL}/files/${basename_filename}`);
-            remoteContent = JSON.stringify(response.data);
+            remoteContent = stringify(response.data);
         } catch (err) {
             if (err.response?.status === 404) {
                 log.warn(`遠端檔案不存在: ${basename_filename}`);
@@ -767,6 +767,7 @@ module.exports = {
     // features
     setDynamicVoice,
     getDynamicVoice,
+    stringify,
     // music
     load_music_data,
     save_music_data,

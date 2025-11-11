@@ -109,7 +109,7 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
     const [same, localContent, remoteContent] = await compareLocalRemote(filename, logger, maxRetries);
     const rl = get_areadline();
 
-    if (!same) {
+    if (!same && localContent && remoteContent) {
         let answer;
         do {
             console.log("=".repeat(30));
@@ -123,10 +123,10 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
             answer = await rl.question('請選擇操作 (1/2/3/4/5): ');
             switch (answer.trim()) {
                 case '4':
-                    console.log(localContent);
+                    console.log(JSON.parse(stringify(localContent)));
                     break;
                 case '5':
-                    console.log(remoteContent);
+                    console.log(JSON.parse(stringify(remoteContent)));
                     break;
                 default:
                     break;
