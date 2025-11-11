@@ -106,6 +106,8 @@ async function onlineDB_deleteFile(filename) {
 };
 
 async function onlineDB_checkFileContent(filename, maxRetries = 3) {
+    const { stringify } = require("./file.js");
+
     const [same, localContent, remoteContent] = await compareLocalRemote(filename, logger, maxRetries);
     const rl = get_areadline();
 
@@ -179,7 +181,7 @@ async function uploadAllDatabaseFiles() {
     for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         await onlineDB_uploadFile(file);
     };
-    
+
     return true;
 };
 
@@ -195,7 +197,7 @@ async function downloadDatabaseFile(src, dst = null) {
         const dstDir = path.dirname(dst);
         if (!existsSync(dstDir)) fs.mkdirSync(dstDir, { recursive: true });
     };
-    
+
     await onlineDB_downloadFile(src, dst);
 };
 
