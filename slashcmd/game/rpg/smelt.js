@@ -98,7 +98,7 @@ module.exports = {
             const { load_rpg_data, load_smelt_data } = require("../../../utils/file.js");
             const { notEnoughItemEmbed, name, smelter_slots, smeltable_items } = require("../../../utils/rpg.js");
             const { setEmbedFooter, get_emoji, get_loophole_embed } = require("../../../cogs/rpg/msg_handler.js");
-            const {embed_error_color} = require("../../../utils/config.js");
+            const { embed_error_color } = require("../../../utils/config.js");
             await interaction.deferReply();
 
             const emoji_cross = await get_emoji(interaction.client, "crosS");
@@ -125,13 +125,13 @@ module.exports = {
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             }
 
+            if (allMats) {
+                amount = Math.floor((rpg_data.inventory[item_id] || amount) / smelt_recipe.input[0].amount);
+            };
+
             const input_amount = smelt_recipe.input[0].amount * amount;
             const output_amount = smelt_recipe.amount * amount;
             const duration = 5 * 60 * amount;
-
-            if (allMats) {
-                amount = Math.floor((rpg_data.inventory[item_id] || amount) / input_amount);
-            };
 
             let item_need = [
                 {
