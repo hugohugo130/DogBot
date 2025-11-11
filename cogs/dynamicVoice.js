@@ -84,7 +84,7 @@ module.exports = {
         if (oldChannel && oldChannel.id !== mainchannelID) {
             const data = client.dvoice[oldChannel.id];
             if (!data) {
-                if (!oldChannel.name.test(pattern)) return;
+                if (!pattern.test(oldChannel.name)) return;
                 logger.warn(`頻道 ${oldChannel.name} 不在動態語音記錄中，但疑似由動態語音建立`);
             };
 
