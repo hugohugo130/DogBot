@@ -394,7 +394,7 @@ function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
     return rpg_data.money;
 };
 
-async function get_loophole_embed(client = global._client, text = "") {
+async function get_loophole_embed(client = global._client, text) {
     const emoji_cross = await get_emoji(client, "crosS");
 
     if (text && !text.includes("```")) {
@@ -556,8 +556,8 @@ const redirect_data = {
     item: "items",
     food: "eat",
     money: "m",
-    store: "shop",
     mo: "m",
+    store: "shop",
     l: "lazy",
 };
 
@@ -573,6 +573,10 @@ const rpg_commands = {
         const userid = message.author.id;
 
         const { item, amount } = random_item;
+        if (!name[item]) {
+            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
+            return await message.reply({ embeds: [embed] });
+        };
 
         if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
         rpg_data.inventory[item] += amount;
@@ -605,9 +609,12 @@ const rpg_commands = {
         const userid = message.author.id;
 
         const { item, amount } = random_item;
+        if (!name[item]) {
+            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
+            return await message.reply({ embeds: [embed] });
+        };
 
         const log_name = name[item];
-        if (!log_name) return await message.reply({ content: `ERROR: 找不到${item}的物品名稱: ${log_name}` });
 
         let description;
         if (item === "god_log") {
@@ -630,18 +637,17 @@ const rpg_commands = {
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed, '', rpg_data)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed, '', rpg_data)] });
     }, false],
-    hew: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-
-    }, false],
-    wood: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-
-    }, false],
     herd: ["放牧", "放牧或屠宰動物", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
         const { animal_products, name, get_name_of_id } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const { item: random_animal, amount } = random_item;
+        if (!animal_products[random_animal]) {
+            const embed = await get_loophole_embed(`找不到${random_animal}的動物產品: ${log_name}`);
+            return await message.reply({ embeds: [embed] });
+        };
+
         const product = animal_products[random_animal];
 
         if (!rpg_data.inventory[product]) rpg_data.inventory[product] = 0;
@@ -681,6 +687,11 @@ const rpg_commands = {
         const userid = message.author.id;
 
         const { item, amount } = random_item;
+        if (!name[item]) {
+            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
+            return await message.reply({ embeds: [embed] });
+        };
+
         if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
         const potion_name = name[item];
         rpg_data.inventory[item] += amount;
@@ -705,6 +716,10 @@ const rpg_commands = {
         const userid = message.author.id;
 
         const { item, amount } = random_item;
+        if (!name[item]) {
+            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
+            return await message.reply({ embeds: [embed] });
+        };
 
         if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
         rpg_data.inventory[item] += amount;
@@ -1009,15 +1024,6 @@ const rpg_commands = {
             };
         };
     }, true],
-    bag: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-
-    }, false],
-    item: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-
-    }, false],
-    ls: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-
-    }, false],
     items: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         return await ls_function({ client, message, rpg_data, data, args, mode, random_item })
     }, false],
@@ -1268,12 +1274,6 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             .setDescription(`你目前有 \`${rpg_data.money.toLocaleString()}$\``);
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
-    }, false],
-    mo: ["查看餘額", "查看自己的餘額", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-
-    }, false],
-    money: ["查看餘額", "查看自己的餘額", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-
     }, false],
     cd: ["查看冷卻剩餘時間", "查看冷卻剩餘時間", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const lastRunTimestamp = rpg_data.lastRunTimestamp;
@@ -1706,9 +1706,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
     }, false],
-    food: ["吃東西", "吃東西回復飽食度", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-
-    }, false],
     sell: ["出售", "出售物品給系統", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { sell_data, name } = require("../../utils/rpg.js");
 
@@ -2065,6 +2062,10 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             completed += 1;
         }, 10);
     }, false],
+};
+
+for (const [from, target] of Object.entries(redirect_data)) {
+    rpg_commands[from] = rpg_commands[target];
 };
 
 const privacy_data = {
