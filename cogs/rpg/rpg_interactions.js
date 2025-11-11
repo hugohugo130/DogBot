@@ -215,6 +215,36 @@ const help = {
                 ],
                 format: "{cmd} <物品ID> [數量]",
             },
+            "shop": {
+                emoji: "",
+                desc: "商店系統 - 透過購買來活絡經濟",
+                usage: [
+                    {
+                        name: "列出{author}有販賣的物品",
+                        value: "&shop @{author}"
+                    },
+                    {
+                        name: "上架麵包 10個，每個價格150$",
+                        value: "&shop add 麵包 10 150"
+                    },
+                    {
+                        name: "下架5個鐵礦",
+                        value: "&shop remove 鐵礦 5"
+                    },
+                    {
+                        name: "下架所有煤炭",
+                        value: "&shop remove 煤炭"
+                    },
+                    {
+                        name: "將你的店舖狀態設為營業中",
+                        value: "&shop open"
+                    },
+                    {
+                        name: "關閉店鋪，其他人將無法查看或是購買物品",
+                        value: "&shop close"
+                    }
+                ]
+            }
         },
         special: {
 
