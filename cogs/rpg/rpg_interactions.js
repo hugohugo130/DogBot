@@ -341,7 +341,9 @@ module.exports = {
         if (user.id !== originalUserId) {
             try {
                 await interaction.followUp({ embeds: [await get_failed_embed(client)], flags: MessageFlags.Ephemeral });
-            } catch (error) { };
+            } catch (error) {
+                logger.error(`對${user.globalName || user.username}顯示拒絕嵌入時發生錯誤：\n${error.stack}`)
+            };
             return;
         };
 
