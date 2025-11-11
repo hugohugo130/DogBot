@@ -1,5 +1,11 @@
 const { Events, ChannelType, Client, VoiceState, PermissionFlagsBits } = require("discord.js");
 
+const pattern = /^└⳺.*⳻ 的頻道$/;
+const format = String(pattern)
+    .replace(/^\/\^/, '')
+    .replace(/\$\//, '')
+    .replace(/\.\*/g, '{user}');
+
 module.exports = {
     name: Events.VoiceStateUpdate,
     async execute(client, oldState, newState) {
@@ -29,7 +35,7 @@ module.exports = {
                 // 檢查機器人權限
                 const botMember = await guild.members.fetch(client.user.id);
                 if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels)) {
-                    logger.error("[動態語音] 機器人缺少管理頻道權限");
+                    logger.error("機器人缺少管理頻道權限");
                     return;
                 };
 
@@ -41,7 +47,7 @@ module.exports = {
 
                 if (!data) {
                     channel = await guild.channels.create({
-                        name: `└[${member.user.username}] 的頻道`,
+                        name: format.replace("{user}", member.user.username),
                         type: ChannelType.GuildVoice,
                         parent: newChannel.parent,
                         permissionOverwrites: [
@@ -62,7 +68,7 @@ module.exports = {
                 };
 
             } catch (error) {
-                logger.error(`[動態語音] 建立頻道失敗: ${error.message}`);
+                logger.error(`建立頻道失敗: ${error.message}`);
                 console.error(error);
             }
         };
@@ -70,17 +76,21 @@ module.exports = {
         // 成員離開語音頻道
         if (oldChannel && oldChannel.id !== mainchannelID) {
             const data = client.dvoice[oldChannel.id];
-            if (!data) return;
+            if (!data) {
+                if (!oldChannel.name.test(pattern)) return;
+                logger.warn(`頻道 ${oldChannel.name} 不在動態語音記錄中，但疑似由動態語音建立`);
+            };
 
             // 檢查頻道是否為空
             if (oldChannel.members.size === 0) {
                 try {
                     await oldChannel.delete();
-                    delete client.dvoice[oldChannel.id];
+                    if (data) delete client.dvoice[oldChannel.id];
                 } catch (error) {
-                    logger.error(`[動態語音] 刪除頻道失敗: ${error.message}`);
+                    logger.error(`刪除頻道失敗: ${error.message}`);
+
                     // 即使刪除失敗也要清理記錄
-                    delete client.dvoice[oldChannel.id];
+                    if (data) delete client.dvoice[oldChannel.id];
                 };
             };
         }
