@@ -224,6 +224,7 @@ module.exports = {
 
             const need_hunger = 5 * amount;
             const insert_amount = hoe === get_id_of_name("鐵鋤", "iron_hoe") ? amount : 1;
+            const hoe_amount = hoe === get_id_of_name("鐵鋤", "iron_hoe") ? 10: amount;
             const duration = 20 * 60;
             const endsAt = DateNowSecond() + duration;
 
@@ -249,7 +250,7 @@ module.exports = {
 
             for (let i = 0; i < insert_amount + 1; i++) {
                 const farm = {
-                    amount: insert_amount === amount ? 1 : amount, // 同等 hoe === get_id_of_name("鐵鋤", "iron_hoe") ? 1 : amount
+                    amount: hoe_amount,
                     hoe,
                     start: DateNowSecond(),
                     endsAt,
