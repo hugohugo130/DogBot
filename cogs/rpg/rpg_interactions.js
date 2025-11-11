@@ -1,4 +1,4 @@
-const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, Client } = require("discord.js");
+const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, Client, CommandInteraction } = require("discord.js");
 const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { get_logger } = require("../../utils/logger.js");
 
@@ -322,6 +322,12 @@ function get_help_command(category, command_name, client = global._client) {
 
 module.exports = {
     name: Events.InteractionCreate,
+    /**
+     * 
+     * @param {Client} client 
+     * @param {CommandInteraction} interaction 
+     * @returns {Promise<void>}
+     */
     execute: async function (client, interaction) {
         const { get_emoji } = require("./msg_handler.js");
         if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
@@ -340,7 +346,11 @@ module.exports = {
         // 驗證使用者身份
         if (user.id !== originalUserId) {
             try {
-                await interaction.followUp({ embeds: [await get_failed_embed(client)], flags: MessageFlags.Ephemeral });
+                if (interaction.deferred) {
+                    await interaction.followUp({ embeds: [await get_failed_embed(client)], flags: MessageFlags.Ephemeral });
+                } else {
+                    await interaction.reply({ embeds: [await get_failed_embed(client)], flags: MessageFlags.Ephemeral });
+                };
             } catch (error) {
                 logger.error(`對${user.globalName || user.username}顯示拒絕嵌入時發生錯誤：\n${error.stack}`)
             };
