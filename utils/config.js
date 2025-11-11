@@ -125,6 +125,7 @@ https://discord.js.org/docs/packages/discord.js/14.24.0/ColorResolvable:TypeAlia
 5. HexColorString
 */
 const embed_default_color = "Random";
+const embed_warn_color = 0xF0B90B;
 const embed_error_color = 0xF04A47;
 
 /*
@@ -329,14 +330,18 @@ module.exports = {
     log_channel_id,
     warn_channel_id,
     error_channel_id,
+
     BotID,
     BotName,
     prefix,
     enable_auto_register_cmd,
     auto_register_cmd_file,
     authorName,
+
     embed_default_color,
+    embed_warn_color,
     embed_error_color,
+
     priorityUserIDs,
     priorityGuildIDs,
     rpg_lvlUp_per,

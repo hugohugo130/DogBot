@@ -1549,6 +1549,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
     eat: ["吃東西", "吃東西回復飽食度", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
         const { foods, name, food_data, foods_crops, foods_meat, fish } = require("../../utils/rpg.js");
+        const { embed_warn_color } = require("../../utils/config.js");
 
         const user = message.author;
         const userid = user.id;
@@ -1611,14 +1612,30 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             let newadd = add * amount;
             if ((rpg_data.hungry + newadd) > max_hungry) {
+                const force_eat = args[2].toLowerCase().trim() === "force";
+
                 const old_amount = amount;
-                amount = Math.floor((max_hungry - rpg_data.hungry) / add);
-                newadd = add * amount;
+
+                
+                const new_amount = Math.floor((max_hungry - rpg_data.hungry) / add);
+                const new_newadd = add * amount;
+
+                if (!force_eat) {
+                    amount = new_amount;
+                    newadd = new_newadd;
+                }
+                
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你會吃太飽撐死!`)
                     .setDescription(`你想吃掉\`${old_amount.toLocaleString()}\` 個 \`${food_name}\` \n但你最多只能吃掉 \`${amount}\` 個 \`${food_name}\``);
+
+                if (force_eat) {
+                    embed.setColor(embed_warn_color)
+                    embed.setTitle(`${emoji_cross} | 爆體保護被停用！`)
+                    .setDescription(`你停用了爆體保護，應該會多吃 \`${old_amount - amount}\` 個 \`${food_name}\``);
+                };
 
                 extra_embeds.push(embed);
             };

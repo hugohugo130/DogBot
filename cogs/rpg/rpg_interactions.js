@@ -92,6 +92,10 @@ const help = {
                     {
                         name: "吃三個牛肉",
                         value: "&eat beef 3"
+                    },
+                    {
+                        name: "[不建議] 停用爆體保護下吃掉所有麵包",
+                        value: "&eat bread all force"
                     }
                 ],
                 format: "{cmd} [食物ID] [數量]",
