@@ -31,7 +31,7 @@ function readFileSync(file_path, options = null) {
     const filename = path.basename(file_path);
 
     if (!existsSync(file_path) && DATABASE_FILES.includes(filename)) {
-        if (typeof options === 'object' && options?.return) return options.return;
+        if (typeof options === 'object' && options?.return) return stringify(options.return);
 
         const default_value = DEFAULT_VALUES.single[filename]
         const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
@@ -40,10 +40,10 @@ function readFileSync(file_path, options = null) {
 
         if (!default_value) {
             if (!other_category_default_value) logger.warn(`警告：資料庫檔案 ${filename} 缺失預設值，請及時補充。`);
-            return "{}";
+            return stringify({});
         } else {
             writeJsonSync(file_path, default_value);
-            return String(default_value);
+            return stringify((default_value));
         };
     };
 
