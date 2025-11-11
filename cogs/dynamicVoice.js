@@ -8,6 +8,13 @@ const format = String(pattern)
 
 module.exports = {
     name: Events.VoiceStateUpdate,
+    /**
+     * 
+     * @param {Client} client 
+     * @param {VoiceState} oldState 
+     * @param {VoiceState} newState 
+     * @returns {Promise<void>}
+     */
     async execute(client, oldState, newState) {
         const { getDynamicVoice } = require("../utils/file.js");
         const { get_logger } = require("../utils/logger.js");
