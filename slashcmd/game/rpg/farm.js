@@ -223,13 +223,14 @@ module.exports = {
             const amount = interaction.options.getInteger("amount") ?? 1;
             const hoe = interaction.options.getString("hoe");
 
-            const need_hunger = 5 * amount;
-            const insert_amount = hoe === get_id_of_name("鐵鋤", "iron_hoe") ? amount : 1;
-            const hoe_amount = hoe === get_id_of_name("鐵鋤", "iron_hoe") ? 10: amount;
+            const iron_hoe = hoe === get_id_of_name("鐵鋤", "iron_hoe");
+            const need_hunger = iron_hoe ? 5 * amount : 0;
+            const insert_amount = iron_hoe ? amount : 1;
+            const hoe_amount = iron_hoe ? 10 : amount;
             const duration = 20 * 60;
             const endsAt = DateNowSecond() + duration;
 
-            if (farm_data.farms.length + amount > farm_slots) {
+            if (farm_data.farms.length >= farm_data || (farm_data.farms.length + insert_amount) > farm_slots) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 最多只能同時使用四把鋤頭`);
@@ -255,7 +256,8 @@ module.exports = {
                 farm_data.farms = [];
             };
 
-            for (let i = 0; i < insert_amount + 1; i++) {
+            // loop {insert_amount} times
+            for (let i = 0; i < insert_amount; i++) {
                 const farm = {
                     amount: hoe_amount,
                     hoe,
