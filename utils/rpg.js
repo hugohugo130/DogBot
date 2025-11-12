@@ -927,7 +927,8 @@ function userHaveEnoughItems(userid, item, item_amount) {
  * @returns {Promise<EmbedBuilder>}
  */
 async function notEnoughItemEmbed(item_datas, client = global._client) {
-    const { setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
+    const { setEmbedFooter, get_emoji } = require("../cogs/rpg/msg_handler.js");
+
     if (item_datas?.length <= 0) throw new Error("item_datas is empty");
 
     const items_str = item_datas.map(item_data => {
