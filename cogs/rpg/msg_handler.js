@@ -1649,7 +1649,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             rpg_data.hungry += newadd;
             rpg_data.hungry = Math.min(rpg_data.hungry, max_hungry);
-            
+
             rpg_data.inventory[food_id] -= amount;
             save_rpg_data(userid, rpg_data);
 
