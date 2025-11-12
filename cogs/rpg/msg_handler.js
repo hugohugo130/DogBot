@@ -2341,6 +2341,7 @@ module.exports = {
             await rpg_handler({ client, message });
         } catch (error) {
             logger.error(`處理rpg遊戲訊息時發生錯誤: ${error.stack}`);
+            await message.reply({embeds: [await get_loophole_embed(client, error.stack)]});
         } finally {
             lock.rpg_handler = false;
         };

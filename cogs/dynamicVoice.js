@@ -16,6 +16,7 @@ module.exports = {
      * @returns {Promise<void>}
      */
     async execute(client, oldState, newState) {
+        try{
         const { getDynamicVoice } = require("../utils/file.js");
         const { get_logger } = require("../utils/logger.js");
         const logger = get_logger();
@@ -73,10 +74,8 @@ module.exports = {
                     channel: channel,
                     guild: guild.id
                 };
-
             } catch (error) {
                 logger.error(`建立頻道失敗: ${error.message}`);
-                console.error(error);
             }
         };
 
@@ -100,6 +99,9 @@ module.exports = {
                     if (data) delete client.dvoice[oldChannel.id];
                 };
             };
-        }
+        };
+    }catch(err){
+        logger.error(`動態語音錯誤: ${err.message}`);
+    }
     },
 }
