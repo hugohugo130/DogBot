@@ -1616,15 +1616,13 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
                 const old_amount = amount;
 
-                
                 const new_amount = Math.floor((max_hungry - rpg_data.hungry) / add);
                 const new_newadd = add * amount;
 
                 if (!force_eat) {
                     amount = new_amount;
                     newadd = new_newadd;
-                }
-                
+                };
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
@@ -1634,7 +1632,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 if (force_eat) {
                     embed.setColor(embed_warn_color)
                     embed.setTitle(`${emoji_cross} | 爆體保護被停用！`)
-                    .setDescription(`你停用了爆體保護，應該會多吃 \`${old_amount - amount}\` 個 \`${food_name}\``);
+                        .setDescription(`你停用了爆體保護，應該會多吃 \`${old_amount - amount}\` 個 \`${food_name}\``);
                 };
 
                 extra_embeds.push(embed);
@@ -2341,7 +2339,7 @@ module.exports = {
             await rpg_handler({ client, message });
         } catch (error) {
             logger.error(`處理rpg遊戲訊息時發生錯誤: ${error.stack}`);
-            await message.reply({embeds: [await get_loophole_embed(client, error.stack)]});
+            await message.reply({ embeds: [await get_loophole_embed(client, error.stack)] });
         } finally {
             lock.rpg_handler = false;
         };
