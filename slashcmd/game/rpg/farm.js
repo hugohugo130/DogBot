@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, User, Client } = require("discord.js");
-const { get_id_of_name } = require("../../../utils/rpg.js");
+const { get_id_of_name, farm_slots } = require("../../../utils/rpg.js");
 
 /**
  * 
@@ -152,7 +152,8 @@ module.exports = {
                         "zh-CN": "要使用的锄头数量",
                     })
                     .setRequired(false)
-                    .setMinValue(1),
+                    .setMinValue(1)
+                    .setMaxValue(farm_slots),
             ),
         )
         .addSubcommand(new SlashCommandSubcommandBuilder() // info
