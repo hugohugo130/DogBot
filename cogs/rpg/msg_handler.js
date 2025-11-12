@@ -1632,7 +1632,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 if (force_eat) {
                     embed.setColor(embed_warn_color)
                     embed.setTitle(`${emoji_cross} | 爆體保護被停用！`)
-                        .setDescription(`你停用了爆體保護，應該會多吃 \`${old_amount - amount}\` 個 \`${food_name}\``);
+                        .setDescription(`你停用了爆體保護，應該會多攝取`);
                 };
 
                 extra_embeds.push(embed);
@@ -1648,6 +1648,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             };
 
             rpg_data.hungry += newadd;
+            rpg_data.hungry = Math.min(rpg_data.hungry, max_hungry);
+            
             rpg_data.inventory[food_id] -= amount;
             save_rpg_data(userid, rpg_data);
 
