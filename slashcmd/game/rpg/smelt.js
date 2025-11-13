@@ -159,7 +159,9 @@ module.exports = {
                     });
                 };
             };
-
+            
+            await interaction.followUp(JSON.stringify(item_need));
+            await interaction.followUp(JSON.stringify(item_missing));
             if (item_missing.length > 0) {
                 const embed = notEnoughItemEmbed(item_missing);
 
