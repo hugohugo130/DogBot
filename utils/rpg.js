@@ -1,6 +1,6 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
-const { wait_until_ready } = require("../../utils/wait_until_ready.js");
+const { wait_until_ready } = require("./wait_until_ready.js");
 const { prefix, embed_default_color, embed_error_color } = require("./config.js");
 
 const logger = get_logger();
