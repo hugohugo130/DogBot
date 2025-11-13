@@ -935,7 +935,7 @@ async function notEnoughItemEmbed(item_datas, client = global._client) {
 
     const items_str = item_datas.map(item_data => {
         if (typeof item_data === "string") return item_data;
-        return `${name[item_data.item]} \`x${item_data.amount}\`個`;
+        return `${get_name_of_id(item_data.item)} \`x${item_data.amount}\`個`;
     }).join("、");
 
     const emoji_cross = await get_emoji(client, "crosS");
@@ -1247,7 +1247,7 @@ async function ls_function({ client, message, rpg_data, data, args, mode, random
         for (const category of categories) {
             if (Object.keys(category.items).length > 0) {
                 const itemsText = Object.entries(category.items)
-                    .map(([item, amount]) => `${name[item]} \`x${amount.toLocaleString()}\``)
+                    .map(([item, amount]) => `${get_name_of_id(item)} \`x${amount.toLocaleString()}\``)
                     .join('\n');
                 embed.addFields({ name: category.name, value: itemsText, inline: true });
             };
