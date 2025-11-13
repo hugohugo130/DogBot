@@ -830,7 +830,7 @@ module.exports = {
                 } = require("../../utils/file.js");
                 const { userHaveEnoughItems, notEnoughItemEmbed, smeltable_items, name, smelter_slots } = require("../../utils/rpg.js");
                 const { setEmbedFooter } = require("./msg_handler.js");
-                const { get_emoji } = require("../../utils/rpg.js");
+                const { get_emoji, get_name_of_id } = require("../../utils/rpg.js");
 
                 await interaction.deferUpdate();
 
@@ -844,8 +844,6 @@ module.exports = {
                 // 從全域變數中取得 item_need 資料
                 const item_need = global.smelter_sessions?.[session_id];
                 if (!item_need) {
-                    const { setEmbedFooter } = require("./msg_handler.js");
-                    const { get_emoji } = require("../../utils/rpg.js");
 
                     const emoji_cross = await get_emoji(interaction.client, "crosS");
                     const embed = new EmbedBuilder()
@@ -868,7 +866,7 @@ module.exports = {
 
                     if (!userHaveEnoughItems(userId, current_item_id, need_amount)) {
                         item_missing.push({
-                            name: name[current_item_id] || need_item,
+                            name: get_name_of_id(current_item_id),
                             amount: need_amount - have_amount,
                         });
                     };
