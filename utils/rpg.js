@@ -933,6 +933,12 @@ async function notEnoughItemEmbed(item_datas, client = global._client) {
     
     if (item_datas?.length <= 0) throw new Error("item_datas is empty");
     if (typeof item_datas === "string") item_datas = [item_datas];
+    if (typeof item_datas === "object") {
+        const length = Object.keys(item_datas).length;
+        if (!item_datas.item || !item_datas.amount || length !== 2) {
+            logger.warn(`item_datas應該只有item和amount屬性，但：\n${JSON.stringify(item_datas, null, 4)}`)
+        };
+    };
 
     const items_str = item_datas.map(item_data => {
         if (typeof item_data === "string") return item_data;
