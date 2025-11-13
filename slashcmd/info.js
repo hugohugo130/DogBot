@@ -23,17 +23,15 @@ const job_emojis = {
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("farm")
-        .setDescription("farm related commands")
+        .setName("info")
+        .setDescription("info")
         .setNameLocalizations({
-            "zh-TW": "種田",
-            "zh-CN": "種田",
-            "en-US": "farm",
+            "zh-TW": "資訊",
+            "zh-CN": "资讯",
         })
         .setDescriptionLocalizations({
-            "zh-TW": "農田相關指令",
-            "zh-CN": "农田相关指令",
-            "en-US": "farm related commands",
+            "zh-TW": "取得資訊",
+            "zh-CN": "取得资讯",
         })
         .addSubcommand(new SlashCommandSubcommandBuilder() // user
             .setName("user")
