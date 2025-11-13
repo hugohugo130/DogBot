@@ -892,8 +892,8 @@ function get_id_of_name(id, default_value = id) {
 };
 
 function get_number_of_items(name, userid) {
-    const { load_rpg_data } = require("../module_database.js");
-    const { name: name_list } = require("../rpg.js");
+    const { load_rpg_data } = require("./file.js");
+
     const rpg_data = load_rpg_data(userid);
     const items = rpg_data.inventory;
 
@@ -1158,7 +1158,6 @@ async function get_loophole_embed(client = global._client, text) {
 
 async function ls_function({ client, message, rpg_data, data, args, mode, random_item, PASS }) {
     const { privacy_data, setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
-    const { name, mine_gets, ingots, logs, foods_crops, foods_meat, fish, weapons_armor, wood_productions, brew, planks } = require("../../utils/rpg.js");
 
     if (!rpg_data.privacy.includes(privacy_data["ls"]) && !PASS) {
         const bag_emoji = await get_emoji(client, "bag");
