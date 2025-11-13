@@ -161,7 +161,7 @@ module.exports = {
             };
 
             if (item_missing.length > 0) {
-                const embed = notEnoughItemEmbed(item_missing);
+                const embed = await notEnoughItemEmbed(item_missing);
 
                 return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
             };
