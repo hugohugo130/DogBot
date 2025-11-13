@@ -934,7 +934,7 @@ module.exports = {
                 await interaction.update({ embeds: [embed], components: [row] });
             };
         } catch (err) {
-            const { get_loophole_embed } = require("./msg_handler.js");
+            const { get_loophole_embed } = require("../../utils/rpg.js");
 
             if (interaction.deferred) {
                 await interaction.followUp({ embeds: [await get_loophole_embed(client, err.stack)], flags: MessageFlags.Ephemeral });
