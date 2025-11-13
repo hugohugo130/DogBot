@@ -866,7 +866,7 @@ module.exports = {
 
                     if (!userHaveEnoughItems(userId, current_item_id, need_amount)) {
                         item_missing.push({
-                            name: get_name_of_id(current_item_id),
+                            item: get_name_of_id(current_item_id),
                             amount: need_amount - have_amount,
                         });
                     };
