@@ -95,6 +95,7 @@ process.on('SIGINT', async () => {
     client.dvoice = loadDvoiceData();
     global._client = null;
     global.oven_sessions = {};
+    global.smelter_sessions = {};
 
     await checkDBFilesCorrupted();
     await checkAllDatabaseFilesContent();
