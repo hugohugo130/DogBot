@@ -155,5 +155,4 @@ module.exports = {
             });
         };
     },
-    get_farm_info_embed,
 };
