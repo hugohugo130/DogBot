@@ -65,7 +65,8 @@ function divide(amount, by) {
 async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const { load_rpg_data, load_bake_data } = require("../../../utils/file.js");
     const { notEnoughItemEmbed, name, oven_slots } = require("../../../utils/rpg.js");
-    const { setEmbedFooter, get_emoji } = require("../../../cogs/rpg/msg_handler.js");
+    const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
+    const { get_emoji } = require("../../../utils/rpg.js");
     const { embed_error_color } = require("../../../utils/config.js");
 
     if (![1, 2].includes(mode)) throw new Error("mode must be 1 or 2");
@@ -345,7 +346,8 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
         const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
         const { name, oven_slots } = require("../../../utils/rpg.js");
-        const { setEmbedFooter, get_emoji } = require("../../../cogs/rpg/msg_handler.js");
+        const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
+        const { get_emoji } = require("../../../utils/rpg.js");
         const { embed_error_color } = require("../../../utils/config.js");
 
         if (subcommand === "bake") {

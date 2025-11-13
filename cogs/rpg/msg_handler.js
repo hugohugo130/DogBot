@@ -2,16 +2,11 @@ const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonSty
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
 const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
-const { wait_until_ready } = require("../../utils/wait_until_ready.js");
 const { randint, choice } = require("../../utils/random.js");
-
+const { BetterEval, get_help_embed, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished } = require("../../utils/rpg.js");
 
 const max_hungry = 20;
 const logger = get_logger();
-
-function BetterEval(obj) {
-    return Function(`"use strict";return ${obj}`)();
-};
 
 async function unlock_waiting_handler(lock_name) {
     await new Promise((resolve) => {
@@ -229,288 +224,6 @@ const rpg_help = {
 // Object.assign(rpg_help.wood, rpg_help.hew);
 
 
-async function get_help_embed(category, client) {
-    category = category.toLowerCase();
-
-    if (!rpg_help[category]) return null;
-
-    const embedData = rpg_help[category];
-    const emojiName = rpg_emojis[category] || "question";
-
-    let emojiStr = "❓"; // 預設表情符號
-    emojiStr = await get_emoji(client, emojiName);
-
-    const embed = new EmbedBuilder()
-        .setColor(embedData.color)
-        .setTitle(`${emojiStr} | ${embedData.title}`)
-        .setDescription(embedData.description);
-
-    return setEmbedFooter(client, embed);
-};
-
-async function get_emoji(client = global._client, name) {
-    // await client.application.fetch();
-    wait_until_ready(client);
-
-    let emojis = client.application.emojis.cache;
-    let emoji = emojis.find(e => e.name === name);
-
-    if (!emoji) {
-        emojis = await client.application.emojis.fetch();
-        emoji = emojis.find(e => e.name === name);
-    };
-
-    // if (!emoji) throw new Error(`找不到名為${name}的emoji`);
-    if (!emoji) return "";
-    emoji = `<${emoji.animated ? 'a' : ''}:${emoji.name}:${emoji.id}>`;
-    return emoji;
-};
-
-async function get_cooldown_embed(remaining_time, client = global._client, action, count) {
-    const emoji = await get_emoji(client, "crosS");
-
-    const timestamp = Math.floor(Date.now() / 1000) + Math.floor(remaining_time / 1000);
-    const time = `<t:${timestamp}:T> (<t:${timestamp}:R>)`;
-
-    action = rpg_actions[action];
-    const verb = action[0];
-    const noun = action[1];
-
-    const embed = new EmbedBuilder()
-        .setColor(embed_error_color)
-        .setTitle(`${emoji} | 你過勞了！`)
-        .setDescription(`你今天${verb}了 \`${count}\` 次${noun}，等待到 ${time} 可以繼續${action.join("")}`);
-    return setEmbedFooter(client, embed);
-};
-
-function get_cooldown_time(command_name, rpg_data) {
-    return BetterEval(rpg_cooldown[command_name].replace("{c}", rpg_data.count[command_name]));
-};
-
-/**
- * 檢查指令是否已經冷卻完畢
- * @param {string} command_name - 指令名稱
- * @param {Object} rpg_data - 用戶的RPG數據
- * @returns {{is_finished: boolean, remaining_time: number}} - is_finished:如果已冷卻完畢返回true，否則返回false - remaining_time: 剩餘時間
- */
-function is_cooldown_finished(command_name, rpg_data) {
-    if (!rpg_cooldown[command_name]) return { is_finished: true, remaining_time: 0 };
-    const lastRunTimestamp = rpg_data.lastRunTimestamp[command_name] || 0;
-    const now = Date.now();
-    const time_diff = now - lastRunTimestamp;
-    const cooldown_time = get_cooldown_time(command_name, rpg_data) * 1000; // 轉換為毫秒
-
-    return {
-        is_finished: time_diff >= cooldown_time,
-        remaining_time: cooldown_time - time_diff,
-        endsAtms: lastRunTimestamp + cooldown_time,
-        endsAts: Math.floor((lastRunTimestamp + cooldown_time) / 1000),
-    };
-};
-
-async function get_failed_embed(client = global._client, failed_reason, rpg_data) {
-    let title = "失敗";
-    let description = `${failed_reason}`;
-
-    if (failed_reason === "boom") {
-        const emoji_bomb = await get_emoji(client, "bomb");
-        title = `${emoji_bomb} | 蹦!`;
-        description = `你以為挖到了鑽石，但其實是一顆從二戰就埋藏在那的炸彈！`;
-    } else if (failed_reason === "mouse") {
-        const emoji_wood = await get_emoji(client, "wood");
-        title = `${emoji_wood} | 山老鼠別跑`;
-        description = `你來到了森林發現有山老鼠把木材都偷走了！`;
-    } else if (failed_reason === "collapse") {
-        const emoji_bomb = await get_emoji(client, "bomb");
-        title = `${emoji_bomb} | 快逃!!`;
-        description = `你努力地在暗黑的礦洞中尋找鑽石，但是別的同伴亂挖導致礦洞坍塌了！`;
-    } else if (failed_reason === "storm") {
-        const emoji_fisher = await get_emoji(client, "fisher");
-        title = `${emoji_fisher} | 搖到快吐了`;
-        description = `氣象明明說今天天氣很好怎麼會有暴風雨！`;
-    } else if (failed_reason === "shark") {
-        const emoji_fisher = await get_emoji(client, "fisher");
-        title = `${emoji_fisher} | a`;
-        description = `欸不是鯊魚 快跑`;
-    } else if (failed_reason === "acid_rain") {
-
-    } else if (failed_reason === "escape") {
-        const emoji_cow = await get_emoji(client, "cow");
-        title = `${emoji_cow} | 給我回來!`;
-        description = `你放牧了一頭牛，結果一轉身他就不見了？！`;
-    } else if (failed_reason === "epidemic") {
-        const emoji_cow = await get_emoji(client, "cow");
-        title = `${emoji_cow} | 瘟疫在搞欸`;
-        description = `很不幸的最近禽類都染上瘟疫，導致動物都死光了`;
-    };
-
-    const embed = new EmbedBuilder()
-        .setColor(embed_error_color)
-        .setTitle(title)
-        .setDescription(description);
-
-    return setEmbedFooter(client, embed, '', rpg_data);
-}
-
-/**
- * 增加錢
- * @param {Object} rpg_data 
- * @param {number} amount 
- * @param {string} originalUser 來源用戶 (系統 或者 '<@id>')
- * @param {string} targetUser 目標用戶 (只能是 '<@id>')
- * @param {string} type 交易類型
- * @returns {number}
- */
-function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
-    rpg_data.money += amount;
-    rpg_data.transactions.push({
-        timestamp: Math.floor(Date.now() / 1000),
-        originalUser,
-        targetUser,
-        amount,
-        type
-    });
-    return rpg_data.money;
-};
-
-/**
- * 扣除錢
- * @param {Object} rpg_data 
- * @param {number} amount 
- * @param {string} originalUser 來源用戶 (系統 或者 '<@id>')
- * @param {string} targetUser 目標用戶 (只能是 '<@id>')
- * @param {string} type 交易類型
- * @returns {number}
- */
-function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
-    rpg_data.money -= amount;
-    rpg_data.transactions.push({
-        timestamp: Math.floor(Date.now() / 1000),
-        originalUser,
-        targetUser,
-        amount,
-        type
-    });
-    return rpg_data.money;
-};
-
-async function get_loophole_embed(client = global._client, text) {
-    const emoji_cross = await get_emoji(client, "crosS");
-
-    if (text && !text.includes("```")) {
-        text = `\`\`\`${text}\`\`\``;
-    };
-
-    const embed = new EmbedBuilder()
-        .setColor(embed_error_color)
-        .setTitle(`${emoji_cross} | 你戳到了一個漏洞！`)
-        .setDescription(text);
-
-    return setEmbedFooter(client, embed)
-};
-
-async function ls_function({ client, message, rpg_data, data, args, mode, random_item, PASS }) {
-    const { name, mine_gets, ingots, logs, foods_crops, foods_meat, fish, weapons_armor, wood_productions, brew, planks } = require("../../utils/rpg.js");
-
-    if (!rpg_data.privacy.includes(privacy_data["ls"]) && !PASS) {
-        const bag_emoji = await get_emoji(client, "bag");
-
-        let embed = new EmbedBuilder()
-            .setTitle(`${bag_emoji} | 查看包包`)
-            .setColor(embed_default_color)
-            .setDescription(`為保護包包內容隱私權，戳這顆按鈕來看你的包包，隱私權設定可以透過 \`${prefix}privacy\` 指令更改`);
-
-        embed = setEmbedFooter(client, embed);
-
-        const confirm_button = new ButtonBuilder()
-            .setCustomId(`ls|${message.author.id}`)
-            .setEmoji(bag_emoji)
-            .setLabel("查看包包")
-            .setStyle(ButtonStyle.Success);
-
-        const row = new ActionRowBuilder()
-            .addComponents(confirm_button);
-
-        if (mode === 1) return { embeds: [embed], components: [row] };
-        return await message.reply({ embeds: [embed], components: [row] });
-    };
-
-    const emojiNames = ["bag", "ore", "farmer", "cow", "swords", "potion"];
-    const [bag_emoji, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await Promise.all(
-        emojiNames.map(name => get_emoji(client, name))
-    );
-
-    // 分類物品
-    const ores = {};
-    const log_items = {};
-    const food_crops_items = {};
-    const food_meat_items = {}
-    const fish_items = {};
-    const weapons_armor_items = {};
-    const potions_items = {}
-    const other_items = {};
-
-    // 遍歷背包中的物品並分類
-    for (const [item, amount] of Object.entries(rpg_data.inventory || {})) {
-        if (!amount) continue;
-
-        if (Object.keys(mine_gets).includes(item) || Object.keys(ingots).includes(item)) {
-            ores[item] = amount;
-        } else if (Object.keys(logs).includes(item) || Object.keys(planks).includes(item) || Object.keys(wood_productions).includes(item)) {
-            log_items[item] = amount;
-        } else if (Object.keys(foods_crops).includes(item)) {
-            food_crops_items[item] = amount;
-        } else if (Object.keys(foods_meat).includes(item) && !Object.keys(fish).includes(item)) {
-            food_meat_items[item] = amount;
-        } else if (Object.keys(fish).includes(item)) {
-            fish_items[item] = amount;
-        } else if (Object.keys(weapons_armor).includes(item)) {
-            weapons_armor_items[item] = amount;
-        } else if (Object.keys(brew).includes(item)) {
-            potions_items[item] = amount;
-        } else {
-            other_items[item] = amount;
-        };
-    };
-
-    // 創建嵌入訊息
-    const embed = new EmbedBuilder()
-        .setColor(embed_default_color)
-        .setTitle(`${bag_emoji} | 你的背包`);
-
-    setEmbedFooter(client, embed);
-
-    // 使用循環添加各類物品欄位
-    const categories = [
-        { items: ores, name: `${ore_emoji} 礦物` },
-        { items: log_items, name: '🪵 木材' },
-        { items: food_crops_items, name: `${farmer_emoji} 農作物` },
-        { items: food_meat_items, name: `${cow_emoji} 肉類` },
-        { items: fish_items, name: `🐟 魚類` },
-        { items: weapons_armor_items, name: `${swords_emoji} 武器 & 防具` },
-        { items: potions_items, name: `${potion_emoji} 藥水` },
-        { items: other_items, name: '📦 其他物品' }
-    ];
-
-    // 如果背包是空的
-    if (Object.keys(rpg_data.inventory || {}).length === 0) {
-        embed.setColor(embed_error_color);
-        embed.setTitle(`${bag_emoji} | 你的背包裡沒有任何東西`);
-    } else {
-        for (const category of categories) {
-            if (Object.keys(category.items).length > 0) {
-                const itemsText = Object.entries(category.items)
-                    .map(([item, amount]) => `${name[item]} \`x${amount.toLocaleString()}\``)
-                    .join('\n');
-                embed.addFields({ name: category.name, value: itemsText, inline: true });
-            };
-        };
-    };
-
-
-    if (mode === 1) return { embeds: [embed] };
-    return await message.reply({ embeds: [embed] });
-}
 
 /*
 command_name: "{c} will be replaced with the command execution times"
@@ -2346,7 +2059,6 @@ module.exports = {
             lock.rpg_handler = false;
         };
     },
-    BetterEval,
     rpg_cooldown,
     rpg_work,
     rpg_commands,
@@ -2354,20 +2066,23 @@ module.exports = {
     rpg_emojis,
     redirect_data,
     redirect_data_reverse,
-    get_help_embed,
     redirect,
     get_number_of_items,
     randint,
-    get_loophole_embed,
     setEmbedFooter,
     setEmbedAuthor,
     unlock_waiting_handler,
     MockMessage,
-    get_emoji,
     rpg_handler,
+    find_redirect_targets_from_id,
+    
+    // moved to utils/rpg.js, require that instead.
+    BetterEval,
+    get_help_embed,
+    get_loophole_embed,
+    get_emoji,
     add_money,
     remove_money,
     ls_function,
-    find_redirect_targets_from_id,
     is_cooldown_finished,
 };

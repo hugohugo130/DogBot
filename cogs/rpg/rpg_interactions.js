@@ -35,7 +35,9 @@ function get_transaction_embed(interaction) {
 };
 
 async function get_failed_embed(client = global._client) {
-    const { setEmbedFooter, get_emoji } = require("./msg_handler.js");
+    const { setEmbedFooter } = require("./msg_handler.js");
+    const { get_emoji } = require("../../utils/rpg.js");
+
     const emoji = await get_emoji(client, "crosS");
 
     const embed = new EmbedBuilder()
@@ -364,7 +366,8 @@ module.exports = {
      */
     execute: async function (client, interaction) {
         try {
-            const { get_emoji } = require("./msg_handler.js");
+            const { get_emoji } = require("../../utils/rpg.js");
+
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
             if (interaction.customId.startsWith("vote_")) return;
             const logger = get_logger();
@@ -419,7 +422,8 @@ module.exports = {
             } else if (interaction.customId.startsWith('pay')) {
                 await interaction.deferUpdate();
                 const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                const { get_emoji, setEmbedFooter, add_money, remove_money } = require("./msg_handler.js");
+                const { setEmbedFooter } = require("./msg_handler.js");
+                const { get_emoji, add_money, remove_money } = require("../../utils/rpg.js");
 
                 const emoji_cross = await get_emoji(interaction.client, "crosS");
                 if (interaction.customId.startsWith('pay_confirm')) {
@@ -495,7 +499,8 @@ module.exports = {
             } else if (interaction.customId.startsWith('rpg_privacy_menu')) {
                 await interaction.deferUpdate();
                 const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
+                const { setEmbedFooter } = require("./msg_handler.js");
+                const { get_emoji } = require("../../utils/rpg.js");
 
                 const [_, userId] = interaction.customId.split('|');
 
@@ -565,7 +570,8 @@ module.exports = {
             } else if (interaction.customId.startsWith('choose_command')) {
                 await interaction.deferUpdate();
                 const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                const { get_emoji, setEmbedFooter, rpg_handler, MockMessage } = require("./msg_handler.js");
+                const { setEmbedFooter, rpg_handler, MockMessage } = require("./msg_handler.js");
+                const { get_emoji } = require("../../utils/rpg.js");
 
                 const [_, __, command] = interaction.customId.split('|');
 
@@ -579,14 +585,15 @@ module.exports = {
                 await interaction.deferReply({ flags: MessageFlags.Ephemeral })
                 const { ls_function, MockMessage } = require("./msg_handler.js");
                 const { load_rpg_data } = require("../../utils/file.js");
+
                 const [_, userId] = interaction.customId.split("|");
                 const message = new MockMessage(`${prefix}ls`, interaction.message.channel, interaction.user, interaction.guild);
                 const res = await ls_function({ client: interaction.client, message, rpg_data: load_rpg_data(userId), mode: 1, PASS: true });
                 await interaction.followUp(res);
             } else if (interaction.customId.startsWith("sell")) {
                 const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                const { add_money, get_emoji, setEmbedFooter } = require("./msg_handler.js");
-                const { name, get_name_of_id } = require("../../utils/rpg.js");
+                const { setEmbedFooter } = require("./msg_handler.js");
+                const { get_emoji, add_money, get_name_of_id, name } = require("../../utils/rpg.js");
                 await interaction.deferUpdate();
 
                 let [_, userId, item_id, price, amount] = customIdParts;
@@ -614,7 +621,9 @@ module.exports = {
 
                 await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
             } else if (interaction.customId.startsWith("cancel")) {
-                const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
+                const { setEmbedFooter } = require("./msg_handler.js");
+                const { get_emoji } = require("../../utils/rpg.js");
+
                 await interaction.deferUpdate();
 
                 const emoji_cross = await get_emoji(interaction.client, "crosS");
@@ -625,9 +634,9 @@ module.exports = {
 
                 await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
             } else if (interaction.customId.startsWith('buy') || interaction.customId.startsWith('buyc')) {
-                const { get_emoji, remove_money, add_money, setEmbedFooter } = require("./msg_handler.js");
+                const { setEmbedFooter } = require("./msg_handler.js");
                 const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                const { get_name_of_id } = require("../../utils/rpg.js");
+                const { get_name_of_id, get_emoji, remove_money, add_money } = require("../../utils/rpg.js");
 
                 const [_, buyerUserId, targetUserId, amount, price, item] = interaction.customId.split('|');
 
@@ -702,7 +711,8 @@ module.exports = {
                     save_rpg_data
                 } = require("../../utils/file.js");
                 const { notEnoughItemEmbed, bake, name, oven_slots } = require("../../utils/rpg.js");
-                const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
+                const { setEmbedFooter } = require("./msg_handler.js");
+                const { get_emoji } = require("../../utils/rpg.js");
 
                 await interaction.deferUpdate();
 
@@ -717,7 +727,9 @@ module.exports = {
                 // 從全域變數中取得 item_need 資料
                 const item_need = global.oven_sessions?.[session_id];
                 if (!item_need) {
-                    const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
+                    const { setEmbedFooter } = require("./msg_handler.js");
+                    const { get_emoji } = require("../../utils/rpg.js");
+
                     const emoji_cross = await get_emoji(interaction.client, "crosS");
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -817,6 +829,8 @@ module.exports = {
                     save_rpg_data
                 } = require("../../utils/file.js");
                 const { userHaveEnoughItems, notEnoughItemEmbed, smeltable_items, name, smelter_slots } = require("../../utils/rpg.js");
+                const { setEmbedFooter } = require("./msg_handler.js");
+                const { get_emoji } = require("../../utils/rpg.js");
 
                 await interaction.deferUpdate();
 
@@ -830,7 +844,9 @@ module.exports = {
                 // 從全域變數中取得 item_need 資料
                 const item_need = global.smelter_sessions?.[session_id];
                 if (!item_need) {
-                    const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
+                    const { setEmbedFooter } = require("./msg_handler.js");
+                    const { get_emoji } = require("../../utils/rpg.js");
+
                     const emoji_cross = await get_emoji(interaction.client, "crosS");
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -904,7 +920,6 @@ module.exports = {
                 // 清理 session 資料
                 delete global.smelter_sessions[session_id];
 
-                const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
                 const emoji_furnace = await get_emoji(interaction.client, "furnace");
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
@@ -919,6 +934,8 @@ module.exports = {
                 await interaction.update({ embeds: [embed], components: [row] });
             };
         } catch (err) {
+            const { get_loophole_embed } = require("./msg_handler.js");
+
             if (interaction.deferred) {
                 await interaction.followUp({ embeds: [await get_loophole_embed(client, err.stack)], flags: MessageFlags.Ephemeral });
             } else {

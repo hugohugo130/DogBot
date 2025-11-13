@@ -1,7 +1,6 @@
 const { Events, EmbedBuilder } = require('discord.js');
 const { get_logger } = require('../utils/logger.js');
-const { time } = require('../utils/time.js');
-const { get_loophole_embed } = require('./rpg/msg_handler.js');
+const { get_loophole_embed } = require('../utils/rpg.js');
 
 function parseOptions(options) {
     if (!options || options.length === 0) return '';
