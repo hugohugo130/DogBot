@@ -98,7 +98,7 @@ module.exports = {
             const { load_rpg_data, load_smelt_data } = require("../../../utils/file.js");
             const { notEnoughItemEmbed, name, smelter_slots, smeltable_items } = require("../../../utils/rpg.js");
             const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
-            const { get_emoji, get_loophole_embed } = require("../../../utils/rpg.js");
+            const { get_emoji, get_loophole_embed, get_id_of_name } = require("../../../utils/rpg.js");
             const { embed_error_color } = require("../../../utils/config.js");
 
             await interaction.deferReply();
@@ -141,7 +141,7 @@ module.exports = {
                     amount: input_amount,
                 },
                 {
-                    item: "coal",
+                    item: get_id_of_name("煤炭", "coal"),
                     amount: Math.ceil(amount / 2),
                 },
             ];
