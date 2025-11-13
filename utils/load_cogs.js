@@ -7,7 +7,12 @@ const logger = get_logger();
 
 function load_cog(client, cog, itemPath) {
     async function run_execute(...args) {
-        await cog.execute(client, ...args);
+        try {
+            await cog.execute(client, ...args);
+        } catch (err) {
+            logger.error(`執行 ${cog.name} 時發生錯誤: ${err}`);
+            console.error(err);
+        };
     };
 
     if (cog.name && cog.execute) {
