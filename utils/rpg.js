@@ -925,13 +925,14 @@ function userHaveEnoughItems(userid, item, item_amount) {
 
 /**
  * 
- * @param {Array<{item: string, amount: number}> | Array<string>} item_datas 
+ * @param {Array<{item: string, amount: number}> | Array<string> | string} item_datas 
  * @returns {Promise<EmbedBuilder>}
  */
 async function notEnoughItemEmbed(item_datas, client = global._client) {
     const { setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
-
+    
     if (item_datas?.length <= 0) throw new Error("item_datas is empty");
+    if (typeof item_datas === "string") item_datas = [item_datas];
 
     const items_str = item_datas.map(item_data => {
         if (typeof item_data === "string") return item_data;
