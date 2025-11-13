@@ -2066,6 +2066,8 @@ module.exports = {
     rpg_emojis,
     redirect_data,
     redirect_data_reverse,
+    privacy_data,
+    rpg_actions,
     redirect,
     get_number_of_items,
     randint,
