@@ -345,7 +345,7 @@ module.exports = {
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
         const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
-        const { name, oven_slots } = require("../../../utils/rpg.js");
+        const { name, oven_slots, notEnoughItemEmbed } = require("../../../utils/rpg.js");
         const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
         const { get_emoji } = require("../../../utils/rpg.js");
         const { embed_error_color } = require("../../../utils/config.js");
@@ -430,13 +430,14 @@ module.exports = {
 
             const total_need_coal = Math.ceil(amounts.reduce((sum, amount) => sum + amount, 0) / 2);
             const coal_amount = rpg_data.inventory["coal"] || 0;
-            if (coal_amount < total_need_coal) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你的煤炭不夠喔！`)
-                    .setDescription(`你需要 \`${total_need_coal}\` 顆煤炭，但你只有 \`${coal_amount}\` 顆煤炭`);
 
-                return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
+            if (coal_amount < total_need_coal) {
+                const item_list = {
+                    item: "coal",
+                    amount: total_need_coal - coal_amount,
+                };
+
+                return await interaction.followUp({ embeds: [await notEnoughItemEmbed(item_list)] });
             };
 
             for (const [index, item] of items.entries()) {
