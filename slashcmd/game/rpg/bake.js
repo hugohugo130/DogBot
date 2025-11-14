@@ -432,10 +432,10 @@ module.exports = {
             const coal_amount = rpg_data.inventory["coal"] || 0;
 
             if (coal_amount < total_need_coal) {
-                const item_list = {
+                const item_list = [{
                     item: "coal",
                     amount: total_need_coal - coal_amount,
-                };
+                }];
 
                 return await interaction.followUp({ embeds: [await notEnoughItemEmbed(item_list)] });
             };

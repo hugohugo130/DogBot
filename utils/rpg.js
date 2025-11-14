@@ -930,18 +930,21 @@ function userHaveEnoughItems(userid, item, item_amount) {
  */
 async function notEnoughItemEmbed(item_datas, client = global._client) {
     const { setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
-    
+
     if (item_datas?.length <= 0) throw new Error("item_datas is empty");
-    if (typeof item_datas === "string") item_datas = [item_datas];
-    if (typeof item_datas === "object") {
+    if (!Array.isArray(item_datas)) item_datas = [item_datas];
+
+    const items_str = item_datas.map(item_data => {
+        if (typeof item_data === "string") return item_data;
+        if (typeof item_data !== "object") {
+            logger.warn(`item_data應該是物件或字串，但：\n${JSON.stringify(item_data, null, 4)}`);
+            return item_data;
+        };
+
         const length = Object.keys(item_datas).length;
         if (!item_datas.item || !item_datas.amount || length !== 2) {
             logger.warn(`item_datas應該只有item和amount屬性，但：\n${JSON.stringify(item_datas, null, 4)}`)
         };
-    };
-
-    const items_str = item_datas.map(item_data => {
-        if (typeof item_data === "string") return item_data;
         return `${get_name_of_id(item_data.item)} \`x${item_data.amount}\`個`;
     }).join("、");
 
