@@ -1299,6 +1299,7 @@ module.exports = {
     farm_slots,
     smelter_slots,
     // rpg functions
+    BetterEval,
     get_help_embed,
     get_emoji,
     get_cooldown_embed,
