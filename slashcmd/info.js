@@ -92,6 +92,7 @@ module.exports = {
     async execute(interaction) {
         const { load_rpg_data } = require("../utils/file.js");
         const { get_emoji } = require("../utils/rpg.js");
+        const { setEmbedFooter, setEmbedAuthor } = require("../cogs/rpg/msg_handler.js");
         const { convertToSecond } = require("../utils/timestamp.js");
         const { embed_default_color } = require("../utils/config.js");
 
@@ -104,6 +105,17 @@ module.exports = {
         const emoji_timer = await get_emoji(client, "timer");
         const emoji_job = await get_emoji(client, "job");
         const emoji_adventure = await get_emoji(client, "adventure");
+        const emoji_user = await get_emoji(client, "user");
+        const emoji_boost2 = await get_emoji(client, "boost2");
+        const emoji_server = await get_emoji(client, "server");
+        const emoji_memory = await get_emoji(client, "memory");
+
+        const memUsage = process.memoryUsage();
+
+        const fix = (num) => {
+            num = num / 1024 / 1024;
+            return num;
+        };
 
         if (subcommand === "user") {
             const user = interaction.options.getUser("user") ?? interaction.user;
@@ -151,6 +163,112 @@ module.exports = {
             await interaction.editReply({
                 embeds: [user_data_embed, rpg_data_embed],
             });
+        } else if (subcommand === "guild") {
+            const guild = interaction.guild;
+            const guildId = guild.id;
+            const guildName = guild.name;
+            const guildMembers = guild.memberCount;
+            const boosts = guild.premiumSubscriptionCount ?? 0;
+            const boostLevel = guild.premiumTier;
+            const ownerId = guild.ownerId;
+            const serverIconURL = guild.iconURL({ dynamic: true });
+            const serverBanner = guild.bannerURL({ dynamic: true });
+            const serverInviteBG = guild.splashURL({ dynamic: true });
+            const createdAt = convertToSecond(interaction.guild.createdAt.getTime());
+
+            const embed = new EmbedBuilder()
+                .setColor(embed_default_color)
+                .setTitle(guildName)
+                .setThumbnail(serverIconURL)
+                .setFields(
+                    {
+                        name: `${emoji_idCard} ID`,
+                        value: `\`${guildId}\``,
+                        inline: true,
+                    },
+                    {
+                        name: `${emoji_user} 成員`,
+                        value: `\`${guildMembers}\``,
+                        inline: true,
+                    },
+                    {
+                        name: `${emoji_boost2} 加成狀態`,
+                        value: `${boosts} 個加成 / ${boostLevel} 級`,
+                        inline: true,
+                    },
+                    {
+                        name: `${emoji_timer} 創建時間`,
+                        value: `<t:${createdAt}:F> (<t:${createdAt}:R>)`,
+                        inline: true,
+                    },
+                    {
+                        name: `👑 擁有者`,
+                        value: `<@${ownerId}>`,
+                        inline: true,
+                    },
+                );
+
+            const BtnLinks = [];
+
+            BtnLinks.push(new ButtonBuilder()
+                .setLabel("圖標")
+                .setStyle(ButtonStyle.Link)
+                .setURL(serverIconURL)
+            );
+
+            if (serverBanner) {
+                BtnLinks.push(new ButtonBuilder()
+                    .setLabel("橫幅")
+                    .setStyle(ButtonStyle.Link)
+                    .setURL(serverBanner)
+                );
+            };
+
+            if (serverInviteBG) {
+                BtnLinks.push(new ButtonBuilder()
+                    .setLabel("邀請背景")
+                    .setStyle(ButtonStyle.Link)
+                    .setURL(serverInviteBG)
+                );
+            };
+
+            const row = new ActionRowBuilder()
+                .addComponents(BtnLinks);
+
+            await interaction.editReply({ embeds: [embed], components: [row] });
+        } else if (subcommand === "bot") {
+            const serverCount = interaction.client.guilds.cache.size;
+            const userCount = interaction.client.users.cache.size;
+            const readyAt = convertToSecond(interaction.client.readyAt.getTime());
+
+            let embed = new EmbedBuilder()
+                .setColor(0x0099FF)
+                .addFields(
+                    {
+                        name: `${emoji_server} 伺服器`,
+                        value: `\`${serverCount}\``,
+                        inline: true,
+                    },
+                    {
+                        name: `${emoji_user} 成員`,
+                        value: `\`${userCount}\``,
+                        inline: true,
+                    },
+                    {
+                        name: `${emoji_timer} 開機時間`,
+                        value: `<t:${readyAt}:R>`,
+                        inline: true,
+                    },
+                    {
+                        name: `${emoji_memory} 記憶體狀況 (Used / Total / RSS)`,
+                        value: `\`${fix(memUsage.heapUsed)} MB\` / \`${fix(memUsage.heapTotal)} MB\` / \`${fix(memUsage.rss)} MB\``,
+                    },
+                );
+
+            embed = setEmbedFooter(client, embed, "我們使用 discord.js 製作這個機器人", null, true);
+            embed = setEmbedAuthor(client, embed, `${client.tag}🤖`);
+
+            await interaction.editReply({ embeds: [embed] });
         };
     },
 };
