@@ -105,6 +105,8 @@ module.exports = {
         const emoji_timer = await get_emoji(client, "timer");
         const emoji_job = await get_emoji(client, "job");
         const emoji_adventure = await get_emoji(client, "adventure");
+        const emoji_drumstick = await get_emoji(client, "drumstick");
+        const emoji_badge = await get_emoji(client, "badge");
         const emoji_user = await get_emoji(client, "user");
         const emoji_boost2 = await get_emoji(client, "boost2");
         const emoji_server = await get_emoji(client, "server");
@@ -121,10 +123,21 @@ module.exports = {
             const user = interaction.options.getUser("user") ?? interaction.user;
             const userTag = user.tag;
             const userId = user.id;
-            const createdAt = convertToSecond(user.createdAt.getTime());
+
             const rpg_data = await load_rpg_data(userId);
+            const show_money = rpg_data.privacy.includes("money");
+            const money = show_money ? rpg_data.money || 0 : "隱私設定關閉";
             const job = rpg_data.job || "無";
+            const fightjob = rpg_data.fightjob || "無";
+            const badge = rpg_data.badge || "無";
+            const marry_data = rpg_data.marry || {};
+            const marry_str = marry_data.status ? `
+和 <${marry_data.with}
+結婚紀念日 <t:${marry_data.time}:R>
+` : "單身";
             // const job_emoji = await get_emoji(client, job_emojis[job]);
+
+            const createdAt = convertToSecond(user.createdAt.getTime());
 
             const user_data_embed = new EmbedBuilder()
                 .setColor(embed_default_color)
@@ -144,19 +157,34 @@ module.exports = {
                 .setColor(embed_default_color)
                 .setFields(
                     {
-                        name: "民生職業",
+                        name: `${emoji_job} 民生職業`,
                         value: job,
                         inline: true,
                     },
                     {
-                        name: "冒險職業",
-                        value: "未開放",
+                        name: `${emoji_adventure} 冒險職業`,
+                        value: fightjob,
                         inline: true,
                     },
                     {
-                        name: "沒做完",
-                        value: "不~沒時間了，先做作業 D:\n先這樣吧",
-                        inline: false,
+                        name: `${emoji_drumstick} 體力`,
+                        value: rpg_data.hungry,
+                        inline: true,
+                    },
+                    {
+                        name: `💰 金錢`,
+                        value: money,
+                        inline: true,
+                    },
+                    {
+                        name: `${emoji_badge} 稱號`,
+                        value: badge,
+                        inline: true,
+                    },
+                    {
+                        name: `❤️ 感情狀態`,
+                        value: marry_str,
+                        inline: true,
                     },
                 );
 

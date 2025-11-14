@@ -25,6 +25,14 @@ const DEFAULT_VALUES = {
         "rpg_database.json": {
             "money": 1000,
             "hungry": 20,
+            "job": null,
+            "fightjob": null,
+            "badge": null,
+            "marry": {
+                "status": false,
+                "with": null,
+                "time": 0,
+            },
             "lastRunTimestamp": {},
             "inventory": {},
             "transactions": [],
