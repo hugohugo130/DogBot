@@ -112,7 +112,7 @@ module.exports = {
 
         const fix = (num) => {
             num = num / 1024 / 1024;
-            return num;
+            return Math.floor(num);
         };
 
         if (subcommand === "user") {
