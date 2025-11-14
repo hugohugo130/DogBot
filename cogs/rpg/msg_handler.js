@@ -1,4 +1,4 @@
-const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message } = require("discord.js");
+const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User } = require("discord.js");
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
 const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
@@ -47,9 +47,16 @@ class MockMessage {
     };
 };
 
+/**
+ * 
+ * @param {string} name 
+ * @param {string} userid 
+ * @returns {number}
+ */
 function get_number_of_items(name, userid) {
     const { load_rpg_data } = require("../../utils/file.js");
     const { get_id_of_name } = require("../../utils/rpg.js");
+
     const rpg_data = load_rpg_data(userid);
     const items = rpg_data.inventory;
 
@@ -62,6 +69,13 @@ function get_number_of_items(name, userid) {
     return items[item_key];
 };
 
+/**
+ * 
+ * @param {string} item 
+ * @param {User} user 
+ * @param {number} amount 
+ * @returns {number}
+ */
 function get_amount(item, user, amount) {
     const default_value = 1;
 
@@ -84,7 +98,7 @@ async function redirect({ client, message, command, mode = 0 }) {
     m = 1: 只回傳訊息參數
     */
     if (![0, 1].includes(mode)) throw new TypeError("Invalid mode");
-    // =======
+
     if (command.includes(prefix)) {
         try {
             throw new Error(`傳送包含${prefix}的指令名已棄用，現在只需要傳送指令名稱`);
@@ -96,10 +110,11 @@ async function redirect({ client, message, command, mode = 0 }) {
             });
         };
     };
-    // =======
+
     if (!command.includes(prefix)) command = prefix + command;
     const msg = new MockMessage(command, message.channel, message.author, message.guild, message.mentions.users.first());
     const message_args = await rpg_handler({ client, message: msg, d: true, mode: 1 });
+
     if (mode === 1) return message_args;
     return await message.reply(message_args);
 };
