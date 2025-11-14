@@ -26,8 +26,8 @@ module.exports = {
         .setName("info")
         .setDescription("info")
         .setNameLocalizations({
-            "zh-TW": "資訊",
-            "zh-CN": "资讯",
+            "zh-TW": "取得資訊",
+            "zh-CN": "取得资讯",
         })
         .setDescriptionLocalizations({
             "zh-TW": "取得資訊",
@@ -41,8 +41,8 @@ module.exports = {
             })
             .setDescription("Getting user's information")
             .setDescriptionLocalizations({
-                "zh-TW": "取得使用者資訊",
-                "zh-CN": "取得用户資訊",
+                "zh-TW": "查詢使用者的資訊",
+                "zh-CN": "查询用户的資訊",
             })
             .addUserOption(option =>
                 option.setName("user")
@@ -52,37 +52,33 @@ module.exports = {
                     })
                     .setDescription("Getting user's information")
                     .setDescriptionLocalizations({
-                        "zh-TW": "取得使用者資訊",
-                        "zh-CN": "取得用户資訊",
-                    })
-            )
+                        "zh-TW": "查詢使用者的資訊",
+                        "zh-CN": "查询用户的資訊",
+                    }),
+            ),
         )
         .addSubcommand(new SlashCommandSubcommandBuilder() // guild
             .setName("guild")
-            // .setNameLocalizations({
-            //     "zh-TW": "資訊",
-            //     "zh-CN": "資訊",
-            //     "en-US": "info",
-            // })
+            .setNameLocalizations({
+                "zh-TW": "伺服器",
+                "zh-CN": "服务器",
+            })
             .setDescription("Getting guild's information")
-            // .setDescriptionLocalizations({
-            //     "zh-TW": "檢視目前農田狀態",
-            //     "zh-CN": "查看目前农田状态",
-            //     "en-US": "Getting guild's information",
-            // }),
+            .setDescriptionLocalizations({
+                "zh-TW": "查詢伺服器的資訊",
+                "zh-CN": "查询服务器的資訊",
+            }),
         )
         .addSubcommand(new SlashCommandSubcommandBuilder() // bot
             .setName("bot")
-            // .setNameLocalizations({
-            //     "zh-TW": "採收",
-            //     "zh-CN": "采集",
-            //     "en-US": "get",
-            // })
+            .setNameLocalizations({
+                "zh-TW": "機器人",
+                "zh-CN": "机器人",
+            })
             .setDescription("Getting bot's information")
             .setDescriptionLocalizations({
-                "zh-TW": "採收農作物",
-                "zh-CN": "采集农作物",
-                "en-US": "Getting bot's information",
+                "zh-TW": "查詢機器人的資訊",
+                "zh-CN": "查询机器人的資訊",
             }),
         ),
     /**
