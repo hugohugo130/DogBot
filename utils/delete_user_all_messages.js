@@ -1,4 +1,4 @@
-const { Client } = require("discord.js");
+const DogClient = require("../utils/customs/client.js");
 
 module.exports = {
     /**
@@ -7,7 +7,7 @@ module.exports = {
      * @param {string} guild_id 
      * @param {number | null} limit 
      * @param {string | null} channel_id 
-     * @param {Client} client 
+     * @param {DogClient} client 
      * @returns {Promise<void>}
     */
     async del_msg(userID, guild_id, limit = 100, channel_id = null, client = null) {

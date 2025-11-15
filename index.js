@@ -1,60 +1,22 @@
-const { Client, GatewayIntentBits, Events, Options, Collection } = require('discord.js');
+const { Events } = require('discord.js');
+const DogClient = require("./utils/customs/client.js");
 const { checkDBFilesExists, checkDBFilesCorrupted } = require('./utils/check_db_files.js');
 const { checkAllDatabaseFilesContent } = require('./utils/onlineDB.js');
 const { load_cogs } = require("./utils/load_cogs.js");
-const { getServerIPSync } = require("./utils/getSeverIPSync.js");
 const { get_logger, loggerManager, loggerManager_log, loggerManager_nodc } = require('./utils/logger.js');
-const { loadslashcmd } = require('./utils/loadslashcmd.js');
 const { safeshutdown } = require('./utils/safeshutdown.js');
 const { get_areadline } = require('./utils/readline.js');
 const { check_item_data } = require('./utils/rpg.js');
 const { should_register_cmd } = require('./utils/auto_register.js');
 const { registcmd } = require('./register_commands.js');
-const { loadDvoiceData } = require('./utils/file.js');
 require("dotenv").config();
 
-const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildVoiceStates,
-    ],
-    rest: {
-        timeout: 15000,
-        retries: 3
-    },
-    allowedMentions: {
-        repliedUser: false,
-    },
-    sweepers: {
-        ...Options.DefaultMakeCacheSettings,
-        channels: {
-            interval: 3_600,
-            lifetime: 1_800,
-        },
-        guilds: {
-            interval: 3_600,
-            lifetime: 1_800,
-        },
-        users: {
-            interval: 3_600,
-            filter: () => user => user.bot && user.id !== user.client.user.id,
-        },
-        messages: {
-            interval: 3_600,
-            lifetime: 1_800,
-        },
-    },
-});
+const client = new DogClient();
 
 const logger = get_logger();
 
 const split_line = "=".repeat(10);
 logger.info(`${split_line}機器人正在啟動....${split_line}`);
-
-client.setMaxListeners(Infinity);
 
 client.once(Events.ClientReady, async () => {
     const rl = get_areadline();
@@ -91,8 +53,6 @@ process.on('SIGINT', async () => {
     // const { downloadAllFiles } = require('./utils/onlineDB.js');
     // await downloadAllFiles();
 
-    client.last_send_log = "";
-    client.dvoice = loadDvoiceData();
     global._client = null;
     global.oven_sessions = {};
     global.smelter_sessions = {};
@@ -106,11 +66,8 @@ process.on('SIGINT', async () => {
     logger.info(`已加載 ${cogs} 個程式碼`);
 
     if (await should_register_cmd()) await registcmd(false, true);
-    client.commands = loadslashcmd(true);
 
     logger.info(`已加載 ${client.commands.size} 個斜線指令`);
-
-    client.serverIP = getServerIPSync(client);
 
     await client.login(process.env.TOKEN);
     global._client = client;

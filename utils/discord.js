@@ -1,6 +1,7 @@
-const { Client, Guild, Collection, GuildChannel } = require("discord.js");
+const { Guild, GuildChannel } = require("discord.js");
 const { get_logger } = require("./logger.js");
 const { wait_until_ready } = require("./wait_until_ready.js")
+const DogClient = require("../utils/customs/client.js");
 
 const logger = get_logger();
 
@@ -22,7 +23,7 @@ async function get_user_of_guild(guildID, client = global._client) {
 /**
  * 
  * @param {string} userID 
- * @param {Client} client 
+ * @param {DogClient} client 
  * @returns {Promise<User>}
  */
 async function get_user(userID, client = global._client) {
@@ -32,7 +33,7 @@ async function get_user(userID, client = global._client) {
 /**
  * 
  * @param {string} guildID 
- * @param {Client} client 
+ * @param {DogClient} client 
  * @returns {Promise<Guild>}
  */
 async function get_guild(guildID, client = global.client) {

@@ -1,4 +1,5 @@
-const { Events, ChannelType, Client, VoiceState, PermissionFlagsBits } = require("discord.js");
+const { Events, ChannelType, VoiceState, PermissionFlagsBits } = require("discord.js");
+const DogClient = require("../utils/customs/client.js");
 
 const pattern = /^└⳺.*⳻ 的頻道$/;
 const format = String(pattern)
@@ -10,7 +11,7 @@ module.exports = {
     name: Events.VoiceStateUpdate,
     /**
      * 
-     * @param {Client} client 
+     * @param {DogClient} client 
      * @param {VoiceState} oldState 
      * @param {VoiceState} newState 
      * @returns {Promise<void>}

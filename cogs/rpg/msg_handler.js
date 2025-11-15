@@ -1,9 +1,11 @@
-const { Client, Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User } = require("discord.js");
+const { Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User } = require("discord.js");
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
 const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { randint, choice } = require("../../utils/random.js");
 const { BetterEval, get_help_embed, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished } = require("../../utils/rpg.js");
+const DogClient = require("../utils/customs/client.js");
+
 const max_hungry = 20;
 const logger = get_logger();
 
@@ -121,7 +123,7 @@ async function redirect({ client, message, command, mode = 0 }) {
 
 /**
  * 
- * @param {Client} client 
+ * @param {DogClient} client 
  * @param {EmbedBuilder} embed 
  * @param {string} [text=""]
  * @param {object | string | null} [rpg_data=null] 顯示飽食度，傳入rpg_data或user id
@@ -155,7 +157,7 @@ function setEmbedFooter(client = global._client, embed, text = "", rpg_data = nu
 
 /**
  * 
- * @param {Client} client 
+ * @param {DogClient} client 
  * @param {EmbedBuilder} embed 
  * @param {string} author 
  */
@@ -1818,7 +1820,7 @@ function find_redirect_targets_from_id(id) {
 };
 
 /**
- * @param {Client} client 機器人客戶端
+ * @param {DogClient} client 機器人客戶端
  * @param {Message} message 訊息
  * @param {boolean} d
  * @param {number} mode 請求模式 - 0: 預設模式 - 1: 取得訊息回傳參數

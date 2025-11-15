@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, User, Client } = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, User} = require("discord.js");
 const { get_id_of_name, farm_slots } = require("../../../utils/rpg.js");
+const DogClient = require("../utils/customs/client.js");
 
 /**
  * 
  * @param {User} user 
- * @param {Client} client 
+ * @param {DogClient} client 
  * @returns {Promise<EmbedBuilder>}
  */
 async function get_farm_info_embed(user, client = global._client) {

@@ -43,6 +43,11 @@ function processDirectory(bot, dirPath) {
     return commands;
 };
 
+/**
+ * 
+ * @param {boolean} bot true返回collection, false返回array
+ * @returns {Collection<string, any> | any[]}
+ */
 function loadslashcmd(bot) {
     const commandsPath = path.join(process.cwd(), 'slashcmd');
 
