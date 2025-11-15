@@ -6,14 +6,6 @@ const { authorName } = require("../config.js");
 
 class DogClient extends Client {
     constructor() {
-        this.last_send_log = "";
-        this.dvoice = loadDvoiceData();
-        this.commands = loadslashcmd(true);
-        this.serverIP = getServerIPSync(this);
-        this.author = authorName || "哈狗";
-
-        this.setMaxListeners(Infinity);
-
         const options = {
             intents: [
                 GatewayIntentBits.Guilds,
@@ -48,11 +40,18 @@ class DogClient extends Client {
                     lifetime: 1_800,
                 },
             },
-        }
+        };
 
         super(options);
-    };
 
-}
+        this.last_send_log = "";
+        this.dvoice = loadDvoiceData();
+        this.commands = loadslashcmd(true);
+        this.serverIP = getServerIPSync(this);
+        this.author = authorName || "哈狗";
+
+        this.setMaxListeners(Infinity);
+    };
+};
 
 module.exports = DogClient;
