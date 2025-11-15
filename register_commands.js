@@ -49,7 +49,6 @@ async function registcmd(quiet = true, logger = false, updateHash = true) {
         return commands;
     } catch (error) {
         _error(logger, error);
-        throw error;
     };
 };
 
