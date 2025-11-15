@@ -4,7 +4,7 @@ const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
 const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { randint, choice } = require("../../utils/random.js");
 const { BetterEval, get_help_embed, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished } = require("../../utils/rpg.js");
-const DogClient = require("../utils/customs/client.js");
+const DogClient = require("../../utils/customs/client.js");
 
 const max_hungry = 20;
 const logger = get_logger();

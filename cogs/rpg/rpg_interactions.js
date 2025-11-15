@@ -1,7 +1,7 @@
 const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, CommandInteraction } = require("discord.js");
 const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { get_logger } = require("../../utils/logger.js");
-const DogClient = require("../utils/customs/client.js");
+const DogClient = require("../../utils/customs/client.js");
 
 function show_transactions(userid) {
     const { load_rpg_data } = require("../../utils/file.js");

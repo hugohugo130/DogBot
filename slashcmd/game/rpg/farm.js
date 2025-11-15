@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, User} = require("discord.js");
 const { get_id_of_name, farm_slots } = require("../../../utils/rpg.js");
-const DogClient = require("../utils/customs/client.js");
+const DogClient = require("../../../utils/customs/client.js");
 
 /**
  * 
