@@ -290,7 +290,7 @@ module.exports = {
                 );
 
             embed = setEmbedFooter(client, embed, "我們使用 discord.js 製作這個機器人", null, true);
-            embed = setEmbedAuthor(client, embed, `${client.tag}🤖`);
+            embed = setEmbedAuthor(client, embed, `${client.user.tag}🤖`);
 
             await interaction.editReply({ embeds: [embed] });
         };
