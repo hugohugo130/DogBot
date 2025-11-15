@@ -207,7 +207,7 @@ module.exports = {
         const { setEmbedFooter, is_cooldown_finished } = require("../../../cogs/rpg/msg_handler.js");
         const { randint } = require("../../../utils/random.js");
         const { get_emoji } = require("../../../utils/rpg.js");
-        const { DateNowSecond } = require("../../../utils/timestamp.js");
+        const { DateNow, DateNowSecond } = require("../../../utils/timestamp.js");
         const { embed_default_color, embed_error_color, rpg_lvlUp_per } = require("../../../utils/config.js");
 
         const client = interaction.client;
@@ -340,7 +340,7 @@ module.exports = {
                 farm_data.exp -= rpg_lvlUp_per * lvlUp;
             };
 
-            rpg_data.lastRunTimestamp[cooldown_key] = DateNowSecond();
+            rpg_data.lastRunTimestamp[cooldown_key] = DateNow();
             farm_data.waterAt = DateNowSecond();
 
             save_rpg_data(userId, rpg_data);
