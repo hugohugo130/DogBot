@@ -228,8 +228,8 @@ module.exports = {
 
             const iron_hoe = hoe === get_id_of_name("鐵鋤", "iron_hoe");
             const need_hunger = iron_hoe ? 5 * amount : 0;
-            const insert_amount = iron_hoe ? amount : 1;
-            const hoe_amount = iron_hoe ? 10 : amount;
+            const insert_amount = amount;
+            const hoe_amount = iron_hoe ? 10 : 4;
             const duration = 20 * 60;
             const endsAt = DateNowSecond() + duration;
 
