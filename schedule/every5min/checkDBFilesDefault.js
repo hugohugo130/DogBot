@@ -9,7 +9,7 @@ module.exports = {
             
             await checkDBFilesDefault(client);
         } catch (error) {
-            logger.error(`檢查資料庫檔案預設值時出錯：${error.stack}`);
+            if (!error.stack.includes("GuildMembersTimeout")) logger.error(`檢查資料庫檔案預設值時出錯：${error.stack}`);
         };
     },
 };
