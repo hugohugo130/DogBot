@@ -758,7 +758,7 @@ const rpg_commands = {
     }, false],
     buy: ["購買", "購買其他人上架的物品", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_shop_data } = require("../../utils/file.js");
-        const { name } = require("../../utils/rpg.js");
+        const { name, get_id_of_name } = require("../../utils/rpg.js");
         const { get_help_command } = require("./rpg_interactions.js");
 
         const userid = message.author.id;
@@ -808,12 +808,7 @@ const rpg_commands = {
         };
 
         let item = args[0];
-        if (!name[item]) {
-            // 如果輸入的是中文名稱，找到對應的英文key
-            if (Object.values(name).includes(item)) {
-                item = Object.keys(name).find(key => name[key] === item);
-            };
-        };
+        item = get_id_of_name(item);
 
         if (!name[item]) item = null;
 
