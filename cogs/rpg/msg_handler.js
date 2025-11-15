@@ -303,7 +303,7 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
         if (!name[item]) {
-            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
+            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`);
             return await message.reply({ embeds: [embed] });
         };
 
@@ -338,12 +338,12 @@ const rpg_commands = {
         const userid = message.author.id;
 
         const { item, amount } = random_item;
+        const log_name = name[item];
+
         if (!name[item]) {
             const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
             return await message.reply({ embeds: [embed] });
         };
-
-        const log_name = name[item];
 
         let description;
         if (item === "god_log") {
@@ -373,7 +373,7 @@ const rpg_commands = {
 
         const { item: random_animal, amount } = random_item;
         if (!animal_products[random_animal]) {
-            const embed = await get_loophole_embed(`找不到${random_animal}的動物產品: ${log_name}`);
+            const embed = await get_loophole_embed(`找不到${random_animal}的動物產品: ${animal_products[random_animal]}`);
             return await message.reply({ embeds: [embed] });
         };
 
@@ -417,7 +417,7 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
         if (!name[item]) {
-            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
+            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`);
             return await message.reply({ embeds: [embed] });
         };
 
