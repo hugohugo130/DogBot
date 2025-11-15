@@ -230,7 +230,9 @@ module.exports = {
             const need_hunger = iron_hoe ? 5 * amount : 0;
             const insert_amount = amount;
             const hoe_amount = iron_hoe ? 10 : 4;
-            const duration = 20 * 60;
+
+            const duration_deduction = farm_data.lvl * 10;
+            const duration = 20 * 60 - duration_deduction;
             const endsAt = DateNowSecond() + duration;
 
             if ((farm_data.farms.length + insert_amount) > farm_slots) {
