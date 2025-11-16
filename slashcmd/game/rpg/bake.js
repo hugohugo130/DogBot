@@ -160,9 +160,14 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
         .setCustomId(`cancel|${userId}`)
         .setLabel("取消")
         .setStyle(ButtonStyle.Danger);
+    
+    const help_buy_coal_button = new ButtonBuilder()
+        .setCustomId(`help|${userId}|rpg|buy`)
+        .setLabel("購買煤炭？")
+        .setStyle(ButtonStyle.Secondary);
 
     const row = new ActionRowBuilder()
-        .addComponents(confirm_button, cancel_button);
+        .addComponents(confirm_button, cancel_button, help_buy_coal_button);
 
     const replyOption = { embeds: [setEmbedFooter(interaction.client, embed)], components: [row] }
 

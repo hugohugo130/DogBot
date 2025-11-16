@@ -403,14 +403,14 @@ module.exports = {
                 const embed = get_transaction_embed(interaction);
                 await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
             } else if (interaction.customId.startsWith('help')) {
-                const [_, __, category] = interaction.customId.split('|');
+                const [_, __, category, cmd = null] = interaction.customId.split('|');
 
                 await interaction.deferUpdate();
                 let embed;
                 let row;
 
                 if (category) {
-                    embed = get_help_command(category, interaction.values[0], client);
+                    embed = get_help_command(category, interaction?.values?.[0] || cmd || "buy", client);
                 } else {
                     [embed, row] = get_help_embed(interaction.values[0], user, client);
                 };
