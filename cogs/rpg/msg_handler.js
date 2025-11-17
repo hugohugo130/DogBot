@@ -1247,6 +1247,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }, false],
     lazy: ["懶惰", "懶惰地遊玩這個遊戲", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        return
         if (message.channel.id !== "1432642462840524853") return await message.reply("只能在 <#1432642462840524853> 中使用");
         // if (new Date().getMinutes() % 2 === 0) {
         if (true) {
