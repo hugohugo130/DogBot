@@ -838,6 +838,7 @@ const rpg_commands = {
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
+
         if (!item) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -846,6 +847,7 @@ const rpg_commands = {
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
+
         // if (target_user.bot) {
         //     const embed = new EmbedBuilder()
         //         .setColor(embed_error_color)
@@ -865,6 +867,7 @@ const rpg_commands = {
         //     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
         //     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         // };
+
         const item_name = name[item] || item;
         const item_exist = shop_data.items[item];
         if (!Object.values(name).includes(item_name)) {
@@ -878,7 +881,8 @@ const rpg_commands = {
             // if (mode === 1) return { embeds: [embed] };
             // return await message.reply({ embeds: [embed] });
             return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
-        }
+        };
+
         if (!item_exist) {
             // return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
 
@@ -899,6 +903,7 @@ const rpg_commands = {
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
+
         let amount = args[1];
         if (amount === "all") {
             amount = item_exist.amount;
@@ -908,6 +913,7 @@ const rpg_commands = {
 
             amount = parseInt(amount);
         };
+
         if (isNaN(amount)) amount = 1;
         if (amount <= 0 || amount > item_exist.amount) {
             const embed = new EmbedBuilder()
@@ -917,6 +923,7 @@ const rpg_commands = {
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
+
         if (rpg_data.money < item_exist.price * amount) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -926,36 +933,6 @@ const rpg_commands = {
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
-
-        // 參數正確，處理購買
-
-        // rpg_data.money = remove_money({
-        //     rpg_data,
-        //     amount: item_exist.price * amount,
-        //     originalUser: `<@${userid}>`,
-        //     targetUser: `<@${target_user.id}>`,
-        //     type: `購買物品付款`,
-        // });
-        // rpg_data.inventory[item] += amount;
-        // target_user_rpg_data.money = add_money({
-        //     rpg_data: target_user_rpg_data,
-        //     amount: item_exist.price * amount,
-        //     originalUser: `<@${userid}>`,
-        //     targetUser: `<@${target_user.id}>`,
-        //     type: `購買物品付款`,
-        // });
-        // shop_data.items[item].amount -= amount;
-        // save_rpg_data(userid, rpg_data);
-        // save_rpg_data(target_user.id, target_user_rpg_data);
-        // save_shop_data(target_user.id, shop_data);
-
-        // const embed = new EmbedBuilder()
-        //     .setColor(embed_default_color)
-        //     .setTitle(`${emoji_store} | 購買成功`)
-        //     .setDescription(`你購買了 ${item_name} \`x${amount.toLocaleString()}\`，花費 \`${(item_exist.price * amount).toLocaleString()}$\``);
-
-        // if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
-        // return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
 
         const buyer_mention = message.author.toString();
         const targetUserMention = target_user.toString();
