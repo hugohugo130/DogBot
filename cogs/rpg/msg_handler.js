@@ -1902,6 +1902,41 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     const rpg_data = load_rpg_data(userid);
     const action = cmd_data[0];
 
+    if (rpg_work.includes(command) && rpg_data.hungry === 0) {
+        const { foods } = require("../../utils/rpg.js");
+        const food_items = Object.keys(foods);
+        let found_food = null;
+        for (const food of food_items) {
+            if (rpg_data.inventory && rpg_data.inventory[food] > 0) {
+                found_food = food;
+                break;
+            };
+        };
+
+        if (found_food) {
+            // 嘗試自動吃掉一個食物
+            if (typeof rpg_commands.eat?.[2] === "function") {
+                const res = await rpg_commands.eat[2]({ client, message, rpg_data, data, args: [found_food, "all"], mode: 1 });
+                if (mode === 1) return res;
+
+                if (res.embeds && res.embeds.length > 1) {
+                    res.embeds.length = 1;
+                };
+
+                await message.reply(res);
+            };
+        } else {
+            const emoji_cross = await get_emoji(client, "crosS");
+
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 你已經餓到沒有食物可以吃了！請先補充食物！`);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+    };
+
     if (rpg_work.includes(command)) {
         if (rpg_data.hungry <= 0) {
             const emoji_cross = await get_emoji(client, "crosS");
@@ -1913,6 +1948,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         };
+
         rpg_data.hungry -= 1;
     };
 
@@ -1958,41 +1994,6 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
         rpg_data.lastRunTimestamp[command] = Date.now();
         save_rpg_data(userid, rpg_data);
-    };
-
-    if (rpg_work.includes(command) && rpg_data.hungry === 0) {
-        const { foods } = require("../../utils/rpg.js");
-        const food_items = Object.keys(foods);
-        let found_food = null;
-        for (const food of food_items) {
-            if (rpg_data.inventory && rpg_data.inventory[food] > 0) {
-                found_food = food;
-                break;
-            };
-        };
-
-        if (found_food) {
-            // 嘗試自動吃掉一個食物
-            if (typeof rpg_commands.eat?.[2] === "function") {
-                const res = await rpg_commands.eat[2]({ client, message, rpg_data, data, args: [found_food, "all"], mode: 1 });
-                if (mode === 1) return res;
-
-                if (res.embeds && res.embeds.length > 1) {
-                    res.embeds.length = 1;
-                };
-
-                await message.reply(res);
-            };
-        } else {
-            const emoji_cross = await get_emoji(client, "crosS");
-
-            const embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 你已經餓到沒有食物可以吃了！請先補充食物！`);
-
-            if (mode === 1) return { embeds: [embed] };
-            return await message.reply({ embeds: [embed] });
-        };
     };
 
     const { failed, item, amount } = get_random_result(command);
