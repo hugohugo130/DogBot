@@ -28,7 +28,7 @@ module.exports = {
                 Object.keys(bake).includes(choice)
                 && choice.startsWith(focusedValue)
                 || get_name_of_id(choice).startsWith(focusedValue)
-            );
+            ).slice(0, 25);
 
             await interaction.respond(
                 choices.map(choice => ({ name: get_name_of_id(choice), value: choice })),
