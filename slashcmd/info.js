@@ -164,12 +164,12 @@ module.exports = {
                     },
                     {
                         name: `${emoji_drumstick} 體力`,
-                        value: rpg_data.hungry || 20,
+                        value: (rpg_data.hungry || 20).toString(),
                         inline: true,
                     },
                     {
                         name: `💰 金錢`,
-                        value: money,
+                        value: money.toString(),
                         inline: true,
                     },
                     {
