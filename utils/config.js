@@ -258,7 +258,6 @@ const probabilities = {
         "stone": [15, 1, 3],
         "coal": [40, 2, 3],
         "iron_ore": [30, 2, 3],
-        "coal": [15, 1, 3],
         "diamond_ore": [8, 1, 3],
         "emerald_ore": [5, 1, 3],
         "gold_ore": [3, 1, 3],
