@@ -236,7 +236,7 @@ module.exports = {
             const duration = 20 * 60 - duration_deduction;
             const endsAt = DateNowSecond() + duration;
 
-            if ((farm_data.farms.length + insert_amount) > farm_slots) {
+            if ((farm_data.farms.length + insert_amount) > farm_slots + 10) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 最多只能同時使用四把鋤頭`);
