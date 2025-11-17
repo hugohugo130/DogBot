@@ -721,7 +721,7 @@ let bake = {
     wheat: "bread",
 };
 
-for (const raw_food of foods_meat.filter(e => e.startsWith("raw_"))) {
+for (const raw_food of Object.keys(foods_meat).filter(e => e.startsWith("raw_"))) {
     if (bake[raw_food]) continue;
     const food = raw_food.replace("raw_", "");
     bake[raw_food] = food;
