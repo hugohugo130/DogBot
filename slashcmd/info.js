@@ -121,8 +121,9 @@ module.exports = {
             const userId = user.id;
 
             const rpg_data = await load_rpg_data(userId);
+            let money = show_money ? rpg_data.money ?? "無資料" : "隱私設定關閉";
+            if (typeof money === "number") money = `\`${money}$\``
             const show_money = rpg_data.privacy.includes("money");
-            const money = show_money ? rpg_data.money ?? "無資料" : "隱私設定關閉";
             const hungry = rpg_data.hungry ?? "無資料";
             const job = rpg_data.job || "無";
             const fightjob = rpg_data.fightjob || "無";
@@ -171,7 +172,7 @@ module.exports = {
                     },
                     {
                         name: `💰 金錢`,
-                        value: `\`${money}$\``,
+                        value: money,
                         inline: true,
                     },
                     {
