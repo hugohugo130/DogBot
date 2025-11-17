@@ -229,7 +229,7 @@ module.exports = {
 
             const iron_hoe = hoe === get_id_of_name("鐵鋤", "iron_hoe");
             const need_hunger = iron_hoe ? 5 * amount : 0;
-            const insert_amount = amount + 10;
+            const insert_amount = amount;
             const hoe_amount = iron_hoe ? 10 : 4;
 
             const duration_deduction = farm_data.lvl * 10;
@@ -237,7 +237,7 @@ module.exports = {
             const least_duration = 2 * 60
             const endsAt = DateNowSecond() + Math.max(least_duration, duration);
 
-            if ((farm_data.farms.length + insert_amount) > farm_slots + 10) {
+            if ((farm_data.farms.length + insert_amount) > farm_slots) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 最多只能同時使用四把鋤頭`);
