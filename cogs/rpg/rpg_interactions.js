@@ -246,7 +246,8 @@ const help = {
                         name: "關閉店鋪，其他人將無法查看或是購買物品",
                         value: "&shop close"
                     }
-                ]
+                ],
+                format: "&shop <list|add|remove|open|close|on|off>",
             }
         },
         special: {
