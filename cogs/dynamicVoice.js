@@ -78,7 +78,7 @@ module.exports = {
                     guild: guild.id
                 };
             } catch (error) {
-                logger.error(`建立頻道失敗: ${error.message}`);
+                logger.error(`建立頻道失敗: ${error.stack}`);
             }
         };
 
