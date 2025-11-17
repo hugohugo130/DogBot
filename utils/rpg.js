@@ -236,6 +236,26 @@ const foods_meat = [
     "raw_mutton",
     "raw_pork",
     "raw_shrimp",
+    "raw_anglerfish",
+    "raw_catfish",
+    "raw_clownfish",
+    "raw_cod",
+    "raw_crab",
+    "raw_duck",
+    "raw_eel",
+    "raw_goldfish",
+    "raw_jellyfish",
+    "raw_koi",
+    "raw_lobster",
+    "raw_mutton",
+    "raw_pufferfish",
+    "raw_octopus",
+    "raw_salmon",
+    "raw_squid",
+    "raw_swordfish",
+    "raw_tropical_fish",
+    "raw_tuna",
+    "raw_whale",
     "salmon",
     "shrimp",
     "squid",
@@ -601,6 +621,26 @@ const food_data = {
     raw_potato: 1,
     raw_shrimp: 1,
     raw_tuna: 1,
+    raw_anglerfish: 1,
+    raw_catfish: 1,
+    raw_clownfish: 1,
+    raw_cod: 1,
+    raw_crab: 1,
+    raw_duck: 1,
+    raw_eel: 1,
+    raw_goldfish: 1,
+    raw_jellyfish: 1,
+    raw_koi: 1,
+    raw_lobster: 1,
+    raw_mutton: 1,
+    raw_pufferfish: 1,
+    raw_octopus: 1,
+    raw_salmon: 1,
+    raw_squid: 1,
+    raw_swordfish: 1,
+    raw_tropical_fish: 1,
+    raw_tuna: 1,
+    raw_whale: 1,
     salmon: 3,
     shrimp: 3,
     squid: 4,
@@ -667,7 +707,7 @@ const weapons_armor = {
 };
 
 // 原材料: 生產出來的
-const bake = {
+let bake = {
     raw_beef: "beef",
     raw_chicken: "chicken",
     raw_duck: "duck",
@@ -679,6 +719,12 @@ const bake = {
     raw_tuna: "tuna",
     corn: "cooked_corn",
     wheat: "bread",
+};
+
+for (const raw_food of foods_meat.filter(e => e.startsWith("raw_"))) {
+    if (bake[raw_food]) continue;
+    const food = raw_food.replace("raw_", "");
+    bake[raw_food] = food;
 };
 
 const name = {
@@ -947,7 +993,7 @@ async function notEnoughItemEmbed(item_datas, client = global._client) {
             logger.warn(`item_data應該只有item和amount屬性，但：\n${JSON.stringify(item_data, null, 4)}`)
         };
 
-    
+
         if (item_data.name && !item_data.item) {
             logger.warn(`item_data應該使用item屬性，但使用了name：\n${JSON.stringify(item_data, null, 4)}`)
             item_data.item = item_data.name;
