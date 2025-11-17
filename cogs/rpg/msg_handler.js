@@ -1526,7 +1526,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
-    }],
+    }, true],
     // cmd: ["通過按下按鈕來選擇指令", "PS: 需要參數的指令不行哦！", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
     //     const commands = Object.keys(rpg_commands);;
 
@@ -1554,7 +1554,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
     //     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: rows, files: [attachment] };
     //     return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: rows, files: [attachment] });
-    // }],
+    // }, false],
     top: ["金錢排行榜", "who!誰是世界首富!是不是你!", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_rpg_data } = require("../../utils/file.js");
         const guild = message.guild;
