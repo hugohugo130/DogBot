@@ -138,6 +138,7 @@ module.exports = {
 
             const user_data_embed = new EmbedBuilder()
                 .setColor(embed_default_color)
+                .setThumbnail(user.displayAvatarURL({ size: 1024 }))
                 .setTitle(userTag)
                 .setFields(
                     {
