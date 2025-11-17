@@ -50,8 +50,7 @@ process.on('SIGINT', async () => {
 });
 
 (async () => {
-    // const { downloadAllFiles } = require('./utils/onlineDB.js');
-    // await downloadAllFiles();
+    // const { downloadAllFiles } = require('./utils/onlineDB.js');await downloadAllFiles();
 
     global._client = null;
     global.oven_sessions = {};
