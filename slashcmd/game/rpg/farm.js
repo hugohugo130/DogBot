@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, User} = require("discord.js");
+const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, User } = require("discord.js");
 const { get_id_of_name, farm_slots } = require("../../../utils/rpg.js");
 const DogClient = require("../../../utils/customs/client.js");
 
@@ -234,7 +234,8 @@ module.exports = {
 
             const duration_deduction = farm_data.lvl * 10;
             const duration = 20 * 60 - duration_deduction;
-            const endsAt = DateNowSecond() + duration;
+            const least_duration = 2 * 60
+            const endsAt = DateNowSecond() + Math.min(least_duration, duration);
 
             if ((farm_data.farms.length + insert_amount) > farm_slots + 10) {
                 const embed = new EmbedBuilder()
