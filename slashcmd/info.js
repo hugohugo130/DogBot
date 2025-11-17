@@ -164,7 +164,7 @@ module.exports = {
                     },
                     {
                         name: `${emoji_drumstick} 體力`,
-                        value: rpg_data.hungry,
+                        value: rpg_data.hungry || 20,
                         inline: true,
                     },
                     {
