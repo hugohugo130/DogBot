@@ -26,8 +26,10 @@ module.exports = {
             const focusedValue = interaction.options.getFocused();
             const choices = Object.keys(rpg_data.inventory).filter(choice =>
                 Object.keys(bake).includes(choice)
-                && choice.startsWith(focusedValue)
-                || get_name_of_id(choice).startsWith(focusedValue)
+                && (
+                    choice.startsWith(focusedValue)
+                    || get_name_of_id(choice).startsWith(focusedValue)
+                )
             ).slice(0, 25);
 
             await interaction.respond(
