@@ -235,7 +235,7 @@ module.exports = {
             const duration_deduction = farm_data.lvl * 10;
             const duration = 20 * 60 - duration_deduction;
             const least_duration = 2 * 60
-            const endsAt = DateNowSecond() + Math.min(least_duration, duration);
+            const endsAt = DateNowSecond() + Math.max(least_duration, duration);
 
             if ((farm_data.farms.length + insert_amount) > farm_slots + 10) {
                 const embed = new EmbedBuilder()
