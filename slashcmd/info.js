@@ -88,7 +88,7 @@ module.exports = {
     async execute(interaction) {
         const { load_rpg_data } = require("../utils/file.js");
         const { get_emoji } = require("../utils/rpg.js");
-        const { setEmbedFooter, setEmbedAuthor } = require("../cogs/rpg/msg_handler.js");
+        const { setEmbedFooter, setEmbedAuthor, max_hungry } = require("../cogs/rpg/msg_handler.js");
         const { convertToSecond } = require("../utils/timestamp.js");
         const { embed_default_color } = require("../utils/config.js");
 
@@ -123,6 +123,7 @@ module.exports = {
             const rpg_data = await load_rpg_data(userId);
             const show_money = rpg_data.privacy.includes("money");
             const money = show_money ? rpg_data.money || 0 : "隱私設定關閉";
+            const hungry = rpg_data.hungry || 20;
             const job = rpg_data.job || "無";
             const fightjob = rpg_data.fightjob || "無";
             const badge = rpg_data.badge || "無";
@@ -164,12 +165,12 @@ module.exports = {
                     },
                     {
                         name: `${emoji_drumstick} 體力`,
-                        value: (rpg_data.hungry || 20).toString(),
+                        value: `\`${hungry}\` / \`${max_hungry}\``,
                         inline: true,
                     },
                     {
                         name: `💰 金錢`,
-                        value: money.toString(),
+                        value: `${money}$`,
                         inline: true,
                     },
                     {
@@ -180,7 +181,7 @@ module.exports = {
                     {
                         name: `❤️ 感情狀態`,
                         value: marry_str,
-                        inline: true,
+                        inline: false,
                     },
                 );
 

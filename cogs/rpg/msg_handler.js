@@ -2073,6 +2073,7 @@ module.exports = {
             lock.rpg_handler = false;
         };
     },
+    max_hungry,
     rpg_cooldown,
     rpg_work,
     rpg_commands,
