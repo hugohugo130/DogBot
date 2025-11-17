@@ -255,17 +255,16 @@ const probabilities = {
     "mine": {
         "boom": [2, 1, 1],
         "collapse": [3, 1, 1],
-        "stone": [20, 1, 3],
+        "stone": [15, 1, 3],
         "coal": [40, 2, 3],
         "iron_ore": [30, 2, 3],
         "coal": [15, 1, 3],
-        "diamond_ore": [15, 1, 3],
-        "emerald_ore": [15, 1, 3],
-        "gold_ore": [15, 1, 3],
+        "diamond_ore": [8, 1, 3],
+        "emerald_ore": [5, 1, 3],
+        "gold_ore": [3, 1, 3],
         "iron_ore": [15, 1, 3],
-        "ruby_ore": [15, 1, 3],
-        "sapphire_ore": [15, 1, 3],
-        "diamond_ore": [5, 1, 3],
+        "ruby_ore": [6, 1, 3],
+        "sapphire_ore": [8, 1, 3],
     },
     "cook": {
 
