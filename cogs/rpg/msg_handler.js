@@ -553,8 +553,7 @@ const rpg_commands = {
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
 
-                let inventory = rpg_data.inventory;
-                if (!inventory[item]) {
+                if (!rpg_data.inventory[item]) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你沒有這個物品`);
@@ -563,7 +562,7 @@ const rpg_commands = {
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
 
-                if (inventory[item] < amount) {
+                if (rpg_data.inventory[item] < amount) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji} | 你沒有足夠的物品`);
@@ -572,7 +571,8 @@ const rpg_commands = {
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
 
-                inventory[item] -= amount;
+                if (typeof rpg_data.inventory[item] !== "number") rpg_data.inventory[item] = 0;
+                rpg_data.inventory[item] -= amount;
                 save_rpg_data(userid, rpg_data);
                 if (item_exist) {
                     shop_data.items[item].amount += amount;
@@ -620,9 +620,11 @@ const rpg_commands = {
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
+
                 const remove_amount = args[2] || undefined;
                 if (!rpg_data.inventory[item_id]) rpg_data.inventory[item_id] = 0;
                 const amount = remove_amount ? parseInt(remove_amount) : shop_data.items[item_id].amount;
+
                 if (amount > shop_data.items[item_id].amount) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -630,12 +632,15 @@ const rpg_commands = {
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
+
                 rpg_data.inventory[item_id] += amount;
+
                 save_rpg_data(userid, rpg_data);
                 shop_data.items[item_id].amount -= amount;
                 if (shop_data.items[item_id].amount <= 0) {
                     delete shop_data.items[item_id];
                 };
+
                 save_shop_data(userid, shop_data);
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
@@ -726,6 +731,7 @@ const rpg_commands = {
                 const shop_data = load_shop_data(userid);
                 shop_data.status = false;
                 save_shop_data(userid, shop_data);
+
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
                     .setTitle(`${emoji} | 你拉下了商店鐵捲門`);
