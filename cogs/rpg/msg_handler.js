@@ -493,6 +493,8 @@ const rpg_commands = {
         const subcommand = args[0];
         switch (subcommand) {
             case "add": {
+                await message.reply(`[DEBUG]\nRPG_DATA_I_GET:\n${JSON.stringify(rpg_data.inventory, null, 4)}`);
+
                 const userid = message.author.id;
                 const emoji = await get_emoji(client, "store");
                 const emoji_cross = await get_emoji(client, "crosS");
@@ -573,7 +575,10 @@ const rpg_commands = {
 
                 if (typeof rpg_data.inventory[item] !== "number") rpg_data.inventory[item] = 0;
                 rpg_data.inventory[item] -= amount;
+                await message.reply(`[DEBUG]\nRPG DATA AFTER REDUCE ITEM:\n\`\`\`${JSON.stringify(rpg_data.inventory, null, 4)}\`\`\``);
+                await message.reply(`[DEBUG]\nSAVED RPG DATA with inventory of up msg`);
                 save_rpg_data(userid, rpg_data);
+
                 if (item_exist) {
                     shop_data.items[item].amount += amount;
                     if (price) {
@@ -590,10 +595,14 @@ const rpg_commands = {
                 amount = shop_data.items[item].amount;
                 price = shop_data.items[item].price;
                 save_shop_data(userid, shop_data);
+
+                await message.reply(`[DEBUG]\nsaved SHOP DATA:\n${JSON.stringify(shop_data, null, 4)}`);
+
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
                     .setTitle(`${emoji} | 成功上架`)
                     .setDescription(`你的店面狀態為: \`${status}\`，現在架上有 \`${amount.toLocaleString()}\` 個 \`${item_name}\`，售價為 \`${price.toLocaleString()}$\``);
+
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                 return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
             }
