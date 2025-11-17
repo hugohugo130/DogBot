@@ -1,11 +1,12 @@
 const { SlashCommandBuilder } = require("discord.js");
-const musicPlayer = require('../../utils/musicPlayer.js');
+// const musicPlayer = require('../../utils/musicPlayer.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('離開語音頻道')
         .setDescription('讓機器人離開語音頻道'),
     async execute(interaction) {
+        return;
         const voiceChannel = interaction.member.voice.channel;
 
         if (!voiceChannel) {
