@@ -171,7 +171,7 @@ module.exports = {
                     },
                     {
                         name: `💰 金錢`,
-                        value: `${money}$`,
+                        value: `\`${money}$\``,
                         inline: true,
                     },
                     {
