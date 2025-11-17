@@ -147,7 +147,7 @@ module.exports = {
                     },
                     {
                         name: `${emoji_timer} 創建時間`,
-                        value: `<t:${createdAt}:F> (<t:${createdAt}:R>}`,
+                        value: `<t:${createdAt}:F> (<t:${createdAt}:R>)`,
                     },
                 );
 
