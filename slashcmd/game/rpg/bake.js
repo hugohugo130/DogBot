@@ -1,25 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
-const { name, bake, oven_slots } = require("../../../utils/rpg.js");
-
-/*
-{
-    raw_beef: '生牛肉',
-    raw_chicken: '生雞肉',
-    raw_duck: '生鴨肉',
-    raw_mutton: '生羊肉',
-    raw_pork: '生豬肉',
-    raw_potato: '馬鈴薯',
-    raw_salmon: '生鮭魚',
-    raw_shrimp: '生蝦',
-    raw_tuna: '生鮪魚',
-    wheat: '小麥'
-*/
-const bakeable_items = Object.fromEntries(
-    Object.entries(bake).map(([key, value]) => [
-        key,
-        name[key],
-    ])
-);
+const { bake, oven_slots } = require("../../../utils/rpg.js");
 
 function divide(amount, by) {
     // 檢查 amount 和 by 是否為整數（沒有小數點）
@@ -221,12 +201,7 @@ module.exports = {
                         "en-US": "Food that needs to be baked.",
                     })
                     .setRequired(false)
-                    .addChoices(
-                        ...Object.entries(bakeable_items).map(([key, value]) => ({
-                            name: value,
-                            value: key,
-                        })),
-                    ),
+                    .setAutocomplete(true),
             )
             .addIntegerOption(option =>
                 option.setName("amount")
