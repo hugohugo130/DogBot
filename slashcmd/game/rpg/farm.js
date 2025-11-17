@@ -229,7 +229,7 @@ module.exports = {
 
             const iron_hoe = hoe === get_id_of_name("鐵鋤", "iron_hoe");
             const need_hunger = iron_hoe ? 5 * amount : 0;
-            const insert_amount = amount;
+            const insert_amount = amount + 10;
             const hoe_amount = iron_hoe ? 10 : 4;
 
             const duration_deduction = farm_data.lvl * 10;
