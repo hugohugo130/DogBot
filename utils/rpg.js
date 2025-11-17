@@ -666,6 +666,7 @@ const weapons_armor = {
     wooden_hoe: "wooden_hoe",
 };
 
+// 原材料: 生產出來的
 const bake = {
     raw_beef: "beef",
     raw_chicken: "chicken",
