@@ -252,19 +252,6 @@ const rpg_actions = {
     抓魚: ["抓", "魚"],
 };
 
-// const rpg_work = [
-//     "mine",
-//     "hew",
-//     "herd",
-//     "brew",
-//     "fish",
-// ];
-
-const rpg_work = [
-    ...Object.keys(rpg_cooldown),
-    ...Object.keys(redirect_data),
-];
-
 const redirect_data = {
     hew: "fell",
     wood: "fell",
@@ -277,6 +264,19 @@ const redirect_data = {
     store: "shop",
     l: "lazy",
 };
+
+// const rpg_work = [
+//     "mine",
+//     "hew",
+//     "herd",
+//     "brew",
+//     "fish",
+// ];
+
+const rpg_work = [
+    ...Object.keys(rpg_cooldown),
+    ...Object.keys(redirect_data),
+];
 
 const redirect_data_reverse = Object.entries(redirect_data).reduce((acc, [key, value]) => {
     acc[value] = key;
