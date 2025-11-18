@@ -10,8 +10,8 @@ function load_cog(client, cog, itemPath) {
         try {
             await cog.execute(client, ...args);
         } catch (err) {
-            logger.error(`執行 ${itemPath} 時發生錯誤: ${err}`);
-            console.error(err);
+            logger.error(`執行 ${itemPath} 時發生錯誤: ${err.stack}`);
+            console.error(`執行 ${itemPath} 時發生錯誤: ${err.stack}`);
         };
     };
 
