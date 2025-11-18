@@ -50,6 +50,13 @@ class DogClient extends Client {
         this.serverIP = getServerIPSync(this);
         this.author = authorName || "哈狗";
 
+        /**
+         * @type {Object.<string, Object.<string, string>>}
+         */
+        this.lock = {
+            rpg_handler: {},
+        };
+
         this.setMaxListeners(Infinity);
     };
 };

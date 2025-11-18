@@ -9,23 +9,6 @@ const DogClient = require("../../utils/customs/client.js");
 const max_hungry = 20;
 const logger = get_logger();
 
-async function unlock_waiting_handler(lock_name) {
-    await new Promise((resolve) => {
-        const startTime = Date.now();
-        const checkLock = () => {
-            if (!lock[lock_name]) {
-                resolve();
-            } else if (Date.now() - startTime >= 20000) {
-                logger.warn(`等待${lock_name}解鎖超時，已進行操作(強制解鎖)`);
-                resolve();
-            } else {
-                setTimeout(checkLock, 100);
-            };
-        };
-        checkLock();
-    });
-};
-
 class MockMessage {
     constructor(content = null, channel = null, author = null, guild = null, mention_user = null) {
         this.content = content;
@@ -2047,24 +2030,38 @@ function get_random_result(category) {
     return { failed: is_failed, item, amount };
 };
 
-let lock = {
-    rpg_handler: false,
-};
-
 module.exports = {
     name: Events.MessageCreate,
+    /**
+     * 
+     * @param {DogClient} client 
+     * @param {Message} message 
+     */
     execute: async function (client, message) {
+        const { embed_error_color } = require("../../utils/config.js");
+        const userId = message.author.id;
+
         try {
-            if (lock.rpg_handler) {
-                await unlock_waiting_handler("rpg_handler");
+            if (client.lock.rpg_handler.hasOwnProperty(userId)) {
+                const emoji_cross = await get_emoji(client, "cross");
+                const running_cmd = client.lock.rpg_handler[userId] ?? "?";
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你已經在執行 ${running_cmd} 指令了`);
+
+                return await message.reply({ embeds: [embed] });
             };
-            lock.rpg_handler = true;
+
+            const command = message.content.split(" ")[0].toLowerCase();
+            client.lock.rpg_handler[userId] = command;
+
             await rpg_handler({ client, message });
         } catch (error) {
             logger.error(`處理rpg遊戲訊息時發生錯誤: ${error.stack}`);
             await message.reply({ embeds: [await get_loophole_embed(client, error.stack)] });
         } finally {
-            lock.rpg_handler = false;
+            delete client.lock.rpg_handler[userId];
         };
     },
     max_hungry,
@@ -2082,7 +2079,6 @@ module.exports = {
     randint,
     setEmbedFooter,
     setEmbedAuthor,
-    unlock_waiting_handler,
     MockMessage,
     rpg_handler,
     find_redirect_targets_from_id,
