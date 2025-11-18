@@ -51,7 +51,10 @@ class DogClient extends Client {
         this.author = authorName || "哈狗";
 
         /**
-         * @type {Object.<string, Object.<string, string>>}
+         * @type {Object.<string, Object.<string, Object.<string, string>>>}
+         * USERID: {
+         *  command: string
+         * }
          */
         this.lock = {
             rpg_handler: {},

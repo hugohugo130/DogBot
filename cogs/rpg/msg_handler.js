@@ -1895,7 +1895,25 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         if (found_food) {
             // 嘗試自動吃掉一個食物
             if (typeof rpg_commands.eat?.[2] === "function") {
-                const res = await rpg_commands.eat[2]({ client, message, rpg_data, data, args: [found_food, "all"], mode: 1 });
+                const eatPromise = rpg_commands.eat[2]({
+                    client,
+                    message,
+                    rpg_data,
+                    data,
+                    args: [found_food, "all"],
+                    mode: 1
+                });
+
+                // 5秒超時
+                const timeoutPromise = new Promise((_, reject) => {
+                    setTimeout(() => reject(new Error('eat timeout')), 5000);
+                });
+
+                const res = await Promise.race([
+                    eatPromise,
+                    timeoutPromise,
+                ]);
+
                 if (mode === 1) return res;
 
                 if (res.embeds && res.embeds.length > 1) {
@@ -2044,6 +2062,8 @@ module.exports = {
         const { embed_error_color } = require("../../utils/config.js");
         const userId = message.author.id;
 
+        if (!client.lock) client.lock = {};
+        if (!client.lock.rpg_handler) client.lock.rpg_handler = {};
         if (client.lock.rpg_handler.hasOwnProperty(userId)) {
             const emoji_cross = await get_emoji(client, "crosS");
             const running_cmd = client.lock.rpg_handler[userId] ?? "?";
@@ -2059,9 +2079,24 @@ module.exports = {
             const command = message.content.split(" ")[0].toLowerCase();
             client.lock.rpg_handler[userId] = command;
 
-            await rpg_handler({ client, message });
+
+            // 超時機制
+            const TIMEOUT = 30000; // 30 秒超時
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => reject(new Error('指令執行超時')), TIMEOUT);
+            });
+
+            await Promise.race([
+                rpg_handler({ client, message }),
+                timeoutPromise
+            ]);
         } catch (error) {
-            logger.error(`處理rpg遊戲訊息時發生錯誤: ${error.stack}`);
+            if (error.message === '指令執行超時') {
+                logger.error(`RPG 指令執行超時: userId=${userId}, command=${client.lock.rpg_handler[userId]}`);
+            } else {
+                logger.error(`處理rpg遊戲訊息時發生錯誤: ${error.stack}`);
+            };
+
             await message.reply({ embeds: [await get_loophole_embed(client, error.stack)] });
         } finally {
             delete client.lock.rpg_handler[userId];
