@@ -241,6 +241,7 @@ const rpg_cooldown = {
     herd: "2",
     brew: "2",
     fish: "2",
+    fell: "2",
     farm_water: "60 * 60 * 12" // 12小時
 };
 
@@ -275,9 +276,8 @@ const redirect_data = {
 
 const rpg_work = [
     ...Object.keys(rpg_cooldown),
-    ...Object.keys(redirect_data),
-    ...Object.values(redirect_data),
-].flat();
+    ...Object.keys(redirect_data).filter(key => rpg_cooldown.includes(redirect_data[key])),
+];
 
 const redirect_data_reverse = Object.entries(redirect_data).reduce((acc, [key, value]) => {
     acc[value] = key;
