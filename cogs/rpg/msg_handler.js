@@ -276,7 +276,7 @@ const redirect_data = {
 
 const rpg_work = [
     ...Object.keys(rpg_cooldown),
-    ...Object.keys(redirect_data).filter(key => rpg_cooldown.includes(redirect_data[key])),
+    ...Object.keys(redirect_data).filter(key => Object.keys(rpg_cooldown).includes(redirect_data[key])),
 ];
 
 const redirect_data_reverse = Object.entries(redirect_data).reduce((acc, [key, value]) => {
