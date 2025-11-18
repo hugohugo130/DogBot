@@ -121,17 +121,17 @@ async function writeJson(path, data, replacer = "") {
 function readScheduleSync() {
     const { scheduleEverysec, scheduleEverymin, scheduleEvery5min } = require("./config.js");
 
-    const everysec = readdirSync(scheduleEverysec, { recursive: true })
+    const everysec = existsSync(scheduleEverysec) ? readdirSync(scheduleEverysec, { recursive: true })
         .filter(file => file.endsWith('.js'))
-        .map(file => `${scheduleEverysec}/${file}`);
+        .map(file => `${scheduleEverysec}/${file}`) : [];
 
-    const everymin = readdirSync(scheduleEverymin, { recursive: true })
+    const everymin = existsSync(scheduleEverymin) ? readdirSync(scheduleEverymin, { recursive: true })
         .filter(file => file.endsWith('.js'))
-        .map(file => `${scheduleEverymin}/${file}`);
+        .map(file => `${scheduleEverymin}/${file}`) : [];
 
-    const every5min = readdirSync(scheduleEvery5min, { recursive: true })
+    const every5min = existsSync(scheduleEvery5min) ? readdirSync(scheduleEvery5min, { recursive: true })
         .filter(file => file.endsWith('.js'))
-        .map(file => `${scheduleEvery5min}/${file}`);
+        .map(file => `${scheduleEvery5min}/${file}`) : [];
 
     return [
         everysec,
