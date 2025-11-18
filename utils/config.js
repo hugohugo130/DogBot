@@ -277,13 +277,12 @@ const probabilities = {
         "birch_wood": [8, 1, 1],
         "crimson_wood": [8, 1, 1],
         "dark_oak_wood": [9, 1, 1],
-        "god_wood": [9, 1, 1],
+        "god_wood": [3, 1, 1],
         "ha_wood": [9, 1, 1],
         "jungle_wood": [9, 1, 1],
         "oak_wood": [9, 1, 1],
         "spruce_wood": [9, 1, 1],
-        "warped_wood": [9, 1, 1],
-        "god_wood": [3, 1, 1]
+        "warped_wood": [9, 1, 1]
     },
     "brew": {
         "cough_potion": [8, 1, 1],

@@ -334,7 +334,7 @@ const rpg_commands = {
         };
 
         let description;
-        if (item === "god_log") {
+        if (item === "god_wood") {
             description = `本來是平常的一天，居然遇到了神木，於是你砍下了它並獲得了 \`${amount}\` 塊${log_name}！`;
         } else {
             description = `你來到了森林，並且砍了 \`${amount}\` 塊${log_name}`;
@@ -348,7 +348,7 @@ const rpg_commands = {
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
-            .setTitle(`${emoji} | ${item === "god_log" ? "是神?!" : "平常的一天"}`)
+            .setTitle(`${emoji} | ${item === "god_wood" ? "是神?!" : "平常的一天"}`)
             .setDescription(description);
 
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed, '', rpg_data)] };
@@ -1782,7 +1782,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             };
 
             completed += 1;
-        }, 10);
+        }, 1000);
     }, false],
 };
 
