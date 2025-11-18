@@ -2044,18 +2044,18 @@ module.exports = {
         const { embed_error_color } = require("../../utils/config.js");
         const userId = message.author.id;
 
+        if (client.lock.rpg_handler.hasOwnProperty(userId)) {
+            const emoji_cross = await get_emoji(client, "crosS");
+            const running_cmd = client.lock.rpg_handler[userId] ?? "?";
+
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 你已經在執行 ${running_cmd} 指令了`);
+
+            return await message.reply({ embeds: [embed] });
+        };
+
         try {
-            if (client.lock.rpg_handler.hasOwnProperty(userId)) {
-                const emoji_cross = await get_emoji(client, "crosS");
-                const running_cmd = client.lock.rpg_handler[userId] ?? "?";
-
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你已經在執行 ${running_cmd} 指令了`);
-
-                return await message.reply({ embeds: [embed] });
-            };
-
             const command = message.content.split(" ")[0].toLowerCase();
             client.lock.rpg_handler[userId] = command;
 
