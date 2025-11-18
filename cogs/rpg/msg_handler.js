@@ -2043,7 +2043,7 @@ module.exports = {
 
         try {
             if (client.lock.rpg_handler.hasOwnProperty(userId)) {
-                const emoji_cross = await get_emoji(client, "cross");
+                const emoji_cross = await get_emoji(client, "crosS");
                 const running_cmd = client.lock.rpg_handler[userId] ?? "?";
 
                 const embed = new EmbedBuilder()
