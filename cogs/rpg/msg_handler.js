@@ -260,7 +260,10 @@ const rpg_actions = {
 //     "fish",
 // ];
 
-const rpg_work = Object.keys(rpg_cooldown);
+const rpg_work = [
+    ...Object.keys(rpg_cooldown),
+    ...Object.keys(redirect_data),
+];
 
 const redirect_data = {
     hew: "fell",
