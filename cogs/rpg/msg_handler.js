@@ -82,6 +82,8 @@ async function redirect({ client, message, command, mode = 0 }) {
     m = 0: 也回復訊息
     m = 1: 只回傳訊息參數
     */
+
+    const { mentions_users } = require("../../utils/message.js");
     if (![0, 1].includes(mode)) throw new TypeError("Invalid mode");
 
     if (command.includes(prefix)) {
@@ -97,7 +99,7 @@ async function redirect({ client, message, command, mode = 0 }) {
     };
 
     if (!command.includes(prefix)) command = prefix + command;
-    const msg = new MockMessage(command, message.channel, message.author, message.guild, message.mentions.users.first());
+    const msg = new MockMessage(command, message.channel, message.author, message.guild, await mentions_users(message));
     const message_args = await rpg_handler({ client, message: msg, d: true, mode: 1 });
 
     if (mode === 1) return message_args;
@@ -477,8 +479,10 @@ const rpg_commands = {
     }, false],
     shop: ["商店", "對你的商店進行任何操作", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_shop_data, save_shop_data, save_rpg_data } = require("../../utils/file.js");
+        const { mentions_users } = require("../../utils/message.js");
         const { name, mine_gets, ingots, foods, shop_lowest_price, get_name_of_id } = require("../../utils/rpg.js");
         const subcommand = args[0];
+
         switch (subcommand) {
             case "add": {
                 await message.reply(`[DEBUG]\nRPG_DATA_I_GET:\n${JSON.stringify(rpg_data.inventory, null, 4)}`);
@@ -647,7 +651,7 @@ const rpg_commands = {
                 return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
             }
             case "list": {
-                const user = message.mentions.users.first() || message.author;
+                const user = await mentions_users(message) || message.author;
                 const userid = user.id;
 
                 const emoji_cross = await get_emoji(client, "crosS");
@@ -759,7 +763,7 @@ const rpg_commands = {
                 return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
             }
             default: {
-                const user = message.mentions.users.first();
+                const user = await mentions_users(message);
                 if (user) {
                     return await redirect({ client, message, command: `shop list ${user.id}`, mode });
                 };
@@ -775,12 +779,13 @@ const rpg_commands = {
         const { load_shop_data } = require("../../utils/file.js");
         const { name, get_id_of_name } = require("../../utils/rpg.js");
         const { get_help_command } = require("./rpg_interactions.js");
+        const { mentions_users } = require("../../utils/message.js");
 
         const userid = message.author.id;
         const emoji_cross = await get_emoji(client, "crosS");
         const emoji_store = await get_emoji(client, "store");
 
-        const target_user = message.mentions.users.first();
+        const target_user = await mentions_users(message);
         if (!target_user) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -1041,12 +1046,17 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
     }, false],
     pay: ["付款", "付款給其他用戶", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const target_user = message.mentions.users.first();
+        const { mentions_users } = require("../../utils/message.js");
+
+        const target_user = await mentions_users(message);
+
         const emoji_cross = await get_emoji(client, "crosS");
         const emoji_top = await get_emoji(client, "top");
+
         if (!target_user) {
             return await redirect({ client, message, command: `help`, mode });
         };
+
         if (target_user.id === message.author.id) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -1054,6 +1064,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
+
         args = args.filter(arg => arg !== `<@${target_user.id}>` && arg !== `<@!${target_user.id}>`);
         if (target_user.bot) {
             const embed = new EmbedBuilder()
@@ -1062,6 +1073,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
+
         const amount = args[0];
         if (isNaN(amount) || amount <= 0) {
             const embed = new EmbedBuilder()
@@ -1070,6 +1082,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
+
         if (rpg_data.money < amount) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)

@@ -11,10 +11,11 @@ function add_item(rpg_data, item, amount) {
     return rpg_data
 };
 
-function handleMoneyCommand(message, args) {
+async function handleMoneyCommand(message, args) {
     const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
+    const { mentions_users } = require("../utils/message.js");
 
-    const user = message.mentions.users.first();
+    const user = await mentions_users(message);
     const amount = parseInt(args[1]);
 
     if (!user) return message.reply("請標記一個用戶！");
@@ -28,10 +29,11 @@ function handleMoneyCommand(message, args) {
     return message.reply(`done adding <@${user.id}>'s money. +${amount}`);
 };
 
-function handleInvCommand(message, args) {
+async function handleInvCommand(message, args) {
     const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
+    const { mentions_users } = require("../utils/message.js");
 
-    const user = message.mentions.users.first();
+    const user = await mentions_users(message);
     const item = args[1];
     const amount = parseInt(args[2]);
 
@@ -76,23 +78,25 @@ module.exports = {
                     break;
 
                 case "money":
-                    handleMoneyCommand(message, commandArgs);
+                    await handleMoneyCommand(message, commandArgs);
                     break;
 
                 case "inv":
-                    handleInvCommand(message, commandArgs);
+                    await handleInvCommand(message, commandArgs);
                     break;
             };
 
             async function handleGiveCommand(message, args) {
+                const { mentions_users } = require("../utils/message.js");
+
                 if (args.length < 3) {
                     return message.reply("用法: !give @user item amount");
-                }
+                };
 
                 let [_, item, amount] = args;
                 item = get_id_of_name(item);
 
-                const user = message.mentions.users.first();
+                const user = await mentions_users(message);
 
                 if (!user) {
                     return message.reply("請標記一個用戶！");
