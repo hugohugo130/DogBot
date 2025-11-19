@@ -1400,6 +1400,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             const farmer_emoji = await get_emoji(client, "farmer");
             const cow_emoji = await get_emoji(client, "cow");
+            const food_emoji = await get_emoji(client, "food");
+            const store_emoji = await get_emoji(client, "store");
 
             const categories = [
                 { items: food_crops_items, name: `${farmer_emoji} 農作物` },
@@ -1414,6 +1416,18 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                     embed.addFields({ name: category.name, value: itemsText });
                 };
             };
+
+            const howToEatButton = new ButtonBuilder()
+                .setCustomId(`help|${message.author.id}|rpg|eat`)
+                .setLabel('如何吃食物')
+                .setEmoji(food_emoji)
+                .setStyle(ButtonStyle.Primary);
+
+            const buyFoodButton = new ButtonBuilder()
+                .setCustomId(`help|${message.author.id}|rpg|buy`)
+                .setLabel('購買食物')
+                .setEmoji(store_emoji)
+                .setStyle(ButtonStyle.Success);
 
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
