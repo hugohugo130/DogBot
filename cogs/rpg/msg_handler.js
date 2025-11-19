@@ -268,6 +268,8 @@ const rpg_commands = {
     fell: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
         const { name } = require("../../utils/rpg.js");
+        const { embed_fell_color } = require("../../utils/config.js");
+
         const userid = message.author.id;
 
         const { item, amount } = random_item;
@@ -292,7 +294,7 @@ const rpg_commands = {
         const emoji = await get_emoji(client, rpg_emojis["hew"]);
 
         const embed = new EmbedBuilder()
-            .setColor(embed_default_color)
+            .setColor(embed_fell_color)
             .setTitle(`${emoji} | ${item === "god_wood" ? "是神?!" : "平常的一天"}`)
             .setDescription(description);
 

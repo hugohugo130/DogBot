@@ -135,6 +135,7 @@ https://discord.js.org/docs/packages/discord.js/14.24.0/ColorResolvable:TypeAlia
 const embed_default_color = "Random";
 const embed_warn_color = 0xF0B90B;
 const embed_error_color = 0xF04A47;
+const embed_fell_color = 0x966e33;
 
 /*
 農夫 和漁夫是差不多辛勤的職業，不過在這個世界，農夫的收益比漁夫還要高
@@ -346,6 +347,7 @@ module.exports = {
     embed_default_color,
     embed_warn_color,
     embed_error_color,
+    embed_fell_color,
 
     priorityUserIDs,
     priorityGuildIDs,

@@ -1,7 +1,7 @@
 const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
 const { wait_until_ready } = require("./wait_until_ready.js");
-const { prefix, embed_default_color, embed_error_color } = require("./config.js");
+const { prefix, embed_default_color, embed_error_color, embed_fell_color } = require("./config.js");
 
 const logger = get_logger();
 
@@ -1098,6 +1098,7 @@ function is_cooldown_finished(command_name, rpg_data) {
 async function get_failed_embed(client = global._client, failed_reason, rpg_data) {
     const { setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
 
+    let color = embed_error_color;
     let title = "失敗";
     let description = `${failed_reason}`;
 
@@ -1107,6 +1108,7 @@ async function get_failed_embed(client = global._client, failed_reason, rpg_data
         description = `你以為挖到了鑽石，但其實是一顆從二戰就埋藏在那的炸彈！`;
     } else if (failed_reason === "mouse") {
         const emoji_wood = await get_emoji(client, "wood");
+        color = embed_fell_color;
         title = `${emoji_wood} | 山老鼠別跑`;
         description = `你來到了森林發現有山老鼠把木材都偷走了！`;
     } else if (failed_reason === "collapse") {
@@ -1134,7 +1136,7 @@ async function get_failed_embed(client = global._client, failed_reason, rpg_data
     };
 
     const embed = new EmbedBuilder()
-        .setColor(embed_error_color)
+        .setColor(color)
         .setTitle(title)
         .setDescription(description);
 
