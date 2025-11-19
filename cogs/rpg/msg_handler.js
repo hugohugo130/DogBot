@@ -3,7 +3,7 @@ const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
 const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { randint, choice } = require("../../utils/random.js");
-const { BetterEval, get_help_embed, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished } = require("../../utils/rpg.js");
+const { BetterEval, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished } = require("../../utils/rpg.js");
 const DogClient = require("../../utils/customs/client.js");
 
 const max_hunger = 20;
@@ -169,64 +169,6 @@ const rpg_emojis = {
     sell: "trade",
     cd: "timer",
 };
-
-const rpg_help = {
-    herd: {
-        color: embed_default_color,
-        title: "放牧",
-        description: `放牧或屠宰動物`
-    },
-    mine: {
-        color: embed_default_color,
-        title: "挖礦",
-        description: `獲得礦石，可以與其他玩家交易`
-    },
-    hew: {
-        color: embed_default_color,
-        title: "伐木",
-        description: `獲得木頭，合成出的木材可以與其他物品製作成武器和防具`
-    },
-    fell: {
-        color: embed_default_color,
-        title: "伐木",
-        description: `獲得木頭，合成出的木材可以與其他物品製作成武器和防具`
-    },
-    wood: {
-        color: embed_default_color,
-        title: "伐木",
-        description: `獲得木頭，合成出的木材可以與其他物品製作成武器和防具`
-    },
-    shop: {
-        color: embed_default_color,
-        title: "商店",
-        description: `商店可以購買物品`
-    },
-    ls: {
-        color: embed_default_color,
-        title: "查看背包",
-        description: `查看背包中的物品`
-    },
-    buy: {
-        color: embed_default_color,
-        title: "購買",
-        description: `購買物品`
-    },
-    sell: {
-        color: embed_default_color,
-        title: "出售",
-        description: `出售物品`
-    },
-    cd: {
-        color: embed_default_color,
-        title: "冷卻",
-        description: `查看冷卻時間`
-    },
-};
-
-// Object.assign(rpg_help.fell, rpg_help.hew);
-// Object.assign(rpg_help.wood, rpg_help.hew);
-
-
 
 /*
 command_name: "{c} will be replaced with the command execution times"
@@ -2135,7 +2077,6 @@ module.exports = {
     rpg_cooldown,
     rpg_work,
     rpg_commands,
-    rpg_help,
     rpg_emojis,
     redirect_data,
     redirect_data_reverse,
@@ -2152,7 +2093,6 @@ module.exports = {
 
     // moved to utils/rpg.js, require that instead.
     BetterEval,
-    get_help_embed,
     get_loophole_embed,
     get_emoji,
     add_money,

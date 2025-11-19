@@ -1029,27 +1029,6 @@ function BetterEval(obj) {
     return Function(`"use strict";return ${obj}`)();
 };
 
-async function get_help_embed(category, client) {
-    const { rpg_help, rpg_emojis, setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
-
-    category = category.toLowerCase();
-
-    if (!rpg_help[category]) return null;
-
-    const embedData = rpg_help[category];
-    const emojiName = rpg_emojis[category] || "question";
-
-    let emojiStr = "❓"; // 預設表情符號
-    emojiStr = await get_emoji(client, emojiName);
-
-    const embed = new EmbedBuilder()
-        .setColor(embedData.color)
-        .setTitle(`${emojiStr} | ${embedData.title}`)
-        .setDescription(embedData.description);
-
-    return setEmbedFooter(client, embed);
-};
-
 async function get_emoji(client = global._client, name) {
     // await client.application.fetch();
     wait_until_ready(client);
@@ -1358,7 +1337,6 @@ module.exports = {
     smelter_slots,
     // rpg functions
     BetterEval,
-    get_help_embed,
     get_emoji,
     get_cooldown_embed,
     get_cooldown_time,
