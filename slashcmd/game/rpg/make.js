@@ -24,7 +24,7 @@ module.exports = {
                         ).join("、");
 
                         return {
-                            name: `${get_name_of_id(item_id)} (${recipe_str})`,
+                            name: `${get_name_of_id(item_id)}x${recipe.amount} (${recipe_str})`,
                             value: `${item_id}|${recipe.input.map(input =>
                                 `${input.item}*${input.amount}`
                             ).join(",")}`
