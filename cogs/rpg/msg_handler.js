@@ -1428,7 +1428,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 .setCustomId(`help|${message.author.id}|rpg|buy`)
                 .setLabel('購買食物')
                 .setEmoji(store_emoji)
-                .setStyle(ButtonStyle.Success);
+                .setStyle(ButtonStyle.Primary);
 
             const row = new ActionRowBuilder()
                 .addComponents(howToEatButton, buyFoodButton);
