@@ -1371,7 +1371,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             const food_crops_items = {};
             const food_meat_items = {};
-            const fish_items = {};
 
             // 遍歷背包中的物品並分類
             for (const [item, amount] of Object.entries(rpg_data.inventory || {})) {
@@ -1382,17 +1381,14 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
                 if (Object.keys(foods_crops).includes(item)) {
                     food_crops_items[item] = amount;
-                } else if (Object.keys(foods_meat).includes(item) && !Object.keys(fish).includes(item)) {
+                } else if (Object.keys(foods_meat).includes(item) || Object.keys(fish).includes(item)) {
                     food_meat_items[item] = amount;
-                } else if (Object.keys(fish).includes(item)) {
-                    fish_items[item] = amount;
                 };
             };
 
             if (
                 Object.keys(food_crops_items).length === 0 &&
-                Object.keys(food_meat_items).length === 0 &&
-                Object.keys(fish_items).length === 0
+                Object.keys(food_meat_items).length === 0
             ) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
@@ -1408,7 +1404,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             const categories = [
                 { items: food_crops_items, name: `${farmer_emoji} 農作物` },
                 { items: food_meat_items, name: `${cow_emoji} 肉類` },
-                { items: fish_items, name: `🐟 魚類` },
             ];
 
             for (const category of categories) {
