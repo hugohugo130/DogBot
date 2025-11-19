@@ -88,7 +88,7 @@ module.exports = {
     async execute(interaction) {
         const { load_rpg_data } = require("../utils/file.js");
         const { get_emoji } = require("../utils/rpg.js");
-        const { setEmbedFooter, setEmbedAuthor, max_hungry } = require("../cogs/rpg/msg_handler.js");
+        const { setEmbedFooter, setEmbedAuthor, max_hunger } = require("../cogs/rpg/msg_handler.js");
         const { convertToSecond } = require("../utils/timestamp.js");
         const { embed_default_color } = require("../utils/config.js");
 
@@ -167,7 +167,7 @@ module.exports = {
                     },
                     {
                         name: `${emoji_drumstick} 體力`,
-                        value: `\`${hungry}\` / \`${max_hungry}\``,
+                        value: `\`${hungry}\` / \`${max_hunger}\``,
                         inline: true,
                     },
                     {
