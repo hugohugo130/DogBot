@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require("discord.js");
-const { recipes, name } = require("../../../utils/rpg.js");
+const { recipes, get_name_of_id } = require("../../../utils/rpg.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,10 +20,10 @@ module.exports = {
                 .addChoices(
                     ...Object.entries(recipes).map(([item_id, recipe]) => {
                         const recipe_str = recipe.input.map(input =>
-                            `${name[input.item] || input.item}x${input.amount}`
+                            `${get_name_of_id(input.item) || input.item}x${input.amount}`
                         ).join("、");
                         return {
-                            name: `${name[item_id]} (${recipe_str})`,
+                            name: `${get_name_of_id(item_id)} (${recipe_str})`,
                             value: `${item_id}|${recipe.input.map(input =>
                                 `${input.item}*${input.amount}`
                             ).join(",")}`
@@ -39,7 +39,7 @@ module.exports = {
         ),
     async execute(interaction) {
         const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
-        const { name, tags } = require("../../../utils/rpg.js");
+        const { get_name_of_id, name, tags } = require("../../../utils/rpg.js");
         const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
         const { get_emoji } = require("../../../utils/rpg.js");
         const { embed_error_color } = require("../../../utils/config.js");
@@ -82,7 +82,7 @@ module.exports = {
             const have_amount = (rpg_data.inventory[need_item] || 0);
             if (have_amount < item_need[need_item]) {
                 item_missing.push({
-                    name: name[need_item] || need_item,
+                    name: get_name_of_id(need_item),
                     amount: item_need[need_item] - have_amount,
                 });
             };
@@ -117,7 +117,7 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setTitle(`${emoji} | 製作物品`)
-            .setDescription(`你製作出了 \`${output_amount}\` 個 ${name[item_id]}`);
+            .setDescription(`你製作出了 \`${output_amount}\` 個 ${get_name_of_id(item_id)}`);
 
         await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)] });
     },
