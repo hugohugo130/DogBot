@@ -2024,8 +2024,8 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
     const { failed, item, amount } = get_random_result(command);
     if (failed && rpg_work.includes(command)) {
-        rpg_data.hungry += 1;
-        save_rpg_data(userid, rpg_data);
+        // rpg_data.hungry += 1;
+        // save_rpg_data(userid, rpg_data);
         if (mode === 1) return { embeds: [await get_failed_embed(client, item, rpg_data)] };
         return await message.reply({ embeds: [await get_failed_embed(client, item, rpg_data)] });
     };
