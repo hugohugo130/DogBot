@@ -1429,8 +1429,11 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 .setEmoji(store_emoji)
                 .setStyle(ButtonStyle.Success);
 
-            if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
-            return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+            const row = new ActionRowBuilder()
+                .addComponents(howToEatButton, buyFoodButton);
+
+            if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
+            return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
         };
     }, false],
     sell: ["出售", "出售物品給系統", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
