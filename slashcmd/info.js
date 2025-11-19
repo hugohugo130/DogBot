@@ -124,7 +124,7 @@ module.exports = {
             let money = show_money ? rpg_data.money ?? "無資料" : "隱私設定關閉";
             if (typeof money === "number") money = `\`${money}$\``
             const show_money = rpg_data.privacy.includes("money");
-            const hungry = rpg_data.hungry ?? "無資料";
+            const hunger = rpg_data.hunger ?? "無資料";
             const job = rpg_data.job || "無";
             const fightjob = rpg_data.fightjob || "無";
             const badge = rpg_data.badge || "無";
@@ -167,7 +167,7 @@ module.exports = {
                     },
                     {
                         name: `${emoji_drumstick} 體力`,
-                        value: `\`${hungry}\` / \`${max_hunger}\``,
+                        value: `\`${hunger}\` / \`${max_hunger}\``,
                         inline: true,
                     },
                     {

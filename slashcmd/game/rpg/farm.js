@@ -245,7 +245,7 @@ module.exports = {
                 return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], flags: MessageFlags.Ephemeral });
             };
 
-            if (rpg_data.hungry < need_hunger) {
+            if (rpg_data.hunger < need_hunger) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的體力不足了`);
@@ -275,7 +275,7 @@ module.exports = {
                 farm_data.farms.push(farm);
             };
 
-            rpg_data.hungry -= need_hunger;
+            rpg_data.hunger -= need_hunger;
             save_rpg_data(userId, rpg_data);
             save_farm_data(userId, farm_data);
 

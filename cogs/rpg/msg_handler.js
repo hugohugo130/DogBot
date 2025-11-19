@@ -128,7 +128,7 @@ function setEmbedFooter(client = global._client, embed, text = "", rpg_data = nu
         };
     };
 
-    if (!force && data) text += `飽食度剩餘 ${data.hungry}`;
+    if (!force && data) text += `飽食度剩餘 ${data.hunger}`;
     if (!force) text += "\n狗狗機器犬 ∙ 由哈狗製作";
     text = text.trim();
 
@@ -1323,7 +1323,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
             };
 
-            if ((rpg_data.hungry + add) > max_hunger) {
+            if ((rpg_data.hunger + add) > max_hunger) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你已經吃太飽了`);
@@ -1333,12 +1333,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             };
 
             let newadd = add * amount;
-            if ((rpg_data.hungry + newadd) > max_hunger) {
+            if ((rpg_data.hunger + newadd) > max_hunger) {
                 const force_eat = args[2]?.toLowerCase().trim() === "force";
 
                 const old_amount = amount;
 
-                const new_amount = Math.floor((max_hunger - rpg_data.hungry) / add);
+                const new_amount = Math.floor((max_hunger - rpg_data.hunger) / add);
                 const new_newadd = add * amount;
 
                 if (!force_eat) {
@@ -1369,8 +1369,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
             };
 
-            rpg_data.hungry += newadd;
-            rpg_data.hungry = Math.min(rpg_data.hungry, max_hunger);
+            rpg_data.hunger += newadd;
+            rpg_data.hunger = Math.min(rpg_data.hunger, max_hunger);
 
             rpg_data.inventory[food_id] -= amount;
             save_rpg_data(userid, rpg_data);
@@ -1378,7 +1378,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
                 .setTitle(`${drumstick_emoji} | 成功進食`)
-                .setDescription(`你吃下了 \`${amount}\` 個 \`${food_name}\`，你的體力值增加到了 \`${rpg_data.hungry}\``);
+                .setDescription(`你吃下了 \`${amount}\` 個 \`${food_name}\`，你的體力值增加到了 \`${rpg_data.hunger}\``);
 
             const embeds = [setEmbedFooter(client, embed), ...extra_embeds.map(e => setEmbedFooter(client, e))];
 
@@ -1388,7 +1388,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
                 .setTitle(`${drumstick_emoji} | 可以吃的東西`)
-                .setDescription(`體力值: ${rpg_data.hungry} / ${max_hunger} 點`);
+                .setDescription(`體力值: ${rpg_data.hunger} / ${max_hunger} 點`);
 
             const food_crops_items = {};
             const food_meat_items = {};
@@ -1910,7 +1910,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     const rpg_data = load_rpg_data(userid);
     const action = cmd_data[0];
 
-    if (rpg_work.includes(command) && rpg_data.hungry === 0) {
+    if (rpg_work.includes(command) && rpg_data.hunger === 0) {
         const { foods } = require("../../utils/rpg.js");
         const food_items = Object.keys(foods);
         let found_food = null;
@@ -1964,7 +1964,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     };
 
     if (rpg_work.includes(command)) {
-        if (rpg_data.hungry <= 0) {
+        if (rpg_data.hunger <= 0) {
             const emoji_cross = await get_emoji(client, "crosS");
 
             const embed = setEmbedFooter(client, new EmbedBuilder()
@@ -1975,7 +1975,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             return await message.reply({ embeds: [embed] });
         };
 
-        rpg_data.hungry -= 1;
+        rpg_data.hunger -= 1;
     };
 
     if (rpg_cooldown[command] || command === "cd") {
@@ -2024,7 +2024,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
     const { failed, item, amount } = get_random_result(command);
     if (failed && rpg_work.includes(command)) {
-        // rpg_data.hungry += 1;
+        // rpg_data.hunger += 1;
         // save_rpg_data(userid, rpg_data);
         if (mode === 1) return { embeds: [await get_failed_embed(client, item, rpg_data)] };
         return await message.reply({ embeds: [await get_failed_embed(client, item, rpg_data)] });

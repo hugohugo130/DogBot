@@ -24,7 +24,7 @@ const DEFAULT_VALUES = {
     "user": {
         "rpg_database.json": {
             "money": 1000,
-            "hungry": 20,
+            "hunger": 20,
             "job": null,
             "fightjob": null,
             "badge": null,
