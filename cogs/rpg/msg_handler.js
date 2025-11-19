@@ -784,11 +784,8 @@ const rpg_commands = {
         if (!target_user) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 錯誤的使用者`)
-                .setDescription(`
-購買指令: buy <用戶提及/id> <物品> <數量>
-範例: buy @Hugo哈狗 鐵礦 10`
-                );
+                .setTitle(`${emoji_cross} | 錯誤的使用者`);
+
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
