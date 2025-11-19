@@ -1297,11 +1297,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 const embed = await get_loophole_embed(client, `food_data[${food_id}] is ${add}`)
 
                 logger.warn(`食物${food_name} (${food_id})在food_data中沒有這個食物的數據`);
-                try {
-                    throw new Error();
-                } catch (e) {
-                    logger.warn(`called from: ${e.stack}`);
-                };
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                 return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
