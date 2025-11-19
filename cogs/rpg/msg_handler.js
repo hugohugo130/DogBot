@@ -99,7 +99,7 @@ async function redirect({ client, message, command, mode = 0 }) {
     };
 
     if (!command.includes(prefix)) command = prefix + command;
-    const msg = new MockMessage(command, message.channel, message.author, message.guild, await mentions_users(message));
+    const msg = new MockMessage(command, message.channel, message.author, message.guild, (await mentions_users(message)).first());
     const message_args = await rpg_handler({ client, message: msg, d: true, mode: 1 });
 
     if (mode === 1) return message_args;
@@ -595,7 +595,7 @@ const rpg_commands = {
                 return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
             }
             case "list": {
-                const user = await mentions_users(message) || message.author;
+                const user = (await mentions_users(message)).first() || message.author;
                 const userid = user.id;
 
                 const emoji_cross = await get_emoji(client, "crosS");
@@ -707,7 +707,7 @@ const rpg_commands = {
                 return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
             }
             default: {
-                const user = await mentions_users(message);
+                const user = (await mentions_users(message)).first();
                 if (user) {
                     return await redirect({ client, message, command: `shop list ${user.id}`, mode });
                 };
@@ -729,7 +729,7 @@ const rpg_commands = {
         const emoji_cross = await get_emoji(client, "crosS");
         const emoji_store = await get_emoji(client, "store");
 
-        const target_user = await mentions_users(message);
+        const target_user = (await mentions_users(message)).first();
         if (!target_user) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -992,7 +992,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
     pay: ["付款", "付款給其他用戶", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { mentions_users } = require("../../utils/message.js");
 
-        const target_user = await mentions_users(message);
+        const target_user = (await mentions_users(message)).first();
 
         const emoji_cross = await get_emoji(client, "crosS");
         const emoji_top = await get_emoji(client, "top");

@@ -15,7 +15,7 @@ async function handleMoneyCommand(message, args) {
     const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
     const { mentions_users } = require("../utils/message.js");
 
-    const user = await mentions_users(message);
+    const user = (await mentions_users(message)).first();
     const amount = parseInt(args[1]);
 
     if (!user) return message.reply("請標記一個用戶！");
@@ -33,7 +33,7 @@ async function handleInvCommand(message, args) {
     const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
     const { mentions_users } = require("../utils/message.js");
 
-    const user = await mentions_users(message);
+    const user = (await mentions_users(message)).first();
     const item = args[1];
     const amount = parseInt(args[2]);
 
@@ -96,7 +96,7 @@ module.exports = {
                 let [_, item, amount] = args;
                 item = get_id_of_name(item);
 
-                const user = await mentions_users(message);
+                const user = (await mentions_users(message)).first();
 
                 if (!user) {
                     return message.reply("請標記一個用戶！");
