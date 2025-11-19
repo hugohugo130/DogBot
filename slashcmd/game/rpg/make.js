@@ -22,6 +22,7 @@ module.exports = {
                         const recipe_str = recipe.input.map(input =>
                             `${get_name_of_id(input.item) || input.item}x${input.amount}`
                         ).join("、");
+
                         return {
                             name: `${get_name_of_id(item_id)} (${recipe_str})`,
                             value: `${item_id}|${recipe.input.map(input =>
@@ -39,7 +40,7 @@ module.exports = {
         ),
     async execute(interaction) {
         const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
-        const { get_name_of_id, name, tags } = require("../../../utils/rpg.js");
+        const { get_name_of_id, tags } = require("../../../utils/rpg.js");
         const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
         const { get_emoji } = require("../../../utils/rpg.js");
         const { embed_error_color } = require("../../../utils/config.js");
@@ -54,13 +55,16 @@ module.exports = {
 
         item = item.split("|");
         const item_id = item[0];
+
         let item_need = {};
         let item_missing = [];
+
         for (const need of item[1].split(",")) {
             const need_item = need.split("*");
             const count = need_item[1] || 1;
             let id = need_item[0];
             let real_id = id;
+
             if (id.startsWith("#")) {
                 const tag = id.replace("#", "");
                 for (const item of tags[tag]) {
@@ -113,7 +117,7 @@ module.exports = {
         rpg_data.inventory[item_id] += output_amount;
         save_rpg_data(userid, rpg_data);
 
-        const emoji = await get_emoji(interaction.client, "toolbox")
+        const emoji = await get_emoji(interaction.client, "toolbox");
         const embed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setTitle(`${emoji} | 製作物品`)
