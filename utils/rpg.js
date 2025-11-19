@@ -203,6 +203,7 @@ const foods_crops = [
     "corn",
     "cooked_corn",
     "potato",
+    "wheat",
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
