@@ -1870,7 +1870,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         command = command.replace(/[^a-zA-Z0-9]/g, '');
 
         const firstChar = command.charAt(0);
-        const similarCommands = commands.filter(cmd => cmd.startsWith(firstChar));
+        const similarCommands = commands.filter(cmd => cmd.startsWith(firstChar) && !rpg_commands[cmd][3]);
 
         const embed = new EmbedBuilder()
             .setColor(embed_error_color)
