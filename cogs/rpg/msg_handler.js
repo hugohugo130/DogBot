@@ -703,8 +703,18 @@ const rpg_commands = {
                     embed.setTitle(`${emoji_cross} | 商店裡沒有販賣任何東西`);
                     embed.setAuthor(null);
                 };
-                if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
-                return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+
+                const buyItemButton = new ButtonBuilder()
+                    .setCustomId(`help|${message.author.id}|rpg|buy`)
+                    .setLabel('購買食物')
+                    .setEmoji(emoji_store)
+                    .setStyle(ButtonStyle.Primary);
+
+                const row = new ActionRowBuilder()
+                    .addComponents(buyItemButton);
+
+                if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
+                return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
             }
             case "open":
             case "on": {
