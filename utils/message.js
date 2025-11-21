@@ -26,11 +26,11 @@ async function mentions_users(message) {
         .filter(isDigit)
         .filter(e => e !== "");
 
-    return new Collection(
-        await Promise.all(
-            UserIDs.map(e => [e, get_user(e)])
-        ),
+    const userids = await Promise.all(
+        UserIDs.map(e => [e, get_user(e)])
     );
+
+    return new Collection(userids);
 };
 
 module.exports = {
