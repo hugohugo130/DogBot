@@ -641,7 +641,9 @@ const rpg_commands = {
                     .join('\n');
                 if (others) embed.addFields({ name: `其他`, value: others, inline: false });
 
-                if ((!minerals && !food && !others) || !shop_data.status) {
+                const nothing_sell = !minerals && !food && !others;
+
+                if (nothing_sell) {
                     embed.setColor(embed_error_color)
                     embed.setTitle(`${emoji_cross} | 商店裡沒有販賣任何東西`);
                     embed.setAuthor(null);
@@ -656,8 +658,8 @@ const rpg_commands = {
                 const row = new ActionRowBuilder()
                     .addComponents(buyItemButton);
 
-                if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
-                return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
+                if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: nothing_sell ? [] : [row] };
+                return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: nothing_sell ? [] : [row] });
             }
             case "open":
             case "on": {
@@ -724,7 +726,8 @@ const rpg_commands = {
         const emoji_cross = await get_emoji(client, "crosS");
         const emoji_store = await get_emoji(client, "store");
 
-        const target_user = (await mentions_users(message)).first();
+        const target_users = await mentions_users(message);
+        const target_user = target_users.first();
         if (!target_user) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -734,9 +737,7 @@ const rpg_commands = {
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
 
-        try {
-            args = args.filter(arg => arg !== `<@${target_user.id}>` && arg !== `<@!${target_user.id}>`);
-        } catch (e) { };
+        args = args.filter(arg => !target_users.keys().includes(arg));
 
         let args_ = [];
         for (const arg of args) {
