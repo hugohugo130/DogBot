@@ -730,6 +730,7 @@ const rpg_commands = {
         const emoji_store = await get_emoji(client, "store");
 
         const target_user = (await mentions_users(message)).first();
+        await message.reply(`[DEBUG]\ntarget_user: ${target_user}`);
         if (!target_user) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
