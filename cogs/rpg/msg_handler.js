@@ -731,7 +731,8 @@ const rpg_commands = {
         if (!target_user) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 錯誤的使用者`);
+                .setTitle(`${emoji_cross} | 錯誤的使用者`)
+                .setDescription(target_users.toJSON().toString());
 
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
