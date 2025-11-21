@@ -732,13 +732,12 @@ const rpg_commands = {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 錯誤的使用者`)
-                .setDescription(target_users.toJSON().toString());
 
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
         };
 
-        args = args.filter(arg => !target_users.keys().includes(arg));
+        args = args.filter(arg => !Array.from(target_users.keys()).includes(arg));
 
         let args_ = [];
         for (const arg of args) {
