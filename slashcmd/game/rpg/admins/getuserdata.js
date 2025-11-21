@@ -63,11 +63,29 @@ module.exports = {
                 { name: "結婚狀態", value: `${rpg_data.marry.status}`, inline: true },
                 { name: "結婚對象", value: `${rpg_data.marry.with}`, inline: true },
                 { name: "結婚時間", value: `${rpg_data.marry.time}`, inline: true },
-                { name: "物品", value: `${rpg_data.inventory}`, inline: false },
                 { name: "交易", value: `${rpg_data.transactions}`, inline: true },
                 { name: "隱私", value: `${rpg_data.privacy}`, inline: true },
-                { name: "上次執行時間", value: `${Object.entries(rpg_data.lastRunTimestamp).map(([key, value]) => `${key}: ${value}`).join("\n") || rpg_data.lastRunTimestamp}`, inline: false },
-                { name: "計數", value: `${Object.entries(rpg_data.count).map(([key, value]) => `${key}: ${value}`).join("\n") || rpg_data.count}`, inline: false },
+                {
+                    name: "物品",
+                    value: Object.entries(rpg_data.inventory)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join("\n"),
+                    inline: false
+                },
+                {
+                    name: "上次執行時間",
+                    value: Object.entries(rpg_data.lastRunTimestamp)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join("\n"),
+                    inline: false
+                },
+                {
+                    name: "計數",
+                    value: Object.entries(rpg_data.count)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join("\n"),
+                    inline: false
+                },
             )
             .setTimestamp();
 
