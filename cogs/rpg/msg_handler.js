@@ -497,7 +497,8 @@ const rpg_commands = {
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
-
+                
+                if (typeof rpg_data.inventory[item] !== "number") rpg_data.inventory[item] = 0;
                 if (rpg_data.inventory[item] < amount) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -507,16 +508,13 @@ const rpg_commands = {
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
 
-                if (typeof rpg_data.inventory[item] !== "number") rpg_data.inventory[item] = 0;
                 rpg_data.inventory[item] -= amount;
 
                 save_rpg_data(userid, rpg_data);
 
                 if (item_exist) {
                     shop_data.items[item].amount += amount;
-                    if (price) {
-                        shop_data.items[item].price = price;
-                    };
+                    if (price) shop_data.items[item].price = price;
                 } else {
                     shop_data.items[item] = {
                         name: item,
