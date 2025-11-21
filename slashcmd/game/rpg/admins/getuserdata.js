@@ -10,7 +10,7 @@ function split_msg(content, split = 2000) {
 };
 
 function show_transactions(userid) {
-    const { load_rpg_data } = require("../../utils/file.js");
+    const { load_rpg_data } = require("../../../../utils/file.js");
     const { transactions = [] } = load_rpg_data(userid);
 
     /* transactions 列表中的每個字典應該包含:
@@ -131,7 +131,7 @@ module.exports = {
                 .join("\n"),
 
             show_transactions(user.id),
-        ]
+        ];
 
         for (const msg of msgs) {
             for (const msgcontent of split_msg(msg)) {
