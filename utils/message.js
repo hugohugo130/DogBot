@@ -2,7 +2,7 @@ const { Collection, Message, User } = require("discord.js");
 const djs = import("discord.js");
 
 function isDigit(char) {
-    return /^\d$/.test(char);
+    return /^[0-9]+$/.test(char);
 };
 
 /**
