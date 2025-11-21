@@ -1288,7 +1288,7 @@ async function ls_function({ client, message, rpg_data, data, args, mode, random
     // 如果背包是空的
     if (Object.keys(rpg_data.inventory || {}).length === 0) {
         embed.setColor(embed_error_color);
-        embed.setTitle(`${bag_emoji} | 你的背包裡沒有任何東西`);
+        embed.setTitle(`${bag_emoji} | 你的背包裡沒有東西`);
     } else {
         for (const category of categories) {
             if (Object.keys(category.items).length > 0) {
