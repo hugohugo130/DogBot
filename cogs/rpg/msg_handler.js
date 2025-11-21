@@ -429,8 +429,6 @@ const rpg_commands = {
 
         switch (subcommand) {
             case "add": {
-                await message.reply(`[DEBUG]\nRPG_DATA_I_GET:\n${JSON.stringify(rpg_data.inventory, null, 4)}`);
-
                 const userid = message.author.id;
                 const emoji = await get_emoji(client, "store");
                 const emoji_cross = await get_emoji(client, "crosS");
@@ -511,8 +509,7 @@ const rpg_commands = {
 
                 if (typeof rpg_data.inventory[item] !== "number") rpg_data.inventory[item] = 0;
                 rpg_data.inventory[item] -= amount;
-                await message.reply(`[DEBUG]\nRPG DATA AFTER REDUCE ITEM:\n\`\`\`${JSON.stringify(rpg_data.inventory, null, 4)}\`\`\``);
-                await message.reply(`[DEBUG]\nSAVED RPG DATA with inventory of up msg`);
+
                 save_rpg_data(userid, rpg_data);
 
                 if (item_exist) {
@@ -531,8 +528,6 @@ const rpg_commands = {
                 amount = shop_data.items[item].amount;
                 price = shop_data.items[item].price;
                 save_shop_data(userid, shop_data);
-
-                await message.reply(`[DEBUG]\nsaved SHOP DATA:\n${JSON.stringify(shop_data, null, 4)}`);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
@@ -730,7 +725,6 @@ const rpg_commands = {
         const emoji_store = await get_emoji(client, "store");
 
         const target_user = (await mentions_users(message)).first();
-        await message.reply(`[DEBUG]\ntarget_user: ${target_user}`);
         if (!target_user) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
