@@ -140,3 +140,4 @@ db/
 auto_register.cmd.data
 .bailurules/
 ai_update/
+database_recovery/
