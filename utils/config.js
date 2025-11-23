@@ -9,15 +9,8 @@ const DEFAULT_IP = "192.168.0.156"
 const DEFAULT_PORT = 3003
 
 const DATABASE_FILES = [
-    "database.json",
-    "rpg_database.json",
-    "rpg_shop.json",
-    "bake_db.json",
-    "smelt_db.json",
-    "serverIP.json",
-    "dvoice_db.json",
-    "rpg_farm.json",
-    "music.json",
+    "serverIP.josn",
+    "bot.db",
 ];
 
 const DEFAULT_VALUES = {
@@ -85,17 +78,7 @@ const onlineDB_Files = [
 const SQL_DB_FILE = "bot.db";
 const SQL_DB_PATH = join(database_folder, SQL_DB_FILE);
 
-// === 已棄用：JSON 檔案路徑（保留以供向後兼容） ===
-// WARN: 這些檔案已被 bot.db SQL 資料庫取代
-const database_file = join(database_folder, "database.json")
-const rpg_database_file = join(database_folder, "rpg_database.json");
-const rpg_shop_file = join(database_folder, "rpg_shop.json");
-const bake_data_file = join(database_folder, "bake_db.json");
 const serverIPFile = join(database_folder, "serverIP.json");
-const smelt_data_file = join(database_folder, "smelt_db.json");
-const dvoice_data_file = join(database_folder, "dvoice_db.json");
-const rpg_farm_file = join(database_folder, "rpg_farm.json");
-const music_data_file = join(database_folder, "music.json");
 
 const cogsFolder = `${cwd()}/cogs`
 const musicFileFolder = `${cwd()}/music`
@@ -311,15 +294,7 @@ module.exports = {
     DATABASE_FILES,
     onlineDB_Files,
 
-    database_file,
-    rpg_database_file,
-    rpg_shop_file,
-    bake_data_file,
     serverIPFile,
-    smelt_data_file,
-    dvoice_data_file,
-    rpg_farm_file,
-    music_data_file,
 
     DEFAULT_VALUES,
     BETA,
