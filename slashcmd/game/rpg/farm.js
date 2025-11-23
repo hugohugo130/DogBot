@@ -256,7 +256,7 @@ module.exports = {
             if (!userHaveEnoughItems(userId, hoe, amount)) {
                 const embed = notEnoughItemEmbed([{ name: get_name_of_id(hoe), amount }]);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
             };
 
             if (!farm_data.farms) {
