@@ -807,7 +807,7 @@ function get_music_data(voiceChannelId) {
 };
 
 function update_music_data(voiceChannelId, newData) {
-    const musicData = load_music_data_SQL();
+    const musicData = load_music_data();
 
     if (!musicData[voiceChannelId]) {
         musicData[voiceChannelId] = {};
