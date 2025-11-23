@@ -9,6 +9,7 @@ const { get_areadline } = require('./utils/readline.js');
 const { check_item_data } = require('./utils/rpg.js');
 const { should_register_cmd } = require('./utils/auto_register.js');
 const { registcmd } = require('./register_commands.js');
+const { initDatabase, transferQueueToClient, closeDatabase } = require('./utils/database.js');
 require("dotenv").config();
 
 const client = new DogClient();
@@ -99,11 +100,13 @@ process.on('SIGINT', async () => {
 });
 
 (async () => {
-    // const { downloadAllFiles } = require('./utils/onlineDB.js');await downloadAllFiles();
-
     global._client = null;
     global.oven_sessions = {};
     global.smelter_sessions = {};
+
+    // 初始化 SQL 資料庫
+    logger.info('初始化 SQL 資料庫...');
+    initDatabase();
 
     await checkDBFilesCorrupted();
     await checkAllDatabaseFilesContent();
@@ -119,4 +122,7 @@ process.on('SIGINT', async () => {
 
     await client.login(process.env.TOKEN);
     global._client = client;
+    
+    // 將 Queue 從 global 轉移到 client
+    transferQueueToClient(client);
 })();

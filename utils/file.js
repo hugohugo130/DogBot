@@ -9,6 +9,7 @@ const axios = require("axios");
 const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder, probabilities } = require("./config.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
 const { sleep } = require("./sleep.js");
+const { getDatabase, addToQueue } = require("./database.js");
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
@@ -312,25 +313,36 @@ function loadData(guildID = null, mode = 0) {
         throw new TypeError("Invalid mode");
     };
 
-    const { database_file } = require("./config.js");
     const database_emptyeg = find_default_value("database.json", {});
+    const db = getDatabase();
 
-    if (fs.existsSync(database_file)) {
-        const rawData = readFileSync(database_file);
-        let data = JSON.parse(rawData);
+    if (mode == 0 && guildID) {
+        // 取得單一伺服器資料
+        const row = db.prepare('SELECT * FROM guilds WHERE guild_id = ?').get(guildID);
+        
+        if (!row) {
+            // 不存在則創建
+            saveData(guildID, database_emptyeg);
+            return database_emptyeg;
+        }
 
-        if (mode == 0 && guildID) {
-            if (!data[guildID]) {
-                data[guildID] = database_emptyeg;
-                saveData(guildID, data[guildID]);
-            };
-
-            return data[guildID];
-        } else {
-            return data;
+        return {
+            rpg: row.rpg === 1,
+            dynamicVoice: row.dynamic_voice
         };
     } else {
-        return {};
+        // 取得所有伺服器資料
+        const rows = db.prepare('SELECT * FROM guilds').all();
+        const data = {};
+        
+        for (const row of rows) {
+            data[row.guild_id] = {
+                rpg: row.rpg === 1,
+                dynamicVoice: row.dynamic_voice
+            };
+        }
+        
+        return data;
     };
 };
 
