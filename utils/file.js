@@ -9,7 +9,7 @@ const axios = require("axios");
 const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder, probabilities } = require("./config.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
 const { sleep } = require("./sleep.js");
-const { getDatabase, addToQueue } = require("./database.js");
+const { getDatabase, addToQueue } = require("./SQLdatabase.js");
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
@@ -50,6 +50,18 @@ function readFileSync(file_path, options = null) {
     };
 
     return fs.readFileSync(file_path, options);
+};
+
+/**
+ * 從 JSON 字串轉換物件，處理錯誤
+ */
+function safeJSONParse(jsonString, defaultValue = {}) {
+    try {
+        return JSON.parse(jsonString);
+    } catch (error) {
+        logger.warn(`JSON 解析失敗: ${error.message}`);
+        return defaultValue;
+    };
 };
 
 function needsStringify(obj) {
@@ -319,12 +331,12 @@ function loadData(guildID = null, mode = 0) {
     if (mode == 0 && guildID) {
         // 取得單一伺服器資料
         const row = db.prepare('SELECT * FROM guilds WHERE guild_id = ?').get(guildID);
-        
+
         if (!row) {
             // 不存在則創建
             saveData(guildID, database_emptyeg);
             return database_emptyeg;
-        }
+        };
 
         return {
             rpg: row.rpg === 1,
@@ -334,61 +346,33 @@ function loadData(guildID = null, mode = 0) {
         // 取得所有伺服器資料
         const rows = db.prepare('SELECT * FROM guilds').all();
         const data = {};
-        
+
         for (const row of rows) {
             data[row.guild_id] = {
                 rpg: row.rpg === 1,
                 dynamicVoice: row.dynamic_voice
             };
-        }
-        
+        };
+
         return data;
     };
 };
 
 function saveData(guildID, guildData) {
-    const { database_file } = require("./config.js");
-    const database_emptyeg = find_default_value("database.json", {});
+    const db = getDatabase();
 
-    // let old_data = {};
-    // if (backup) {
-    //     old_data = loadData(null, 1);
-    // };
+    addToQueue(() => {
+        const stmt = db.prepare(`
+            INSERT OR REPLACE INTO guilds (guild_id, rpg, dynamic_voice, updated_at)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        `);
 
-    let data = {};
-
-    if (fs.existsSync(database_file)) {
-        const rawData = readFileSync(database_file);
-        data = JSON.parse(rawData);
-    };
-
-    if (!data[guildID]) {
-        data[guildID] = database_emptyeg;
-    };
-
-    data[guildID] = { ...data[guildID], ...guildData };
-    data[guildID] = order_data(data[guildID], database_emptyeg)
-
-    // 增加重試機制
-    let retries = 3;
-    let lastError = null;
-
-    while (retries > 0) {
-        try {
-            writeJsonSync(database_file, data);
-            break;
-        } catch (error) {
-            lastError = error;
-            retries--;
-            if (retries > 0) {
-                sleep(1000);
-            };
-        };
-    };
-
-    if (retries === 0) {
-        throw lastError;
-    };
+        stmt.run(
+            guildID,
+            guildData.rpg ? 1 : 0,
+            guildData.dynamicVoice || null
+        );
+    }, 5);
 };
 
 /*
@@ -402,109 +386,159 @@ function saveData(guildID, guildData) {
 
 function setRPG(guildID, enable) {
     if (![true, false].includes(enable)) throw new Error(`Invalid mode: ${enable}`)
+
     const data = loadData(guildID);
     data["rpg"] = enable;
-    saveData(guildID, data)
-}
+
+    saveData(guildID, data);
+};
 
 function load_rpg_data(userid) {
-    const { rpg_database_file } = require("./config.js");
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
+    const db = getDatabase();
 
-    if (fs.existsSync(rpg_database_file)) {
-        const rawData = readFileSync(rpg_database_file);
-        const data = JSON.parse(rawData);
+    const row = db.prepare('SELECT * FROM rpg_database WHERE user_id = ?').get(userid);
 
-        if (!data[userid]) {
-            save_rpg_data(userid, rpg_emptyeg);
-            return rpg_emptyeg;
-        };
-
-        return order_data(data[userid], rpg_emptyeg);
-    } else {
+    if (!row) {
         save_rpg_data(userid, rpg_emptyeg);
         return rpg_emptyeg;
+    };
+
+    return {
+        money: row.money,
+        hunger: row.hunger,
+        job: row.job,
+        fightjob: row.fightjob,
+        badge: row.badge,
+        marry: {
+            status: row.marry_status === 1,
+            with: row.marry_with,
+            time: row.marry_time
+        },
+        lastRunTimestamp: safeJSONParse(row.last_run_timestamp, {}),
+        inventory: safeJSONParse(row.inventory, {}),
+        transactions: safeJSONParse(row.transactions, []),
+        count: safeJSONParse(row.count, {}),
+        privacy: safeJSONParse(row.privacy, [])
     };
 };
 
 function save_rpg_data(userid, rpgdata) {
-    const { rpg_database_file } = require("./config.js");
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
+    const db = getDatabase();
 
-    let data = {};
-    if (fs.existsSync(rpg_database_file)) {
-        const rawData = readFileSync(rpg_database_file);
-        data = JSON.parse(rawData);
-    };
+    // 先讀取現有資料
+    const existing = db.prepare('SELECT * FROM rpg_database WHERE user_id = ?').get(userid);
+    const currentData = existing ? {
+        money: existing.money,
+        hunger: existing.hunger,
+        job: existing.job,
+        fightjob: existing.fightjob,
+        badge: existing.badge,
+        marry: {
+            status: existing.marry_status === 1,
+            with: existing.marry_with,
+            time: existing.marry_time
+        },
+        lastRunTimestamp: safeJSONParse(existing.last_run_timestamp, {}),
+        inventory: safeJSONParse(existing.inventory, {}),
+        transactions: safeJSONParse(existing.transactions, []),
+        count: safeJSONParse(existing.count, {}),
+        privacy: safeJSONParse(existing.privacy, [])
+    } : rpg_emptyeg;
 
-    if (!data[userid]) {
-        data[userid] = rpg_emptyeg;
-    };
+    // 合併資料
+    const mergedData = { ...currentData, ...rpgdata };
 
-    data[userid] = { ...data[userid], ...rpgdata };
-
-    // 檢查並清理 inventory 中數量為 0 或 null 的物品
-    if (data[userid].inventory) {
-        Object.keys(data[userid].inventory).forEach(item => {
-            if (data[userid].inventory[item] === 0 || data[userid].inventory[item] === null) {
-                delete data[userid].inventory[item];
-            };
+    // 清理 inventory 中數量為 0 或 null 的物品
+    if (mergedData.inventory) {
+        Object.keys(mergedData.inventory).forEach(item => {
+            if (mergedData.inventory[item] === 0 || mergedData.inventory[item] === null) {
+                delete mergedData.inventory[item];
+            }
         });
     };
 
-    data[userid] = order_data(data[userid], rpg_emptyeg);
+    addToQueue(() => {
+        const stmt = db.prepare(`
+            INSERT OR REPLACE INTO rpg_database (
+                user_id, money, hunger, job, fightjob, badge,
+                marry_status, marry_with, marry_time,
+                last_run_timestamp, inventory, transactions, count, privacy,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `);
 
-    writeJsonSync(rpg_database_file, data);
+        stmt.run(
+            userid,
+            mergedData.money || 1000,
+            mergedData.hunger || 20,
+            mergedData.job || null,
+            mergedData.fightjob || null,
+            mergedData.badge || null,
+            mergedData.marry?.status ? 1 : 0,
+            mergedData.marry?.with || null,
+            mergedData.marry?.time || 0,
+            JSON.stringify(mergedData.lastRunTimestamp || {}),
+            JSON.stringify(mergedData.inventory || {}),
+            JSON.stringify(mergedData.transactions || []),
+            JSON.stringify(mergedData.count || {}),
+            JSON.stringify(mergedData.privacy || [])
+        );
+    }, 5);
 };
 
 function load_shop_data(userid) {
-    const { rpg_shop_file } = require("./config.js");
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
+    const db = getDatabase();
 
-    if (fs.existsSync(rpg_shop_file)) {
-        const rawData = readFileSync(rpg_shop_file);
-        const data = JSON.parse(rawData);
+    const row = db.prepare('SELECT * FROM rpg_shop WHERE user_id = ?').get(userid);
 
-        if (!data[userid]) {
-            save_shop_data(userid, shop_emptyeg);
-            return shop_emptyeg;
-        };
-
-        return order_data(data[userid], shop_emptyeg);
-    } else {
+    if (!row) {
         save_shop_data(userid, shop_emptyeg);
         return shop_emptyeg;
+    };
+
+    return {
+        status: row.status === 1,
+        items: safeJSONParse(row.items, {})
     };
 };
 
 function save_shop_data(userid, shop_data) {
-    const { rpg_shop_file } = require("./config.js");
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
+    const db = getDatabase();
 
-    let data = {};
-    if (fs.existsSync(rpg_shop_file)) {
-        const rawData = readFileSync(rpg_shop_file);
-        data = JSON.parse(rawData);
-    };
+    const existing = db.prepare('SELECT * FROM rpg_shop WHERE user_id = ?').get(userid);
+    const currentData = existing ? {
+        status: existing.status === 1,
+        items: safeJSONParse(existing.items, {})
+    } : shop_emptyeg;
 
-    if (!data[userid]) {
-        data[userid] = shop_emptyeg;
-    };
-
-    data[userid] = { ...data[userid], ...shop_data };
+    const mergedData = { ...currentData, ...shop_data };
 
     // 清除數量為0的物品
-    if (data[userid].items) {
-        for (const [item, itemData] of Object.entries(data[userid].items)) {
+    if (mergedData.items) {
+        for (const [item, itemData] of Object.entries(mergedData.items)) {
             if (itemData.amount <= 0) {
-                delete data[userid].items[item];
-            };
+                delete mergedData.items[item];
+            }
         };
     };
 
-    data[userid] = order_data(data[userid], shop_emptyeg);
+    addToQueue(() => {
+        const stmt = db.prepare(`
+            INSERT OR REPLACE INTO rpg_shop (user_id, status, items, updated_at)
+            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+        `);
 
-    writeJsonSync(rpg_shop_file, data);
+        stmt.run(
+            userid,
+            mergedData.status ? 1 : 0,
+            JSON.stringify(mergedData.items || {})
+        );
+    }, 5);
 };
 
 /**
@@ -513,19 +547,22 @@ function save_shop_data(userid, shop_data) {
  * @returns {{lvl: number, exp: number, waterAt: number, farms: Array<Object}}
  */
 function load_farm_data(userid) {
-    const { rpg_farm_file } = require("./config.js");
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
+    const db = getDatabase();
 
-    const rawData = readFileSync(rpg_farm_file);
+    const row = db.prepare('SELECT * FROM rpg_farm WHERE user_id = ?').get(userid);
 
-    const data = JSON.parse(rawData);
-
-    if (!data[userid]) {
-        save_shop_data(userid, farm_emptyeg);
+    if (!row) {
+        save_farm_data(userid, farm_emptyeg);
         return farm_emptyeg;
     };
 
-    return data[userid];
+    return {
+        exp: row.exp,
+        lvl: row.lvl,
+        waterAt: row.water_at,
+        farms: safeJSONParse(row.farms, [])
+    };
 };
 
 /**
@@ -534,55 +571,93 @@ function load_farm_data(userid) {
  * @param {Array} farm_data 
  */
 function save_farm_data(userid, farm_data) {
-    const { rpg_farm_file } = require("./config.js");
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
+    const db = getDatabase();
 
-    let data = {};
-    if (fs.existsSync(rpg_farm_file)) {
-        const rawData = readFileSync(rpg_farm_file);
-        data = JSON.parse(rawData);
-    };
+    const existing = db.prepare('SELECT * FROM rpg_farm WHERE user_id = ?').get(userid);
+    const currentData = existing ? {
+        exp: existing.exp,
+        lvl: existing.lvl,
+        waterAt: existing.water_at,
+        farms: safeJSONParse(existing.farms, [])
+    } : farm_emptyeg;
 
-    if (!data[userid]) {
-        data[userid] = farm_emptyeg;
-    };
+    const mergedData = { ...currentData, ...farm_data };
 
-    data[userid] = { ...data[userid], ...farm_data };
+    addToQueue(() => {
+        const stmt = db.prepare(`
+            INSERT OR REPLACE INTO rpg_farm (user_id, exp, lvl, water_at, farms, updated_at)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `);
 
-    // 清除數量為0的物品
-    if (data[userid].items) {
-        for (const [item, itemData] of Object.entries(data[userid].items)) {
-            if (itemData.amount <= 0) {
-                delete data[userid].items[item];
-            };
-        };
-    };
-
-    writeJsonSync(rpg_farm_file, data);
+        stmt.run(
+            userid,
+            mergedData.exp || 0,
+            mergedData.lvl || 0,
+            mergedData.waterAt || 0,
+            JSON.stringify(mergedData.farms || [])
+        );
+    }, 5);
 };
 
 function load_bake_data() {
-    const { bake_data_file } = require("./config.js");
+    const db = getDatabase();
+    const rows = db.prepare('SELECT * FROM bake_data').all();
 
-    return readJsonSync(bake_data_file);
+    // 返回所有用戶的烘焙資料
+    const result = {};
+    for (const row of rows) {
+        result[row.user_id] = safeJSONParse(row.data, []);
+    };
+
+    return result;
 };
 
 function save_bake_data(data) {
-    const { bake_data_file } = require("./config.js");
+    const db = getDatabase();
 
-    writeJsonSync(bake_data_file, data);
+    addToQueue(() => {
+        // 清空並重新插入所有資料
+        db.prepare('DELETE FROM bake_data').run();
+
+        const stmt = db.prepare(`
+            INSERT INTO bake_data (user_id, data, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+        `);
+
+        for (const [userid, userData] of Object.entries(data)) {
+            stmt.run(userid, JSON.stringify(userData));
+        }
+    }, 5);
 };
 
 function load_smelt_data() {
-    const { smelt_data_file } = require("./config.js");
+    const db = getDatabase();
+    const rows = db.prepare('SELECT * FROM smelt_data').all();
 
-    return readJsonSync(smelt_data_file);
+    const result = {};
+    for (const row of rows) {
+        result[row.user_id] = safeJSONParse(row.data, []);
+    };
+
+    return result;
 };
 
 function save_smelt_data(data) {
-    const { smelt_data_file } = require("./config.js");
+    const db = getDatabase();
 
-    writeJsonSync(smelt_data_file, data);
+    addToQueue(() => {
+        db.prepare('DELETE FROM smelt_data').run();
+
+        const stmt = db.prepare(`
+            INSERT INTO smelt_data (user_id, data, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+        `);
+
+        for (const [userid, userData] of Object.entries(data)) {
+            stmt.run(userid, JSON.stringify(userData));
+        }
+    }, 5);
 };
 
 /*
@@ -595,15 +670,32 @@ function save_smelt_data(data) {
 */
 
 function loadDvoiceData() {
-    const { dvoice_data_file } = require("./config.js");
+    const db = getDatabase();
+    const rows = db.prepare('SELECT * FROM dvoice').all();
 
-    return readJsonSync(dvoice_data_file);
+    const result = {};
+    for (const row of rows) {
+        result[row.channel_id] = safeJSONParse(row.data, {});
+    };
+
+    return result;
 };
 
 function saveDvoiceData(data) {
-    const { dvoice_data_file } = require("./config.js");
+    const db = getDatabase();
 
-    writeJsonSync(dvoice_data_file, data);
+    addToQueue(() => {
+        db.prepare('DELETE FROM dvoice').run();
+
+        const stmt = db.prepare(`
+            INSERT INTO dvoice (channel_id, data, updated_at)
+            VALUES (?, ?, CURRENT_TIMESTAMP)
+        `);
+
+        for (const [channelId, channelData] of Object.entries(data)) {
+            stmt.run(channelId, JSON.stringify(channelData));
+        };
+    }, 5);
 };
 
 /*
@@ -648,42 +740,50 @@ function getDynamicVoice(guildID) {
 */
 
 function load_music_data() {
-    const { music_data_file } = require("./config.js");
-    const music_emptyeg = find_default_value("music.json", {});
+    const db = getDatabase();
+    const rows = db.prepare('SELECT * FROM music').all();
 
-    if (!existsSync(music_data_file)) {
-        writeJsonSync(music_data_file, music_emptyeg);
-        return music_emptyeg;
+    const result = {};
+    for (const row of rows) {
+        result[row.voice_channel_id] = {
+            queue: safeJSONParse(row.queue, []),
+            currentIndex: row.current_index,
+            isPlaying: row.is_playing === 1,
+            volume: row.volume,
+            loopMode: row.loop_mode,
+            textChannelId: row.text_channel_id
+        };
     };
 
-    return readJsonSync(music_data_file);
+    return result;
 };
 
 function save_music_data(data) {
-    const { music_data_file } = require("./config.js");
+    const db = getDatabase();
 
-    // 確保每個語音頻道的資料結構完整
-    for (const [voiceChannelId, channelData] of Object.entries(data)) {
-        if (!channelData.queue) channelData.queue = [];
-        if (typeof channelData.currentIndex !== 'number') channelData.currentIndex = 0;
-        if (typeof channelData.isPlaying !== 'boolean') channelData.isPlaying = false;
-        if (typeof channelData.volume !== 'number') channelData.volume = 1.0;
-        if (!channelData.loopMode) channelData.loopMode = "off";
-        if (!channelData.textChannelId) channelData.textChannelId = "";
+    addToQueue(() => {
+        db.prepare('DELETE FROM music').run();
 
-        // 確保 queue 中的每首歌都有必要的欄位
-        channelData.queue = channelData.queue.map(song => ({
-            url: song.url || "",
-            title: song.title || "未知標題",
-            duration: song.duration || "0:00",
-            requestedBy: song.requestedBy || "",
-            thumbnail: song.thumbnail || "",
-            addedAt: song.addedAt || new Date().toISOString(),
-            ...song
-        }));
-    };
+        const stmt = db.prepare(`
+            INSERT INTO music (
+                voice_channel_id, queue, current_index, is_playing,
+                volume, loop_mode, text_channel_id, updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        `);
 
-    writeJsonSync(music_data_file, data);
+        for (const [channelId, musicData] of Object.entries(data)) {
+            stmt.run(
+                channelId,
+                JSON.stringify(musicData.queue || []),
+                musicData.currentIndex || 0,
+                musicData.isPlaying ? 1 : 0,
+                musicData.volume || 1.0,
+                musicData.loopMode || 'off',
+                musicData.textChannelId || ''
+            );
+        };
+    }, 5);
 };
 
 function get_music_data(voiceChannelId) {
@@ -707,7 +807,7 @@ function get_music_data(voiceChannelId) {
 };
 
 function update_music_data(voiceChannelId, newData) {
-    const musicData = load_music_data();
+    const musicData = load_music_data_SQL();
 
     if (!musicData[voiceChannelId]) {
         musicData[voiceChannelId] = {};
@@ -720,15 +820,15 @@ function update_music_data(voiceChannelId, newData) {
 };
 
 function delete_music_data(voiceChannelId) {
-    const musicData = load_music_data();
+    const db = getDatabase();
 
-    if (musicData[voiceChannelId]) {
-        delete musicData[voiceChannelId];
-        save_music_data(musicData);
-        return true;
-    };
+    addToQueue(() => {
+        const stmt = db.prepare('DELETE FROM music WHERE voice_channel_id = ?');
+        const result = stmt.run(voiceChannelId);
+        return result.changes > 0;
+    }, 5);
 
-    return false;
+    return true;
 };
 
 module.exports = {
