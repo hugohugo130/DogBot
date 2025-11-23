@@ -132,6 +132,11 @@ function setEmbedFooter(client = global._client, embed, text = "", rpg_data = nu
     if (!force) text += "\n狗狗機器犬 ∙ 由哈狗製作";
     text = text.trim();
 
+    if (!embed.setFooter) {
+        logger.warn(`？為什麼阿，embed沒有setFooter方法？\n${embed.toJSON?.() || embed.toString?.() || String(embed)}\ncalled from ${getCallerModuleName(null)}`)
+        return embed;
+    };
+
     embed.setFooter({
         text,
         iconURL: client?.user?.displayAvatarURL({ dynamic: true }),
@@ -497,7 +502,7 @@ const rpg_commands = {
                     if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
                     return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
                 };
-                
+
                 if (typeof rpg_data.inventory[item] !== "number") rpg_data.inventory[item] = 0;
                 if (rpg_data.inventory[item] < amount) {
                     const embed = new EmbedBuilder()
