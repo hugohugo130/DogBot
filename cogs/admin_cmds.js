@@ -4,6 +4,12 @@ const util = require("util");
 const execPromise = util.promisify(exec);
 
 function add_item(rpg_data, item, amount) {
+    const { get_id_of_name, get_name_of_id } = require("../utils/rpg.js");
+    item = get_id_of_name(item);
+    if (get_name_of_id(item, null) === null) {
+        throw new Error("item not found");
+    };
+
     if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
 
     rpg_data.inventory[item] += amount;
@@ -49,6 +55,50 @@ async function handleInvCommand(message, args) {
     return message.reply(`done setting <@${user.id}>'s ${item} to ${amount}`);
 };
 
+async function handleGive2Command(message, args) {
+    const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
+    const { mentions_users } = require("../utils/message.js");
+
+    if (args.length !== 3) {
+        return message.reply("用法: !give @user OBJECT");
+    };
+
+    /*
+    object:
+    {
+        "ITEM_NAME": AMOUNT,
+    }
+    */
+    let [_, object] = args;
+    try {
+        JSON.parse(object)
+    } catch (_) {
+        return message.reply("object must be a valid json string");
+    };
+
+    const user = (await mentions_users(message)).first();
+
+    if (!user) {
+        return message.reply("請標記一個用戶！");
+    };
+
+    let rpg_data = load_rpg_data(user.id);
+    let log = "";
+    for (const [item, amount] of object) {
+        try {
+            add_item(rpg_data, item, parseInt(amount))
+            log += `added ${item}*${amount} to user <@${user.id}>'s inventory\n`;
+        } catch (err) {
+            await message.reply(`error adding item ${item} to user <@${user.id}>'s inventory: ${err.message}`);
+            continue;
+        };
+    };
+
+    save_rpg_data(user.id, rpg_data);
+
+    return message.reply(`done adding user <@${user.id}> 's inventory:\n${log}`);
+};
+
 module.exports = {
     name: Events.MessageCreate,
     execute: async function (client, message) {
@@ -71,6 +121,10 @@ module.exports = {
             switch (command) {
                 case "give":
                     await handleGiveCommand(message, commandArgs);
+                    break;
+
+                case "give2":
+                    await handleGive2Command(message, commandArgs);
                     break;
 
                 case "run":
