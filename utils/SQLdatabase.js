@@ -2,7 +2,7 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 const { get_logger } = require('./logger.js');
-const { database_folder, DEFAULT_VALUES } = require('./config.js');
+const { database_folder } = require('./config.js');
 
 const logger = get_logger();
 
@@ -12,7 +12,7 @@ const DB_PATH = path.join(database_folder, 'bot.db');
 // 確保資料庫目錄存在
 if (!fs.existsSync(database_folder)) {
     fs.mkdirSync(database_folder, { recursive: true });
-}
+};
 
 // 初始化資料庫連接
 let db = null;
@@ -21,7 +21,7 @@ let db = null;
 if (!global.dbQueue) {
     global.dbQueue = [];
     global.dbQueueProcessing = false;
-}
+};
 
 /**
  * 初始化資料庫連接
@@ -38,8 +38,8 @@ function initDatabase() {
     } catch (error) {
         logger.error(`初始化資料庫失敗: ${error.stack}`);
         throw error;
-    }
-}
+    };
+};
 
 /**
  * 關閉資料庫連接
@@ -49,8 +49,8 @@ function closeDatabase() {
         db.close();
         db = null;
         logger.info('資料庫連接已關閉');
-    }
-}
+    };
+};
 
 /**
  * 獲取資料庫實例
@@ -60,7 +60,7 @@ function getDatabase() {
         return initDatabase();
     }
     return db;
-}
+};
 
 /**
  * 創建資料表結構
@@ -177,7 +177,7 @@ function createTables() {
         CREATE INDEX IF NOT EXISTS idx_rpg_shop_updated ON rpg_shop(updated_at);
         CREATE INDEX IF NOT EXISTS idx_rpg_farm_updated ON rpg_farm(updated_at);
     `);
-}
+};
 
 /**
  * 添加操作到 Queue
@@ -192,7 +192,7 @@ function addToQueue(operation, priority = 5) {
     queue.sort((a, b) => a.priority - b.priority || a.timestamp - b.timestamp);
 
     processQueue();
-}
+};
 
 /**
  * 處理 Queue 中的操作
@@ -204,13 +204,13 @@ async function processQueue() {
     // 如果已經在處理，就不要重複處理
     if (client?.dbQueueProcessing || global.dbQueueProcessing) {
         return;
-    }
+    };
 
     if (client) {
         client.dbQueueProcessing = true;
     } else {
         global.dbQueueProcessing = true;
-    }
+    };
 
     while (queueRef.length > 0) {
         const { operation } = queueRef.shift();
@@ -219,15 +219,15 @@ async function processQueue() {
             await operation();
         } catch (error) {
             logger.error(`處理資料庫 Queue 操作時出錯: ${error.stack}`);
-        }
-    }
+        };
+    };
 
     if (client) {
         client.dbQueueProcessing = false;
     } else {
         global.dbQueueProcessing = false;
-    }
-}
+    };
+};
 
 /**
  * 將 client Queue 轉移到 global
@@ -235,20 +235,20 @@ async function processQueue() {
 function transferQueueToClient(client) {
     if (!client.dbQueue) {
         client.dbQueue = [];
-    }
+    };
 
     if (!client.dbQueueProcessing) {
         client.dbQueueProcessing = false;
-    }
+    };
 
     // 將 global queue 轉移到 client
     if (global.dbQueue && global.dbQueue.length > 0) {
         client.dbQueue.push(...global.dbQueue);
         global.dbQueue = [];
-    }
+    };
 
     logger.info('資料庫 Queue 已轉移到 client');
-}
+};
 
 /**
  * 檢查並更新資料表 Schema
@@ -282,14 +282,14 @@ function checkAndUpdateSchema() {
                 logger.warn(`資料表 ${tableName} 缺少欄位: ${missingColumns.join(', ')}`);
                 // SQLite 不支援直接添加多個欄位，需要重建資料表
                 // 這裡只記錄警告，實際添加欄位需要手動處理
-            }
-        }
+            };
+        };
 
         logger.info('Schema 檢查完成');
     } catch (error) {
         logger.error(`檢查 Schema 時出錯: ${error.stack}`);
-    }
-}
+    };
+};
 
 module.exports = {
     initDatabase,
