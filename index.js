@@ -9,7 +9,7 @@ const { get_areadline } = require('./utils/readline.js');
 const { check_item_data } = require('./utils/rpg.js');
 const { should_register_cmd } = require('./utils/auto_register.js');
 const { registcmd } = require('./register_commands.js');
-const { initDatabase, transferQueueToClient, closeDatabase } = require('./utils/database.js');
+const { initDatabase, transferQueueToClient, closeDatabase } = require('./utils/SQLdatabase.js');
 require("dotenv").config();
 
 const client = new DogClient();
