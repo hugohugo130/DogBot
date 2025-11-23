@@ -78,19 +78,19 @@ const DEFAULT_VALUES = {
 };
 
 const onlineDB_Files = [
-    "database.json",
-    "rpg_database.json",
-    "rpg_shop.json",
-    "bake_db.json",
-    "smelt_db.json",
-    "dvoice_db.json",
-    "rpg_farm.json",
+    "bot.db",
 ];
 
+// SQL 資料庫配置
+const SQL_DB_FILE = "bot.db";
+const SQL_DB_PATH = join(database_folder, SQL_DB_FILE);
+
+// === 已棄用：JSON 檔案路徑（保留以供向後兼容） ===
+// WARN: 這些檔案已被 bot.db SQL 資料庫取代
 const database_file = join(database_folder, "database.json")
 const rpg_database_file = join(database_folder, "rpg_database.json");
-const rpg_shop_file = join(database_folder, "rpg_database.json");
-const bake_data_file = join(database_folder, "./bake_db.json");
+const rpg_shop_file = join(database_folder, "rpg_shop.json");
+const bake_data_file = join(database_folder, "bake_db.json");
 const serverIPFile = join(database_folder, "serverIP.json");
 const smelt_data_file = join(database_folder, "smelt_db.json");
 const dvoice_data_file = join(database_folder, "dvoice_db.json");
