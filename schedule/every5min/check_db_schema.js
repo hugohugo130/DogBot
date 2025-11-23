@@ -1,4 +1,4 @@
-const { checkAndUpdateSchema } = require("../../utils/database.js");
+const { checkAndUpdateSchema } = require("../../utils/SQLdatabase.js");
 const { get_logger } = require("../../utils/logger.js");
 
 const logger = get_logger();
