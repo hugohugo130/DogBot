@@ -254,7 +254,7 @@ module.exports = {
             };
 
             if (!userHaveEnoughItems(userId, hoe, amount)) {
-                const embed = notEnoughItemEmbed([{ name: get_name_of_id(hoe), amount }]);
+                const embed = notEnoughItemEmbed([{ item: hoe, amount }]);
 
                 return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
             };
