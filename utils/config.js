@@ -9,7 +9,7 @@ const DEFAULT_IP = "192.168.0.156"
 const DEFAULT_PORT = 3003
 
 const DATABASE_FILES = [
-    "serverIP.josn",
+    "serverIP.json",
     "bot.db",
 ];
 

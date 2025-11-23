@@ -246,8 +246,6 @@ function transferQueueToClient(client) {
         client.dbQueue.push(...global.dbQueue);
         global.dbQueue = [];
     };
-
-    logger.info('資料庫 Queue 已轉移到 client');
 };
 
 /**
@@ -280,12 +278,8 @@ function checkAndUpdateSchema() {
 
             if (missingColumns.length > 0) {
                 logger.warn(`資料表 ${tableName} 缺少欄位: ${missingColumns.join(', ')}`);
-                // SQLite 不支援直接添加多個欄位，需要重建資料表
-                // 這裡只記錄警告，實際添加欄位需要手動處理
             };
         };
-
-        logger.info('Schema 檢查完成');
     } catch (error) {
         logger.error(`檢查 Schema 時出錯: ${error.stack}`);
     };
