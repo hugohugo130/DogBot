@@ -91,7 +91,7 @@ ${Object.keys(loggerManager_nodc).join("\n")}`);
     await checkDBFilesExists();
     check_item_data();
 
-    this.serverIP = getServerIPSync(this);
+    client.serverIP = getServerIPSync(client);
 
     const cogs = load_cogs(client);
     logger.info(`已加載 ${cogs} 個程式碼`);
