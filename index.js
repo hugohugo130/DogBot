@@ -91,7 +91,6 @@ ${Object.keys(loggerManager_nodc).join("\n")}`);
     await checkDBFilesExists();
     check_item_data();
 
-
     this.serverIP = getServerIPSync(this);
 
     const cogs = load_cogs(client);
