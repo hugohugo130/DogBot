@@ -58,7 +58,7 @@ async function handleInvCommand(message, args) {
 async function handleGive2Command(message, args) {
     const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
     const { mentions_users } = require("../utils/message.js");
-    const { get_id_of_name } = require("../utils/rpg.js");
+    const { get_id_of_name, get_name_of_id } = require("../utils/rpg.js");
 
     if (args.length !== 2) {
         return message.reply("用法: !give @user OBJECT");
@@ -90,7 +90,7 @@ async function handleGive2Command(message, args) {
 
         try {
             add_item(rpg_data, item, parseInt(amount))
-            log += `added ${item}\\*${amount} to user <@${user.id}>'s inventory\n`;
+            log += `added ${get_name_of_id(item)}\\*${amount} to user <@${user.id}>'s inventory\n`;
         } catch (err) {
             await message.reply(`error adding item ${item} to user <@${user.id}>'s inventory: ${err.message}`);
             continue;
