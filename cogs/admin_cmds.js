@@ -77,7 +77,6 @@ async function handleGive2Command(message, args) {
         return message.reply("object must be a valid json string");
     };
 
-    console.log(await mentions_users(message));
     const user = (await mentions_users(message)).first();
 
     if (!user) {
