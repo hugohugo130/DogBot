@@ -27,7 +27,7 @@ async function mentions_users(message) {
         .filter(e => e !== "");
 
     const userids = await Promise.all(
-        UserIDs.map(e => [e, get_user(e)])
+        UserIDs.map(async e => [e, await get_user(e)])
     );
 
     return new Collection(userids);
