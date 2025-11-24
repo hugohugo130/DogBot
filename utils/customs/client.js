@@ -1,5 +1,4 @@
 const { Client, GatewayIntentBits, Options } = require('discord.js');
-const { getServerIPSync } = require("../getSeverIPSync.js");
 const { loadslashcmd } = require('../loadslashcmd.js');
 const { loadDvoiceData } = require('../file.js');
 const { authorName } = require("../config.js");
@@ -47,7 +46,6 @@ class DogClient extends Client {
         this.last_send_log = "";
         this.dvoice = loadDvoiceData();
         this.commands = loadslashcmd(true);
-        this.serverIP = getServerIPSync(this);
         this.author = authorName || "哈狗";
 
         /**

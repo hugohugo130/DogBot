@@ -9,7 +9,8 @@ const { get_areadline } = require('./utils/readline.js');
 const { check_item_data } = require('./utils/rpg.js');
 const { should_register_cmd } = require('./utils/auto_register.js');
 const { registcmd } = require('./register_commands.js');
-const { initDatabase, transferQueueToClient, closeDatabase } = require('./utils/SQLdatabase.js');
+const { initDatabase, transferQueueToClient } = require('./utils/SQLdatabase.js');
+const { getServerIPSync } = require("./utils/getSeverIPSync.js");
 require("dotenv").config();
 
 const client = new DogClient();
@@ -35,20 +36,20 @@ setInterval(() => {
     const memUsage = process.memoryUsage();
     const memUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
     const memTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
-    
+
     // 記憶體使用超過限制時警告（每5分鐘最多警告一次）
     if (memUsedMB > memoryLimitMB && Date.now() - lastMemoryWarning > 300000) {
         logger.warn(`記憶體使用過高: ${memUsedMB}MB / ${memTotalMB}MB`);
         lastMemoryWarning = Date.now();
     };
-    
+
     // CPU 使用率監控
     const currentCpuUsage = process.cpuUsage(lastCpuUsage);
     lastCpuUsage = process.cpuUsage();
-    
+
     // 計算 CPU 使用率（百分比）
     const cpuPercent = ((currentCpuUsage.user + currentCpuUsage.system) / 1000000 / 30) * 100;
-    
+
     if (cpuPercent > 80) {
         logger.warn(`CPU 使用率過高: ${cpuPercent.toFixed(2)}%`);
     };
@@ -113,6 +114,9 @@ process.on('SIGINT', async () => {
     await checkDBFilesExists();
     check_item_data();
 
+
+    this.serverIP = getServerIPSync(this);
+
     const cogs = load_cogs(client);
     logger.info(`已加載 ${cogs} 個程式碼`);
 
@@ -122,7 +126,7 @@ process.on('SIGINT', async () => {
 
     await client.login(process.env.TOKEN);
     global._client = client;
-    
+
     // 將 Queue 從 global 轉移到 client
     transferQueueToClient(client);
 })();
