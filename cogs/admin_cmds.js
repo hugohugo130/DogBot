@@ -77,6 +77,7 @@ async function handleGive2Command(message, args) {
         return message.reply("object must be a valid json string");
     };
 
+    console.log(await mentions_users(message));
     const user = (await mentions_users(message)).first();
 
     if (!user) {
@@ -90,7 +91,7 @@ async function handleGive2Command(message, args) {
 
         try {
             add_item(rpg_data, item, parseInt(amount))
-            log += `added ${item}*${amount} to user <@${user.id}>'s inventory\n`;
+            log += `added ${item}\\*${amount} to user <@${user.id}>'s inventory\n`;
         } catch (err) {
             await message.reply(`error adding item ${item} to user <@${user.id}>'s inventory: ${err.message}`);
             continue;
