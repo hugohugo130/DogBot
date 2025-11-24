@@ -78,28 +78,6 @@ ${Object.keys(loggerManager_nodc).join("\n")}`);
     });
 });
 
-// 處理 Docker 容器關閉信號
-// 處理 Docker 容器關閉信號
-process.on('SIGTERM', async () => {
-    logger.info('收到 SIGTERM 信號，準備安全關閉...');
-    try {
-        await safeshutdown(client);
-    } catch (error) {
-        logger.error(`安全關閉時發生錯誤: ${error.stack}`);
-        process.exit(1);
-    };
-});
-
-process.on('SIGINT', async () => {
-    logger.info('收到 SIGINT 信號，準備安全關閉...');
-    try {
-        await safeshutdown(client);
-    } catch (error) {
-        logger.error(`安全關閉時發生錯誤: ${error.stack}`);
-        process.exit(1);
-    };
-});
-
 (async () => {
     global._client = null;
     global.oven_sessions = {};
@@ -125,6 +103,27 @@ process.on('SIGINT', async () => {
     logger.info(`已加載 ${client.commands.size} 個斜線指令`);
 
     await client.login(process.env.TOKEN);
+
+    process.on('SIGTERM', async () => {
+        logger.info('收到 SIGTERM 信號，準備安全關閉...');
+        try {
+            await safeshutdown(client);
+        } catch (error) {
+            logger.error(`安全關閉時發生錯誤: ${error.stack}`);
+            process.exit(1);
+        };
+    });
+
+    process.on('SIGINT', async () => {
+        logger.info('收到 SIGINT 信號，準備安全關閉...');
+        try {
+            await safeshutdown(client);
+        } catch (error) {
+            logger.error(`安全關閉時發生錯誤: ${error.stack}`);
+            process.exit(1);
+        };
+    });
+
     global._client = client;
 
     // 將 Queue 從 global 轉移到 client
