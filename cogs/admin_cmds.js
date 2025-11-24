@@ -72,7 +72,7 @@ async function handleGive2Command(message, args) {
     */
     let [_, object] = args;
     try {
-        JSON.parse(object)
+        object = JSON.parse(object)
     } catch (_) {
         return message.reply("object must be a valid json string");
     };
@@ -85,7 +85,7 @@ async function handleGive2Command(message, args) {
 
     let rpg_data = load_rpg_data(user.id);
     let log = "";
-    for (let [item, amount] of object) {
+    for (let [item, amount] of Object.entries(object)) {
         item = get_id_of_name(item);
 
         try {
@@ -127,8 +127,13 @@ module.exports = {
                     break;
 
                 case "give2":
-                    const userMention = commandArgs[0];
-                    const object = commandArgs.slice(1).join(" ");
+                    let give2args = message.content.split(" ");
+                    give2args = give2args.map(arg => arg.trim());
+                    give2args = give2args.filter(arg => arg !== '');
+                    give2args = give2args.slice(1);
+                    
+                    const userMention = give2args[0];
+                    const object = give2args.slice(1).join(" ");
 
                     await handleGive2Command(message, [userMention, object]);
                     break;
