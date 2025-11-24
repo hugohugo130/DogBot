@@ -84,7 +84,6 @@ ${Object.keys(loggerManager_nodc).join("\n")}`);
     global.smelter_sessions = {};
 
     // 初始化 SQL 資料庫
-    logger.info('初始化 SQL 資料庫...');
     initDatabase();
 
     await checkDBFilesCorrupted();
