@@ -17,9 +17,9 @@ async function safeshutdown(client) {
             logger.info(`🛑 ${client.name || BotName || client.user.tag} 已關機！`);
         };
 
-        await shutdown(true, 200);
-
         closeDatabase();
+
+        await shutdown(true, 200);
     } finally {
         if (client?.destroy) await client.destroy();
         process.exit();
