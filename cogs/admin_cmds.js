@@ -131,7 +131,7 @@ module.exports = {
                     give2args = give2args.map(arg => arg.trim());
                     give2args = give2args.filter(arg => arg !== '');
                     give2args = give2args.slice(1);
-                    
+
                     const userMention = give2args[0];
                     const object = give2args.slice(1).join(" ");
 
@@ -208,6 +208,8 @@ module.exports = {
                 };
             };
         } catch (err) {
+            const { get_loophole_embed } = require("../utils/rpg.js");
+
             await message.reply({ embeds: [await get_loophole_embed(client, err.stack)] });
         };
     },
