@@ -60,7 +60,7 @@ async function handleGive2Command(message, args) {
     const { mentions_users } = require("../utils/message.js");
     const { get_id_of_name } = require("../utils/rpg.js");
 
-    if (args.length !== 3) {
+    if (args.length !== 2) {
         return message.reply("用法: !give @user OBJECT");
     };
 
@@ -127,7 +127,10 @@ module.exports = {
                     break;
 
                 case "give2":
-                    await handleGive2Command(message, commandArgs);
+                    const userMention = commandArgs[0];
+                    const object = commandArgs.slice(1).join(" ");
+
+                    await handleGive2Command(message, [userMention, object]);
                     break;
 
                 case "run":
