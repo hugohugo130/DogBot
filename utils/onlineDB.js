@@ -109,13 +109,14 @@ async function onlineDB_deleteFile(filename) {
 async function onlineDB_checkFileContent(filename, maxRetries = 3) {
     const { stringify } = require("./file.js");
 
+    const isSqlFile = filename.endsWith('.db');
+
     const [same, localContent, remoteContent] = await compareLocalRemote(filename, logger, maxRetries);
     const rl = get_areadline();
 
     if (!same && localContent && remoteContent) {
         let answer;
-        const isSqlFile = filename.endsWith('.db');
-        
+
         do {
             console.log("=".repeat(30));
             console.log(`檔案 ${filename} 內容不同:`);
@@ -128,7 +129,7 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
             }
 
             answer = await rl.question(isSqlFile ? '請選擇操作 (1/2/3): ' : '請選擇操作 (1/2/3/4/5): ');
-            
+
             if (!isSqlFile) {
                 switch (answer.trim()) {
                     case '4':
@@ -141,7 +142,7 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
                         break;
                 };
             }
-            
+
             const validOptions = isSqlFile ? ['1', '2', '3'] : ['1', '2', '3', '4', '5'];
             if (!validOptions.includes(answer.trim())) {
                 console.log(`請輸入有效的選項 (${validOptions.join('/')})`);
@@ -177,7 +178,7 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
 async function checkAllDatabaseFilesContent() {
     let executed = false;
 
-    for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
+    for (const file of DATABASE_FILES.map(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         const res = await onlineDB_checkFileContent(file);
         // logger.debug(`正在檢查資料庫檔案內容 - ${file} - ${res}`);
         if (!executed && res) executed = true;
@@ -188,7 +189,7 @@ async function checkAllDatabaseFilesContent() {
 
 // === 批量上載所有資料庫檔案 ===
 async function uploadAllDatabaseFiles() {
-    for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
+    for (const file of DATABASE_FILES.map(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         await onlineDB_uploadFile(file);
     };
 
@@ -212,7 +213,7 @@ async function downloadDatabaseFile(src, dst = null) {
 };
 
 async function downloadAllFiles() {
-    for (const filename of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
+    for (const filename of DATABASE_FILES.map(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         const res = await onlineDB_downloadFile(filename);
         logger.debug(`downloaded ${filename}, saved to ${res}`);
     };
@@ -221,11 +222,11 @@ async function downloadAllFiles() {
 async function uploadChangedDatabaseFiles() {
     for (const file of onlineDB_Files.filter(e => existsSync(join_db_folder(e)))) {
         const localPath = join_db_folder(file);
-        
+
         if (fs.existsSync(localPath)) {
             const isSqlFile = file.endsWith('.db');
             let localContent;
-            
+
             try {
                 if (isSqlFile) {
                     // SQL 檔案：讀取為 buffer 並計算 hash
