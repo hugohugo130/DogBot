@@ -121,9 +121,10 @@ module.exports = {
             const userId = user.id;
 
             const rpg_data = await load_rpg_data(userId);
+            const show_money = rpg_data.privacy.includes("money");
             let money = show_money ? rpg_data.money ?? "無資料" : "隱私設定關閉";
             if (typeof money === "number") money = `\`${money}$\``
-            const show_money = rpg_data.privacy.includes("money");
+
             const hunger = rpg_data.hunger ?? "無資料";
             const job = rpg_data.job || "無";
             const fightjob = rpg_data.fightjob || "無";
