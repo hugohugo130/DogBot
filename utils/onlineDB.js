@@ -178,7 +178,7 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
 async function checkAllDatabaseFilesContent() {
     let executed = false;
 
-    for (const file of DATABASE_FILES.map(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
+    for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         const res = await onlineDB_checkFileContent(file);
         // logger.debug(`正在檢查資料庫檔案內容 - ${file} - ${res}`);
         if (!executed && res) executed = true;
@@ -189,7 +189,7 @@ async function checkAllDatabaseFilesContent() {
 
 // === 批量上載所有資料庫檔案 ===
 async function uploadAllDatabaseFiles() {
-    for (const file of DATABASE_FILES.map(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
+    for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         await onlineDB_uploadFile(file);
     };
 
@@ -213,7 +213,7 @@ async function downloadDatabaseFile(src, dst = null) {
 };
 
 async function downloadAllFiles() {
-    for (const filename of DATABASE_FILES.map(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
+    for (const filename of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         const res = await onlineDB_downloadFile(filename);
         logger.debug(`downloaded ${filename}, saved to ${res}`);
     };
