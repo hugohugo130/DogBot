@@ -1,7 +1,10 @@
 const { Events } = require("discord.js");
 const { exec } = require("child_process");
 const util = require("util");
+const { get_logger } = require("../utils/logger.js");
 const execPromise = util.promisify(exec);
+
+const logger = get_logger();
 
 function add_item(rpg_data, item, amount) {
     const { get_id_of_name, get_name_of_id } = require("../utils/rpg.js");
@@ -210,6 +213,7 @@ module.exports = {
         } catch (err) {
             const { get_loophole_embed } = require("../utils/rpg.js");
 
+            logger.error(`admin cmds 錯誤: ${err.stack}`);
             await message.reply({ embeds: [await get_loophole_embed(client, err.stack)] });
         };
     },
