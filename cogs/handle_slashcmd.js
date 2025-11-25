@@ -38,19 +38,19 @@ module.exports = {
         const backend_logger = get_logger({ backend: true });
 
         const username = interaction.user.globalName || interaction.user.username;
+        const command = interaction.client.commands.get(interaction.commandName);
+
+        if (!command) {
+            logger.error(`找不到名為 ${interaction.commandName} 的指令`);
+            return;
+        };
+
+        let subPath = getFullCommandPath(interaction.options.data);
+        let fullCommand = [interaction.commandName, ...subPath].join(' ');
+        let finalOptions = getFinalOptions(interaction.options.data);
+        let optionsStr = finalOptions.map(option => `${option.name}: ${option.value}`).join(', ');
 
         try {
-            const command = interaction.client.commands.get(interaction.commandName);
-
-            if (!command) {
-                logger.error(`找不到名為 ${interaction.commandName} 的指令`);
-                return;
-            };
-
-            let subPath = getFullCommandPath(interaction.options.data);
-            let fullCommand = [interaction.commandName, ...subPath].join(' ');
-            let finalOptions = getFinalOptions(interaction.options.data);
-            let optionsStr = finalOptions.map(option => `${option.name}: ${option.value}`).join(', ');
 
             logger.info(`${username} 正在執行斜線指令: ${fullCommand}${optionsStr ? `, 選項: ${optionsStr}` : ""}`);
 
@@ -66,7 +66,7 @@ module.exports = {
         } catch (error) {
             const { get_loophole_embed } = require('../utils/rpg.js');
 
-            logger.error(`執行斜線指令時出錯：${error.stack}`);
+            logger.error(`執行斜線指令 ${fullCommand} 時出錯：${error.stack}`);
 
             const embed = await get_loophole_embed(interaction.client, error.stack);
             await interaction.followUp({ embeds: [embed] });
