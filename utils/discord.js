@@ -24,10 +24,14 @@ async function get_user_of_guild(guildID, client = global._client) {
  * 
  * @param {string} userID 
  * @param {DogClient} client 
- * @returns {Promise<User>}
+ * @returns {Promise<User | null>}
  */
 async function get_user(userID, client = global._client) {
-    return client.users.cache.get(userID) || await client.users.fetch(userID);
+    try {
+        return client.users.cache.get(userID) || await client.users.fetch(userID);
+    } catch (_) {
+        return null;
+    };
 };
 
 /**
