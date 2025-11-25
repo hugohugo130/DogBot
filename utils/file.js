@@ -10,7 +10,9 @@ const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder, probabilities }
 const { get_logger, getCallerModuleName } = require("./logger.js");
 const { sleep } = require("./sleep.js");
 const { getDatabase, addToQueue } = require("./SQLdatabase.js");
+const Database = require("better-sqlite3");
 
+const unlinkSync = fs.unlinkSync;
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
 const mkdirSync = fs.mkdirSync;
@@ -59,7 +61,7 @@ function safeJSONParse(jsonString, defaultValue = {}) {
     try {
         return JSON.parse(jsonString);
     } catch (error) {
-        logger.warn(`JSON 解析失敗: ${error.message}`);
+        logger.warn(`JSON 解析失敗: ${error.stack}`);
         return defaultValue;
     };
 };
@@ -184,6 +186,165 @@ async function readSchedule() {
     };
 };
 
+// 獲取資料庫的指紋（結構和數據的哈希）
+async function getDatabaseFingerprint(dbPath) {
+    const db = new Database(dbPath, { readonly: true });
+
+    try {
+        const fingerprint = {
+            tables: {},
+            schemaHash: "",
+            dataHash: "",
+            tableCount: 0,
+            totalRows: 0,
+            timestamp: Date.now()
+        };
+
+        // 獲取所有表名（排除 sqlite 系統表）
+        const tables = db.prepare(`
+            SELECT name FROM sqlite_master 
+            WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
+        `).all();
+
+        fingerprint.tableCount = tables.length;
+        const tableFingerprints = [];
+        const schemaHashes = [];
+        const dataHashes = [];
+
+        for (const table of tables) {
+            const tableName = table.name;
+
+            // 獲取表結構
+            const schema = db.prepare(`SELECT sql FROM sqlite_master WHERE name = ?`).get(tableName);
+            const schemaHash = require('crypto')
+                .createHash('md5')
+                .update(schema.sql || '')
+                .digest('hex');
+
+            // 獲取數據哈希（按排序後的數據計算）
+            let data;
+            try {
+                data = db.prepare(`SELECT * FROM "${tableName}"`).all();
+
+                // 對數據進行排序以確保一致性
+                data.sort((a, b) => {
+                    const aStr = JSON.stringify(a);
+                    const bStr = JSON.stringify(b);
+                    return aStr.localeCompare(bStr);
+                });
+            } catch (e) {
+                log.warn(`無法讀取表 ${tableName} 的數據: ${e.message}`);
+                data = [];
+            };
+
+            const dataHash = require('crypto')
+                .createHash('md5')
+                .update(JSON.stringify(data))
+                .digest('hex');
+
+            fingerprint.tables[tableName] = {
+                schemaHash,
+                dataHash,
+                rowCount: data.length,
+                schema: schema.sql
+            };
+
+            fingerprint.totalRows += data.length;
+            tableFingerprints.push(`${tableName}:${schemaHash}:${dataHash}`);
+            schemaHashes.push(schemaHash);
+            dataHashes.push(dataHash);
+        };
+
+        // 生成整體哈希
+        tableFingerprints.sort();
+        schemaHashes.sort();
+        dataHashes.sort();
+
+        fingerprint.schemaHash = require('crypto')
+            .createHash('md5')
+            .update(schemaHashes.join(''))
+            .digest('hex');
+        fingerprint.dataHash = require('crypto')
+            .createHash('md5')
+            .update(dataHashes.join(''))
+            .digest('hex');
+
+        return fingerprint;
+
+    } catch (error) {
+        throw new Error(`獲取資料庫指紋失敗 (${dbPath}): ${error.message}`);
+    } finally {
+        db.close();
+    };
+};
+
+// 比較兩個資料庫指紋是否相同
+function isDatabaseFingerprintEqual(fp1, fp2) {
+    // 比較基本統計信息
+    if (fp1.tableCount !== fp2.tableCount) return false;
+
+    // 比較表數量
+    const tables1 = Object.keys(fp1.tables);
+    const tables2 = Object.keys(fp2.tables);
+
+    if (tables1.length !== tables2.length) return false;
+
+    // 檢查所有表名是否一致
+    for (const tableName of tables1) {
+        if (!fp2.tables[tableName]) {
+            return false;
+        };
+    };
+
+    // 比較每個表的結構和數據
+    for (const tableName of tables1) {
+        const table1 = fp1.tables[tableName];
+        const table2 = fp2.tables[tableName];
+
+        if (table1.schemaHash !== table2.schemaHash ||
+            table1.dataHash !== table2.dataHash ||
+            table1.rowCount !== table2.rowCount
+        ) {
+            return false;
+        };
+    };
+
+    return true;
+};
+
+// 下載遠端資料庫到臨時檔案
+async function downloadRemoteDatabase(url, filename) {
+    const tempDir = require("os").tmpdir();
+    const tempPath = join(tempDir, `remote_${Date.now()}_${filename}`);
+
+    const response = await axios({
+        method: 'GET',
+        url: url,
+        responseType: 'stream',
+        timeout: 30000
+    });
+
+    const writer = createWriteStream(tempPath);
+
+    response.data.pipe(writer);
+
+    return new Promise((resolve, reject) => {
+        writer.on('finish', () => resolve(tempPath));
+        writer.on('error', (err) => {
+            // 如果寫入失敗，嘗試刪除臨時檔案
+            try {
+                if (existsSync(tempPath)) {
+                    unlinkSync(tempPath);
+                };
+            } catch (e) {
+                // 忽略清理錯誤
+            };
+
+            reject(err);
+        });
+    });
+};
+
 /**
  * 
  * @param {string} filename 
@@ -191,11 +352,13 @@ async function readSchedule() {
  * @param {number} maxRetries 
  * @returns {Promise<{same: boolean, localContent: string, remoteContent: string}>}
  */
-async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
+async function compareLocalRemote(filename, log = console, maxRetries = 3) {
     const { getServerIPSync } = require("./getSeverIPSync.js");
 
     let localContent;
     let remoteContent;
+    let localIsSqlFile = false;
+    let remoteIsSqlFile = false;
 
     const basename_filename = path.basename(filename);
     const local_filepath = join_db_folder(basename_filename);
@@ -205,58 +368,97 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
     const SERVER_URL = `http://${serverIP}:${PORT}`;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        // 讀取本地檔案
         try {
+            // 讀取本地檔案
             if (existsSync(local_filepath)) {
-                localContent = readFileSync(local_filepath, {
-                    encoding: "utf8",
-                    return: null,
-                });
-                // 嘗試解析並格式化 JSON 以便比較
-                try {
-                    localContent = stringify(JSON.parse(localContent));
-                } catch (e) {
-                    // 不是 JSON 格式，保持原樣
+                // 檢查本地檔案類型
+                if (local_filepath.endsWith('.db') || local_filepath.endsWith('.sqlite')) {
+                    localIsSqlFile = true;
+
+                    // 使用指紋函數獲取資料庫指紋
+                    localContent = await getDatabaseFingerprint(local_filepath);
+                } else if (local_filepath.endsWith('.json')) {
+                    localIsSqlFile = false;
+                    const fileContent = readFileSync(local_filepath, "utf8");
+                    localContent = JSON.stringify(JSON.parse(fileContent));
+                } else {
+                    throw new Error(`不支援的本地檔案類型: ${basename_filename}`);
                 }
             } else {
                 localContent = null;
-            }
-        } catch (err) {
-            log.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
-            localContent = null;
-        };
+                log.warn(`本地檔案不存在: ${local_filepath}`);
+            };
 
-        // 從遠端伺服器獲取檔案
-        try {
-            const response = await axios.get(`${SERVER_URL}/files/${basename_filename}`);
-            remoteContent = stringify(response.data);
-        } catch (err) {
-            if (err.response?.status === 404) {
-                log.warn(`遠端檔案不存在: ${basename_filename}`);
-                remoteContent = null;
-            } else if (err.code === 'ECONNRESET' || err.message?.includes("socket hang up")) {
-                if (attempt < maxRetries) {
-                    log.warn(`連接遠端伺服器時中斷，正在重試 (${attempt}/${maxRetries})...`);
-                    sleep(1000);
-                    continue;
+            // 從遠端伺服器獲取檔案
+            try {
+                // 檢查遠端檔案類型
+                if (basename_filename.endsWith('.db') || basename_filename.endsWith('.sqlite')) {
+                    remoteIsSqlFile = true;
+                    const tempPath = await downloadRemoteDatabase(`${SERVER_URL}/files/${basename_filename}`, basename_filename);
+
+                    remoteContent = await getDatabaseFingerprint(tempPath);
+
+                    unlinkSync(tempPath);
+                } else if (basename_filename.endsWith('.json')) {
+                    remoteIsSqlFile = false;
+                    const response = await axios.get(`${SERVER_URL}/files/${basename_filename}`);
+                    remoteContent = JSON.stringify(response.data);
                 } else {
-                    log.error(`獲取遠端檔案內容時遇到錯誤: ${err.message}`);
-                    remoteContent = null;
+                    throw new Error(`不支援的遠端檔案類型: ${basename_filename}`);
                 };
+            } catch (err) {
+                if (err.response?.status === 404) {
+                    log.warn(`遠端檔案不存在: ${basename_filename}`);
+                    remoteContent = null;
+                } else if (err.code === 'ECONNRESET' || err.message?.includes("socket hang up")) {
+                    if (attempt < maxRetries) {
+                        log.warn(`連接遠端伺服器時中斷，正在重試 (${attempt}/${maxRetries})...`);
+                        sleep(1000);
+                        continue;
+                    } else {
+                        throw err;
+                    };
+                } else {
+                    throw err;
+                };
+            };
+
+            break;
+
+        } catch (err) {
+            if (attempt === maxRetries) {
+                log.error(`比較檔案時遇到錯誤: ${err.stack}`);
+                throw err;
             } else {
-                log.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
-                remoteContent = null;
+                log.warn(`嘗試 ${attempt}/${maxRetries} 失敗: ${err.message}`);
+                sleep(1000);
             };
         };
+    };
 
-        break;
+    // 檢查檔案類型是否一致
+    if (localContent !== null && remoteContent !== null && localIsSqlFile !== remoteIsSqlFile) {
+        return [false, localContent, remoteContent];
     };
 
     // 比較內容
-    const same = localContent && remoteContent && isDeepStrictEqual(localContent, remoteContent);
+    let same = false;
+    if (localContent && remoteContent) {
+        if (localIsSqlFile) { // SQL 檔案
+            // 使用指紋比較函數
+            same = isDatabaseFingerprintEqual(localContent, remoteContent);
+        } else {
+            // 對於 JSON 檔案，直接比較字符串
+            same = localContent === remoteContent;
+        };
+    } else {
+        // 如果任一內容為 null，只有當兩者都為 null 時才認為相同
+        same = localContent === remoteContent;
+    };
 
     return [same, localContent, remoteContent];
 };
+
 
 /**
  * 
