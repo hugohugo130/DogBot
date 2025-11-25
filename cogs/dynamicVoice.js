@@ -39,7 +39,7 @@ module.exports = {
             const oldChannel = oldState.channel;
             const newChannel = newState.channel;
 
-            if (oldChannel.id === newChannel.id) return;
+            if (oldChannel?.id && newChannel?.id && oldChannel?.id === newChannel?.id) return;
 
             // 成員加入語音頻道
             if (newChannel && newChannel.id === mainchannelID) {
