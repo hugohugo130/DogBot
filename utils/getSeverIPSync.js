@@ -35,7 +35,9 @@ function getServerIPSync() {
         };
     };
 
-    if (!serverIP || !check_IP_valid(serverIP, PORT)) {
+    const IP_file = serverIP?.IP;
+
+    if (!serverIP || !IP_file || !check_IP_valid(IP_file, PORT)) {
         let IP = DEFAULT_IP;
 
         try {
