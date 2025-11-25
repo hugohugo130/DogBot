@@ -48,7 +48,6 @@ function closeDatabase() {
     if (db) {
         db.close();
         db = null;
-        logger.info('資料庫連接已關閉');
     };
 };
 
