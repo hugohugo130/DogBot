@@ -3,7 +3,7 @@ FROM node:22.14.0-slim
 WORKDIR /app
 
 # 安裝ffmpeg
-RUN apk add --update --no-cache ffmpeg
+# RUN apk add --update --no-cache ffmpeg
 
 # 安裝編譯依賴 (某些套件會需要)
 RUN apk add --no-cache python3 make g++ git
