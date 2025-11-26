@@ -1,4 +1,4 @@
-FROM node:22.14.0-alpine
+FROM node:22.14.0-slim
 
 WORKDIR /app
 
@@ -9,7 +9,7 @@ RUN apk add --update --no-cache ffmpeg
 RUN apk add --no-cache python3 make g++ git
 
 # 安裝各種東西
-RUN apk install curl libc6-compat
+RUN apk install --no-cache curl libc6-compat
 
 # 複製 package.json / package-lock.json
 COPY package*.json ./
