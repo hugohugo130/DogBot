@@ -9,7 +9,7 @@ WORKDIR /app
 RUN apt install --no-cache python3 make g++ git
 
 # 安裝各種東西
-RUN apk install --no-cache curl libc6-compat
+RUN apt install --no-cache curl libc6-compat
 
 # 複製 package.json / package-lock.json
 COPY package*.json ./
@@ -18,7 +18,7 @@ COPY package*.json ./
 RUN npm install
 
 # 刪掉編譯依賴
-RUN apk del python3 make g++ git
+RUN apt del python3 make g++ git
 
 # 複製剩下的程式碼
 COPY . .
