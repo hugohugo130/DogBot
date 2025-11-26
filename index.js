@@ -78,6 +78,16 @@ ${Object.keys(loggerManager_nodc).join("\n")}`);
     });
 });
 
+async function handle_shutdown(sign) {
+    logger.info(`收到 ${sign} 信號，準備安全關閉...`);
+    try {
+        await safeshutdown(client);
+    } catch (error) {
+        logger.error(`安全關閉時發生錯誤: ${error.stack}`);
+        process.exit(1);
+    };
+};
+
 (async () => {
     global._client = null;
     global.oven_sessions = {};
@@ -103,23 +113,11 @@ ${Object.keys(loggerManager_nodc).join("\n")}`);
     await client.login(process.env.TOKEN);
 
     process.on('SIGTERM', async () => {
-        logger.info('收到 SIGTERM 信號，準備安全關閉...');
-        try {
-            await safeshutdown(client);
-        } catch (error) {
-            logger.error(`安全關閉時發生錯誤: ${error.stack}`);
-            process.exit(1);
-        };
+        await handle_shutdown('SIGTERM');
     });
 
     process.on('SIGINT', async () => {
-        logger.info('收到 SIGINT 信號，準備安全關閉...');
-        try {
-            await safeshutdown(client);
-        } catch (error) {
-            logger.error(`安全關閉時發生錯誤: ${error.stack}`);
-            process.exit(1);
-        };
+        await handle_shutdown('SIGINT');
     });
 
     global._client = client;
