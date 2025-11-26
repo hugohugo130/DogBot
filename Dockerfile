@@ -3,13 +3,13 @@ FROM node:latest
 WORKDIR /app
 
 # 安裝ffmpeg
-# RUN apt install --update --no-cache ffmpeg
+# RUN apt install --updateaptffmpeg
 
 # 安裝編譯依賴 (某些套件會需要)
-RUN apt install --no-cache python3 make g++ git
+RUN apt installaptpython3 make g++ git
 
 # 安裝各種東西
-RUN apt install --no-cache curl libc6-compat
+RUN apt installaptcurl libc6-compat
 
 # 複製 package.json / package-lock.json
 COPY package*.json ./
@@ -30,6 +30,7 @@ RUN if [ "$update" = "true" ]; then \
     npm audit fix; \
 fi
 
+RUN apt clean && rm -rf /var/lib/apt/lists/*
 RUN npm cache clean --force
 
 # 啟動
