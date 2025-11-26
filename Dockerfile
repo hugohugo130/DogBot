@@ -3,13 +3,13 @@ FROM node:latest
 WORKDIR /app
 
 # 安裝ffmpeg
-# RUN apt install --updateaptffmpeg
+# RUN apt install --update ffmpeg
 
 # 安裝編譯依賴 (某些套件會需要)
-RUN apt installaptpython3 make g++ git
+RUN apt install python3 make g++ git
 
 # 安裝各種東西
-RUN apt installaptcurl libc6-compat
+RUN apt install curl libc6-compat
 
 # 複製 package.json / package-lock.json
 COPY package*.json ./
