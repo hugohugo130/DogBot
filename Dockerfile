@@ -6,7 +6,10 @@ WORKDIR /app
 RUN apk add --update --no-cache ffmpeg
 
 # 安裝編譯依賴 (某些套件會需要)
-RUN apk add --no-cache python3 make g++ git curl
+RUN apk add --no-cache python3 make g++ git
+
+# 安裝各種東西
+RUN apk install curl libc6-compat
 
 # 複製 package.json / package-lock.json
 COPY package*.json ./
