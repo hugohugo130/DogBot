@@ -18,7 +18,7 @@ COPY package*.json ./
 RUN npm install
 
 # 刪掉編譯依賴
-RUN apt remove python3 make g++ git
+RUN apt remove python3 make g++ git -y
 
 # 複製剩下的程式碼
 COPY . .
