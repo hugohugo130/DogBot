@@ -9,7 +9,7 @@ WORKDIR /app
 RUN apt install python3 make g++ git
 
 # 安裝各種東西
-RUN apt install curl libc6-compat
+RUN apt install curl
 
 # 複製 package.json / package-lock.json
 COPY package*.json ./
