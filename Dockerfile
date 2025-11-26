@@ -3,10 +3,10 @@ FROM node:latest
 WORKDIR /app
 
 # 安裝ffmpeg
-# RUN apk add --update --no-cache ffmpeg
+# RUN apt install --update --no-cache ffmpeg
 
 # 安裝編譯依賴 (某些套件會需要)
-RUN apk add --no-cache python3 make g++ git
+RUN apt install --no-cache python3 make g++ git
 
 # 安裝各種東西
 RUN apk install --no-cache curl libc6-compat
