@@ -39,7 +39,7 @@ class MockMessage {
  * @returns {number}
  */
 function get_number_of_items(name, userid) {
-    const { load_rpg_data } = require("../../utils/file.js");
+    const { load_rpg_data, load_rpg_data } = require("../../utils/file.js");
     const { get_id_of_name } = require("../../utils/rpg.js");
 
     const rpg_data = load_rpg_data(userid);
@@ -232,6 +232,34 @@ const redirect_data_reverse = Object.entries(redirect_data).reduce((acc, [key, v
     acc[value] = key;
     return acc;
 }, {});
+
+/**
+ * 
+ * @param {Object} rpg_data 
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function show_marry_info(client, rpg_data) {
+    const { convertToSecond } = require("../../utils/timestamp.js");
+
+    const marry_info = rpg_data?.marry ?? {};
+    const married = marry_info.status ?? false;
+    if (!married) throw new Error("not married but triggered show_marry_info");
+
+    const emoji_check = await get_emoji(client, "check");
+    const marryTime = convertToSecond(marry_info.date);
+
+    const embed = new EmbedBuilder()
+        .setTitle(`${emoji_check} 結婚資訊`)
+        .setColor("#FF0000")
+        .setDescription(
+            `你和 <@${marry_info.id}> ❤️
+
+結婚紀念日 - <t:${marryTime}:R>`
+        );
+
+    return setEmbedFooter(client, embed)
+
+};
 
 const rpg_commands = {
     mine: ["挖礦", "挖礦", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
@@ -1650,112 +1678,102 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
     }, true],
-    limited: ["???", "???", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        if (message.author.id !== "898836485397180426") return;
+    marry: ["結婚", "與某人結婚", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        const { mentions_users } = require("../../utils/message.js");
         const { load_rpg_data } = require("../../utils/file.js");
-        const { foods } = require("../../utils/rpg.js");
-        const amount = parseInt(args[0]) || 1;
-        const msg = await message.reply("處理中...");
-        const total = amount;
-        const length = 50;
-        let completed = 0;
-        let last_msg = "";
 
-        // 取得所有可吃的食物
-        const food_items = Object.keys(foods);
+        const marry_info = rpg_data?.marry ?? {};
+        const marry_with = marry_info.with ?? null;
+        const married = marry_info.status ?? false;
 
-        const timer = setInterval(async () => {
-            const percent = (completed / total).toFixed(4);
-            const cell_num = Math.floor(percent * length);
+        const emoji_cross = await get_emoji(client, "crosS");
 
-            let cell = '';
-            for (let i = 0; i < cell_num; i++) {
-                cell += '█';
-            };
+        const target_users = await mentions_users(message);
+        const target_user = target_users.first();
+        if (!target_user) {
+            if (!married) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 錯誤的使用者`)
 
-            let empty = '';
-            for (let i = 0; i < length - cell_num; i++) {
-                empty += '░';
-            };
-
-            const show_completed = completed.toString().padStart(total.toString().length, '0');
-            const percentage = (100 * percent).toFixed(2).toString();
-
-            const progressText = `進度: ${percentage}% ${cell}${empty} ${show_completed}/${total}`;
-
-            const embeds = last_msg?.embeds;
-            let desc = "";
-            if (embeds && embeds[0]) {
-                const embed = embeds[0]?.toJSON();
-                const description = embed.description || embed.title || "無描述";
-                if (!description.includes("天氣")) {
-                    const new_description = description
-                        .split("`")
-                        .slice(1)
-                        .join("`")
-                        .replace('`', '')
-                        .replace("條", '')
-                        .replace('！', '')
-                        .replace('個', '');
-
-                    const [amount, ...names] = new_description.split(" ");
-                    if (amount && names && names.length > 0) {
-                        for (const name of names) {
-                            if (name.includes("生")) {
-                                desc = name;
-                                desc += ` x${amount}`;
-                                break;
-                            };
-                        };
-                    } else {
-                        desc = description;
-                    };
-                };
-            };
-            desc = desc.padEnd(13, '|');
-
-            // 重新載入玩家資料
-            // if (completed % 1 === 0) {
-            if (true) {
-                rpg_data = load_rpg_data(message.author.id);
-            };
-
-            // 尋找玩家擁有的可吃食物
-            let current_food = null;
-            for (const food of food_items) {
-                if (rpg_data.inventory[food] > 0) {
-                    current_food = food;
-                    break;
-                };
-            };
-
-            let txt;
-            if (current_food) {
-                txt = `${progressText} | 剩下 ${rpg_data.inventory[current_food].toLocaleString()} 個${current_food} | ${desc}`;
+                if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+                return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
             } else {
-                txt = `${progressText} | 沒有食物了 | ${desc}`;
-            };
-            process.stdout.write(txt + "\r");
+                const embed = await show_marry_info(client, rpg_data);
 
-            if (completed >= total) {
-                clearInterval(timer);
-                await msg.edit("完成!");
-                return;
+                if (mode === 1) return { embeds: [embed] };
+                return await message.reply({ embeds: [embed] });
             };
+        };
 
-            const cmds = ["mine", "hew", "herd", "brew", "fish"];
-            for (const cmd of cmds) {
-                last_msg = await redirect({ client, message, command: cmd, mode: 1 });
+        if (target_user.id === message.author.id) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 欸不是 不要跟自己結婚好嘛>_<`);
+
+            if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+            return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+        };
+
+        if (married) {
+            if (marry_with === target_user.id) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你那麼健忘哦? 他都跟你結過婚了!`);
+
+                if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+                return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+            } else {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 還敢偷找小三!`);
+
+                if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+                return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
             };
+        };
 
-            // 如果有食物就吃
-            if (current_food) {
-                await redirect({ client, message, command: `eat ${current_food} all`, mode: 1 });
-            };
+        const t_rpg_data = load_rpg_data(target_user.id);
+        const t_marry_info = t_rpg_data?.marry ?? {};
+        const t_married = t_marry_info.status ?? false;
+        if (t_married) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 你的要結婚對象已經有其他人了!`);
 
-            completed += 1;
-        }, 1000);
-    }, false],
+            if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+            return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+        };
+
+        const embed = new EmbedBuilder()
+            .setColor(embed_color)
+            .setTitle(`❤️ | 求婚`)
+            .setDescription(`<@${message.author.id}> 向你求婚!`)
+            .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Drawn_love_hearts.svg/1200px-Drawn_love_hearts.svg.png");
+
+        const deny_button = new ButtonBuilder()
+            .setCustomId(`cancel|${target_user.id}|marry`)
+            .setLabel("拒絕")
+            .setStyle(ButtonStyle.Danger);
+
+        const accept_button = new ButtonBuilder()
+            .setCustomId(`marry_accept|${target_user.id}|${message.author.id}`)
+            .setLabel("我願意!")
+            .setEmoji("❤️")
+            .setStyle(ButtonStyle.Success);
+
+        const row = new ActionRowBuilder()
+            .addComponents(accept_button, deny_button);
+
+        if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
+        return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
+    }, (_, userid) => {
+        const rpg_data = load_rpg_data(userid);
+        const marry_info = rpg_data?.marry ?? {};
+        const married = marry_info.status ?? false;
+
+        return !married;
+    }],
 };
 
 for (const [from, target] of Object.entries(redirect_data)) {
@@ -1969,7 +1987,15 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         return await message.reply({ embeds: [await get_failed_embed(client, item, rpg_data)] });
     };
 
-    const need_arg = rpg_commands[command][3] ?? false;
+    let need_arg = false;
+    if (rpg_commands[command][3]) {
+        if (typeof rpg_commands[command][3] === "function") {
+            need_arg = await rpg_commands[command][3](client, userid);
+        } else {
+            need_arg = rpg_commands[command][3];
+        };
+    };
+
     if (need_arg && !args[0]) {
         const embed = get_help_command("rpg", command, client);
 

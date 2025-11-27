@@ -259,6 +259,12 @@ const help = {
     },
 };
 
+const special_cancel = {
+    marry: {
+        title: "{crosS} 求婚被拒絕了",
+    },
+};
+
 /**
  * 
  * @param {string} category 
@@ -625,14 +631,41 @@ module.exports = {
             } else if (interaction.customId.startsWith("cancel")) {
                 const { setEmbedFooter } = require("./msg_handler.js");
                 const { get_emoji } = require("../../utils/rpg.js");
-
                 await interaction.deferUpdate();
 
                 const emoji_cross = await get_emoji(interaction.client, "crosS");
 
+                const [_, __, special = null] = interaction.customId.split("|");
+
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 操作取消`);
+
+                if (special) {
+                    const data = special_cancel[special];
+                    if (data) {
+                        const title = data.title ?? null;
+                        const description = data.description ?? null;
+
+                        // 把title和description中的{xxx}改成await get_emoji(client, xxx)
+                        const regex = /\{([^}]+)\}/g;
+                        const replaceAsync = async (str, regex, replacer) => {
+                            const promises = [];
+                            str.replace(regex, (match, p1) => {
+                                promises.push(replacer(match, p1));
+                                return match;
+                            });
+                            const replacements = await Promise.all(promises);
+                            return str.replace(regex, () => replacements.shift());
+                        };
+
+                        title = await replaceAsync(title, regex, async (match, p1) => await get_emoji(client, p1));
+                        description = await replaceAsync(description, regex, async (match, p1) => await get_emoji(client, p1));
+
+                        embed.setTitle(title);
+                        embed.setDescription(description);
+                    };
+                };
 
                 await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
             } else if (interaction.customId.startsWith('buy') || interaction.customId.startsWith('buyc')) {
@@ -932,6 +965,52 @@ module.exports = {
 
                 const [embed, row] = await get_farm_info_embed(user, client);
                 await interaction.update({ embeds: [embed], components: [row] });
+            } else if (interaction.customId.startsWith("marry_accept")) {
+                const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
+                const { setEmbedFooter } = require("./msg_handler.js");
+
+                const emoji_cross = await get_emoji(client, "crosS");
+                const emoji_check = await get_emoji(client, "check");
+
+                const [_, targetUserId, __] = interaction.customId.split("|");
+
+                const rpg_data = load_rpg_data(user.id);
+                const t_rpg_data = load_rpg_data(targetUserId);
+                const marry_data = rpg_data.marry ?? {};
+                const marry_with = marry_data.with ?? null;
+                const married = marry_data.married ?? false;
+
+                if (married) {
+                    if (marry_with === targetUserId) {
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_error_color)
+                            .setTitle(`${emoji_cross} | 你那麼健忘哦? 他都跟你結過婚了!`);
+
+                        return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
+                    } else {
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_error_color)
+                            .setTitle(`${emoji_cross} | 還敢偷找小三!`);
+
+                        return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
+                    };
+                };
+
+                t_rpg_data.marry = rpg_data.marry = {
+                    status: true,
+                    with: targetUserId,
+                    time: Date.now(),
+                };
+
+                save_rpg_data(user.id, rpg_data);
+                save_rpg_data(targetUserId, t_rpg_data);
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_check} | 求婚成功`)
+                    .setDescription(`<@${user.id}> 和 <@${targetUserId}> 現在是夫妻拉`);
+
+                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
             };
         } catch (err) {
             const { get_loophole_embed } = require("../../utils/rpg.js");
