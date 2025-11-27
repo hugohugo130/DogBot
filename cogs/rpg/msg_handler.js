@@ -1746,7 +1746,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         };
 
         const embed = new EmbedBuilder()
-            .setColor(embed_color)
+            .setColor(embed_default_color)
             .setTitle(`❤️ | 求婚`)
             .setDescription(`<@${message.author.id}> 向你求婚!`)
             .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Drawn_love_hearts.svg/1200px-Drawn_love_hearts.svg.png");
