@@ -117,26 +117,26 @@ module.exports = {
 
         await interaction.editReply({ embeds: [embed] });
 
-        const msgs = [
-            Object.entries(rpg_data.inventory)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join("\n"),
+        // const msgs = [
+        //     Object.entries(rpg_data.inventory)
+        //         .map(([key, value]) => `${key}: ${value}`)
+        //         .join("\n"),
 
-            Object.entries(rpg_data.lastRunTimestamp)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join("\n"),
+        //     Object.entries(rpg_data.lastRunTimestamp)
+        //         .map(([key, value]) => `${key}: ${value}`)
+        //         .join("\n"),
 
-            Object.entries(rpg_data.count)
-                .map(([key, value]) => `${key}: ${value}`)
-                .join("\n"),
+        //     Object.entries(rpg_data.count)
+        //         .map(([key, value]) => `${key}: ${value}`)
+        //         .join("\n"),
 
-            show_transactions(user.id),
-        ];
+        //     show_transactions(user.id),
+        // ];
 
-        for (const msg of msgs) {
-            for (const msgcontent of split_msg(msg)) {
-                await interaction.followUp({content: msgcontent});
-            };
-        };
+        // for (const msg of msgs) {
+        //     for (const msgcontent of split_msg(msg)) {
+        //         await interaction.followUp({content: msgcontent});
+        //     };
+        // };
     },
 };
