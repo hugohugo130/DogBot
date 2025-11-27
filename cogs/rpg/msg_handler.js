@@ -39,7 +39,7 @@ class MockMessage {
  * @returns {number}
  */
 function get_number_of_items(name, userid) {
-    const { load_rpg_data, load_rpg_data } = require("../../utils/file.js");
+    const { load_rpg_data } = require("../../utils/file.js");
     const { get_id_of_name } = require("../../utils/rpg.js");
 
     const rpg_data = load_rpg_data(userid);
