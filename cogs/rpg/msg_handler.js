@@ -1765,8 +1765,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const row = new ActionRowBuilder()
             .addComponents(accept_button, deny_button);
 
-        if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
-        return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
+        if (mode === 1) return { content: `<@${target_user.id}>`, embeds: [setEmbedFooter(client, embed)], components: [row] };
+        return await message.reply({ content: `<@${target_user.id}>`, embeds: [setEmbedFooter(client, embed)], components: [row] });
     }, (_, userid) => {
         const { load_rpg_data } = require("../../utils/file.js");
 
