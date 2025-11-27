@@ -370,7 +370,10 @@ function get_help_command(category, command_name, client = global._client) {
 
     const alias = find_redirect_targets_from_id(command_name).map(name => `\`${name}\``).join("、");
 
-    const emoji = command_data.emoji || "";
+    let emoji = "";
+    if (command_data.emoji) {
+        emoji = get_emoji(command_data.emoji) ?? command_data.emoji;
+    };
 
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
