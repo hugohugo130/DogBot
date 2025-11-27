@@ -1013,6 +1013,8 @@ module.exports = {
                 const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
                 const { setEmbedFooter } = require("./msg_handler.js");
 
+                await interaction.deferUpdate();
+
                 const emoji_cross = await get_emoji(client, "crosS");
                 const emoji_check = await get_emoji(client, "check");
 
