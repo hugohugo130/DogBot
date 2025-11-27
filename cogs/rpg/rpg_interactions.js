@@ -248,7 +248,29 @@ const help = {
                     }
                 ],
                 format: "&shop <list|add|remove|open|close|on|off>",
-            }
+            },
+            "id": {
+                emoji: "",
+                desc: "獲取物品的ID(英文)",
+                usage: [
+                    {
+                        name: "獲取小麥的ID(wheat)",
+                        value: "&id 小麥"
+                    },
+                ],
+                format: "{cmd} <物品名稱>",
+            },
+            "name": {
+                emoji: "",
+                desc: "獲取物品的名稱(中文)",
+                usage: [
+                    {
+                        name: "獲取wheat的中文(小麥)",
+                        value: "&name wheat"
+                    },
+                ],
+                format: "{cmd} <物品ID>",
+            },
         },
         special: {
 
