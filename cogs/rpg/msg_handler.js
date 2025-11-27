@@ -212,7 +212,8 @@ const redirect_data = {
     money: "m",
     mo: "m",
     store: "shop",
-    l: "lazy",
+    // l: "lazy",
+    love: "marry",
 };
 
 // const rpg_work = [
@@ -258,7 +259,6 @@ async function show_marry_info(client, rpg_data) {
         );
 
     return setEmbedFooter(client, embed)
-
 };
 
 const rpg_commands = {
