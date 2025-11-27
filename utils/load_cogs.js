@@ -39,13 +39,18 @@ function processDirectory(client, dirPath) {
         if (stat.isDirectory()) {
             loadedFiles += processDirectory(client, itemPath);
         } else if (item.endsWith('.js')) {
-            delete require.cache[require.resolve(itemPath)];
-            const cog = require(itemPath);
-            const res = load_cog(client, cog, itemPath);
-            if (!res) continue;
-            else logger.info(`cog ${item} 已加載`);
+            try {
+                delete require.cache[require.resolve(itemPath)];
+                const cog = require(itemPath);
+                const res = load_cog(client, cog, itemPath);
+                if (!res) continue;
+                else logger.info(`cog ${item} 已加載`);
 
-            loadedFiles++;
+                loadedFiles++;
+            } catch (err) {
+                logger.error(`加載 ${itemPath} 時發生錯誤: ${err.stack}`);
+                continue;
+            };
         };
     };
 
