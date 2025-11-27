@@ -1768,6 +1768,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }, (_, userid) => {
+        const { load_rpg_data } = require("../../utils/file.js");
+
         const rpg_data = load_rpg_data(userid);
         const marry_info = rpg_data?.marry ?? {};
         const married = marry_info.status ?? false;
