@@ -224,7 +224,6 @@ const probabilities = {
         "raw_swordfish": [15, 1, 2],
         "raw_tropical_fish": [15, 1, 2],
         "raw_whale": [15, 1, 2],
-        "raw_shrimp": [15, 1, 2]
     },
     "herd": {
         "escape": [2, 1, 1],
