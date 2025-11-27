@@ -271,6 +271,25 @@ const help = {
                 ],
                 format: "{cmd} <物品ID>",
             },
+            "marry": {
+                emoji: "",
+                desc: "結婚指令",
+                usage: [
+                    {
+                        name: "查詢感情狀態",
+                        value: "&marry"
+                    },
+                    {
+                        name: "和{author}結婚",
+                        value: "&marry @{author}"
+                    },
+                    {
+                        name: "離婚 :((",
+                        value: "&divorce"
+                    }
+                ],
+                format: "{cmd} [使用者]",
+            },
         },
         special: {
 
