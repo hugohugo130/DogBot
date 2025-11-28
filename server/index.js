@@ -34,7 +34,7 @@ app.get('/files/:filename/last-modified', (req, res) => {
     const filePath = path.join(FILES_DIR, req.params.filename);
     if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
     fs.stat(filePath, (err, stats) => {
-        if (err) return res.status(500).json({ error: err.stack });
+        if (err) return res.status(500).json({ error: errorStack });
         res.json({ lastModified: stats.mtime.getTime() });
     });
 });
@@ -45,7 +45,7 @@ app.get('/files', (req, res) => {
 
     console.log(`[${time()}] ${action}：GET /files - by ${req.ip}`);
     fs.readdir(FILES_DIR, (err, files) => {
-        if (err) return res.status(500).json({ error: err.stack });
+        if (err) return res.status(500).json({ error: errorStack });
         res.json({ files });
     });
 });
@@ -81,7 +81,7 @@ app.delete('/files/:filename', (req, res) => {
     const filePath = path.join(FILES_DIR, req.params.filename);
     if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
     fs.unlink(filePath, err => {
-        if (err) return res.status(500).json({ error: err.stack });
+        if (err) return res.status(500).json({ error: errorStack });
         res.json({ message: 'File deleted' });
     });
 });
@@ -98,7 +98,7 @@ app.post('/mkdir', (req, res) => {
         fs.mkdirSync(fullPath, { recursive: true });
         res.json({ message: `Directory created: ${fullPath}` });
     } catch (err) {
-        res.status(500).json({ error: err.stack });
+        res.status(500).json({ error: errorStack });
     }
 });
 
@@ -117,7 +117,7 @@ app.post('/copy', (req, res) => {
         fs.copyFileSync(srcPath, dstPath);
         res.json({ message: `File copied from ${srcPath} to ${dstPath}` });
     } catch (err) {
-        res.status(500).json({ error: err.stack });
+        res.status(500).json({ error: errorStack });
     }
 });
 

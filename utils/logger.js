@@ -1,5 +1,6 @@
 const { EmbedBuilder, MessageFlags, Embed } = require('discord.js');
 const winston = require('winston');
+const util = require('node:util');
 const path = require("path");
 
 const { time2 } = require('./time.js');
@@ -130,13 +131,19 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
 function getCallerModuleName(depth = 4) {
     if (!depth) {
         const err = new Error();
-        return err.stack || err;
+
+        const errorStack = util.inspect(err, { depth: null });
+
+        return errorStack || err;
     };
 
     let res = 'unknown';
     try {
         const err = new Error();
-        const stackLines = err.stack.split('\n');
+
+        const errorStack = util.inspect(err, { depth: null });
+
+        const stackLines = errorStack.split('\n');
         const callerLine = stackLines[depth] || stackLines[stackLines.length - 1];
 
         const match = callerLine.match(/\((.*):\d+:\d+\)$/) ||
@@ -158,10 +165,12 @@ function getCallerModuleName(depth = 4) {
         try {
             const err = new Error();
             Error.prepareStackTrace = (err, stack) => stack; // Override to get stack frames
-            const currentFile = err.stack.shift().getFileName(); // File where getCallerFile is defined
+            const errorStack = util.inspect(err, { depth: null });
 
-            while (err.stack.length) {
-                callerFile = err.stack.shift().getFileName();
+            const currentFile = errorStack.shift().getFileName(); // File where getCallerFile is defined
+
+            while (errorStack.length) {
+                callerFile = errorStack.shift().getFileName();
                 if (currentFile !== callerFile) { // Find the first different file in the stack
                     break;
                 }

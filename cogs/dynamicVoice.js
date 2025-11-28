@@ -1,4 +1,5 @@
 const { Events, ChannelType, VoiceState, PermissionFlagsBits } = require("discord.js");
+const util = require('node:util');
 const DogClient = require("../utils/customs/client.js");
 
 const pattern = /^└⳺.*⳻ 的頻道$/;
@@ -79,7 +80,8 @@ module.exports = {
                         guild: guild.id
                     };
                 } catch (error) {
-                    logger.error(`建立頻道失敗: ${error.stack}`);
+                    const errorStack = util.inspect(error, { depth: null });
+                    logger.error(`建立頻道失敗: ${errorStack}`);
                 }
             };
 
@@ -105,7 +107,9 @@ module.exports = {
                 };
             };
         } catch (err) {
-            logger.error(`動態語音錯誤: ${err.stack}`);
+            const errorStack = util.inspect(err, { depth: null });
+
+            logger.error(`動態語音錯誤: ${errorStack}`);
         };
     },
 }

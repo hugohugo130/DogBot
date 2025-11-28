@@ -1,6 +1,7 @@
 const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
+const util = require('node:util');
 const { get_logger } = require('./logger.js');
 const { database_folder } = require('./config.js');
 
@@ -36,7 +37,9 @@ function initDatabase() {
         createTables();
         return db;
     } catch (error) {
-        logger.error(`初始化資料庫失敗: ${error.stack}`);
+        const errorStack = util.inspect(error, { depth: null });
+
+        logger.error(`初始化資料庫失敗: ${errorStack}`);
         throw error;
     };
 };
@@ -217,7 +220,9 @@ async function processQueue() {
         try {
             await operation();
         } catch (error) {
-            logger.error(`處理資料庫 Queue 操作時出錯: ${error.stack}`);
+            const errorStack = util.inspect(error, { depth: null });
+
+            logger.error(`處理資料庫 Queue 操作時出錯: ${errorStack}`);
         };
     };
 
@@ -280,7 +285,9 @@ function checkAndUpdateSchema() {
             };
         };
     } catch (error) {
-        logger.error(`檢查 Schema 時出錯: ${error.stack}`);
+        const errorStack = util.inspect(error, { depth: null });
+
+        logger.error(`檢查 Schema 時出錯: ${errorStack}`);
     };
 };
 

@@ -3,6 +3,7 @@ const path = require("path");
 const { wait_until_ready } = require("./wait_until_ready.js");
 const { asleep } = require("./sleep.js");
 const { get_logger } = require("./logger.js");
+const util = require('node:util');
 
 const logger = get_logger({ nodc: true });
 let run_lock = {};
@@ -13,7 +14,9 @@ async function interval(per_sec, execute, file, ...args) {
         try {
             await execute(...args);
         } catch (error) {
-            logger.error(`[interval] 每${per_sec}秒的排程，${file}執行錯誤: ${error.stack}`);
+            const errorStack = util.inspect(error, { depth: null });
+
+            logger.error(`[interval] 每${per_sec}秒的排程，${file}執行錯誤: ${errorStack}`);
 
             await asleep(Math.max(per_sec * 1000, 1000));
         };
@@ -87,7 +90,9 @@ async function scheduleFunc(client, file, per) {
             await schedule.execute(client);
         };
     } catch (error) {
-        logger.error(`處理每${per}排程 ${basename} 時出錯：${error.stack}`);
+        const errorStack = util.inspect(error, { depth: null });
+
+        logger.error(`處理每${per}排程 ${basename} 時出錯：${errorStack}`);
     } finally {
         run_lock[basename] = false;
     };

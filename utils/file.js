@@ -1,7 +1,7 @@
 const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
-const { isDeepStrictEqual } = require("node:util");
+const util = require('node:util');
 const { Logger } = require("winston");
 const { VoiceChannel } = require("discord.js");
 const axios = require("axios");
@@ -61,7 +61,9 @@ function safeJSONParse(jsonString, defaultValue = {}) {
     try {
         return JSON.parse(jsonString);
     } catch (error) {
-        logger.warn(`JSON 解析失敗: ${error.stack}`);
+        const errorStack = util.inspect(error, { depth: null });
+
+        logger.warn(`JSON 解析失敗: ${errorStack}`);
         return defaultValue;
     };
 };
@@ -427,7 +429,10 @@ async function compareLocalRemote(filename, log = console, maxRetries = 3) {
 
         } catch (err) {
             if (attempt === maxRetries) {
-                log.error(`比較檔案時遇到錯誤: ${err.stack}`);
+                const errorStack = util.inspect(err, { depth: null });
+
+                log.error(`比較檔案時遇到錯誤: ${errorStack}`);
+
                 throw err;
             } else {
                 log.warn(`嘗試 ${attempt}/${maxRetries} 失敗: ${err.message}`);

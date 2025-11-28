@@ -4,6 +4,7 @@ const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
 const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
 const { randint, choice } = require("../../utils/random.js");
 const { BetterEval, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished } = require("../../utils/rpg.js");
+const util = require('node:util');
 const DogClient = require("../../utils/customs/client.js");
 
 const max_hunger = 20;
@@ -1405,6 +1406,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                     const itemsText = Object.entries(category.items)
                         .map(([item, amount]) => `${name[item]} \`${amount.toLocaleString()}\` 個 (回復 \`${food_data[item]}\` ${drumstick_emoji})`)
                         .join('\n');
+
                     embed.addFields({ name: category.name, value: itemsText });
                 };
             };
@@ -2087,13 +2089,15 @@ module.exports = {
                 timeoutPromise
             ]);
         } catch (error) {
+            const errorStack = util.inspect(error, { depth: null });
+
             if (error.message === '指令執行超時') {
                 logger.error(`RPG 指令執行超時: userId=${userId}, command=${client.lock.rpg_handler[userId]}`);
             } else {
-                logger.error(`處理rpg遊戲訊息時發生錯誤: ${error.stack}`);
+                logger.error(`處理rpg遊戲訊息時發生錯誤: ${errorStack}`);
             };
 
-            await message.reply({ embeds: [await get_loophole_embed(client, error.stack)] });
+            await message.reply({ embeds: [await get_loophole_embed(client, errorStack)] });
         } finally {
             delete client.lock.rpg_handler[userId];
         };

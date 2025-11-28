@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const FormData = require('form-data');
+const util = require('node:util');
 
 const { getServerIPSync } = require("./getSeverIPSync.js");
 const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
@@ -20,7 +21,9 @@ async function onlineDB_listFiles() {
         const res = await axios.get(`${SERVER_URL}/files`);
         return res.data.files;
     } catch (err) {
-        logger.error(`列出檔案時遇到錯誤: ${err.stack}`);
+        const errorStack = util.inspect(err, { depth: null });
+
+        logger.error(`列出檔案時遇到錯誤: ${errorStack}`);
     };
 };
 
@@ -43,8 +46,10 @@ async function onlineDB_downloadFile(filename, savePath = null) {
             logger.error(`下載檔案時遇到錯誤: 檔案 ${filename} 不存在`);
             return [err, `下載檔案時遇到錯誤: 檔案 ${filename} 不存在`];
         } else {
-            logger.error(`下載檔案時遇到未知錯誤: ${err.stack}`);
-            return [err, `下載檔案時遇到未知錯誤: ${err.stack}`];
+            const errorStack = util.inspect(err, { depth: null });
+
+            logger.error(`下載檔案時遇到未知錯誤: ${errorStack}`);
+            return [err, `下載檔案時遇到未知錯誤: ${errorStack}`];
         };
     };
 };
@@ -86,7 +91,9 @@ async function onlineDB_uploadFile(filepath) {
         const res = await axios.post(`${SERVER_URL}/files`, form, { headers: form.getHeaders() });
         return res.data;
     } catch (err) {
-        if (err) logger.error(`上載檔案時遇到錯誤: ${err.stack}`);
+        const errorStack = util.inspect(err, { depth: null });
+
+        if (err) logger.error(`上載檔案時遇到錯誤: ${errorStack}`);
     };
 };
 
@@ -100,8 +107,10 @@ async function onlineDB_deleteFile(filename) {
             logger.error(`刪除檔案時遇到錯誤: 檔案 ${filename} 不存在`);
             return [err, `刪除檔案時遇到錯誤: 檔案 ${filename} 不存在`];
         } else {
-            logger.error(`刪除檔案時遇到未知錯誤: ${err.stack}`);
-            return [err, `刪除檔案時遇到未知錯誤: ${err.stack}`];
+            const errorStack = util.inspect(err, { depth: null });
+
+            logger.error(`刪除檔案時遇到未知錯誤: ${errorStack}`);
+            return [err, `刪除檔案時遇到未知錯誤: ${errorStack}`];
         };
     }
 };
@@ -237,9 +246,11 @@ async function uploadChangedDatabaseFiles() {
                     localContent = JSON.stringify(JSON.parse(localContent));
                 }
             } catch (err) {
-                logger.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
+                const errorStack = util.inspect(err, { depth: null });
+
+                logger.error(`讀取本地檔案內容時遇到錯誤: ${errorStack}`);
                 continue;
-            }
+            };
 
             let remoteContent;
             try {
@@ -251,16 +262,19 @@ async function uploadChangedDatabaseFiles() {
                     // JSON 檔案
                     const response = await axios.get(`${SERVER_URL}/files/${file}`);
                     remoteContent = JSON.stringify(response.data);
-                }
+                };
             } catch (err) {
                 if (err.response?.status === 404) {
                     logger.info(`遠端無 ${file} 檔案，準備上傳本地檔案`);
                     await onlineDB_uploadFile(file);
                 } else {
-                    logger.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
-                }
+                    const errorStack = util.inspect(err, { depth: null });
+
+                    logger.error(`獲取遠端檔案內容時遇到錯誤: ${errorStack}`);
+                };
+
                 continue;
-            }
+            };
 
             // 比對內容
             let isDifferent = false;

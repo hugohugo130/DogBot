@@ -11,6 +11,7 @@ const { should_register_cmd } = require('./utils/auto_register.js');
 const { registcmd } = require('./register_commands.js');
 const { initDatabase, transferQueueToClient } = require('./utils/SQLdatabase.js');
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
+const util = require('node:util');
 require("dotenv").config();
 
 const client = new DogClient();
@@ -24,7 +25,8 @@ process.on('unhandledRejection', (reason, promise) => {
 
 // 未捕獲的異常處理
 process.on('uncaughtException', (error) => {
-    logger.error(`未捕獲的異常:\n${error.stack}`);
+    const errorStack = util.inspect(error, { depth: null });
+    logger.error(`未捕獲的異常:\n${errorStack}`);
 });
 
 // CPU 和記憶體監控
@@ -83,7 +85,8 @@ async function handle_shutdown(sign) {
     try {
         await safeshutdown(client);
     } catch (error) {
-        logger.error(`安全關閉時發生錯誤: ${error.stack}`);
+        const errorStack = util.inspect(error, { depth: null });
+        logger.error(`安全關閉時發生錯誤: ${errorStack}`);
         process.exit(1);
     };
 };

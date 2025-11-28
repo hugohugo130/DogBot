@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const util = require('node:util');
 const { get_logger } = require("./logger.js");
 
 const load_skiplist = [];
@@ -10,7 +11,9 @@ function load_cog(client, cog, itemPath) {
         try {
             await cog.execute(client, ...args);
         } catch (err) {
-            logger.error(`執行 ${itemPath} 時發生錯誤: ${err.stack}`);
+            const errorStack = util.inspect(err, { depth: null });
+
+            logger.error(`執行 ${itemPath} 時發生錯誤: ${errorStack}`);
         };
     };
 
@@ -48,7 +51,9 @@ function processDirectory(client, dirPath) {
 
                 loadedFiles++;
             } catch (err) {
-                logger.error(`加載 ${itemPath} 時發生錯誤: ${err.stack}`);
+                const errorStack = util.inspect(err, { depth: null });
+
+                logger.error(`加載 ${itemPath} 時發生錯誤: ${errorStack}`);
                 continue;
             };
         };
@@ -64,7 +69,9 @@ function load_cogs(client) {
         const totalFiles = processDirectory(client, cogsFolder);
         return totalFiles;
     } catch (error) {
-        logger.error(`加載程式碼(cogs)時出錯:\n${error.stack}`);
+        const errorStack = util.inspect(error, { depth: null });
+
+        logger.error(`加載程式碼(cogs)時出錯:\n${errorStack}`);
     };
 };
 
