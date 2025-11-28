@@ -132,18 +132,14 @@ function getCallerModuleName(depth = 4) {
     if (!depth) {
         const err = new Error();
 
-        const errorStack = util.inspect(err, { depth: null });
-
-        return errorStack || err;
+        return err.stack || err;
     };
 
     let res = 'unknown';
     try {
         const err = new Error();
 
-        const errorStack = util.inspect(err, { depth: null });
-
-        const stackLines = errorStack.split('\n');
+        const stackLines = err.stack.split('\n');
         const callerLine = stackLines[depth] || stackLines[stackLines.length - 1];
 
         const match = callerLine.match(/\((.*):\d+:\d+\)$/) ||
@@ -165,12 +161,10 @@ function getCallerModuleName(depth = 4) {
         try {
             const err = new Error();
             Error.prepareStackTrace = (err, stack) => stack; // Override to get stack frames
-            const errorStack = util.inspect(err, { depth: null });
+            const currentFile = err.stack.shift().getFileName(); // File where getCallerFile is defined
 
-            const currentFile = errorStack.shift().getFileName(); // File where getCallerFile is defined
-
-            while (errorStack.length) {
-                callerFile = errorStack.shift().getFileName();
+            while (err.stack.length) {
+                callerFile = err.stack.shift().getFileName();
                 if (currentFile !== callerFile) { // Find the first different file in the stack
                     break;
                 }
