@@ -248,7 +248,7 @@ async function show_marry_info(client, rpg_data) {
     if (!married) throw new Error("not married but triggered show_marry_info");
 
     const emoji_check = await get_emoji(client, "check");
-    const marryTime = convertToSecond(marry_info.date);
+    const marryTime = convertToSecond(marry_info.time);
 
     const embed = new EmbedBuilder()
         .setTitle(`${emoji_check} 結婚資訊`)
