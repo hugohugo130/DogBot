@@ -1402,13 +1402,21 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 { items: food_meat_items, name: `${cow_emoji} 肉類` },
             ];
 
-            for (const category of categories) {
-                if (Object.keys(category.items).length > 0) {
-                    const itemsText = Object.entries(category.items)
-                        .map(([item, amount]) => `${name[item]} \`${amount.toLocaleString()}\` 個 (回復 \`${food_data[item]}\` ${drumstick_emoji})`)
-                        .join('\n');
+            let errors = [];
 
-                    embed.addFields({ name: category.name, value: itemsText });
+            for (const category of categories) {
+                try {
+                    if (Object.keys(category.items).length > 0) {
+                        const itemsText = Object.entries(category.items)
+                            .map(([item, amount]) => `${name[item]} \`${amount.toLocaleString()}\` 個 (回復 \`${food_data[item]}\` ${drumstick_emoji})`)
+                            .join('\n');
+
+                        embed.addFields({ name: category.name, value: itemsText });
+                    };
+                } catch (err) {
+                    const errorStack = util.inspect(err, { depth: null });
+
+                    errors.push(errorStack);
                 };
             };
 
@@ -1426,6 +1434,13 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             const row = new ActionRowBuilder()
                 .addComponents(howToEatButton, buyFoodButton);
+
+            if (errors) {
+                const embed = await get_loophole_embed(client, errors);
+
+                if (mode === 1) return { embeds: [embed] };
+                await message.reply({ embeds: [embed] });
+            };
 
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
@@ -1780,7 +1795,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return !married;
     }],
     divorce: ["結婚", "與某人結婚", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-
         const emoji_cross = await get_emoji(client, "crosS");
 
         const userid = message.author.id;
