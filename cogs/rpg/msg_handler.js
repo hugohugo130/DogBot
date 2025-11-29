@@ -154,13 +154,40 @@ function setEmbedFooter(client = global._client, embed, text = "", rpg_data = nu
  */
 function setEmbedAuthor(client = global._client, embed, author = "") {
     if (!author) author = client.name;
-
+    
     embed.setAuthor({
         name: author,
         iconURL: client?.user?.displayAvatarURL({ dynamic: true }),
     });
-
+    
     return embed;
+};
+
+/**
+ * 
+ * @param {Object} rpg_data 
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function show_marry_info(client, rpg_data) {
+    const { convertToSecond } = require("../../utils/timestamp.js");
+
+    const marry_info = rpg_data?.marry ?? {};
+    const married = marry_info.status ?? false;
+    if (!married) throw new Error("not married but triggered show_marry_info");
+
+    const emoji_check = await get_emoji(client, "check");
+    const marryTime = convertToSecond(marry_info.time);
+
+    const embed = new EmbedBuilder()
+        .setTitle(`${emoji_check} 結婚資訊`)
+        .setColor("#FF0000")
+        .setDescription(
+            `你和 <@${marry_info.with}> ❤️
+
+結婚紀念日 - <t:${marryTime}:R>`
+        );
+
+    return setEmbedFooter(client, embed)
 };
 
 const rpg_emojis = {
@@ -235,33 +262,6 @@ const redirect_data_reverse = Object.entries(redirect_data).reduce((acc, [key, v
     acc[value] = key;
     return acc;
 }, {});
-
-/**
- * 
- * @param {Object} rpg_data 
- * @returns {Promise<EmbedBuilder>}
- */
-async function show_marry_info(client, rpg_data) {
-    const { convertToSecond } = require("../../utils/timestamp.js");
-
-    const marry_info = rpg_data?.marry ?? {};
-    const married = marry_info.status ?? false;
-    if (!married) throw new Error("not married but triggered show_marry_info");
-
-    const emoji_check = await get_emoji(client, "check");
-    const marryTime = convertToSecond(marry_info.time);
-
-    const embed = new EmbedBuilder()
-        .setTitle(`${emoji_check} 結婚資訊`)
-        .setColor("#FF0000")
-        .setDescription(
-            `你和 <@${marry_info.with}> ❤️
-
-結婚紀念日 - <t:${marryTime}:R>`
-        );
-
-    return setEmbedFooter(client, embed)
-};
 
 const rpg_commands = {
     mine: ["挖礦", "挖礦", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
