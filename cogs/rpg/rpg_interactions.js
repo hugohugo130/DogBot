@@ -293,6 +293,12 @@ const help = {
                 ],
                 format: "{cmd} [使用者]",
             },
+            "divorce": {
+                emoji: "",
+                desc: "離婚指令",
+                usage: [],
+                format: "{cmd}",
+            },
         },
         special: {
 
