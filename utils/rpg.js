@@ -1244,20 +1244,23 @@ async function job_delay_embed(userId, client = global._client) {
  * @param {string} userid 
  * @returns {EmbedBuilder}
  */
-function choose_job_row(userid) {
+async function choose_job_row(userid) {
     const { jobs } = require("./config.js");
 
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(`job_choose|${userid}`)
         .setPlaceholder("選擇職業")
         .addOptions(
-            ...Object.entries(jobs).map(([id, data]) => {
-                return {
-                    label: get_name_of_id(id),
-                    description: data.desc,
-                    value: id,
-                };
-            })
+            ...await Promise.all(
+                Object.entries(jobs).map(async ([id, data]) => {
+                    return {
+                        label: get_name_of_id(id),
+                        description: data.desc,
+                        value: id,
+                        emoji: await get_emoji(client, id)
+                    };
+                }),
+            ),
         );
 
     const cancel_button = new ButtonBuilder()
