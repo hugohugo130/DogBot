@@ -1271,11 +1271,13 @@ async function choose_job_row(userid) {
         .addOptions(
             ...await Promise.all(
                 Object.entries(jobs).map(async ([id, data]) => {
+                    const emojiObject = await get_emoji_object(id);
+
                     return {
                         label: get_name_of_id(id),
                         description: data.desc,
                         value: id,
-                        emoji: await get_emoji_object(id),
+                        emoji: emojiObject ? emojiObject.id : "❓",
                     };
                 }),
             ),
