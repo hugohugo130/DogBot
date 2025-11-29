@@ -1060,6 +1060,27 @@ module.exports = {
                     .setDescription(`<@${userId}> 和 <@${targetUserId}> 現在是夫妻拉`);
 
                 return await interaction.editReply({ content: "", embeds: [setEmbedFooter(client, embed)], components: [] });
+            } else if (interaction.customId.startsWith("divorce")) {
+                const [_, userId, with_UserId] = interaction.customId.split("|");
+
+                const emoji_cross = await get_emoji(client, "cross");
+
+                const rpg_data = load_rpg_data(userId);
+                const with_User_rpg_data = load_rpg_data(with_UserId);
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_cross} | 歐不`)
+                    .setDescription(`<@${userId}> 和 <@${with_UserId}> 的婚姻關係已經結束了 :((`);
+
+                rpg_data.marry = marry_default_value;
+                with_User_rpg_data.marry = marry_default_value;
+
+                save_rpg_data(userId, rpg_data);
+                save_rpg_data(with_UserId, with_User_rpg_data);
+
+                if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+                return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
             };
         } catch (err) {
             const { get_loophole_embed } = require("../../utils/rpg.js");

@@ -1800,21 +1800,27 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         };
 
         const with_UserId = marry_info.with;
-        const with_User_rpg_data = load_rpg_data(with_UserId);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
-            .setTitle(`${emoji_cross} | 歐不`)
-            .setDescription(`<@${userid}> 和 <@${with_UserId}> 的婚姻關係已經結束了 :((`);
+            .setTitle("⚠ | 離婚確認")
+            .setDescription(`你確定你不愛 <@${with_UserId}> 了嗎?!`)
 
-        rpg_data.marry = marry_default_value;
-        with_User_rpg_data.marry = marry_default_value;
+        const confirm_button = new ButtonBuilder()
+            .setCustomId(`divorce|${userid}|${with_UserId}`)
+            .setLabel("確定")
+            .setStyle(ButtonStyle.Danger);
 
-        save_rpg_data(userid, rpg_data);
-        save_rpg_data(with_UserId, with_User_rpg_data);
+        const deny_button = new ButtonBuilder()
+            .setCustomId(`cancel|${userid}`)
+            .setLabel("取消")
+            .setStyle(ButtonStyle.Success);
 
-        if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
-        return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+        const row = new ActionRowBuilder()
+            .addComponents(confirm_button, deny_button);
+
+        if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
+        return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
     }, (_, userid) => {
         const { load_rpg_data } = require("../../utils/file.js");
 
