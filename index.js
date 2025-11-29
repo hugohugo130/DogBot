@@ -20,7 +20,13 @@ const logger = get_logger();
 
 // 未捕獲的 Promise Rejection 處理
 process.on('unhandledRejection', (reason, promise) => {
-    logger.error(`未捕獲的 Promise Rejection:\n${reason?.stack || reason}`);
+    let errorStack = reason;
+    if (reason?.stack) errorStack = reason.stack;
+    if (reason instanceof Error) {
+        errorStack = util.inspect(reason, { depth: null });
+    };
+
+    logger.error(`未捕獲的 Promise Rejection:\n${errorStack}`);
 });
 
 // 未捕獲的異常處理
