@@ -480,9 +480,9 @@ module.exports = {
                 const { setEmbedFooter } = require("./msg_handler.js");
                 const { get_emoji, add_money, remove_money } = require("../../utils/rpg.js");
 
-                const emoji_cross = await get_emoji(interaction.client, "crosS");
+                const emoji_cross = await get_emoji(client, "crosS");
                 if (interaction.customId.startsWith('pay_confirm')) {
-                    const emoji_top = await get_emoji(interaction.client, "top");
+                    const emoji_top = await get_emoji(client, "top");
                     const [_, userId, targetUserId, amount, timestamp] = interaction.customId.split('|');
                     const rpg_data = load_rpg_data(userId);
                     const target_user_rpg_data = load_rpg_data(targetUserId);
@@ -532,8 +532,8 @@ module.exports = {
                 // const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
 
                 // await interaction.deferUpdate();
-                // const emoji_tick = get_emoji(interaction.client, "Tick");
-                // const emoji_cross = get_emoji(interaction.client, "crosS");
+                // const emoji_tick = get_emoji(client, "Tick");
+                // const emoji_cross = get_emoji(client, "crosS");
                 // const embed = new EmbedBuilder()
                 //     .setColor(embed_default_color)
                 //     .setTitle(`${emoji_tick} | 語言設定成功`)
@@ -563,7 +563,7 @@ module.exports = {
 
                 const [emoji_shield, emoji_backpack, emoji_partner] = await Promise.all(
                     ["shield", "bag", "partner"].map(async (name) => {
-                        return await get_emoji(interaction.client, name);
+                        return await get_emoji(client, name);
                     }),
                 );
 
@@ -631,7 +631,7 @@ module.exports = {
                 const [_, __, command] = interaction.customId.split('|');
 
                 const message = new MockMessage(`${prefix}${command}`, interaction.channel, interaction.user, interaction.guild);
-                let response = await rpg_handler({ client: interaction.client, message, d: true, mode: 1 });
+                let response = await rpg_handler({ client: client, message, d: true, mode: 1 });
 
                 response.components ??= [];
 
@@ -643,7 +643,7 @@ module.exports = {
 
                 const [_, userId] = interaction.customId.split("|");
                 const message = new MockMessage(`${prefix}ls`, interaction.message.channel, interaction.user, interaction.guild);
-                const res = await ls_function({ client: interaction.client, message, rpg_data: load_rpg_data(userId), mode: 1, PASS: true });
+                const res = await ls_function({ client: client, message, rpg_data: load_rpg_data(userId), mode: 1, PASS: true });
                 await interaction.followUp(res);
             } else if (interaction.customId.startsWith("sell")) {
                 const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
@@ -669,7 +669,7 @@ module.exports = {
 
                 save_rpg_data(userId, rpg_data);
 
-                const emoji_trade = await get_emoji(interaction.client, "trade");
+                const emoji_trade = await get_emoji(client, "trade");
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
                     .setTitle(`${emoji_trade} | 成功售出了 ${amount} 個 ${name[item_id]}`);
@@ -680,7 +680,7 @@ module.exports = {
                 const { get_emoji } = require("../../utils/rpg.js");
                 await interaction.deferUpdate();
 
-                const emoji_cross = await get_emoji(interaction.client, "crosS");
+                const emoji_cross = await get_emoji(client, "crosS");
 
                 const [_, __, special = null] = interaction.customId.split("|");
 
@@ -726,8 +726,8 @@ module.exports = {
 
                 const isConfirm = interaction.customId.startsWith('buyc');
 
-                const emoji_cross = await get_emoji(interaction.client, "crosS");
-                const emoji_store = await get_emoji(interaction.client, "store");
+                const emoji_cross = await get_emoji(client, "crosS");
+                const emoji_store = await get_emoji(client, "store");
 
                 const buyerRPGData = load_rpg_data(buyerUserId);
                 const targetUserRPGData = load_rpg_data(targetUserId);
@@ -812,7 +812,7 @@ module.exports = {
                     const { setEmbedFooter } = require("./msg_handler.js");
                     const { get_emoji } = require("../../utils/rpg.js");
 
-                    const emoji_cross = await get_emoji(interaction.client, "crosS");
+                    const emoji_cross = await get_emoji(client, "crosS");
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 烘烤會話已過期`)
@@ -831,7 +831,7 @@ module.exports = {
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你的烤箱已經滿了`);
 
-                    return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
+                    return await interaction.followUp({ embeds: [setEmbedFooter(client, embed)] });
                 };
 
                 // ==================檢查物品==================
@@ -864,7 +864,7 @@ module.exports = {
                         if (components.length === 2) components[0].setLabel("重試");
                     };
 
-                    return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], components: TopLevelComponent });
+                    return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: TopLevelComponent });
                 };
                 // ============================================
 
@@ -895,7 +895,7 @@ module.exports = {
                 // 清理 session 資料
                 delete global.oven_sessions[session_id];
 
-                const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
+                const emoji_drumstick = await get_emoji(client, "drumstick");
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
@@ -927,7 +927,7 @@ module.exports = {
                 const item_need = global.smelter_sessions?.[session_id];
                 if (!item_need) {
 
-                    const emoji_cross = await get_emoji(interaction.client, "crosS");
+                    const emoji_cross = await get_emoji(client, "crosS");
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 熔鍊會話已過期`)
@@ -957,7 +957,7 @@ module.exports = {
                 if (item_missing.length > 0) {
                     const embed = await notEnoughItemEmbed(item_missing);
 
-                    return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
+                    return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], flags: MessageFlags.Ephemeral });
                 };
                 // ==================檢查物品==================
 
@@ -982,7 +982,7 @@ module.exports = {
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你的煉金爐已經滿了`);
 
-                    return await interaction.followUp({ embeds: [setEmbedFooter(interaction.client, embed)] });
+                    return await interaction.followUp({ embeds: [setEmbedFooter(client, embed)] });
                 };
 
                 smelt_data[userId].push({
@@ -1000,7 +1000,7 @@ module.exports = {
                 // 清理 session 資料
                 delete global.smelter_sessions[session_id];
 
-                const emoji_furnace = await get_emoji(interaction.client, "furnace");
+                const emoji_furnace = await get_emoji(client, "furnace");
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
                     .setTitle(`${emoji_furnace} | 成功放進煉金爐內`)
