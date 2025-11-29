@@ -1195,6 +1195,10 @@ async function get_loophole_embed(client = global._client, text) {
         text = `\`\`\`${text}\`\`\``;
     };
 
+    if (typeof text !== 'string') {
+        text = String(text);
+    };
+
     // embed 描述最長：4096 字元
     if (text.length > 4000) {
         text = text.slice(0, 4096) + "...";
