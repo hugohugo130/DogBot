@@ -1272,10 +1272,13 @@ async function choose_job_row(userid) {
         .setLabel("取消")
         .setStyle(ButtonStyle.Danger);
 
-    const row = new ActionRowBuilder()
-        .addComponents(selectMenu, cancel_button);
+    const row1 = new ActionRowBuilder()
+        .addComponents(selectMenu);
 
-    return row;
+    const row2 = new ActionRowBuilder()
+        .addComponents(cancel_button);
+
+    return [row1, row2];
 };
 
 async function ls_function({ client, message, rpg_data, data, args, mode, random_item, PASS }) {
