@@ -1021,9 +1021,9 @@ module.exports = {
                 const emoji_cross = await get_emoji(client, "crosS");
                 const emoji_check = await get_emoji(client, "check");
 
-                const [_, targetUserId, __] = interaction.customId.split("|");
+                const [_, targetUserId, userId] = interaction.customId.split("|");
 
-                const rpg_data = load_rpg_data(user.id);
+                const rpg_data = load_rpg_data(userId);
                 const t_rpg_data = load_rpg_data(targetUserId);
                 const marry_data = rpg_data.marry ?? {};
                 const marry_with = marry_data.with ?? null;
@@ -1051,13 +1051,13 @@ module.exports = {
                     time: Date.now(),
                 };
 
-                save_rpg_data(user.id, rpg_data);
+                save_rpg_data(userId, rpg_data);
                 save_rpg_data(targetUserId, t_rpg_data);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
                     .setTitle(`${emoji_check} | 求婚成功`)
-                    .setDescription(`<@${user.id}> 和 <@${targetUserId}> 現在是夫妻拉`);
+                    .setDescription(`<@${userId}> 和 <@${targetUserId}> 現在是夫妻拉`);
 
                 return await interaction.editReply({ content: "", embeds: [setEmbedFooter(client, embed)], components: [] });
             };
