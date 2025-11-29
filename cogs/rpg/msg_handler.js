@@ -154,12 +154,12 @@ function setEmbedFooter(client = global._client, embed, text = "", rpg_data = nu
  */
 function setEmbedAuthor(client = global._client, embed, author = "") {
     if (!author) author = client.name;
-    
+
     embed.setAuthor({
         name: author,
         iconURL: client?.user?.displayAvatarURL({ dynamic: true }),
     });
-    
+
     return embed;
 };
 
@@ -1817,7 +1817,16 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
         return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
-    }, false],
+    }, (_, userid) => {
+        const { load_rpg_data } = require("../../utils/file.js");
+
+        const rpg_data = load_rpg_data(userid);
+
+        const marry_info = rpg_data.marry ?? {};
+        const married = marry_info.status ?? false;
+
+        return married;
+    }],
 };
 
 for (const [from, target] of Object.entries(redirect_data)) {
