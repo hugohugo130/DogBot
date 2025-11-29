@@ -1062,11 +1062,27 @@ module.exports = {
                 return await interaction.editReply({ content: "", embeds: [setEmbedFooter(client, embed)], components: [] });
             } else if (interaction.customId.startsWith("divorce")) {
                 const [_, userId, with_UserId] = interaction.customId.split("|");
+                const { find_default_value } = require("../../utils/file.js");
+
+                const marry_default_value = find_default_value("rpg_database.json")?.["marry"] ?? {};
+
+                await interaction.deferReply();
 
                 const emoji_cross = await get_emoji(client, "cross");
 
                 const rpg_data = load_rpg_data(userId);
                 const with_User_rpg_data = load_rpg_data(with_UserId);
+
+                const marry_data = rpg_data.marry ?? {};
+                const married = marry_data.married ?? false;
+
+                if (!married) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你還沒有結過婚ㄝ`);
+
+                    return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
+                };
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
@@ -1080,7 +1096,7 @@ module.exports = {
                 save_rpg_data(with_UserId, with_User_rpg_data);
 
                 if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
-                return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
             };
         } catch (err) {
             const { get_loophole_embed } = require("../../utils/rpg.js");

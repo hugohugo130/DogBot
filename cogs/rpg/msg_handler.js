@@ -1780,8 +1780,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return !married;
     }],
     divorce: ["結婚", "與某人結婚", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { load_rpg_data, save_rpg_data, find_default_value } = require("../../utils/file.js");
-        const marry_default_value = find_default_value("rpg_database.json")?.["marry"] ?? {};
 
         const emoji_cross = await get_emoji(client, "crosS");
 
@@ -1793,7 +1791,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         if (!married) {
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
-                .setTitle(`${emoji_cross} | 你還沒有結婚!`);
+                .setTitle(`${emoji_cross} | 你還沒有結過婚ㄝ`);
 
             if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
             return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
