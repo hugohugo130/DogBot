@@ -1194,6 +1194,11 @@ async function get_loophole_embed(client = global._client, text) {
         text = `\`\`\`${text}\`\`\``;
     };
 
+    // embed 描述最長：4096 字元
+    if (text.length > 4000) {
+        text = text.slice(0, 4096) + "...";
+    };
+
     const embed = new EmbedBuilder()
         .setColor(embed_error_color)
         .setTitle(`${emoji_cross} | 你戳到了一個漏洞！`)
