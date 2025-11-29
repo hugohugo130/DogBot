@@ -1058,7 +1058,7 @@ module.exports = {
                     .setTitle(`${emoji_check} | 求婚成功`)
                     .setDescription(`<@${user.id}> 和 <@${targetUserId}> 現在是夫妻拉`);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)] });
+                return await interaction.editReply({ content: "", embeds: [setEmbedFooter(client, embed)], components: [] });
             };
         } catch (err) {
             const { get_loophole_embed } = require("../../utils/rpg.js");
