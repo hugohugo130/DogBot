@@ -1783,6 +1783,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const marry_default_value = find_default_value("rpg_database.json")?.["marry"] ?? {};
 
         const emoji_check = await get_emoji(client, "check");
+        const emoji_cross = await get_emoji(client, "crosS");
+
         const userid = message.author.id;
 
         const marry_info = rpg_data.marry ?? {};
