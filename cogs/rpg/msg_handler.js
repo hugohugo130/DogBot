@@ -1783,7 +1783,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const { load_rpg_data, save_rpg_data, find_default_value } = require("../../utils/file.js");
         const marry_default_value = find_default_value("rpg_database.json")?.["marry"] ?? {};
 
-        const emoji_check = await get_emoji(client, "check");
         const emoji_cross = await get_emoji(client, "crosS");
 
         const userid = message.author.id;
@@ -1801,13 +1800,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         };
 
         const with_UserId = marry_info.with;
-        const with_User = await client.users.fetch(with_UserId);
         const with_User_rpg_data = load_rpg_data(with_UserId);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
-            .setTitle(`${emoji_check} | 你已經與 ${with_User.username} 離婚了!`)
-            .setDescription(`你們的婚姻已經結束了!`);
+            .setTitle(`${emoji_cross} | 歐不`)
+            .setDescription(`<@${userid}> 和 <@${with_UserId}> 的婚姻關係已經結束了 :((`);
 
         rpg_data.marry = marry_default_value;
         with_User_rpg_data.marry = marry_default_value;
