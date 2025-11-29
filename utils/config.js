@@ -106,6 +106,9 @@ const rpg_lvlUp_per = 50;
 
 const authorName = "哈狗";
 
+// 24 * 24 * 60 * 7 = 604800
+const setJobDelay = 604800 // 秒
+
 /*
 https://discord.js.org/docs/packages/discord.js/14.24.0/ColorResolvable:TypeAlias
 - ColorResolvable -
@@ -119,6 +122,7 @@ const embed_default_color = "Random";
 const embed_warn_color = 0xF0B90B;
 const embed_error_color = 0xF04A47;
 const embed_fell_color = 0x966e33;
+const embed_job_color = 0x3498db;
 
 /*
 農夫 和漁夫是差不多辛勤的職業，不過在這個世界，農夫的收益比漁夫還要高
@@ -286,6 +290,41 @@ const probabilities = {
     },
 };
 
+const jobs = {
+    "fisher": { // 漁夫
+        "emoji": "fisher",
+        "desc": "是個需要勞力的職業，你必須要努力勤奮的抓魚，才會獲得收益",
+    },
+    "pharmacist": { // 藥劑師
+        "emoji": "potion",
+        "desc": "這個世界神秘力量的來源，製作藥水以及科學實驗來幫助成長",
+    },
+    "farmer": { // 農夫
+        "emoji": "farmer",
+        "desc": "和漁夫是差不多辛勤的職業，只是會遇到颱風之類的災難",
+    },
+    "cook": { // 廚師
+        "emoji": "cook",
+        "desc": "需購買食材，烘烤食物並轉賣來獲得收益 (新手不建議)",
+    },
+    "miner": { // 礦工
+        "emoji": "ore",
+        "desc": "這個世界各類金屬的來源，挖取原礦並轉賣給鐵匠",
+    },
+    "herder": { // 牧農
+        "emoji": "cow",
+        "desc": "肉類的來源，養殖各類動物",
+    },
+    "blacksmith": { // 鐵匠
+        "emoji": "anvil",
+        "desc": "熔煉各類原礦轉換成有價值的礦物 (新手不建議)",
+    },
+    "lumberjack": { // 伐木工
+        "emoji": "wood",
+        "desc": "在森林中砍伐木頭，是木頭的來源",
+    },
+};
+
 module.exports = {
     INDENT,
     database_folder,
@@ -321,10 +360,15 @@ module.exports = {
     embed_warn_color,
     embed_error_color,
     embed_fell_color,
+    embed_job_color,
 
     priorityUserIDs,
     priorityGuildIDs,
     rpg_lvlUp_per,
+
+    setJobDelay,
+
     failed,
     probabilities,
+    jobs,
 };

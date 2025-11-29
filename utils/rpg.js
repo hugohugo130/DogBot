@@ -2,6 +2,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("
 const { get_logger, getCallerModuleName } = require("./logger.js");
 const { wait_until_ready } = require("./wait_until_ready.js");
 const { prefix, embed_default_color, embed_error_color, embed_fell_color } = require("./config.js");
+const DogClient = require("./customs/client.js");
 
 const logger = get_logger();
 
@@ -1207,6 +1208,69 @@ async function get_loophole_embed(client = global._client, text) {
     return setEmbedFooter(client, embed);
 };
 
+/**
+ * 
+ * @param {string} userId 
+ * @param {DogClient} client 
+ * @returns {Promise<EmbedBuilder | null>}
+ */
+async function job_delay_embed(userId, client = global._client) {
+    const { setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
+    const { load_rpg_data } = require("./file.js");
+    const { convertToSecond, DateNowSecond } = require("./timestamp.js");
+    const { setJobDelay } = require("./config.js");
+
+    const rpg_data = await load_rpg_data(userId);
+    const lastRunTimestamp = rpg_data.lastRunTimestamp ?? {};
+    const setJobTime = convertToSecond(lastRunTimestamp.job ?? 0);
+    const waitUntil = setJobTime + setJobDelay;
+    const now = DateNowSecond();
+
+    if (waitUntil > now) {
+        const emoji_cross = await get_emoji(client, "crosS");
+        const embed = new EmbedBuilder()
+            .setColor(embed_error_color)
+            .setTitle(`${emoji_cross} | 轉職後一個禮拜不能更動職業!`)
+            .setDescription(`還需要等待到 <t:${waitUntil}:F>`);
+
+        return setEmbedFooter(client, embed);
+    } else {
+        return null;
+    };
+};
+
+/**
+ * 
+ * @param {string} userid 
+ * @returns {EmbedBuilder}
+ */
+function choose_job_row(userid) {
+    const { jobs } = require("./config.js");
+
+    const selectMenu = new StringSelectMenuBuilder()
+        .setCustomId(`job_choose|${userid}`)
+        .setPlaceholder("選擇職業")
+        .addOptions(
+            ...Object.entries(jobs).map(([id, data]) => {
+                return {
+                    label: get_name_of_id(id),
+                    description: data.desc,
+                    value: id,
+                };
+            })
+        );
+
+    const cancel_button = new ButtonBuilder()
+        .setCustomId(`cancel|${userid}`)
+        .setLabel("取消")
+        .setStyle(ButtonStyle.Danger);
+
+    const row = new ActionRowBuilder()
+        .addComponents(selectMenu, cancel_button);
+
+    return row;
+};
+
 async function ls_function({ client, message, rpg_data, data, args, mode, random_item, PASS }) {
     const { privacy_data, setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
 
@@ -1338,9 +1402,12 @@ module.exports = {
     get_number_of_items,
     userHaveEnoughItems,
     notEnoughItemEmbed,
+    job_delay_embed,
+    choose_job_row,
     oven_slots,
     farm_slots,
     smelter_slots,
+
     // rpg functions
     BetterEval,
     get_emoji,

@@ -1,7 +1,7 @@
 const { Events, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User } = require("discord.js");
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
-const { prefix, embed_default_color, embed_error_color } = require("../../utils/config.js");
+const { prefix, embed_default_color, embed_error_color, embed_job_color } = require("../../utils/config.js");
 const { randint, choice } = require("../../utils/random.js");
 const { BetterEval, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished } = require("../../utils/rpg.js");
 const util = require('node:util');
@@ -1843,6 +1843,52 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         return !married;
     }],
+    job: ["職業", "選擇職業", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        const { get_name_of_id, choose_job_row } = require("../../utils/rpg.js");
+        const { jobs } = require("../../utils/config.js");
+
+        const emoji_job = await get_emoji(client, "job");
+        const emoji_nekoWave = await get_emoji(client, "nekoWave");
+
+        const userid = message.author.id;
+        const job = rpg_data.job;
+
+        if (job) {
+            const job_name = get_name_of_id(job);
+
+            const embed = new EmbedBuilder()
+                .setColor(embed_job_color)
+                .setTitle(`${emoji_job} | 你是一名 ${job_name}`)
+                .setDescription(jobs[job].desc);
+
+            const change_job_button = new ButtonBuilder()
+                .setCustomId(`job_transfer|${userid}`)
+                .setLabel("轉職?")
+                .setStyle(ButtonStyle.Primary);
+
+            const row = new ActionRowBuilder()
+                .addComponents(change_job_button);
+
+            if (mode === 1) return { embeds: [setEmbedFooter(client, embed)], components: [row] };
+            return await message.reply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
+        } else {
+            const embed = new EmbedBuilder()
+                .setColor(embed_job_color)
+                .setTitle(`${emoji_job} | 請選擇你的職業`)
+                .setDescription
+                (`
+轉職後一個禮拜不能更動職業!
+
+${emoji_nekoWave} 如果出現紅字 Invalid Form Body 的錯誤訊息
+，請確認 Discord 有更新到最新版本
+                `);
+
+            const row = choose_job_row(userid);
+
+            if (mode === 1) return { embeds: [embed], components: [row] };
+            return await message.reply({ embeds: [embed], components: [row] });
+        };
+    }, false],
 };
 
 for (const [from, target] of Object.entries(redirect_data)) {
