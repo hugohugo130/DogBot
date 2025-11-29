@@ -1277,7 +1277,11 @@ async function choose_job_row(userid) {
                         label: get_name_of_id(id),
                         description: data.desc,
                         value: id,
-                        emoji: emojiObject ? emojiObject.id : "❓",
+                        emoji: emojiObject ? {
+                            id: emojiObject.id,
+                            name: emojiObject.name,
+                            animated: emojiObject.animated || false
+                        } : "❓"
                     };
                 }),
             ),
