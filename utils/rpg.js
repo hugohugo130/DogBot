@@ -1,4 +1,4 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } = require("discord.js");
+const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji } = require("discord.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
 const { wait_until_ready } = require("./wait_until_ready.js");
 const { prefix, embed_default_color, embed_error_color, embed_fell_color } = require("./config.js");
@@ -1030,8 +1030,13 @@ function BetterEval(obj) {
     return Function(`"use strict";return ${obj}`)();
 };
 
-async function get_emoji(client = global._client, name) {
-    // await client.application.fetch();
+/**
+ * 
+ * @param {string} name 
+ * @param {DogClient} client 
+ * @returns {Promise<Emoji>}
+ */
+async function get_emoji_object(name, client = global._client) {
     wait_until_ready(client);
 
     let emojis = client.application.emojis.cache;
@@ -1041,6 +1046,15 @@ async function get_emoji(client = global._client, name) {
         emojis = await client.application.emojis.fetch();
         emoji = emojis.find(e => e.name === name);
     };
+
+    return emoji;
+};
+
+async function get_emoji(client = global._client, name) {
+    // await client.application.fetch();
+    wait_until_ready(client);
+
+    let emoji = await get_emoji_object(name, client);
 
     // if (!emoji) throw new Error(`找不到名為${name}的emoji`);
     if (!emoji) return "";
@@ -1414,6 +1428,7 @@ module.exports = {
     notEnoughItemEmbed,
     job_delay_embed,
     choose_job_row,
+    get_emoji_object,
     oven_slots,
     farm_slots,
     smelter_slots,
