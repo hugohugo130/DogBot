@@ -4,6 +4,8 @@ const { get_logger } = require("../../utils/logger.js");
 const util = require('node:util');
 const DogClient = require("../../utils/customs/client.js");
 
+const logger = get_logger();
+
 function show_transactions(userid) {
     const { load_rpg_data } = require("../../utils/file.js");
     const { transactions = [] } = load_rpg_data(userid);
@@ -423,7 +425,6 @@ module.exports = {
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
             if (interaction.customId.startsWith("vote_")) return;
-            const logger = get_logger();
 
             const message = interaction.message;
             const user = interaction.user;
@@ -1064,6 +1065,8 @@ module.exports = {
             const { get_loophole_embed } = require("../../utils/rpg.js");
 
             const errorStack = util.inspect(err, { depth: null });
+
+            logger.error(errorStack);
 
             if (interaction.deferred) {
                 await interaction.followUp({ embeds: [await get_loophole_embed(client, errorStack)], flags: MessageFlags.Ephemeral });
