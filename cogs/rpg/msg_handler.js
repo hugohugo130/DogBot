@@ -1435,7 +1435,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             const row = new ActionRowBuilder()
                 .addComponents(howToEatButton, buyFoodButton);
 
-            if (errors) {
+            if (errors.length > 0) {
                 const embed = await get_loophole_embed(client, errors);
 
                 if (mode === 1) return { embeds: [embed] };
