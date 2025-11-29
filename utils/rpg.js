@@ -1275,7 +1275,7 @@ async function choose_job_row(userid) {
                         label: get_name_of_id(id),
                         description: data.desc,
                         value: id,
-                        emoji: await get_emoji(global._client, id)
+                        emoji: await get_emoji_object(id),
                     };
                 }),
             ),
