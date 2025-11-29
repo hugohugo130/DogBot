@@ -215,6 +215,7 @@ const redirect_data = {
     store: "shop",
     // l: "lazy",
     love: "marry",
+    unmarry: "divorce",
 };
 
 // const rpg_work = [
