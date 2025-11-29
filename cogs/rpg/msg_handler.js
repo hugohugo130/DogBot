@@ -1778,6 +1778,43 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         return !married;
     }],
+    divorce: ["結婚", "與某人結婚", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        const { load_rpg_data, save_rpg_data, find_default_value } = require("../../utils/file.js");
+        const marry_default_value = find_default_value("rpg_database.json")?.["marry"] ?? {};
+
+        const emoji_check = await get_emoji(client, "check");
+        const userid = message.author.id;
+
+        const marry_info = rpg_data.marry ?? {};
+        const married = marry_info.status ?? false;
+
+        if (!married) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_default_color)
+                .setTitle(`${emoji_cross} | 你還沒有結婚!`);
+
+            if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+            return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+        };
+
+        const with_UserId = marry_info.with;
+        const with_User = await client.users.fetch(with_UserId);
+        const with_User_rpg_data = load_rpg_data(with_UserId);
+
+        const embed = new EmbedBuilder()
+            .setColor(embed_default_color)
+            .setTitle(`${emoji_check} | 你已經與 ${with_User.username} 離婚了!`)
+            .setDescription(`你們的婚姻已經結束了!`);
+
+        rpg_data.marry = marry_default_value;
+        with_User_rpg_data.marry = marry_default_value;
+
+        save_rpg_data(userid, rpg_data);
+        save_rpg_data(with_UserId, with_User_rpg_data);
+
+        if (mode === 1) return { embeds: [setEmbedFooter(client, embed)] };
+        return await message.reply({ embeds: [setEmbedFooter(client, embed)] });
+    }, false],
 };
 
 for (const [from, target] of Object.entries(redirect_data)) {
