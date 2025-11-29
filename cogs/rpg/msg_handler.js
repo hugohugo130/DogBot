@@ -254,7 +254,7 @@ async function show_marry_info(client, rpg_data) {
         .setTitle(`${emoji_check} 結婚資訊`)
         .setColor("#FF0000")
         .setDescription(
-            `你和 <@${marry_info.id}> ❤️
+            `你和 <@${marry_info.with}> ❤️
 
 結婚紀念日 - <t:${marryTime}:R>`
         );
