@@ -1,7 +1,7 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji } = require("discord.js");
 const { wait_until_ready } = require("./wait_until_ready.js");
 const { prefix, embed_default_color, embed_error_color, embed_fell_color } = require("./config.js");
-const EmbedBuilder = require('../utils/customs/embedBuilder.js');
+const EmbedBuilder = require('./customs/embedBuilder.js');
 const DogClient = require("./customs/client.js");
 
 const mine_gets = [

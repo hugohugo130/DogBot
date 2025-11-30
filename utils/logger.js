@@ -103,7 +103,7 @@ const consoleFormat = winston.format.combine(
 );
 
 async function send_msg(channel, level, color, logger_name, message, timestamp = null, embed = null) {
-    const EmbedBuilder = require('../utils/customs/embedBuilder.js');
+    const EmbedBuilder = require('./customs/embedBuilder.js');
     
     if (message) message = message.replace("```", "");
 
@@ -249,7 +249,7 @@ function get_logger(options = {}) {
 
 // 處理發送隊列
 async function process_send_queue(client) {
-    const EmbedBuilder = require('../utils/customs/embedBuilder.js');
+    const EmbedBuilder = require('./customs/embedBuilder.js');
     
     while (global.sendQueue.length > 0) {
         const info = global.sendQueue[0];
