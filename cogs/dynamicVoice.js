@@ -28,7 +28,7 @@ module.exports = {
             if (!guild) return;
 
             const member = newState.member || oldState.member;
-            if (!member) return;;
+            if (!member) return;
 
             // 確保 client.dvoice 已初始化
             if (!client.dvoice) client.dvoice = new Map();

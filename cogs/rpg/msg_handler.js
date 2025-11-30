@@ -1562,7 +1562,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return await message.reply({ embeds: [embed], components: [row] });
     }, true],
     // cmd: ["通過按下按鈕來選擇指令", "PS: 需要參數的指令不行哦！", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-    //     const commands = Object.keys(rpg_commands);;
+    //     const commands = Object.keys(rpg_commands);
 
     //     const attachment = new AttachmentBuilder(`./f_images/cmdBlock.webp`, { name: "cmdBlock.webp" });
     //     const embed = new EmbedBuilder()

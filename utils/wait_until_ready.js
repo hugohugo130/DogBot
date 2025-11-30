@@ -10,7 +10,7 @@ function wait_until_ready(client = global._client, timeout = 10) {
         if (client_ready(client) || start + timeout >= Date.now()) break;
     };
 
-    return client_ready(client) ? client : null;;
+    return client_ready(client) ? client : null;
 };
 
 module.exports = {

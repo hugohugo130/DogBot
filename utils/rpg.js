@@ -280,7 +280,7 @@ const animals = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, {});;
+}, {});
 
 const animal_products = {
     a_chicken: "raw_chicken",
