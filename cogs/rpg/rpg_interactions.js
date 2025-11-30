@@ -1178,6 +1178,11 @@ module.exports = {
                 const rpg_data = load_rpg_data(user.id);
 
                 rpg_data.job = job;
+                if (job === "farmer") {
+                    if (!rpg_data.inventory) rpg_data.inventory = {};
+                    if (!rpg_data.inventory.wooden_hoe) rpg_data.inventory.wooden_hoe = 0;
+                    rpg_data.inventory.wooden_hoe += 4;
+                };
 
                 if (!rpg_data.lastRunTimestamp) rpg_data.lastRunTimestamp = {};
                 rpg_data.lastRunTimestamp.job = Date.now();
