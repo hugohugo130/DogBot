@@ -1940,8 +1940,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 (`
 轉職後一個禮拜不能更動職業!
 
-${emoji_nekoWave} 如果出現紅字 Invalid Form Body 的錯誤訊息
-，請確認 Discord 有更新到最新版本
+${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
+，請確認 \`Discord\` 有更新到最新版本
                 `)
                 .setEmbedFooter();
 
