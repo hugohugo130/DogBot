@@ -1094,10 +1094,11 @@ module.exports = {
                 const { job_delay_embed, choose_job_row } = require("../../utils/rpg.js");
 
                 const emoji_job = await get_emoji(client, "job");
+                await interaction.deferUpdate();
 
                 const job_embed = await job_delay_embed(user.id);
                 if (job_embed) {
-                    return await interaction.editReply({ embeds: [job_embed], flags: MessageFlags.Ephemeral });
+                    return await interaction.update({ embeds: [job_embed], flags: MessageFlags.Ephemeral });
                 } else {
                     const embed = new EmbedBuilder()
                         .setColor(embed_job_color)
@@ -1106,13 +1107,13 @@ module.exports = {
 
                     const row = choose_job_row(user.id);
 
-                    return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
+                    return await interaction.update({ embeds: [setEmbedFooter(client, embed)], components: [row] });
                 }
             } else if (interaction.customId.startsWith("job_choose")) {
                 const { job_delay_embed, get_name_of_id } = require("../../utils/rpg.js");
 
                 if (!interaction.isStringSelectMenu()) return;
-                await interaction.deferReply();
+                await interaction.deferUpdate();
 
                 const emoji_job = await get_emoji(client, "job");
 
@@ -1121,7 +1122,7 @@ module.exports = {
 
                 const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
-                    return await interaction.editReply({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
+                    return await interaction.update({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                 };
 
                 const embed = new EmbedBuilder()
@@ -1137,7 +1138,7 @@ module.exports = {
                 const row = new ActionRowBuilder()
                     .addComponents(confirm_button);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [row] });
+                return await interaction.update({ embeds: [setEmbedFooter(client, embed)], components: [row] });
             } else if (interaction.customId.startsWith("job_confirm")) {
                 const { job_delay_embed, get_name_of_id } = require("../../utils/rpg.js");
                 const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
@@ -1146,11 +1147,11 @@ module.exports = {
                 const job_name = get_name_of_id(job);
 
                 const emoji_job = await get_emoji(client, "job");
-                await interaction.deferReply();
+                await interaction.deferUpdate();
 
                 const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
-                    return await interaction.editReply({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
+                    return await interaction.update({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                 };
 
                 const rpg_data = load_rpg_data(user.id);
@@ -1166,7 +1167,7 @@ module.exports = {
                     .setColor(embed_job_color)
                     .setTitle(`${emoji_job} | 成功轉職為 ${job_name}!`);
 
-                return await interaction.editReply({ embeds: [setEmbedFooter(client, embed)], components: [] });
+                return await interaction.update({ embeds: [setEmbedFooter(client, embed)], components: [] });
             };
         } catch (err) {
             const { get_loophole_embed } = require("../../utils/rpg.js");
