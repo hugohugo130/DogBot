@@ -1119,7 +1119,7 @@ module.exports = {
                 const job = interaction.values[0];
                 const job_name = get_name_of_id(job);
 
-                const delay_embed = job_delay_embed(user.id);
+                const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
                     return await interaction.editReply({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                 };
