@@ -1477,6 +1477,9 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const item_name = name[args[0]] || args[0];
         const item_id = Object.keys(name).find(key => name[key] === item_name);
 
+        const isFarmer = rpg_data.job === "farmer";
+        const isHoe = item_id.endsWith('hoe');
+
         const emoji_trade = await get_emoji(client, "trade");
 
         if (!name[item_id]) {
@@ -1514,7 +1517,19 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
-        }
+        };
+
+        if (isFarmer && isHoe) {
+            const emoji_cross = await get_emoji(client, "crosS");
+
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 農夫不能販賣鋤頭`)
+                .setEmbedFooter();
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
 
         const price = sell_data[item_id];
         if (!price) {
