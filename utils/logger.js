@@ -1,5 +1,4 @@
 const { EmbedBuilder: djsEmbedBuilder, MessageFlags, Embed } = require('discord.js');
-const EmbedBuilder = require('../utils/customs/embedBuilder.js');
 const winston = require('winston');
 const path = require("path");
 
@@ -104,6 +103,8 @@ const consoleFormat = winston.format.combine(
 );
 
 async function send_msg(channel, level, color, logger_name, message, timestamp = null, embed = null) {
+    const EmbedBuilder = require('../utils/customs/embedBuilder.js');
+    
     if (message) message = message.replace("```", "");
 
     if (!embed) {
@@ -248,6 +249,8 @@ function get_logger(options = {}) {
 
 // 處理發送隊列
 async function process_send_queue(client) {
+    const EmbedBuilder = require('../utils/customs/embedBuilder.js');
+    
     while (global.sendQueue.length > 0) {
         const info = global.sendQueue[0];
         if (DEBUG) console.debug(`[DEBUG] [process_send_queue] handling send Queue ${JSON.stringify(info, null, 4)}`)
