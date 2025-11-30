@@ -1,11 +1,8 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji } = require("discord.js");
-const { get_logger, getCallerModuleName } = require("./logger.js");
 const { wait_until_ready } = require("./wait_until_ready.js");
 const { prefix, embed_default_color, embed_error_color, embed_fell_color } = require("./config.js");
 const EmbedBuilder = require('../utils/customs/embedBuilder.js');
 const DogClient = require("./customs/client.js");
-
-const logger = get_logger();
 
 const mine_gets = [
     "coal",
@@ -886,6 +883,9 @@ const name_reverse = Object.entries(name).reduce((acc, [key, value]) => {
 
 function check_item_data() {
     const { get_probability_of_id } = require("./file.js");
+    const { get_logger } = require("./logger.js");
+
+    const logger = get_logger();
 
     const all_items = [
         ...Object.values(mine_gets),
@@ -979,8 +979,11 @@ function userHaveEnoughItems(userid, item, item_amount) {
  * @returns {Promise<EmbedBuilder>}
  */
 async function notEnoughItemEmbed(item_datas, client = global._client) {
+    const { get_logger } = require("./logger.js");
+
     if (item_datas?.length <= 0) throw new Error("item_datas is empty");
     if (!Array.isArray(item_datas)) item_datas = [item_datas];
+    const logger = get_logger();
 
     const items_str = item_datas.map(item_data => {
         if (typeof item_data === "string") return item_data;
