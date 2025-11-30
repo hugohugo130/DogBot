@@ -1112,6 +1112,7 @@ module.exports = {
                 const { job_delay_embed, get_name_of_id } = require("../../utils/rpg.js");
 
                 if (!interaction.isStringSelectMenu()) return;
+                await interaction.deferReply();
 
                 const emoji_job = await get_emoji(client, "job");
 
