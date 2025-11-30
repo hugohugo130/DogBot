@@ -1260,7 +1260,7 @@ async function job_delay_embed(userId, client = global._client) {
 /**
  * 
  * @param {string} userid 
- * @returns {EmbedBuilder}
+ * @returns {Promise<EmbedBuilder>}
  */
 async function choose_job_row(userid) {
     const { jobs } = require("./config.js");
