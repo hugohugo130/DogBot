@@ -1,4 +1,5 @@
 const { SlashCommandBuilder } = require("discord.js");
+const EmbedBuilder = require('../utils/customs/embedBuilder.js');
 const musicPlayer = require('../../utils/musicPlayer.js');
 
 module.exports = {

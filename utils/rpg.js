@@ -1,7 +1,8 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji } = require("discord.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
 const { wait_until_ready } = require("./wait_until_ready.js");
 const { prefix, embed_default_color, embed_error_color, embed_fell_color } = require("./config.js");
+const EmbedBuilder = require('../utils/customs/embedBuilder.js');
 const DogClient = require("./customs/client.js");
 
 const logger = get_logger();
@@ -978,8 +979,6 @@ function userHaveEnoughItems(userid, item, item_amount) {
  * @returns {Promise<EmbedBuilder>}
  */
 async function notEnoughItemEmbed(item_datas, client = global._client) {
-    const { setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
-
     if (item_datas?.length <= 0) throw new Error("item_datas is empty");
     if (!Array.isArray(item_datas)) item_datas = [item_datas];
 
@@ -1008,9 +1007,10 @@ async function notEnoughItemEmbed(item_datas, client = global._client) {
     const embed = new EmbedBuilder()
         .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
         .setColor(embed_error_color)
-        .setDescription(`你缺少了 ${items_str}`);
+        .setDescription(`你缺少了 ${items_str}`)
+        .setEmbedFooter();
 
-    return setEmbedFooter(client, embed);
+    return embed;
 };
 
 const oven_slots = 3;
@@ -1077,8 +1077,10 @@ async function get_cooldown_embed(remaining_time, client = global._client, actio
     const embed = new EmbedBuilder()
         .setColor(embed_error_color)
         .setTitle(`${emoji} | 你過勞了！`)
-        .setDescription(`你今天${verb}了 \`${count}\` 次${noun}，等待到 ${time} 可以繼續${action.join("")}`);
-    return setEmbedFooter(client, embed);
+        .setDescription(`你今天${verb}了 \`${count}\` 次${noun}，等待到 ${time} 可以繼續${action.join("")}`)
+        .setEmbedFooter();
+
+    return embed;
 };
 
 function get_cooldown_time(command_name, rpg_data) {
@@ -1153,9 +1155,10 @@ async function get_failed_embed(client = global._client, failed_reason, rpg_data
     const embed = new EmbedBuilder()
         .setColor(color)
         .setTitle(title)
-        .setDescription(description);
+        .setDescription(description)
+        .setEmbedFooter('', rpg_data);
 
-    return setEmbedFooter(client, embed, '', rpg_data);
+    return embed;
 }
 
 /**
@@ -1201,8 +1204,6 @@ function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
 };
 
 async function get_loophole_embed(client = global._client, text) {
-    const { setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
-
     const emoji_cross = await get_emoji(client, "crosS");
 
     if (text && !text.includes("```")) {
@@ -1221,9 +1222,10 @@ async function get_loophole_embed(client = global._client, text) {
     const embed = new EmbedBuilder()
         .setColor(embed_error_color)
         .setTitle(`${emoji_cross} | 你戳到了一個漏洞！`)
-        .setDescription(text);
+        .setDescription(text)
+        .setEmbedFooter();
 
-    return setEmbedFooter(client, embed);
+    return embed;
 };
 
 /**
@@ -1249,9 +1251,10 @@ async function job_delay_embed(userId, client = global._client) {
         const embed = new EmbedBuilder()
             .setColor(embed_error_color)
             .setTitle(`${emoji_cross} | 轉職後一個禮拜不能更動職業!`)
-            .setDescription(`還需要等待到 <t:${waitUntil}:F>`);
+            .setDescription(`還需要等待到 <t:${waitUntil}:F>`)
+            .setEmbedFooter();
 
-        return setEmbedFooter(client, embed);
+        return embed;
     } else {
         return null;
     };
@@ -1310,9 +1313,10 @@ async function ls_function({ client, message, rpg_data, data, args, mode, random
         let embed = new EmbedBuilder()
             .setTitle(`${bag_emoji} | 查看包包`)
             .setColor(embed_default_color)
-            .setDescription(`為保護包包內容隱私權，戳這顆按鈕來看你的包包，隱私權設定可以透過 \`${prefix}privacy\` 指令更改`);
+            .setDescription(`為保護包包內容隱私權，戳這顆按鈕來看你的包包，隱私權設定可以透過 \`${prefix}privacy\` 指令更改`)
+            .setEmbedFooter();
 
-        embed = setEmbedFooter(client, embed);
+        embed = embed;
 
         const confirm_button = new ButtonBuilder()
             .setCustomId(`ls|${message.author.id}`)
@@ -1368,9 +1372,8 @@ async function ls_function({ client, message, rpg_data, data, args, mode, random
     // 創建嵌入訊息
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
-        .setTitle(`${bag_emoji} | 你的背包`);
-
-    setEmbedFooter(client, embed);
+        .setTitle(`${bag_emoji} | 你的背包`)
+        .setEmbedFooter();
 
     // 使用循環添加各類物品欄位
     const categories = [

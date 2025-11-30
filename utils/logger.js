@@ -1,6 +1,6 @@
-const { EmbedBuilder, MessageFlags, Embed } = require('discord.js');
+const { EmbedBuilder: djsEmbedBuilder, MessageFlags, Embed } = require('discord.js');
+const EmbedBuilder = require('../utils/customs/embedBuilder.js');
 const winston = require('winston');
-const util = require('node:util');
 const path = require("path");
 
 const { time2 } = require('./time.js');
@@ -272,6 +272,7 @@ async function process_send_queue(client) {
                 message
                 && (
                     (typeof message === 'object' && message.data)
+                    || message instanceof djsEmbedBuilder
                     || message instanceof EmbedBuilder
                     || message instanceof Embed
                 )

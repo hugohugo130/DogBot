@@ -1,25 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction } = require("discord.js");
-
-/*
-fisher
-pharmacist
-farmer
-cook
-miner
-herder
-blacksmith
-lumberjack
-*/
-const job_emojis = {
-    "fisher": "fisher",
-    "pharmacist": "potion",
-    "farmer": "farmer",
-    "cook": "cook",
-    "miner": "ore",
-    "herder": "cow",
-    "blacksmith": "anvil",
-    "lumberjack": "wood",
-};
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction } = require("discord.js");
+const EmbedBuilder = require('../utils/customs/embedBuilder.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -88,7 +68,7 @@ module.exports = {
     async execute(interaction) {
         const { load_rpg_data } = require("../utils/file.js");
         const { get_emoji } = require("../utils/rpg.js");
-        const { setEmbedFooter, setEmbedAuthor, max_hunger } = require("../cogs/rpg/msg_handler.js");
+        const { max_hunger } = require("../cogs/rpg/msg_handler.js");
         const { convertToSecond } = require("../utils/timestamp.js");
         const { embed_default_color } = require("../utils/config.js");
 
@@ -291,10 +271,9 @@ module.exports = {
                         name: `${emoji_memory} 記憶體狀況 (Used / Total / RSS)`,
                         value: `\`${fix(memUsage.heapUsed)} MB\` / \`${fix(memUsage.heapTotal)} MB\` / \`${fix(memUsage.rss)} MB\``,
                     },
-                );
-
-            embed = setEmbedFooter(client, embed, "我們使用 discord.js 製作這個機器人", null, true);
-            embed = setEmbedAuthor(client, embed, `${client.user.tag}🤖`);
+                )
+                .setEmbedFooter("我們使用 discord.js 製作這個機器人", null, true)
+                .setEmbedAuthor(`${client.user.tag}🤖`);
 
             await interaction.editReply({ embeds: [embed] });
         };

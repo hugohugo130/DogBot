@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const EmbedBuilder = require('../../../utils/customs/embedBuilder.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,12 +20,11 @@ module.exports = {
         // const { get_emoji } = require("../../../utils/rpg.js");
 
         // const emoji = await get_emoji(interaction.client, "top");
-        // let embed = new EmbedBuilder()
+        // const embed = new EmbedBuilder()
         //     .setColor(0x00BBFF)
         //     .setTitle(`${emoji} | 設定語言`)
-        //     .setDescription(`請選擇要設定的語言`);
-        
-        // embed = setEmbedFooter(interaction, embed);
+        //     .setDescription(`請選擇要設定的語言`)
+        //     .setEmbedFooter();
         
         // const row = new ActionRowBuilder()
 

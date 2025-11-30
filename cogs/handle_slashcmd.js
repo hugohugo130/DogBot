@@ -1,4 +1,5 @@
-const { Events, EmbedBuilder } = require('discord.js');
+const { Events } = require('discord.js');
+const EmbedBuilder = require('../utils/customs/embedBuilder.js');
 const { get_logger } = require('../utils/logger.js');
 const util = require('node:util');
 

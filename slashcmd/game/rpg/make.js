@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder, MessageFlags } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags } = require("discord.js");
+const EmbedBuilder = require('../../../utils/customs/embedBuilder.js');
 const { recipes, get_name_of_id } = require("../../../utils/rpg.js");
 
 module.exports = {
@@ -101,9 +102,10 @@ module.exports = {
             const embed = new EmbedBuilder()
                 .setTitle("你沒有足夠的材料")
                 .setColor(embed_error_color)
-                .setDescription(`你缺少了 ${items.join("、")}`);
+                .setDescription(`你缺少了 ${items.join("、")}`)
+                .setEmbedFooter();
 
-            return await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)], flags: MessageFlags.Ephemeral });
+            return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
         for (const need_item in item_need) {
@@ -121,8 +123,9 @@ module.exports = {
         const embed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setTitle(`${emoji} | 製作物品`)
-            .setDescription(`你製作出了 \`${output_amount}\` 個 ${get_name_of_id(item_id)}`);
+            .setDescription(`你製作出了 \`${output_amount}\` 個 ${get_name_of_id(item_id)}`)
+            .setEmbedFooter();
 
-        await interaction.editReply({ embeds: [setEmbedFooter(interaction.client, embed)] });
+        await interaction.editReply({ embeds: [embed] });
     },
 };

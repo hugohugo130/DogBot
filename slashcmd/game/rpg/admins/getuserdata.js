@@ -1,4 +1,5 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
+const EmbedBuilder = require('../../../../utils/customs/embedBuilder.js');
 
 function split_msg(content, split = 2000) {
     let messages = [];
