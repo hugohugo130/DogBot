@@ -152,6 +152,15 @@ module.exports = {
                 case "inv":
                     await handleInvCommand(message, commandArgs);
                     break;
+
+                case "resjob":
+                    const rpg_data = load_rpg_data(message.author.id);
+                    rpg_data.job = null;
+
+                    save_rpg_data(message.author.id, rpg_data);
+
+                    await message.reply("DONE！");
+                    break;
             };
 
             async function handleGiveCommand(message, args) {
