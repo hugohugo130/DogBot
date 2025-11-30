@@ -1113,8 +1113,8 @@ module.exports = {
 
                 const emoji_job = await get_emoji(client, "job");
 
-                const job_embed = await job_delay_embed(user.id);
-                if (job_embed) {
+                const delay_embed = await job_delay_embed(user.id);
+                if (delay_embed) {
                     return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                 } else {
                     const embed = new EmbedBuilder()
