@@ -1095,7 +1095,7 @@ module.exports = {
 
                 const emoji_job = await get_emoji(client, "job");
 
-                const job_embed = job_delay_embed(user.id);
+                const job_embed = await job_delay_embed(user.id);
                 if (job_embed) {
                     return await interaction.editReply({ embeds: [job_embed], flags: MessageFlags.Ephemeral });
                 } else {
@@ -1147,7 +1147,7 @@ module.exports = {
 
                 const emoji_job = await get_emoji(client, "job");
 
-                const delay_embed = job_delay_embed(user.id);
+                const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
                     return await interaction.editReply({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                 };
