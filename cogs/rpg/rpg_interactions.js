@@ -1,4 +1,4 @@
-const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, CommandInteraction, ButtonStyle } = require("discord.js");
+const { Events, EmbedBuilder, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, CommandInteraction, ButtonStyle, ButtonBuilder } = require("discord.js");
 const { prefix, embed_default_color, embed_error_color, embed_job_color } = require("../../utils/config.js");
 const { get_logger } = require("../../utils/logger.js");
 const util = require('node:util');
@@ -1146,6 +1146,7 @@ module.exports = {
                 const job_name = get_name_of_id(job);
 
                 const emoji_job = await get_emoji(client, "job");
+                await interaction.deferReply();
 
                 const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
