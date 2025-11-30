@@ -1115,7 +1115,7 @@ module.exports = {
 
                 const job_embed = await job_delay_embed(user.id);
                 if (job_embed) {
-                    return await interaction.update({ embeds: [job_embed], flags: MessageFlags.Ephemeral });
+                    return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                 } else {
                     const embed = new EmbedBuilder()
                         .setColor(embed_job_color)
@@ -1126,7 +1126,7 @@ module.exports = {
                     const row = choose_job_row(user.id);
 
                     return await interaction.update({ embeds: [embed], components: [row] });
-                }
+                };
             } else if (interaction.customId.startsWith("job_choose")) {
                 const { job_delay_embed, get_name_of_id } = require("../../utils/rpg.js");
 
@@ -1139,7 +1139,7 @@ module.exports = {
 
                 const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
-                    return await interaction.update({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
+                    return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                 };
 
                 const embed = new EmbedBuilder()
@@ -1168,7 +1168,7 @@ module.exports = {
 
                 const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
-                    return await interaction.update({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
+                    return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                 };
 
                 const rpg_data = load_rpg_data(user.id);
