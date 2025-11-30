@@ -654,20 +654,21 @@ module.exports = {
                 await interaction.followUp(res);
             } else if (interaction.customId.startsWith("sell")) {
                 const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                const { get_emoji, add_money, get_name_of_id, name } = require("../../utils/rpg.js");
+                const { get_emoji, add_money, get_name_of_id} = require("../../utils/rpg.js");
                 await interaction.deferUpdate();
 
-                let [_, userId, item_id, price, amount] = customIdParts;
+                let [_, userId, item_id, price, amount, total_price] = customIdParts;
 
-                price = parseInt(price);
+                price = parseFloat(price);
                 amount = parseInt(amount);
+                total_price = Math.round(parseFloat(total_price));
 
                 const rpg_data = load_rpg_data(userId);
 
                 rpg_data.inventory[item_id] -= amount;
                 rpg_data.money = add_money({
                     rpg_data,
-                    amount: price * amount,
+                    amount: total_price,
                     originalUser: "系統",
                     targetUser: `<@${userId}>`,
                     type: "出售物品所得",
@@ -678,7 +679,7 @@ module.exports = {
                 const emoji_trade = await get_emoji(client, "trade");
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
-                    .setTitle(`${emoji_trade} | 成功售出了 ${amount} 個 ${name[item_id]}`)
+                    .setTitle(`${emoji_trade} | 成功售出了 ${amount} 個 ${get_name_of_id(item_id)}`)
                     .setEmbedFooter();
 
                 await interaction.editReply({ embeds: [embed], components: [] });

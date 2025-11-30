@@ -1538,9 +1538,10 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         };
+        const total_price = Math.round(price * amount);
 
         const confirm_button = new ButtonBuilder()
-            .setCustomId(`sell|${message.author.id}|${item_id}|${price}|${amount}`)
+            .setCustomId(`sell|${message.author.id}|${item_id}|${price}|${amount}|${total_price}`)
             .setLabel("確認")
             .setStyle(ButtonStyle.Success);
 
@@ -1555,7 +1556,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${emoji_trade} | 出售確認`)
-            .setDescription(`你將要出售 \`${amount.toLocaleString()}\` 個 \`${item_name}\`，共獲得 \`${(price * amount).toLocaleString()}$\``)
+            .setDescription(`你將要出售 \`${amount.toLocaleString()}\` 個 \`${item_name}\`，共獲得 \`${total_price.toLocaleString()}$\``)
             .setEmbedFooter();
 
         if (mode === 1) return { embeds: [embed], components: [row] };
