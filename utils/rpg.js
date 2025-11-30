@@ -587,7 +587,7 @@ const shop_lowest_price = {
 //     unlucky_potion: 50,
 // };
 const sell_data = Object.keys(shop_lowest_price).reduce(function (result, key) {
-    result[key] = object[key] * 0.8;
+    result[key] = shop_lowest_price[key] * 0.8;
     return result
 }, {});
 
