@@ -1927,7 +1927,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
 ${emoji_nekoWave} 如果出現紅字 Invalid Form Body 的錯誤訊息
 ，請確認 Discord 有更新到最新版本
-                `);
+                `)
+                .setEmbedFooter();
 
             const rows = await choose_job_row(userid);
 
