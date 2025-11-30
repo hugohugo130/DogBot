@@ -9,7 +9,7 @@ const util = require('node:util');
 const DogClient = require("../../utils/customs/client.js");
 
 const max_hunger = 20;
-const logger = get_logger();
+const logger = get_logger({ nodc: true });
 
 class MockMessage {
     constructor(content = null, channel = null, author = null, guild = null, mention_user = null) {
@@ -117,51 +117,18 @@ async function redirect({ client, message, command, mode = 0 }) {
  * @param {boolean} [force=false] text參數將不會增加飽食度或機器犬文字
  * @returns {EmbedBuilder}
  */
+// [DEPRECATED] setEmbedFooter 和 setEmbedAuthor 已移至 EmbedBuilder 類別方法
+// 向後兼容
 function setEmbedFooter(client = global._client, embed, text = "", rpg_data = null, force = false) {
-    const { load_rpg_data } = require("../../utils/file.js");
-
-    if (text.includes("飽食度剩餘")) logger.warn(`[DEPRECATED] give rpg_data or user id instead add to the text\ncalled from ${getCallerModuleName(null)}`)
-    let data;
-    if (rpg_data) {
-        if (rpg_data instanceof String) { // userid
-            data = load_rpg_data(rpg_data);
-        } else if (rpg_data instanceof Object) { // rpg_data
-            data = rpg_data;
-        };
-    };
-
-    if (!force && data) text += `飽食度剩餘 ${data.hunger}`;
-    if (!force) text += "\n狗狗機器犬 ∙ 由哈狗製作";
-    text = text.trim();
-
-    if (!embed.setFooter) {
-        logger.warn(`？為什麼阿，embed沒有setFooter方法？\n${embed.toJSON?.() || embed.toString?.() || String(embed)}\ncalled from ${getCallerModuleName(null)}`)
-        return embed;
-    };
-
-    embed.setFooter({
-        text,
-        iconURL: client?.user?.displayAvatarURL({ dynamic: true }),
-    });
-
-    return embed;
+    logger.warn(`setEmbedFooter 已棄用，請改用 EmbedBuilder.setEmbedFooter 方法, called from:\n${getCallerModuleName(null)}`)
+    return embed.setEmbedFooter(text, rpg_data, force, client);
 };
 
-/**
- * 
- * @param {DogClient} client 
- * @param {EmbedBuilder} embed 
- * @param {string} author 
- */
+// [DEPRECATED] setEmbedFooter 和 setEmbedAuthor 已移至 EmbedBuilder 類別方法
+// 向後兼容
 function setEmbedAuthor(client = global._client, embed, author = "") {
-    if (!author) author = client.name;
-
-    embed.setAuthor({
-        name: author,
-        iconURL: client?.user?.displayAvatarURL({ dynamic: true }),
-    });
-
-    return embed;
+    logger.warn(`setEmbedAuthor 已棄用，請改用 EmbedBuilder.setEmbedAuthor 方法, called from:\n${getCallerModuleName(null)}`)
+    return embed.setEmbedAuthor(author, client);
 };
 
 /**
