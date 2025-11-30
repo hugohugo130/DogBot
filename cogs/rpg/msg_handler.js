@@ -405,7 +405,7 @@ const rpg_commands = {
             fish_text = "🐢魚"
             description = `你等待了幾個小時，獲得了 \`${amount}\` 條${fish_name}！`
         } else if (item === "raw_shrimp") {
-            fish_text = "太蝦了吧"
+            fish_text = "太蝦了把"
             description = `你打撈了一片蝦子上來，獲得了 \`${amount}\` 個${fish_name}！`
         } else if (item === "raw_tuna") {
             fish_text = "呼"
