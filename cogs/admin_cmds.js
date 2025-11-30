@@ -156,6 +156,7 @@ module.exports = {
                 case "resjob":
                     const rpg_data = load_rpg_data(message.author.id);
                     rpg_data.job = null;
+                    delete rpg_data.lastRunTimestamp;
 
                     save_rpg_data(message.author.id, rpg_data);
 
