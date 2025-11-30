@@ -1271,7 +1271,7 @@ async function choose_job_row(userid) {
         .addOptions(
             ...await Promise.all(
                 Object.entries(jobs).map(async ([id, data]) => {
-                    const emojiObject = await get_emoji_object(id);
+                    const emojiObject = await get_emoji_object(data.emoji || id);
 
                     return {
                         label: get_name_of_id(id),
