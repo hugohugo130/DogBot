@@ -586,7 +586,7 @@ const shop_lowest_price = {
 //     steel: 585,
 //     unlucky_potion: 50,
 // };
-const sell_data = Object.keys(object).reduce(function (result, key) {
+const sell_data = Object.keys(shop_lowest_price).reduce(function (result, key) {
     result[key] = object[key] * 0.8;
     return result
 }, {});
