@@ -16,7 +16,6 @@ module.exports = {
             "en-US": "set bot display language",
         }),
     async execute(interaction) {
-        // const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
         // const { get_emoji } = require("../../../utils/rpg.js");
 
         // const emoji = await get_emoji(interaction.client, "top");

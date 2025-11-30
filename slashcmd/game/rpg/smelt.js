@@ -203,7 +203,6 @@ module.exports = {
         } else if (subcommand === "info") {
             const { load_smelt_data } = require("../../../utils/file.js");
             const { name, smelter_slots } = require("../../../utils/rpg.js");
-            const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
             const { get_emoji } = require("../../../utils/rpg.js");
 
             await interaction.deferReply();
@@ -248,7 +247,6 @@ module.exports = {
             const { load_smelt_data, save_smelt_data, load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
             const { name } = require("../../../utils/rpg.js");
             const { embed_error_color } = require("../../../utils/config.js");
-            const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
             const { get_emoji } = require("../../../utils/rpg.js");
 
             await interaction.deferReply();

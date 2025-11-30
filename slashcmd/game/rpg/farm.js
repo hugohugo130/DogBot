@@ -11,7 +11,6 @@ const DogClient = require("../../../utils/customs/client.js");
  */
 async function get_farm_info_embed(user, client = global._client) {
     const { load_farm_data } = require("../../../utils/file.js");
-    const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
     const { get_emoji } = require("../../../utils/rpg.js");
     const { get_name_of_id } = require("../../../utils/rpg.js");
     const { convertToSecond, DateNowSecond } = require("../../../utils/timestamp.js");
@@ -207,7 +206,7 @@ module.exports = {
 
         const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
         const { farm_slots, get_name_of_id, userHaveEnoughItems, notEnoughItemEmbed } = require("../../../utils/rpg.js");
-        const { setEmbedFooter, is_cooldown_finished } = require("../../../cogs/rpg/msg_handler.js");
+        const { is_cooldown_finished } = require("../../../cogs/rpg/msg_handler.js");
         const { randint } = require("../../../utils/random.js");
         const { get_emoji } = require("../../../utils/rpg.js");
         const { DateNow, DateNowSecond } = require("../../../utils/timestamp.js");

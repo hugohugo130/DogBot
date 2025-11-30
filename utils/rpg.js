@@ -1066,7 +1066,7 @@ async function get_emoji(client = global._client, name) {
 };
 
 async function get_cooldown_embed(remaining_time, client = global._client, action, count) {
-    const { rpg_actions, setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
+    const { rpg_actions } = require("../cogs/rpg/msg_handler.js");
 
     const emoji = await get_emoji(client, "crosS");
 
@@ -1116,8 +1116,6 @@ function is_cooldown_finished(command_name, rpg_data) {
 };
 
 async function get_failed_embed(client = global._client, failed_reason, rpg_data) {
-    const { setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
-
     let color = embed_error_color;
     let title = "失敗";
     let description = `${failed_reason}`;
@@ -1238,7 +1236,6 @@ async function get_loophole_embed(client = global._client, text) {
  * @returns {Promise<EmbedBuilder | null>}
  */
 async function job_delay_embed(userId, client = global._client) {
-    const { setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
     const { load_rpg_data } = require("./file.js");
     const { convertToSecond, DateNowSecond } = require("./timestamp.js");
     const { setJobDelay } = require("./config.js");
@@ -1307,8 +1304,8 @@ async function choose_job_row(userid) {
     return [row1, row2];
 };
 
-async function ls_function({ client, message, rpg_data, data, args, mode, random_item, PASS }) {
-    const { privacy_data, setEmbedFooter } = require("../cogs/rpg/msg_handler.js");
+async function ls_function({ client, message, rpg_data, mode, PASS }) {
+    const { privacy_data } = require("../cogs/rpg/msg_handler.js");
 
     if (!rpg_data.privacy.includes(privacy_data["ls"]) && !PASS) {
         const bag_emoji = await get_emoji(client, "bag");

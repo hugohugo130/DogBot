@@ -361,7 +361,7 @@ function get_help_embed(category, user, client = global._client) {
  * @returns {EmbedBuilder}
  */
 function get_help_command(category, command_name, client = global._client) {
-    const { setEmbedFooter, find_redirect_targets_from_id } = require("./msg_handler.js");
+    const { find_redirect_targets_from_id } = require("./msg_handler.js");
 
     const command_data = help.group[category][command_name];
     if (!command_data) return new EmbedBuilder().setTitle("指令不存在");
@@ -428,7 +428,6 @@ module.exports = {
     execute: async function (client, interaction) {
         try {
             const { get_emoji } = require("../../utils/rpg.js");
-            const { setEmbedFooter } = require("./msg_handler.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
             if (interaction.customId.startsWith("vote_")) return;
@@ -538,7 +537,7 @@ module.exports = {
                 };
             } else if (interaction.customId.startsWith('setLang')) {
                 // const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                // const { get_emoji, setEmbedFooter } = require("./msg_handler.js");
+                // const { get_emoji } = require("./msg_handler.js");
 
                 // await interaction.deferUpdate();
                 // const emoji_tick = get_emoji(client, "Tick");
@@ -634,7 +633,7 @@ module.exports = {
             } else if (interaction.customId.startsWith('choose_command')) {
                 await interaction.deferUpdate();
                 const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                const { setEmbedFooter, rpg_handler, MockMessage } = require("./msg_handler.js");
+                const { rpg_handler, MockMessage } = require("./msg_handler.js");
 
                 const [_, __, command] = interaction.customId.split('|');
 
