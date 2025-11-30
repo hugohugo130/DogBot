@@ -46,9 +46,8 @@ function divide(amount, by) {
 async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const { load_rpg_data, load_bake_data } = require("../../../utils/file.js");
     const { notEnoughItemEmbed, name, oven_slots } = require("../../../utils/rpg.js");
-    const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
     const { get_emoji } = require("../../../utils/rpg.js");
-    const { embed_error_color } = require("../../../utils/config.js");
+    const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 
     if (![1, 2].includes(mode)) throw new Error("mode must be 1 or 2");
 
@@ -116,7 +115,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     };
 
     const embed = new EmbedBuilder()
-        .setColor(0x0099ff)
+        .setColor(embed_default_color)
         .setTitle(`${emoji_drumstick} | 烘烤確認`)
         .setDescription(
             `將要烘烤 \`${amount}\` 個 \`${name[item_id]}\`
@@ -329,9 +328,8 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
         const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
         const { name, oven_slots, notEnoughItemEmbed } = require("../../../utils/rpg.js");
-        const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
         const { get_emoji } = require("../../../utils/rpg.js");
-        const { embed_error_color } = require("../../../utils/config.js");
+        const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 
         if (subcommand === "bake") {
             const emoji_cross = await get_emoji(interaction.client, "crosS");
@@ -443,7 +441,7 @@ module.exports = {
             const current_time = Math.floor(Date.now() / 1000);
 
             const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 .setTitle(`${emoji_drumstick} | 你的烤箱使用狀況`)
                 .setDescription(`使用率 \`[${used_slots} / ${oven_slots}]\``)
                 .setEmbedFooter();
@@ -524,7 +522,7 @@ module.exports = {
                 save_rpg_data(userId, rpg_data);
 
                 const embed = new EmbedBuilder()
-                    .setColor(0x00BBFF)
+                    .setColor(embed_default_color)
                     .setTitle(`${emoji_drumstick} | 成功從烤箱取出了 ${name[item.output_item_id] || item.output_item_id}x${item.amount}`)
                     .setEmbedFooter();
 

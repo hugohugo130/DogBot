@@ -98,9 +98,8 @@ module.exports = {
         if (subcommand === "smelt") {
             const { load_rpg_data, load_smelt_data } = require("../../../utils/file.js");
             const { notEnoughItemEmbed, name, smelter_slots, smeltable_items } = require("../../../utils/rpg.js");
-            const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
             const { get_emoji, get_loophole_embed, get_id_of_name } = require("../../../utils/rpg.js");
-            const { embed_error_color } = require("../../../utils/config.js");
+            const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 
             await interaction.deferReply();
 
@@ -170,7 +169,7 @@ module.exports = {
             };
 
             const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 .setTitle(`${emoji_furnace} | 熔鍊確認`)
                 .setDescription(
                     `將要熔鍊 \`${input_amount}\` 組 \`${get_name_of_id(item_id)}\`
@@ -216,7 +215,7 @@ module.exports = {
             const current_time = Math.floor(Date.now() / 1000);
 
             const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 .setTitle(`${emoji_furnace} | 你的煉金爐使用狀況`)
                 .setDescription(`使用率 \`[${used_slots} / ${smelter_slots}]\``)
                 .setEmbedFooter();
@@ -301,7 +300,7 @@ module.exports = {
             save_rpg_data(userId, rpg_data);
 
             const embed = new EmbedBuilder()
-                .setColor(0x00BBFF)
+                .setColor(embed_default_color)
                 .setTitle(`${emoji_furnace} | 成功從煉金爐取出了 ${name[item.output_item_id] || item.output_item_id}x${item.output_amount}`)
                 .setEmbedFooter();
 

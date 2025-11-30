@@ -2,7 +2,7 @@ const { Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBu
 const EmbedBuilder = require('../../utils/customs/embedBuilder.js');
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
-const { prefix, embed_default_color, embed_error_color, embed_job_color } = require("../../utils/config.js");
+const { prefix, embed_default_color, embed_error_color, embed_job_color, embed_marry_color } = require("../../utils/config.js");
 const { randint, choice } = require("../../utils/random.js");
 const { BetterEval, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished } = require("../../utils/rpg.js");
 const util = require('node:util');
@@ -148,7 +148,7 @@ async function show_marry_info(client, rpg_data) {
 
     const embed = new EmbedBuilder()
         .setTitle(`${emoji_check} 結婚資訊`)
-        .setColor("#FF0000")
+        .setColor(embed_marry_color)
         .setDescription(
             `你和 <@${marry_info.with}> ❤️
 

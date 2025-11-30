@@ -250,7 +250,7 @@ module.exports = {
             const readyAt = convertToSecond(interaction.client.readyAt.getTime());
 
             let embed = new EmbedBuilder()
-                .setColor(0x0099FF)
+                .setColor(embed_default_color)
                 .addFields(
                     {
                         name: `${emoji_server} 伺服器`,

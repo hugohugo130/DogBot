@@ -42,9 +42,8 @@ module.exports = {
     async execute(interaction) {
         const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
         const { get_name_of_id, tags } = require("../../../utils/rpg.js");
-        const { setEmbedFooter } = require("../../../cogs/rpg/msg_handler.js");
         const { get_emoji } = require("../../../utils/rpg.js");
-        const { embed_error_color } = require("../../../utils/config.js");
+        const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 
         await interaction.deferReply();
 
@@ -121,7 +120,7 @@ module.exports = {
 
         const emoji = await get_emoji(interaction.client, "toolbox");
         const embed = new EmbedBuilder()
-            .setColor(0x0099ff)
+            .setColor(embed_default_color)
             .setTitle(`${emoji} | 製作物品`)
             .setDescription(`你製作出了 \`${output_amount}\` 個 ${get_name_of_id(item_id)}`)
             .setEmbedFooter();
