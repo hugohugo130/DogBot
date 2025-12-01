@@ -1278,7 +1278,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
                 const itemsText = Object.entries(category.items)
                     .map(([item, amount]) => `${get_name_of_id(item)} \`x${amount.toLocaleString()}\``)
                     .join('\n');
-                embed.addFields({ name: category.name, value: itemsText, inline: true });
+                embed.addFields({ name: category.name, value: String(itemsText), inline: true });
             };
         };
     };
