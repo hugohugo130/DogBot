@@ -1478,7 +1478,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const item_id = Object.keys(name).find(key => name[key] === item_name);
 
         const isFarmer = rpg_data.job === "farmer";
-        const isHoe = item_id.endsWith('hoe');
+        const isHoe = item_id?.endsWith('hoe') ?? false;
 
         const emoji_trade = await get_emoji(client, "trade");
 
