@@ -111,8 +111,8 @@ module.exports = {
             const badge = rpg_data.badge || "無";
             const marry_data = rpg_data.marry || {};
             const marry_str = marry_data.status ? `
-和 <${marry_data.with}
-結婚紀念日 <t:${marry_data.time}:R>
+和 <@${marry_data.with}>
+結婚紀念日 <t:${convertToSecond(marry_data.time)}:R>
 ` : "單身";
             // const job_emoji = await get_emoji(client, job_emojis[job]);
 
