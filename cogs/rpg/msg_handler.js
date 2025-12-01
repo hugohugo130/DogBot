@@ -2110,9 +2110,6 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             return await message.reply({ embeds: [embed] });
             */
         };
-
-        rpg_data.hunger -= 1;
-        save_rpg_data(userid, rpg_data);
     };
 
     if (rpg_cooldown[command] || command === "cd") {
@@ -2151,6 +2148,8 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             if (mode === 1) return { embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] };
             return await message.reply({ embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] });
         };
+
+        rpg_data.hunger -= 1;
 
         // 增加計數
         rpg_data.count[command]++;
