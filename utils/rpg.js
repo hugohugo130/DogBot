@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji } = require("discord.js");
 const { wait_until_ready } = require("./wait_until_ready.js");
-const { prefix, embed_default_color, embed_error_color, embed_fell_color } = require("./config.js");
+const { embed_default_color, embed_error_color, embed_fell_color } = require("./config.js");
 const EmbedBuilder = require('./customs/embedBuilder.js');
 const DogClient = require("./customs/client.js");
 
@@ -1169,7 +1169,7 @@ async function choose_job_row(userid) {
  * @returns {Promise<EmbedBuilder | null>}
  */
 async function amount_limit_embed(amount) {
-    const {item_amount_limit} = require("./config.js");
+    const { item_amount_limit } = require("./config.js");
 
     if (amount <= item_amount_limit) {
         return null;
@@ -1182,14 +1182,20 @@ async function amount_limit_embed(amount) {
         .setTitle(`${emoji_cross} | 數量超過上限!`)
         .setDescription(`請輸入小於等於 ${amount} 的數字`)
         .setEmbedFooter();
-    
+
     return embed;
 };
 
 async function ls_function({ client, message, rpg_data, mode, PASS }) {
     const { privacy_data } = require("../cogs/rpg/msg_handler.js");
+    const { loadData } = require("./file.js");
 
     if (!rpg_data.privacy.includes(privacy_data["ls"]) && !PASS) {
+
+        const guildData = loadData(message.guild.id);
+
+        const prefix = guildData.prefix ?? "&";
+
         const bag_emoji = await get_emoji(client, "bag");
 
         let embed = new EmbedBuilder()

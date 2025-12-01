@@ -1,6 +1,6 @@
 const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, CommandInteraction, ButtonStyle, ButtonBuilder } = require("discord.js");
 const EmbedBuilder = require('../../utils/customs/embedBuilder.js');
-const { prefix, embed_default_color, embed_error_color, embed_job_color } = require("../../utils/config.js");
+const { embed_default_color, embed_error_color, embed_job_color } = require("../../utils/config.js");
 const { get_logger } = require("../../utils/logger.js");
 const util = require('node:util');
 const DogClient = require("../../utils/customs/client.js");
@@ -323,7 +323,7 @@ const special_cancel = {
  * @param {DogClient} client 
  * @returns {[EmbedBuilder, ActionRowBuilder]}
  */
-function get_help_embed(category, user, client = global._client) {
+function get_help_embed(category, user) {
     const options = Object.entries(help.group[category])
         .flatMap(([name, data]) => {
             return [{
@@ -358,13 +358,19 @@ function get_help_embed(category, user, client = global._client) {
  * 
  * @param {string} command_name 
  * @param {DogClient} client 
+ * @param {string} guildID
  * @returns {EmbedBuilder}
  */
-function get_help_command(category, command_name, client = global._client) {
+function get_help_command(category, command_name, guildID, client = global._client) {
     const { find_redirect_targets_from_id } = require("./msg_handler.js");
+    const { loadData } = require("../../utils/file.js");
 
     const command_data = help.group[category][command_name];
     if (!command_data) return new EmbedBuilder().setTitle("指令不存在");
+
+    const guildData = loadData(guildID);
+
+    const prefix = guildData.prefix ?? "&";
 
     /*
     Field name: 使用方法
@@ -472,7 +478,7 @@ module.exports = {
                 if (category) {
                     embed = get_help_command(category, interaction?.values?.[0] || cmd || "buy", client);
                 } else {
-                    [embed, row] = get_help_embed(interaction.values[0], user, client);
+                    [embed, row] = get_help_embed(interaction.values[0], user);
                 };
 
                 await interaction.followUp({
@@ -632,8 +638,12 @@ module.exports = {
                 return await interaction.editReply({ embeds: [embed], components: [row] });
             } else if (interaction.customId.startsWith('choose_command')) {
                 await interaction.deferUpdate();
-                const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
+                const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
                 const { rpg_handler, MockMessage } = require("./msg_handler.js");
+
+                const guildData = loadData(interaction.guild.id);
+
+                const prefix = guildData.prefix ?? "&";
 
                 const [_, __, command] = interaction.customId.split('|');
 
@@ -646,7 +656,11 @@ module.exports = {
             } else if (interaction.customId.startsWith('ls')) {
                 await interaction.deferReply({ flags: MessageFlags.Ephemeral })
                 const { ls_function, MockMessage } = require("./msg_handler.js");
-                const { load_rpg_data } = require("../../utils/file.js");
+                const { load_rpg_data, loadData } = require("../../utils/file.js");
+
+                const guildData = loadData(interaction.guild.id);
+
+                const prefix = guildData.prefix ?? "&";
 
                 const [_, userId] = interaction.customId.split("|");
                 const message = new MockMessage(`${prefix}ls`, interaction.message.channel, interaction.user, interaction.guild);
@@ -654,7 +668,7 @@ module.exports = {
                 await interaction.followUp(res);
             } else if (interaction.customId.startsWith("sell")) {
                 const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                const { get_emoji, add_money, get_name_of_id} = require("../../utils/rpg.js");
+                const { get_emoji, add_money, get_name_of_id } = require("../../utils/rpg.js");
                 await interaction.deferUpdate();
 
                 let [_, userId, item_id, price, amount, total_price] = customIdParts;

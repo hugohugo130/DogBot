@@ -2,7 +2,7 @@ const { Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBu
 const EmbedBuilder = require('../../utils/customs/embedBuilder.js');
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
-const { prefix, embed_default_color, embed_error_color, embed_job_color, embed_marry_color } = require("../../utils/config.js");
+const { embed_default_color, embed_error_color, embed_job_color, embed_marry_color } = require("../../utils/config.js");
 const { randint, choice } = require("../../utils/random.js");
 const { BetterEval, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished } = require("../../utils/rpg.js");
 const util = require('node:util');
@@ -85,8 +85,14 @@ async function redirect({ client, message, command, mode = 0 }) {
     m = 1: 只回傳訊息參數
     */
 
+    const { loadData } = require("../../utils/file.js");
     const { mentions_users } = require("../../utils/message.js");
     if (![0, 1].includes(mode)) throw new TypeError("Invalid mode");
+
+    const guild = message.guild;
+    const guildData = loadData(guild.id);
+
+    const prefix = guildData.prefix ?? "&";
 
     if (command.includes(prefix)) {
         try {
@@ -1985,6 +1991,8 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     const guildID = message.guild.id;
     const data = loadData(guildID);
     if (!data["rpg"]) return;
+
+    const prefix = data.prefix ?? "&";
 
     let content = message.content.toLowerCase().trim();
     if (!content.startsWith(prefix)) return;
