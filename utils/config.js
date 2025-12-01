@@ -74,10 +74,6 @@ const onlineDB_Files = [
     "bot.db",
 ];
 
-// SQL 資料庫配置
-const SQL_DB_FILE = "bot.db";
-const SQL_DB_PATH = join(database_folder, SQL_DB_FILE);
-
 const serverIPFile = join(database_folder, "serverIP.json");
 
 const cogsFolder = `${cwd()}/cogs`
