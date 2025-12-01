@@ -7,7 +7,7 @@ async function get_members_of_guild(guildID, client = global._client) {
     const logger = get_logger();
 
     wait_until_ready(client);
-    const guild = client.guilds.fetch(guildID);
+    const guild = await get_guild(guildID, client);
     if (!guild) {
         logger.warn(`找不到Guild (ID: ${guildID})，返回members []`);
         return [];
