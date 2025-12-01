@@ -441,7 +441,7 @@ const shop_lowest_price = {
 };
 
 const sell_data = Object.keys(shop_lowest_price).reduce(function (result, key) {
-    result[key] = parseFloat((shop_lowest_price[key] * 0.8).toFixed(1));
+    result[key] = parseFloat((shop_lowest_price[key] * 0.9).toFixed(1));
     return result
 }, {});
 
