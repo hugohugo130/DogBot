@@ -1198,8 +1198,6 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
             .setDescription(`為保護包包內容隱私權，戳這顆按鈕來看你的包包，隱私權設定可以透過 \`${prefix}privacy\` 指令更改`)
             .setEmbedFooter();
 
-        embed = embed;
-
         const confirm_button = new ButtonBuilder()
             .setCustomId(`ls|${message.author.id}`)
             .setEmoji(bag_emoji)
