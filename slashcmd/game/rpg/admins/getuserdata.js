@@ -82,33 +82,33 @@ module.exports = {
             .setColor(embed_default_color)
             .setTitle(`${user.username}的RPG數據`)
             .addFields(
-                { name: "金錢", value: rpg_data.money.toString(), inline: true },
-                { name: "飽食度", value: rpg_data.hunger.toString(), inline: true },
-                { name: "工作", value: rpg_data.job.toString(), inline: true },
-                { name: "戰鬥工作", value: rpg_data.fightjob.toString(), inline: true },
-                { name: "徽章", value: rpg_data.badge.toString(), inline: true },
-                { name: "結婚狀態", value: rpg_data.marry.status.toString(), inline: true },
-                { name: "結婚對象", value: rpg_data.marry.with.toString(), inline: true },
-                { name: "結婚時間", value: rpg_data.marry.time.toString(), inline: true },
-                { name: "交易", value: rpg_data.transactions.toString(), inline: true },
-                { name: "隱私", value: rpg_data.privacy.toString(), inline: true },
+                { name: "金錢", value: rpg_data?.money?.toString(), inline: true },
+                { name: "飽食度", value: rpg_data?.hunger?.toString(), inline: true },
+                { name: "工作", value: rpg_data?.job?.toString(), inline: true },
+                { name: "戰鬥工作", value: rpg_data?.fightjob?.toString(), inline: true },
+                { name: "徽章", value: rpg_data?.badge?.toString(), inline: true },
+                { name: "結婚狀態", value: rpg_data?.marry.status?.toString(), inline: true },
+                { name: "結婚對象", value: rpg_data?.marry.with?.toString(), inline: true },
+                { name: "結婚時間", value: rpg_data?.marry.time?.toString(), inline: true },
+                { name: "交易", value: rpg_data?.transactions?.toString(), inline: true },
+                { name: "隱私", value: rpg_data?.privacy?.toString(), inline: true },
                 {
                     name: "物品",
-                    value: Object.entries(rpg_data.inventory)
+                    value: Object.entries(rpg_data?.inventory || {})
                         .map(([key, value]) => `${key}: ${value}`)
                         .join("\n"),
                     inline: false
                 },
                 {
                     name: "上次執行時間",
-                    value: Object.entries(rpg_data.lastRunTimestamp)
+                    value: Object.entries(rpg_data?.lastRunTimestamp || {})
                         .map(([key, value]) => `${key}: ${value}`)
                         .join("\n"),
                     inline: false
                 },
                 {
                     name: "計數",
-                    value: Object.entries(rpg_data.count)
+                    value: Object.entries(rpg_data?.count || {})
                         .map(([key, value]) => `${key}: ${value}`)
                         .join("\n"),
                     inline: false
@@ -119,15 +119,15 @@ module.exports = {
         await interaction.editReply({ embeds: [embed] });
 
         // const msgs = [
-        //     Object.entries(rpg_data.inventory)
+        //     Object.entries(rpg_data?.inventory)
         //         .map(([key, value]) => `${key}: ${value}`)
         //         .join("\n"),
 
-        //     Object.entries(rpg_data.lastRunTimestamp)
+        //     Object.entries(rpg_data?.lastRunTimestamp)
         //         .map(([key, value]) => `${key}: ${value}`)
         //         .join("\n"),
 
-        //     Object.entries(rpg_data.count)
+        //     Object.entries(rpg_data?.count)
         //         .map(([key, value]) => `${key}: ${value}`)
         //         .join("\n"),
 
