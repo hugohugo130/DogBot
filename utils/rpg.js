@@ -1163,6 +1163,29 @@ async function choose_job_row(userid) {
     return [row1, row2];
 };
 
+/**
+ * 
+ * @param {number} amount 
+ * @returns {Promise<EmbedBuilder | null>}
+ */
+async function amount_limit_embed(amount) {
+    const {item_amount_limit} = require("./config.js");
+
+    if (amount <= item_amount_limit) {
+        return null;
+    };
+
+    const emoji_cross = await get_emoji(client, "crosS");
+
+    const embed = new EmbedBuilder()
+        .setColor(embed_error_color)
+        .setTitle(`${emoji_cross} | 數量超過上限!`)
+        .setDescription(`請輸入小於等於 ${amount} 的數字`)
+        .setEmbedFooter();
+    
+    return embed;
+};
+
 async function ls_function({ client, message, rpg_data, mode, PASS }) {
     const { privacy_data } = require("../cogs/rpg/msg_handler.js");
 

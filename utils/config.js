@@ -109,6 +109,8 @@ const authorName = "哈狗";
 // 24 * 24 * 60 * 7 = 604800
 const setJobDelay = 604800 // 秒
 
+const item_amount_limit = 999999999;
+
 /*
 https://discord.js.org/docs/packages/discord.js/14.24.0/ColorResolvable:TypeAlias
 - ColorResolvable -
@@ -369,6 +371,7 @@ module.exports = {
     rpg_lvlUp_per,
 
     setJobDelay,
+    item_amount_limit,
 
     failed,
     probabilities,
