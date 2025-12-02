@@ -992,12 +992,14 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             for (const [command, time] of Object.entries(filtered_lastRunTimestamp)) {
                 if (!rpg_cooldown[command]) continue;
                 const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
-                const name = command;
+                const name = command === "work" ? "工作" : command;
                 let target_time = Math.floor(new Date() / 1000 + remaining_time / 1000);
                 target_time = `<t:${target_time}:R>`;
+
                 let value = is_finished ? `冷卻完畢 (${target_time})` : target_time;
                 value += `\n上次執行時間: <t:${Math.floor(time / 1000)}:D> <t:${Math.floor(time / 1000)}:T>`;
                 value += `\n今天執行了 \`${rpg_data.count[command].toLocaleString()}\` 次`;
+
                 embed.addFields({ name: name, value: value });
             };
         };
@@ -2160,7 +2162,11 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         rpg_data.hunger -= 1;
 
         // 增加計數
-        rpg_data.count[command]++;
+        if (rpg_work[command]) {
+            rpg_data.count["work"]++;
+        } else {
+            rpg_data.count[command]++;
+        };
 
         rpg_data.lastRunTimestamp[command] = Date.now();
         save_rpg_data(userid, rpg_data);
