@@ -884,8 +884,6 @@ const rpg_commands = {
         };
 
         let amount = args[1];
-        await message.reply(String(args));
-
         if (amount === "all") {
             amount = item_exist.amount;
         } else if (amount) {
