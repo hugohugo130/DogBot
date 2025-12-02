@@ -771,7 +771,7 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
-        args = args.filter(arg => !Array.from(target_users.keys()).includes(arg));
+        args = args.filter(arg => !Array.from(target_users.values()).includes(arg));
 
         let args_ = [];
         for (const arg of args) {
