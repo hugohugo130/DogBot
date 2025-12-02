@@ -95,12 +95,13 @@ module.exports = {
     async execute(interaction) {
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
-        if (subcommand === "smelt") {
-            const { load_rpg_data, load_smelt_data } = require("../../../utils/file.js");
-            const { notEnoughItemEmbed, name, smelter_slots, smeltable_items } = require("../../../utils/rpg.js");
-            const { get_emoji, get_loophole_embed, get_id_of_name } = require("../../../utils/rpg.js");
-            const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 
+        const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
+        const { load_rpg_data, load_smelt_data, save_smelt_data, save_rpg_data } = require("../../../utils/file.js");
+        const { notEnoughItemEmbed, name, smelter_slots, smeltable_items } = require("../../../utils/rpg.js");
+        const { get_emoji, get_loophole_embed, get_id_of_name } = require("../../../utils/rpg.js");
+
+        if (subcommand === "smelt") {
             await interaction.deferReply();
 
             const emoji_cross = await get_emoji(interaction.client, "crosS");
@@ -201,10 +202,6 @@ module.exports = {
 
             await interaction.editReply({ embeds: [embed], components: [row] });
         } else if (subcommand === "info") {
-            const { load_smelt_data } = require("../../../utils/file.js");
-            const { name, smelter_slots } = require("../../../utils/rpg.js");
-            const { get_emoji } = require("../../../utils/rpg.js");
-
             await interaction.deferReply();
 
             const smelt_data = load_smelt_data()[userId];
@@ -244,11 +241,6 @@ module.exports = {
 
             await interaction.editReply({ embeds: [embed] });
         } else if (subcommand === "get") {
-            const { load_smelt_data, save_smelt_data, load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
-            const { name } = require("../../../utils/rpg.js");
-            const { embed_error_color } = require("../../../utils/config.js");
-            const { get_emoji } = require("../../../utils/rpg.js");
-
             await interaction.deferReply();
 
             const smelt_data_all = load_smelt_data();
