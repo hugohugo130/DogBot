@@ -15,6 +15,8 @@ module.exports = {
 
             const users = client.users.cache.values();
             for (const user of users) {
+                if (user.bot) continue;
+
                 const rpg_data = load_rpg_data(user.id);
 
                 if (!rpg_data) continue;
