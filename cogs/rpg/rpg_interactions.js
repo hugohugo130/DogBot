@@ -509,6 +509,17 @@ module.exports = {
                         return;
                     };
 
+                    if (rpg_data.money < amount) {
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_error_color)
+                            .setTitle(`${emoji_cross} | 歐不!`)
+                            .setDescription(`你還差 \`${(amount - rpg_data.money).toLocaleString()}$\``)
+                            .setEmbedFooter();
+
+                        if (mode === 1) return { embeds: [embed] };
+                        return await message.reply({ embeds: [embed] });
+                    };
+
                     rpg_data.money = remove_money({
                         rpg_data,
                         amount: parseInt(amount),
@@ -516,6 +527,7 @@ module.exports = {
                         targetUser: `<@${targetUserId}>`,
                         type: `付款給`,
                     });
+
                     target_user_rpg_data.money = add_money({
                         rpg_data: target_user_rpg_data,
                         amount: parseInt(amount),
@@ -523,6 +535,7 @@ module.exports = {
                         targetUser: `<@${targetUserId}>`,
                         type: `付款給`,
                     });
+
                     save_rpg_data(userId, rpg_data);
                     save_rpg_data(targetUserId, target_user_rpg_data);
 
