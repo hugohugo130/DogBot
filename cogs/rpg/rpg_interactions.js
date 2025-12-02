@@ -493,20 +493,9 @@ module.exports = {
 
                 const emoji_cross = await get_emoji(client, "crosS");
                 const emoji_top = await get_emoji(client, "top");
-                const [_, userId, targetUserId, amount, timestamp] = interaction.customId.split('|');
+                const [_, userId, targetUserId, amount] = interaction.customId.split('|');
                 const rpg_data = load_rpg_data(userId);
                 const target_user_rpg_data = load_rpg_data(targetUserId);
-
-                if (Date.now() - parseInt(timestamp) > 30000) {
-                    const embed = new EmbedBuilder()
-                        .setColor(embed_default_color)
-                        .setTitle(`${emoji_cross} | 付款失敗`)
-                        .setDescription(`付款確認已過期`)
-                        .setEmbedFooter();
-
-                    await interaction.editReply({ embeds: [embed], components: [] });
-                    return;
-                };
 
                 if (rpg_data.money < amount) {
                     const embed = new EmbedBuilder()

@@ -1089,7 +1089,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         };
 
         const confirmButton = new ButtonBuilder()
-            .setCustomId(`pay_confirm|${message.author.id}|${target_user.id}|${amount}|${Date.now()}`)
+            .setCustomId(`pay_confirm|${message.author.id}|${target_user.id}|${amount}`)
             .setLabel('確認付款')
             .setStyle(ButtonStyle.Danger);
 
