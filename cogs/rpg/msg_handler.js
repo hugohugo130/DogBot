@@ -893,6 +893,8 @@ const rpg_commands = {
             amount = parseInt(amount);
         };
 
+        if (typeof amount !== "number") amount = parseInt(amount);
+
         if (!amount) amount = 1;
         if (amount <= 0 || amount > item_exist.amount) {
             const embed = new EmbedBuilder()
