@@ -893,7 +893,7 @@ const rpg_commands = {
             amount = parseInt(amount);
         };
 
-        if (isNaN(amount)) amount = 1;
+        if (!amount) amount = 1;
         if (amount <= 0 || amount > item_exist.amount) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
