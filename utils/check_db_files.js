@@ -165,9 +165,6 @@ async function checkDBFilesDefault(client) {
         insertGuildStmt.run(guild.id);
     };
 
-    // === 關閉資料庫 ===
-    db.close();
-
     // 執行 make_db_compatible
     make_db_compatible(users);
 };
