@@ -1481,6 +1481,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
     }, false],
     sell: ["出售", "出售物品給系統", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { sell_data, name } = require("../../utils/rpg.js");
+        const { cannot_sell } = require("../../utils/config.js");
 
         const item_name = name[args[0]] || args[0];
         const item_id = Object.keys(name).find(key => name[key] === item_name);
@@ -1521,6 +1522,18 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你沒有這麼多的物品哦`)
+                .setEmbedFooter();
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        if (cannot_sell.includes(item_id)) {
+            const emoji_cross = await get_emoji(client, "crosS");
+
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 這個物品不能販賣`)
                 .setEmbedFooter();
 
             if (mode === 1) return { embeds: [embed] };
