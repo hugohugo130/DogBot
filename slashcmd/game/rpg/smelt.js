@@ -1,7 +1,6 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags } = require("discord.js");
 const EmbedBuilder = require('../../../utils/customs/embedBuilder.js');
 const { smeltable_items, get_name_of_id } = require("../../../utils/rpg.js");
-const { embed_default_color } = require("../../../utils/config.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
