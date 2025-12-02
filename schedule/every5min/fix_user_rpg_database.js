@@ -23,7 +23,6 @@ module.exports = {
 
                 const backpack = rpg_data.backpack || {};
                 let modified = false;
-                logger.debug(`正在檢查用戶 ${user.id} 的背包...`);
 
                 for (const [item, amount] of Object.entries(backpack)) {
                     if (typeof amount === "string") {
