@@ -188,12 +188,12 @@ const rpg_cooldown = {
     // herd: "195 + {c} * 30",
     // brew: "145 + {c} * 25",
     // fish: "90 + {c} * 20",
-    mine: "2",
-    hew: "2",
-    herd: "2",
-    brew: "2",
-    fish: "2",
-    fell: "2",
+    mine: "60 * 5",
+    hew: "60 * 5",
+    herd: "60 * 5",
+    brew: "60 * 5",
+    fish: "60 * 5",
+    fell: "60 * 5",
     farm_water: "60 * 60 * 12" // 12小時
 };
 
