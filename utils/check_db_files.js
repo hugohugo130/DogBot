@@ -1,4 +1,4 @@
-const { writeJson, existsSync, basename, join_db_folder, load_rpg_data } = require("./file.js");
+const { writeJson, existsSync, basename, join_db_folder, load_rpg_data, save_rpg_data } = require("./file.js");
 const { DATABASE_FILES, DEFAULT_VALUES, priorityUserIDs, priorityGuildIDs } = require("./config.js");
 const { get_logger } = require("./logger.js");
 const { wait_until_ready, client_ready } = require("./wait_until_ready.js");
