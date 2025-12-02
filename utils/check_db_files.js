@@ -4,6 +4,7 @@ const { get_logger } = require("./logger.js");
 const { wait_until_ready, client_ready } = require("./wait_until_ready.js");
 const { getDatabase } = require("./SQLdatabase.js");
 const { User } = require("discord.js");
+const DogClient = require("./customs/client.js");
 
 const logger = get_logger();
 const logger_nodc = get_logger({ nodc: true });
@@ -94,7 +95,7 @@ function make_db_compatible(users) {
 
 /**
  * @warning run this before client.login may block forever
- * @param {object} client 
+ * @param {DogClient} client 
  * @returns {Promise<void>}
  */
 async function checkDBFilesDefault(client) {
@@ -119,6 +120,9 @@ async function checkDBFilesDefault(client) {
         if (!err.message.includes("GuildMembersTimeout")) throw err;
         users = guilds.map(guild => guild.members.cache);
     };
+
+    client.users.cache2 = structuredClone(users)
+        .flatMap(members => members.map(member => member.user));
 
     users = users
         .flatMap(members => [...members.values()])
