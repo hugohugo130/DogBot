@@ -169,7 +169,7 @@ async function checkDBFilesDefault(client) {
     db.close();
 
     // 執行 make_db_compatible
-    make_db_compatible();
+    make_db_compatible(users);
 };
 
 module.exports = {
