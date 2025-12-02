@@ -486,74 +486,65 @@ module.exports = {
                     components: row ? [row] : [],
                     flags: MessageFlags.Ephemeral,
                 });
-            } else if (interaction.customId.startsWith('pay')) {
+            } else if (interaction.customId.startsWith('pay_confirm')) {
                 await interaction.deferUpdate();
                 const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
                 const { get_emoji, add_money, remove_money } = require("../../utils/rpg.js");
 
                 const emoji_cross = await get_emoji(client, "crosS");
-                if (interaction.customId.startsWith('pay_confirm')) {
-                    const emoji_top = await get_emoji(client, "top");
-                    const [_, userId, targetUserId, amount, timestamp] = interaction.customId.split('|');
-                    const rpg_data = load_rpg_data(userId);
-                    const target_user_rpg_data = load_rpg_data(targetUserId);
+                const emoji_top = await get_emoji(client, "top");
+                const [_, userId, targetUserId, amount, timestamp] = interaction.customId.split('|');
+                const rpg_data = load_rpg_data(userId);
+                const target_user_rpg_data = load_rpg_data(targetUserId);
 
-                    if (Date.now() - parseInt(timestamp) > 30000) {
-                        const embed = new EmbedBuilder()
-                            .setColor(embed_default_color)
-                            .setTitle(`${emoji_cross} | 付款失敗`)
-                            .setDescription(`付款確認已過期`)
-                            .setEmbedFooter();
-
-                        await interaction.editReply({ embeds: [embed], components: [] });
-                        return;
-                    };
-
-                    if (rpg_data.money < amount) {
-                        const embed = new EmbedBuilder()
-                            .setColor(embed_error_color)
-                            .setTitle(`${emoji_cross} | 歐不!`)
-                            .setDescription(`你還差 \`${(amount - rpg_data.money).toLocaleString()}$\``)
-                            .setEmbedFooter();
-
-                        if (mode === 1) return { embeds: [embed] };
-                        return await message.reply({ embeds: [embed] });
-                    };
-
-                    rpg_data.money = remove_money({
-                        rpg_data,
-                        amount: parseInt(amount),
-                        originalUser: `<@${userId}>`,
-                        targetUser: `<@${targetUserId}>`,
-                        type: `付款給`,
-                    });
-
-                    target_user_rpg_data.money = add_money({
-                        rpg_data: target_user_rpg_data,
-                        amount: parseInt(amount),
-                        originalUser: `<@${userId}>`,
-                        targetUser: `<@${targetUserId}>`,
-                        type: `付款給`,
-                    });
-
-                    save_rpg_data(userId, rpg_data);
-                    save_rpg_data(targetUserId, target_user_rpg_data);
-
+                if (Date.now() - parseInt(timestamp) > 30000) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
-                        .setTitle(`${emoji_top} | 付款成功`)
-                        .setDescription(`你已成功付款 \`${parseInt(amount).toLocaleString()}$\` 給 <@${targetUserId}>`)
+                        .setTitle(`${emoji_cross} | 付款失敗`)
+                        .setDescription(`付款確認已過期`)
                         .setEmbedFooter();
 
                     await interaction.editReply({ embeds: [embed], components: [] });
-                } else if (interaction.customId.startsWith('pay_cancel')) {
+                    return;
+                };
+
+                if (rpg_data.money < amount) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 操作取消`)
+                        .setTitle(`${emoji_cross} | 歐不!`)
+                        .setDescription(`你還差 \`${(amount - rpg_data.money).toLocaleString()}$\``)
                         .setEmbedFooter();
 
-                    await interaction.editReply({ embeds: [embed], components: [] });
+                    if (mode === 1) return { embeds: [embed] };
+                    return await message.reply({ embeds: [embed] });
                 };
+
+                rpg_data.money = remove_money({
+                    rpg_data,
+                    amount: parseInt(amount),
+                    originalUser: `<@${userId}>`,
+                    targetUser: `<@${targetUserId}>`,
+                    type: `付款給`,
+                });
+
+                target_user_rpg_data.money = add_money({
+                    rpg_data: target_user_rpg_data,
+                    amount: parseInt(amount),
+                    originalUser: `<@${userId}>`,
+                    targetUser: `<@${targetUserId}>`,
+                    type: `付款給`,
+                });
+
+                save_rpg_data(userId, rpg_data);
+                save_rpg_data(targetUserId, target_user_rpg_data);
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_top} | 付款成功`)
+                    .setDescription(`你已成功付款 \`${parseInt(amount).toLocaleString()}$\` 給 <@${targetUserId}>`)
+                    .setEmbedFooter();
+
+                await interaction.editReply({ embeds: [embed], components: [] });
             } else if (interaction.customId.startsWith('setLang')) {
                 // const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
                 // const { get_emoji } = require("./msg_handler.js");

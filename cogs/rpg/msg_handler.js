@@ -1094,7 +1094,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             .setStyle(ButtonStyle.Danger);
 
         const cancelButton = new ButtonBuilder()
-            .setCustomId(`pay_cancel|${message.author.id}`)
+            .setCustomId(`cancel|${message.author.id}`)
             .setLabel('取消付款')
             .setStyle(ButtonStyle.Success);
 
