@@ -1961,6 +1961,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     if (!data["rpg"]) return;
 
     const prefix = data.prefix ?? "&";
+    await message.reply(JSON.stringify(data, null, 2));
 
     let content = message.content.toLowerCase().trim();
     if (!content.startsWith(prefix)) return;
