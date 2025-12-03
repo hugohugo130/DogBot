@@ -45,7 +45,7 @@ function divide(amount, by) {
  */
 async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const { load_rpg_data, load_bake_data } = require("../../../utils/file.js");
-    const { notEnoughItemEmbed, name, oven_slots } = require("../../../utils/rpg.js");
+    const { notEnoughItemEmbed, get_name_of_id, name, oven_slots } = require("../../../utils/rpg.js");
     const { get_emoji } = require("../../../utils/rpg.js");
     const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 
@@ -96,7 +96,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
 
         if (have_amount < need_amount) {
             item_missing.push({
-                name: name[current_item_id] || need_item,
+                name: get_name_of_id(current_item_id),
                 amount: need_amount - have_amount,
             });
         };
@@ -420,7 +420,7 @@ module.exports = {
 
             if (coal_amount < total_need_coal) {
                 const item_list = [{
-                    item: "coal",
+                    name: "coal",
                     amount: total_need_coal - coal_amount,
                 }];
 
