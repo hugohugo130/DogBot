@@ -182,31 +182,6 @@ function createTables() {
 };
 
 /**
- * 
- * @param {string} table 
- * @param {string[]} columns 
- * @returns {string}
- */
-function generate_prepare_command(table, columns) {
-    const followUp = {
-        'updated_at': "CURRENT_TIMESTAMP"
-    };
-    
-    const columnSet = new Set(columns);
-    const allColumns = [...columns];
-    const placeholders = Array(columns.length).fill('?');
-    
-    for (const key in followUp) {
-        if (!columnSet.has(key)) {
-            allColumns.push(key);
-            placeholders.push(followUp[key]);
-        };
-    };
-    
-    return `INSERT OR REPLACE INTO ${table} (${allColumns.join(', ')}) VALUES (${placeholders.join(', ')})`;
-};
-
-/**
  * 添加操作到 Queue
  * @param {Function} operation - 要執行的資料庫操作
  * @param {number} priority - 優先級（數字越小越優先，預設 5）
@@ -321,7 +296,6 @@ module.exports = {
     closeDatabase,
     getDatabase,
     createTables,
-    generate_prepare_command,
     addToQueue,
     processQueue,
     transferQueueToClient,
