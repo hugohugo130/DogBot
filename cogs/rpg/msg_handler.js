@@ -815,7 +815,7 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
-        await message.reply(`item: ${item}\name[item]: ${name[item]}\nname_reverse[item]: ${name_reverse[item]}\nitem_exist: ${shop_data.items[item]}`);
+        await message.reply(`target_users: ${target_users.values().id}\ntarget_user: ${target_user}\nargs: ${args}\nitem: ${item}\nname[item]: ${name[item]}\nname_reverse[item]: ${name_reverse[item]}\nitem_exist: ${shop_data.items[item]}`);
 
         const item_name = get_name_of_id(item);
         if (!item || !name_reverse[item_name]) {
