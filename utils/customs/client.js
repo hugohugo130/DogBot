@@ -47,7 +47,6 @@ class DogClient extends Client {
         this.dvoice = loadDvoiceData();
         this.commands = loadslashcmd(true);
         this.author = authorName || "哈狗";
-        this.users.cache2 = structuredClone(this.users.cache);
 
         /**
          * @type {Object.<string, Object.<string, Object.<string, string>>>}

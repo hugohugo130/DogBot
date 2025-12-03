@@ -121,9 +121,6 @@ async function checkDBFilesDefault(client) {
         users = guilds.map(guild => guild.members.cache);
     };
 
-    client.users.cache2 = structuredClone(users)
-        .flatMap(members => members.map(member => member.user));
-
     users = users
         .flatMap(members => [...members.values()])
         .map(member => member.user)

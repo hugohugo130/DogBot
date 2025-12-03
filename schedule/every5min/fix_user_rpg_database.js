@@ -13,7 +13,7 @@ module.exports = {
         try {
             const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
 
-            const users = client.users.cache2.values();
+            const users = client.users.cache.values();
             for (const user of users) {
                 if (user.bot) continue;
 
