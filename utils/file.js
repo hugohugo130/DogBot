@@ -591,11 +591,30 @@ function saveData(guildID, guildData) {
 ╚═╝  ╚═╝╚═╝      ╚═════╝ 
 */
 
+/**
+ * 
+ * @param {string} guildID 
+ * @param {boolean} enable 
+ */
 function setRPG(guildID, enable) {
     if (![true, false].includes(enable)) throw new Error(`Invalid mode: ${enable}`)
 
     const data = loadData(guildID);
     data["rpg"] = enable;
+
+    saveData(guildID, data);
+};
+
+/**
+ * 
+ * @param {string} guildID 
+ * @param {string} prefix 
+ */
+function setPrefix(guildID, prefix) {
+    if (!typeof prefix === "string") throw new Error(`Invalid prefix: ${enable}`)
+
+    const data = loadData(guildID);
+    data["prefix"] = prefix;
 
     saveData(guildID, data);
 };
@@ -1070,6 +1089,7 @@ module.exports = {
     saveData,
     // RPG
     setRPG,
+    setPrefix,
     load_rpg_data,
     save_rpg_data,
     load_shop_data,
