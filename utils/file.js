@@ -468,8 +468,8 @@ async function compareLocalRemote(filename, log = console, maxRetries = 3) {
 /**
  * 
  * @param {string} filename 
- * @param {any} default_return 
- * @returns {object | any}
+ * @param {T} default_return 
+ * @returns {object | T}
  */
 function find_default_value(filename, default_return = undefined) {
     const basename = path.basename(filename);
@@ -566,18 +566,21 @@ function loadData(guildID = null, mode = 0) {
 };
 
 function saveData(guildID, guildData) {
+    const { generate_prepare_command } = require("./SQLdatabase.js");
+
     const db = getDatabase();
+    const database_default_value = find_default_value("database.json", {});
+    guildData = order_data(guildData, database_default_value);
 
     addToQueue(() => {
-        const stmt = db.prepare(`
-            INSERT OR REPLACE INTO guilds (guild_id, rpg, dynamic_voice, updated_at)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-        `);
+        const command = generate_prepare_command("guilds", ["guild_id", ...Object.keys(database_default_value)]);
+        const stmt = db.prepare(command);
 
         stmt.run(
             guildID,
             guildData.rpg ? 1 : 0,
-            guildData.dynamicVoice || null
+            guildData.dynamicVoice || null,
+            guildData.prefix || "&",
         );
     }, 5);
 };
@@ -650,6 +653,8 @@ function load_rpg_data(userid) {
 };
 
 function save_rpg_data(userid, rpgdata) {
+    const { generate_prepare_command } = require("./SQLdatabase.js");
+
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
     const db = getDatabase();
 
@@ -686,15 +691,8 @@ function save_rpg_data(userid, rpgdata) {
     };
 
     addToQueue(() => {
-        const stmt = db.prepare(`
-            INSERT OR REPLACE INTO rpg_database (
-                user_id, money, hunger, job, fightjob, badge,
-                marry_status, marry_with, marry_time,
-                last_run_timestamp, inventory, transactions, count, privacy,
-                updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        `);
+        const command = generate_prepare_command("rpg_database", ["user_id", ...Object.keys(rpg_emptyeg)]);
+        const stmt = db.prepare(command);
 
         stmt.run(
             userid,
@@ -733,6 +731,8 @@ function load_shop_data(userid) {
 };
 
 function save_shop_data(userid, shop_data) {
+    const { generate_prepare_command } = require("./SQLdatabase.js");
+
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
     const db = getDatabase();
 
@@ -754,10 +754,8 @@ function save_shop_data(userid, shop_data) {
     };
 
     addToQueue(() => {
-        const stmt = db.prepare(`
-            INSERT OR REPLACE INTO rpg_shop (user_id, status, items, updated_at)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-        `);
+        const command = generate_prepare_command("rpg_shop", ["user_id", ...Object.keys(shop_emptyeg)]);
+        const stmt = db.prepare(command);
 
         stmt.run(
             userid,
@@ -797,6 +795,8 @@ function load_farm_data(userid) {
  * @param {Array} farm_data 
  */
 function save_farm_data(userid, farm_data) {
+    const { generate_prepare_command } = require("./SQLdatabase.js");
+
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
     const db = getDatabase();
 
@@ -811,10 +811,8 @@ function save_farm_data(userid, farm_data) {
     const mergedData = { ...currentData, ...farm_data };
 
     addToQueue(() => {
-        const stmt = db.prepare(`
-            INSERT OR REPLACE INTO rpg_farm (user_id, exp, lvl, water_at, farms, updated_at)
-            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        `);
+        const command = generate_prepare_command("rpg_farm", ["user_id", ...Object.keys(farm_emptyeg)]);
+        const stmt = db.prepare(command);
 
         stmt.run(
             userid,
