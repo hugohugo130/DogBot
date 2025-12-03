@@ -771,9 +771,6 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
-        await message.reply(String(target_users));
-        await message.reply(String(args));
-
         args = args.filter(arg => !Array.from(target_users.values()).includes(arg));
 
         let args_ = [];
@@ -822,7 +819,7 @@ const rpg_commands = {
         if (!item || !name_reverse[item_name]) {
             return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
         };
-        
+
         const item_exist = shop_data.items[item];
         if (!item_exist) {
             const embed = new EmbedBuilder()
