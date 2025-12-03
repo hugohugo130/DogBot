@@ -771,7 +771,7 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
-        args = args.filter(arg => !Array.from(target_users.values()).includes(arg));
+        args = args.filter(arg => !Array.from(target_users.values()).map(user => user.id).includes(arg));
 
         let args_ = [];
         for (const arg of args) {
@@ -815,7 +815,7 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
-        await message.reply(`target_users: ${target_users.values().id}\ntarget_user: ${target_user}\nargs: ${args}\nitem: ${item}\nname[item]: ${name[item]}\nname_reverse[item]: ${name_reverse[item]}\nitem_exist: ${shop_data.items[item]}`);
+        await message.reply(`target_users: ${Array.from(target_users.values()).map(user => user.id).join("、")}\ntarget_user: ${target_user}\nargs: ${args}\nitem: ${item}\nname[item]: ${name[item]}\nname_reverse[item]: ${name_reverse[item]}\nitem_exist: ${shop_data.items[item]}`);
 
         const item_name = get_name_of_id(item);
         if (!item || !name_reverse[item_name]) {
@@ -988,7 +988,8 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
     pay: ["付款", "付款給其他用戶", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { mentions_users } = require("../../utils/message.js");
 
-        const target_user = (await mentions_users(message)).first();
+        const target_users = await mentions_users(message);
+        const target_user = target_users.first();
 
         const emoji_cross = await get_emoji(client, "crosS");
         const emoji_top = await get_emoji(client, "top");
@@ -1007,7 +1008,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             return await message.reply({ embeds: [embed] });
         };
 
-        args = args.filter(arg => arg !== `<@${target_user.id}>` && arg !== `<@!${target_user.id}>`);
+        args = args.filter(arg => !Array.from(target_users.values()).map(user => user.id).includes(arg));
         if (target_user.bot) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
