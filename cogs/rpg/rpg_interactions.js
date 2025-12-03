@@ -433,7 +433,10 @@ module.exports = {
      */
     execute: async function (client, interaction) {
         try {
-            const { get_emoji } = require("../../utils/rpg.js");
+            const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data, load_bake_data, save_bake_data, load_smelt_data, save_smelt_data, loadData, find_default_value } = require("../../utils/file.js");
+            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, bake, smeltable_items, name, smelter_slots, oven_slots } = require("../../utils/rpg.js");
+            const { ls_function, rpg_handler, MockMessage } = require("./msg_handler.js");
+            const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
             if (interaction.customId.startsWith("vote_")) return;
@@ -467,6 +470,7 @@ module.exports = {
             if (interaction.customId.startsWith('rpg_transaction')) {
                 await interaction.deferUpdate();
                 const embed = get_transaction_embed(interaction);
+
                 await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
             } else if (interaction.customId.startsWith('help')) {
                 const [_, __, category, cmd = null] = interaction.customId.split('|');
@@ -488,9 +492,6 @@ module.exports = {
                 });
             } else if (interaction.customId.startsWith('pay_confirm')) {
                 await interaction.deferUpdate();
-                const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                const { get_emoji, add_money, remove_money } = require("../../utils/rpg.js");
-
                 const emoji_cross = await get_emoji(client, "crosS");
                 const emoji_top = await get_emoji(client, "top");
                 const [_, userId, targetUserId, amount] = interaction.customId.split('|');
@@ -561,7 +562,6 @@ module.exports = {
                 // await interaction.editReply({ embeds: [embed], components: [] });
             } else if (interaction.customId.startsWith('rpg_privacy_menu')) {
                 await interaction.deferUpdate();
-                const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
 
                 const [_, userId] = interaction.customId.split('|');
 
@@ -631,8 +631,6 @@ module.exports = {
                 return await interaction.editReply({ embeds: [embed], components: [row] });
             } else if (interaction.customId.startsWith('choose_command')) {
                 await interaction.deferUpdate();
-                const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
-                const { rpg_handler, MockMessage } = require("./msg_handler.js");
 
                 const guildData = loadData(interaction.guild.id);
 
@@ -648,8 +646,6 @@ module.exports = {
                 await interaction.editReply(response);
             } else if (interaction.customId.startsWith('ls')) {
                 await interaction.deferReply({ flags: MessageFlags.Ephemeral })
-                const { ls_function, MockMessage } = require("./msg_handler.js");
-                const { load_rpg_data, loadData } = require("../../utils/file.js");
 
                 const guildData = loadData(interaction.guild.id);
 
@@ -660,8 +656,6 @@ module.exports = {
                 const res = await ls_function({ client: client, message, rpg_data: load_rpg_data(userId), mode: 1, PASS: true });
                 await interaction.followUp(res);
             } else if (interaction.customId.startsWith("sell")) {
-                const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                const { get_emoji, add_money, get_name_of_id } = require("../../utils/rpg.js");
                 await interaction.deferUpdate();
 
                 let [_, userId, item_id, price, amount, total_price] = customIdParts;
@@ -730,9 +724,6 @@ module.exports = {
 
                 await interaction.editReply({ embeds: [embed], components: [] });
             } else if (interaction.customId.startsWith('buy') || interaction.customId.startsWith('buyc')) {
-                const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                const { get_name_of_id, get_emoji, remove_money, add_money } = require("../../utils/rpg.js");
-
                 const [_, buyerUserId, targetUserId, amount, price, item] = interaction.customId.split('|');
 
                 await interaction.deferUpdate();
@@ -802,14 +793,6 @@ module.exports = {
 
                 return await interaction.editReply({ embeds: [embed], components: [] });
             } else if (interaction.customId.startsWith('oven_bake')) {
-                const {
-                    load_bake_data,
-                    save_bake_data,
-                    load_rpg_data,
-                    save_rpg_data
-                } = require("../../utils/file.js");
-                const { notEnoughItemEmbed, bake, name, oven_slots } = require("../../utils/rpg.js");
-
                 await interaction.deferUpdate();
 
                 // oven_bake|${userId}|${item_id}|${amount}|${coal_amount}|${duration}|${session_id}
@@ -919,15 +902,6 @@ module.exports = {
 
                 await interaction.editReply({ embeds: [embed], components: [] });
             } else if (interaction.customId.startsWith("smelter_smelt")) {
-                const {
-                    load_smelt_data,
-                    save_smelt_data,
-                    load_rpg_data,
-                    save_rpg_data
-                } = require("../../utils/file.js");
-                const { userHaveEnoughItems, notEnoughItemEmbed, smeltable_items, name, smelter_slots } = require("../../utils/rpg.js");
-                const { get_emoji, get_name_of_id } = require("../../utils/rpg.js");
-
                 await interaction.deferUpdate();
 
                 const [_, userId, item_id, amount, coal_amount, duration, output_amount, session_id] = interaction.customId.split("|");
@@ -1023,13 +997,10 @@ module.exports = {
 
                 await interaction.editReply({ embeds: [embed], components: [] });
             } else if (interaction.customId.startsWith("farm")) {
-                const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
-
                 const [embed, row] = await get_farm_info_embed(user, client);
+
                 await interaction.update({ embeds: [embed], components: [row] });
             } else if (interaction.customId.startsWith("marry_accept")) {
-                const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-
                 await interaction.deferUpdate();
 
                 const emoji_cross = await get_emoji(client, "crosS");
@@ -1079,7 +1050,6 @@ module.exports = {
                 return await interaction.editReply({ content: "", embeds: [embed], components: [] });
             } else if (interaction.customId.startsWith("divorce")) {
                 const [_, userId, with_UserId] = interaction.customId.split("|");
-                const { find_default_value } = require("../../utils/file.js");
 
                 const marry_default_value = find_default_value("rpg_database.json")?.["marry"] ?? {};
 
@@ -1117,8 +1087,6 @@ module.exports = {
                 if (mode === 1) return { embeds: [embed] };
                 return await interaction.editReply({ embeds: [embed] });
             } else if (interaction.customId.startsWith("job_transfer")) {
-                const { job_delay_embed, choose_job_row } = require("../../utils/rpg.js");
-
                 const emoji_job = await get_emoji(client, "job");
 
                 const delay_embed = await job_delay_embed(user.id);
@@ -1138,8 +1106,6 @@ module.exports = {
                     return await interaction.update({ embeds: [embed], components: [row] });
                 };
             } else if (interaction.customId.startsWith("job_choose")) {
-                const { job_delay_embed, get_name_of_id } = require("../../utils/rpg.js");
-
                 if (!interaction.isStringSelectMenu()) return;
 
                 const emoji_job = await get_emoji(client, "job");
@@ -1168,8 +1134,6 @@ module.exports = {
 
                 return await interaction.update({ embeds: [embed], components: [row] });
             } else if (interaction.customId.startsWith("job_confirm")) {
-                const { job_delay_embed, get_name_of_id } = require("../../utils/rpg.js");
-                const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
 
                 const [_, __, job] = interaction.customId.split("|");
                 const job_name = get_name_of_id(job);
