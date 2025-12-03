@@ -815,6 +815,8 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
+        await message.reply(`item: ${item}\name[item]: ${name[item]}\nname_reverse[item]: ${name_reverse[item]}\nitem_exist: ${shop_data.items[item]}`);
+
         const item_name = get_name_of_id(item);
         if (!item || !name_reverse[item_name]) {
             return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
