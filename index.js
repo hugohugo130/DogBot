@@ -9,7 +9,6 @@ const { get_areadline } = require('./utils/readline.js');
 const { check_item_data } = require('./utils/rpg.js');
 const { should_register_cmd } = require('./utils/auto_register.js');
 const { registcmd } = require('./register_commands.js');
-const { initDatabase, transferQueueToClient } = require('./utils/SQLdatabase.js');
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
 const util = require('node:util');
 require("dotenv").config();
@@ -102,9 +101,6 @@ async function handle_shutdown(sign) {
     global.oven_sessions = {};
     global.smelter_sessions = {};
 
-    // 初始化 SQL 資料庫
-    initDatabase();
-
     await checkDBFilesCorrupted();
     await checkAllDatabaseFilesContent();
     await checkDBFilesExists();
@@ -130,7 +126,4 @@ async function handle_shutdown(sign) {
     });
 
     global._client = client;
-
-    // 將 Queue 從 global 轉移到 client
-    transferQueueToClient(client);
 })();

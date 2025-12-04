@@ -771,7 +771,7 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
-        args = args.filter(arg => !Array.from(target_users.values()).map(user => user.id).includes(arg));
+        args = args.filter(arg => !arg.includes(target_user.id));
 
         let args_ = [];
         for (const arg of args) {
@@ -814,8 +814,6 @@ const rpg_commands = {
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         };
-
-        await message.reply(`target_users: ${Array.from(target_users.values()).map(user => user.id).join("、")}\ntarget_user: ${target_user}\nargs: ${args}\nitem: ${item}\nname[item]: ${name[item]}\nname_reverse[item]: ${name_reverse[item]}\nitem_exist: ${shop_data.items[item]}`);
 
         const item_name = get_name_of_id(item);
         if (!item || !name_reverse[item_name]) {
@@ -1008,16 +1006,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             return await message.reply({ embeds: [embed] });
         };
 
-        args = args.filter(arg => !Array.from(target_users.values()).map(user => user.id).includes(arg));
-        if (target_user.bot) {
-            const embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 不能付款給機器人 還是你要把你的錢錢丟進大海`)
-                .setEmbedFooter();
-
-            if (mode === 1) return { embeds: [embed] };
-            return await message.reply({ embeds: [embed] });
-        };
+        args = args.filter(arg => !arg.includes(target_user.id));
 
         const amount = args[0];
         if (isNaN(amount) || amount <= 0) {
@@ -1433,11 +1422,11 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         };
     }, false],
     sell: ["出售", "出售物品給系統", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { sell_data, name } = require("../../utils/rpg.js");
+        const { sell_data, name, get_name_of_id, get_id_of_name } = require("../../utils/rpg.js");
         const { cannot_sell } = require("../../utils/config.js");
 
-        const item_name = name[args[0]] || args[0];
-        const item_id = Object.keys(name).find(key => name[key] === item_name);
+        const item_name = get_name_of_id(args[0]);
+        const item_id = get_id_of_name(args[0]);
 
         const isFarmer = rpg_data.job === "farmer";
         const isHoe = item_id?.endsWith('hoe') ?? false;
@@ -1468,7 +1457,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             return await message.reply({ embeds: [embed] });
         };
 
-        const amount = get_amount(item_id || item_name, message.author, args[1]) || 1;
+        const amount = get_amount(item_id, message.author, args[1]) || 1;
         if (rpg_data.inventory[item_id] < amount) {
             const emoji_cross = await get_emoji(client, "crosS");
 
@@ -1961,7 +1950,6 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     if (!data["rpg"]) return;
 
     const prefix = data.prefix ?? "&";
-    await message.reply(JSON.stringify(data, null, 2));
 
     let content = message.content.toLowerCase().trim();
     if (!content.startsWith(prefix)) return;
@@ -2214,10 +2202,17 @@ module.exports = {
      */
     execute: async function (client, message) {
         const { embed_error_color } = require("../../utils/config.js");
+        const { loadData } = require("../../utils/file.js");
+
         const userId = message.author.id;
+        const guildID = message.guild.id;
 
         if (!client.lock) client.lock = {};
         if (!client.lock.rpg_handler) client.lock.rpg_handler = {};
+
+        const data = loadData(guildID);
+        if (!data["rpg"]) return;
+
         if (client.lock.rpg_handler.hasOwnProperty(userId)) {
             const emoji_cross = await get_emoji(client, "crosS");
             const running_cmd = client.lock.rpg_handler[userId] ?? "?";

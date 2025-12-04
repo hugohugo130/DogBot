@@ -14,12 +14,12 @@ function check_IP_valid(IP, PORT) {
     if (platform === "win32") { // windows NT
         // 用 powershell 偵測本地伺服器
         res = require('child_process').execSync(`powershell -Command \"try { (Invoke-WebRequest -Uri 'http://${IP}:${PORT}/verify' -UseBasicParsing -TimeoutSec 1).StatusCode } catch { '' }\"`).toString().trim();
-        passed = true;
+        if (res === "200") passed = true;
     } else if (platform === "linux") { // linux / ubuntu
         res = require('child_process').execSync(`curl -s -o /dev/null -w "%{http_code}" http://${IP}:${PORT}/verify --connect-timeout 1 || echo ""`).toString().trim();
-        passed = true;
-    } else { // other unsupport system D:
-        serverIP = DEFAULT_IP;
+        if (res === "200") passed = true;
+    } else {
+        // 不支援的操作系統 D:
     };
 
     return passed;

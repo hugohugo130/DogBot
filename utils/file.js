@@ -9,10 +9,7 @@ const axios = require("axios");
 const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder, probabilities } = require("./config.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
 const { sleep } = require("./sleep.js");
-const { getDatabase, addToQueue } = require("./SQLdatabase.js");
-const Database = require("better-sqlite3");
 
-const unlinkSync = fs.unlinkSync;
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
 const mkdirSync = fs.mkdirSync;
@@ -56,6 +53,9 @@ function readFileSync(file_path, options = null) {
 
 /**
  * 從 JSON 字串轉換物件，處理錯誤
+ * @argument {string} jsonString - 要解析的 JSON 字串
+ * @argument {any} defaultValue - 解析失敗時的預設值
+ * @returns {object | any} 解析後的物件或預設值
  */
 function safeJSONParse(jsonString, defaultValue = {}) {
     try {
@@ -116,7 +116,7 @@ async function write(path, data, p = false) {
 };
 
 function readJsonSync(path) {
-    return JSON.parse(readFileSync(path));
+    return safeJSONParse(readFileSync(path));
 };
 
 function writeJsonSync(path, data, replacer = "") {
@@ -126,7 +126,7 @@ function writeJsonSync(path, data, replacer = "") {
 };
 
 async function readJson(path) {
-    return JSON.parse(await read(path));
+    return safeJSONParse(await read(path));
 };
 
 async function writeJson(path, data, replacer = "") {
@@ -188,179 +188,18 @@ async function readSchedule() {
     };
 };
 
-// 獲取資料庫的指紋（結構和數據的哈希）
-async function getDatabaseFingerprint(dbPath) {
-    const db = new Database(dbPath, { readonly: true });
-
-    try {
-        const fingerprint = {
-            tables: {},
-            schemaHash: "",
-            dataHash: "",
-            tableCount: 0,
-            totalRows: 0,
-            timestamp: Date.now()
-        };
-
-        // 獲取所有表名（排除 sqlite 系統表）
-        const tables = db.prepare(`
-            SELECT name FROM sqlite_master 
-            WHERE type = 'table' AND name NOT LIKE 'sqlite_%'
-        `).all();
-
-        fingerprint.tableCount = tables.length;
-        const tableFingerprints = [];
-        const schemaHashes = [];
-        const dataHashes = [];
-
-        for (const table of tables) {
-            const tableName = table.name;
-
-            // 獲取表結構
-            const schema = db.prepare(`SELECT sql FROM sqlite_master WHERE name = ?`).get(tableName);
-            const schemaHash = require('crypto')
-                .createHash('md5')
-                .update(schema.sql || '')
-                .digest('hex');
-
-            // 獲取數據哈希（按排序後的數據計算）
-            let data;
-            try {
-                data = db.prepare(`SELECT * FROM "${tableName}"`).all();
-
-                // 對數據進行排序以確保一致性
-                data.sort((a, b) => {
-                    const aStr = JSON.stringify(a);
-                    const bStr = JSON.stringify(b);
-                    return aStr.localeCompare(bStr);
-                });
-            } catch (e) {
-                log.warn(`無法讀取表 ${tableName} 的數據: ${e.message}`);
-                data = [];
-            };
-
-            const dataHash = require('crypto')
-                .createHash('md5')
-                .update(JSON.stringify(data))
-                .digest('hex');
-
-            fingerprint.tables[tableName] = {
-                schemaHash,
-                dataHash,
-                rowCount: data.length,
-                schema: schema.sql
-            };
-
-            fingerprint.totalRows += data.length;
-            tableFingerprints.push(`${tableName}:${schemaHash}:${dataHash}`);
-            schemaHashes.push(schemaHash);
-            dataHashes.push(dataHash);
-        };
-
-        // 生成整體哈希
-        tableFingerprints.sort();
-        schemaHashes.sort();
-        dataHashes.sort();
-
-        fingerprint.schemaHash = require('crypto')
-            .createHash('md5')
-            .update(schemaHashes.join(''))
-            .digest('hex');
-        fingerprint.dataHash = require('crypto')
-            .createHash('md5')
-            .update(dataHashes.join(''))
-            .digest('hex');
-
-        return fingerprint;
-
-    } catch (error) {
-        throw new Error(`獲取資料庫指紋失敗 (${dbPath}): ${error.message}`);
-    } finally {
-        db.close();
-    };
-};
-
-// 比較兩個資料庫指紋是否相同
-function isDatabaseFingerprintEqual(fp1, fp2) {
-    // 比較基本統計信息
-    if (fp1.tableCount !== fp2.tableCount) return false;
-
-    // 比較表數量
-    const tables1 = Object.keys(fp1.tables);
-    const tables2 = Object.keys(fp2.tables);
-
-    if (tables1.length !== tables2.length) return false;
-
-    // 檢查所有表名是否一致
-    for (const tableName of tables1) {
-        if (!fp2.tables[tableName]) {
-            return false;
-        };
-    };
-
-    // 比較每個表的結構和數據
-    for (const tableName of tables1) {
-        const table1 = fp1.tables[tableName];
-        const table2 = fp2.tables[tableName];
-
-        if (table1.schemaHash !== table2.schemaHash ||
-            table1.dataHash !== table2.dataHash ||
-            table1.rowCount !== table2.rowCount
-        ) {
-            return false;
-        };
-    };
-
-    return true;
-};
-
-// 下載遠端資料庫到臨時檔案
-async function downloadRemoteDatabase(url, filename) {
-    const tempDir = require("os").tmpdir();
-    const tempPath = join(tempDir, `remote_${Date.now()}_${filename}`);
-
-    const response = await axios({
-        method: 'GET',
-        url: url,
-        responseType: 'stream',
-        timeout: 30000
-    });
-
-    const writer = createWriteStream(tempPath);
-
-    response.data.pipe(writer);
-
-    return new Promise((resolve, reject) => {
-        writer.on('finish', () => resolve(tempPath));
-        writer.on('error', (err) => {
-            // 如果寫入失敗，嘗試刪除臨時檔案
-            try {
-                if (existsSync(tempPath)) {
-                    unlinkSync(tempPath);
-                };
-            } catch (e) {
-                // 忽略清理錯誤
-            };
-
-            reject(err);
-        });
-    });
-};
-
 /**
  * 
  * @param {string} filename 
- * @param {Logger} log 
+ * @param {Logger | Console} log 
  * @param {number} maxRetries 
  * @returns {Promise<{same: boolean, localContent: string, remoteContent: string}>}
  */
-async function compareLocalRemote(filename, log = console, maxRetries = 3) {
+async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
     const { getServerIPSync } = require("./getSeverIPSync.js");
 
     let localContent;
     let remoteContent;
-    let localIsSqlFile = false;
-    let remoteIsSqlFile = false;
 
     const basename_filename = path.basename(filename);
     const local_filepath = join_db_folder(basename_filename);
@@ -370,100 +209,58 @@ async function compareLocalRemote(filename, log = console, maxRetries = 3) {
     const SERVER_URL = `http://${serverIP}:${PORT}`;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        // 讀取本地檔案
         try {
-            // 讀取本地檔案
             if (existsSync(local_filepath)) {
-                // 檢查本地檔案類型
-                if (local_filepath.endsWith('.db') || local_filepath.endsWith('.sqlite')) {
-                    localIsSqlFile = true;
-
-                    // 使用指紋函數獲取資料庫指紋
-                    localContent = await getDatabaseFingerprint(local_filepath);
-                } else if (local_filepath.endsWith('.json')) {
-                    localIsSqlFile = false;
-                    const fileContent = readFileSync(local_filepath, "utf8");
-                    localContent = JSON.stringify(JSON.parse(fileContent));
-                } else {
-                    throw new Error(`不支援的本地檔案類型: ${basename_filename}`);
-                }
+                localContent = readFileSync(local_filepath, {
+                    encoding: "utf8",
+                    return: null,
+                });
+                // 嘗試解析並格式化 JSON 以便比較
+                try {
+                    localContent = stringify(safeJSONParse(localContent));
+                } catch (e) {
+                    // 不是 JSON 格式，保持原樣
+                };
             } else {
                 localContent = null;
-                log.warn(`本地檔案不存在: ${local_filepath}`);
-            };
-
-            // 從遠端伺服器獲取檔案
-            try {
-                // 檢查遠端檔案類型
-                if (basename_filename.endsWith('.db') || basename_filename.endsWith('.sqlite')) {
-                    remoteIsSqlFile = true;
-                    const tempPath = await downloadRemoteDatabase(`${SERVER_URL}/files/${basename_filename}`, basename_filename);
-
-                    remoteContent = await getDatabaseFingerprint(tempPath);
-
-                    unlinkSync(tempPath);
-                } else if (basename_filename.endsWith('.json')) {
-                    remoteIsSqlFile = false;
-                    const response = await axios.get(`${SERVER_URL}/files/${basename_filename}`);
-                    remoteContent = JSON.stringify(response.data);
-                } else {
-                    throw new Error(`不支援的遠端檔案類型: ${basename_filename}`);
-                };
-            } catch (err) {
-                if (err.response?.status === 404) {
-                    log.warn(`遠端檔案不存在: ${basename_filename}`);
-                    remoteContent = null;
-                } else if (err.code === 'ECONNRESET' || err.message?.includes("socket hang up")) {
-                    if (attempt < maxRetries) {
-                        log.warn(`連接遠端伺服器時中斷，正在重試 (${attempt}/${maxRetries})...`);
-                        sleep(1000);
-                        continue;
-                    } else {
-                        throw err;
-                    };
-                } else {
-                    throw err;
-                };
-            };
-
-            break;
-
+            }
         } catch (err) {
-            if (attempt === maxRetries) {
-                const errorStack = util.inspect(err, { depth: null });
+            log.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
+            localContent = null;
+        };
 
-                log.error(`比較檔案時遇到錯誤: ${errorStack}`);
-
-                throw err;
+        // 從遠端伺服器獲取檔案
+        try {
+            const response = await axios.get(`${SERVER_URL}/files/${basename_filename}`);
+            remoteContent = stringify(response.data);
+        } catch (err) {
+            if (err.response?.status === 404) {
+                log.warn(`遠端檔案不存在: ${basename_filename}`);
+                remoteContent = null;
+            } else if (err.code === 'ECONNRESET' || err.message?.includes("socket hang up")) {
+                if (attempt < maxRetries) {
+                    log.warn(`連接遠端伺服器時中斷，正在重試 (${attempt}/${maxRetries})...`);
+                    sleep(1000);
+                    continue;
+                } else {
+                    log.error(`獲取遠端檔案內容時遇到錯誤: ${err.message}`);
+                    remoteContent = null;
+                };
             } else {
-                log.warn(`嘗試 ${attempt}/${maxRetries} 失敗: ${err.message}`);
-                sleep(1000);
+                log.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
+                remoteContent = null;
             };
         };
-    };
 
-    // 檢查檔案類型是否一致
-    if (localContent !== null && remoteContent !== null && localIsSqlFile !== remoteIsSqlFile) {
-        return [false, localContent, remoteContent];
+        break;
     };
 
     // 比較內容
-    let same = false;
-    if (localContent && remoteContent) {
-        if (localIsSqlFile) { // SQL 檔案
-            // 使用指紋比較函數
-            same = isDatabaseFingerprintEqual(localContent, remoteContent);
-        } else {
-            // 對於 JSON 檔案，直接比較字符串
-            same = localContent === remoteContent;
-        };
-    } else {
-        // 如果任一內容為 null，只有當兩者都為 null 時才認為相同
-        same = localContent === remoteContent;
-    };
+    const same = localContent && remoteContent && util.isDeepStrictEqual(localContent, remoteContent);
 
     return [same, localContent, remoteContent];
 };
-
 
 /**
  * 
@@ -532,54 +329,64 @@ function loadData(guildID = null, mode = 0) {
         throw new TypeError("Invalid mode");
     };
 
+    const { database_file } = require("./config.js");
     const database_emptyeg = find_default_value("database.json", {});
-    const db = getDatabase();
+
+    if (!fs.existsSync(database_file)) return {};
+
+    const rawData = readFileSync(database_file);
+    let data = safeJSONParse(rawData);
 
     if (mode == 0 && guildID) {
-        // 取得單一伺服器資料
-        const row = db.prepare('SELECT * FROM guilds WHERE guild_id = ?').get(guildID);
-
-        if (!row) {
-            // 不存在則創建
-            saveData(guildID, database_emptyeg);
-            return database_emptyeg;
+        if (!data[guildID]) {
+            data[guildID] = database_emptyeg;
+            saveData(guildID, data[guildID]);
         };
 
-        return {
-            rpg: row.rpg === 1,
-            dynamicVoice: row.dynamic_voice
-        };
+        return data[guildID];
     } else {
-        // 取得所有伺服器資料
-        const rows = db.prepare('SELECT * FROM guilds').all();
-        const data = {};
-
-        for (const row of rows) {
-            data[row.guild_id] = {
-                rpg: row.rpg === 1,
-                dynamicVoice: row.dynamic_voice
-            };
-        };
-
         return data;
     };
 };
 
 function saveData(guildID, guildData) {
-    const db = getDatabase();
+    const { database_file } = require("./config.js");
+    const database_emptyeg = find_default_value("database.json", {});
 
-    addToQueue(() => {
-        const stmt = db.prepare(`
-            INSERT OR REPLACE INTO guilds (guild_id, rpg, dynamic_voice, updated_at)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-        `);
+    let data = {};
 
-        stmt.run(
-            guildID,
-            guildData.rpg ? 1 : 0,
-            guildData.dynamicVoice || null
-        );
-    }, 5);
+    if (fs.existsSync(database_file)) {
+        const rawData = readFileSync(database_file);
+        data = safeJSONParse(rawData);
+    };
+
+    if (!data[guildID]) {
+        data[guildID] = database_emptyeg;
+    };
+
+    data[guildID] = { ...data[guildID], ...guildData };
+    data[guildID] = order_data(data[guildID], database_emptyeg)
+
+    // 增加重試機制
+    let retries = 3;
+    let lastError = null;
+
+    while (retries > 0) {
+        try {
+            writeJsonSync(database_file, data);
+            break;
+        } catch (error) {
+            lastError = error;
+            retries--;
+            if (retries > 0) {
+                sleep(1000);
+            };
+        };
+    };
+
+    if (retries === 0) {
+        throw lastError;
+    };
 };
 
 /*
@@ -620,151 +427,104 @@ function setPrefix(guildID, prefix) {
 };
 
 function load_rpg_data(userid) {
+    const { rpg_database_file } = require("./config.js");
+
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
-    const db = getDatabase();
 
-    const row = db.prepare('SELECT * FROM rpg_database WHERE user_id = ?').get(userid);
+    if (fs.existsSync(rpg_database_file)) {
+        const rawData = readFileSync(rpg_database_file);
+        const data = safeJSONParse(rawData);
 
-    if (!row) {
+        if (!data[userid]) {
+            save_rpg_data(userid, rpg_emptyeg);
+            return rpg_emptyeg;
+        };
+        return order_data(data[userid], rpg_emptyeg);
+    } else {
         save_rpg_data(userid, rpg_emptyeg);
         return rpg_emptyeg;
-    };
-
-    return {
-        money: row.money,
-        hunger: row.hunger,
-        job: row.job,
-        fightjob: row.fightjob,
-        badge: row.badge,
-        marry: {
-            status: row.marry_status === 1,
-            with: row.marry_with,
-            time: row.marry_time
-        },
-        lastRunTimestamp: safeJSONParse(row.last_run_timestamp, {}),
-        inventory: safeJSONParse(row.inventory, {}),
-        transactions: safeJSONParse(row.transactions, []),
-        count: safeJSONParse(row.count, {}),
-        privacy: safeJSONParse(row.privacy, [])
     };
 };
 
 function save_rpg_data(userid, rpgdata) {
+    const { rpg_database_file } = require("./config.js");
+
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
-    const db = getDatabase();
 
-    // 先讀取現有資料
-    const existing = db.prepare('SELECT * FROM rpg_database WHERE user_id = ?').get(userid);
-    const currentData = existing ? {
-        money: existing.money,
-        hunger: existing.hunger,
-        job: existing.job,
-        fightjob: existing.fightjob,
-        badge: existing.badge,
-        marry: {
-            status: existing.marry_status === 1,
-            with: existing.marry_with,
-            time: existing.marry_time
-        },
-        lastRunTimestamp: safeJSONParse(existing.last_run_timestamp, {}),
-        inventory: safeJSONParse(existing.inventory, {}),
-        transactions: safeJSONParse(existing.transactions, []),
-        count: safeJSONParse(existing.count, {}),
-        privacy: safeJSONParse(existing.privacy, [])
-    } : rpg_emptyeg;
+    let data = {};
+    if (fs.existsSync(rpg_database_file)) {
+        const rawData = readFileSync(rpg_database_file);
+        data = safeJSONParse(rawData);
+    };
 
-    // 合併資料
-    const mergedData = { ...currentData, ...rpgdata };
+    if (!data[userid]) {
+        data[userid] = rpg_emptyeg;
+    };
 
-    // 清理 inventory 中數量為 0 或 null 的物品
-    if (mergedData.inventory) {
-        Object.keys(mergedData.inventory).forEach(item => {
-            if (mergedData.inventory[item] === 0 || mergedData.inventory[item] === null) {
-                delete mergedData.inventory[item];
-            }
+    data[userid] = { ...data[userid], ...rpgdata };
+
+    // 檢查並清理 inventory 中數量為 0 或 null 的物品
+    if (data[userid].inventory) {
+        Object.keys(data[userid].inventory).forEach(item => {
+            if (data[userid].inventory[item] === 0 || data[userid].inventory[item] === null) {
+                delete data[userid].inventory[item];
+            };
         });
     };
 
-    addToQueue(() => {
-        const stmt = db.prepare(`
-            INSERT OR REPLACE INTO rpg_database (
-                user_id, money, hunger, job, fightjob, badge,
-                marry_status, marry_with, marry_time,
-                last_run_timestamp, inventory, transactions, count, privacy,
-                updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        `);
+    data[userid] = order_data(data[userid], rpg_emptyeg);
 
-        stmt.run(
-            userid,
-            mergedData.money || 1000,
-            mergedData.hunger || 20,
-            mergedData.job || null,
-            mergedData.fightjob || null,
-            mergedData.badge || null,
-            mergedData.marry?.status ? 1 : 0,
-            mergedData.marry?.with || null,
-            mergedData.marry?.time || 0,
-            JSON.stringify(mergedData.lastRunTimestamp || {}),
-            JSON.stringify(mergedData.inventory || {}),
-            JSON.stringify(mergedData.transactions || []),
-            JSON.stringify(mergedData.count || {}),
-            JSON.stringify(mergedData.privacy || [])
-        );
-    }, 5);
+    writeJsonSync(rpg_database_file, data);
 };
 
 function load_shop_data(userid) {
+    const { rpg_shop_file } = require("./config.js");
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
-    const db = getDatabase();
 
-    const row = db.prepare('SELECT * FROM rpg_shop WHERE user_id = ?').get(userid);
+    if (fs.existsSync(rpg_shop_file)) {
+        const rawData = readFileSync(rpg_shop_file);
+        const data = safeJSONParse(rawData);
 
-    if (!row) {
+        if (!data[userid]) {
+            save_shop_data(userid, shop_emptyeg);
+            return shop_emptyeg;
+        };
+
+        return order_data(data[userid], shop_emptyeg);
+    } else {
         save_shop_data(userid, shop_emptyeg);
         return shop_emptyeg;
-    };
-
-    return {
-        status: row.status === 1,
-        items: safeJSONParse(row.items, {})
     };
 };
 
 function save_shop_data(userid, shop_data) {
+    const { rpg_shop_file } = require("./config.js");
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
-    const db = getDatabase();
 
-    const existing = db.prepare('SELECT * FROM rpg_shop WHERE user_id = ?').get(userid);
-    const currentData = existing ? {
-        status: existing.status === 1,
-        items: safeJSONParse(existing.items, {})
-    } : shop_emptyeg;
+    let data = {};
+    if (fs.existsSync(rpg_shop_file)) {
+        const rawData = readFileSync(rpg_shop_file);
+        data = safeJSONParse(rawData);
+    };
 
-    const mergedData = { ...currentData, ...shop_data };
+    if (!data[userid]) {
+        data[userid] = shop_emptyeg;
+    };
+
+    data[userid] = { ...data[userid], ...shop_data };
 
     // 清除數量為0的物品
-    if (mergedData.items) {
-        for (const [item, itemData] of Object.entries(mergedData.items)) {
+    if (data[userid].items) {
+        for (const [item, itemData] of Object.entries(data[userid].items)) {
             if (itemData.amount <= 0) {
-                delete mergedData.items[item];
-            }
+                delete data[userid].items[item];
+            };
         };
     };
 
-    addToQueue(() => {
-        const stmt = db.prepare(`
-            INSERT OR REPLACE INTO rpg_shop (user_id, status, items, updated_at)
-            VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-        `);
+    data[userid] = order_data(data[userid], shop_emptyeg);
 
-        stmt.run(
-            userid,
-            mergedData.status ? 1 : 0,
-            JSON.stringify(mergedData.items || {})
-        );
-    }, 5);
+    writeJsonSync(rpg_shop_file, data);
 };
 
 /**
@@ -773,22 +533,19 @@ function save_shop_data(userid, shop_data) {
  * @returns {{lvl: number, exp: number, waterAt: number, farms: Array<Object}}
  */
 function load_farm_data(userid) {
+    const { rpg_farm_file } = require("./config.js");
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
-    const db = getDatabase();
 
-    const row = db.prepare('SELECT * FROM rpg_farm WHERE user_id = ?').get(userid);
+    const rawData = readFileSync(rpg_farm_file);
 
-    if (!row) {
-        save_farm_data(userid, farm_emptyeg);
+    const data = safeJSONParse(rawData);
+
+    if (!data[userid]) {
+        save_shop_data(userid, farm_emptyeg);
         return farm_emptyeg;
     };
 
-    return {
-        exp: row.exp,
-        lvl: row.lvl,
-        waterAt: row.water_at,
-        farms: safeJSONParse(row.farms, [])
-    };
+    return data[userid];
 };
 
 /**
@@ -797,93 +554,55 @@ function load_farm_data(userid) {
  * @param {Array} farm_data 
  */
 function save_farm_data(userid, farm_data) {
+    const { rpg_farm_file } = require("./config.js");
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
-    const db = getDatabase();
 
-    const existing = db.prepare('SELECT * FROM rpg_farm WHERE user_id = ?').get(userid);
-    const currentData = existing ? {
-        exp: existing.exp,
-        lvl: existing.lvl,
-        waterAt: existing.water_at,
-        farms: safeJSONParse(existing.farms, [])
-    } : farm_emptyeg;
+    let data = {};
+    if (fs.existsSync(rpg_farm_file)) {
+        const rawData = readFileSync(rpg_farm_file);
+        data = safeJSONParse(rawData);
+    };
 
-    const mergedData = { ...currentData, ...farm_data };
+    if (!data[userid]) {
+        data[userid] = farm_emptyeg;
+    };
 
-    addToQueue(() => {
-        const stmt = db.prepare(`
-            INSERT OR REPLACE INTO rpg_farm (user_id, exp, lvl, water_at, farms, updated_at)
-            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        `);
+    data[userid] = { ...data[userid], ...farm_data };
 
-        stmt.run(
-            userid,
-            mergedData.exp || 0,
-            mergedData.lvl || 0,
-            mergedData.waterAt || 0,
-            JSON.stringify(mergedData.farms || [])
-        );
-    }, 5);
+    // 清除數量為0的物品
+    if (data[userid].items) {
+        for (const [item, itemData] of Object.entries(data[userid].items)) {
+            if (itemData.amount <= 0) {
+                delete data[userid].items[item];
+            };
+        };
+    };
+
+    writeJsonSync(rpg_farm_file, data);
 };
 
 function load_bake_data() {
-    const db = getDatabase();
-    const rows = db.prepare('SELECT * FROM bake_data').all();
+    const { bake_data_file } = require("./config.js");
 
-    // 返回所有用戶的烘焙資料
-    const result = {};
-    for (const row of rows) {
-        result[row.user_id] = safeJSONParse(row.data, []);
-    };
-
-    return result;
+    return readJsonSync(bake_data_file);
 };
 
 function save_bake_data(data) {
-    const db = getDatabase();
+    const { bake_data_file } = require("./config.js");
 
-    addToQueue(() => {
-        // 清空並重新插入所有資料
-        db.prepare('DELETE FROM bake_data').run();
-
-        const stmt = db.prepare(`
-            INSERT INTO bake_data (user_id, data, updated_at)
-            VALUES (?, ?, CURRENT_TIMESTAMP)
-        `);
-
-        for (const [userid, userData] of Object.entries(data)) {
-            stmt.run(userid, JSON.stringify(userData));
-        }
-    }, 5);
+    writeJsonSync(bake_data_file, data);
 };
 
 function load_smelt_data() {
-    const db = getDatabase();
-    const rows = db.prepare('SELECT * FROM smelt_data').all();
+    const { smelt_data_file } = require("./config.js");
 
-    const result = {};
-    for (const row of rows) {
-        result[row.user_id] = safeJSONParse(row.data, []);
-    };
-
-    return result;
+    return readJsonSync(smelt_data_file);
 };
 
 function save_smelt_data(data) {
-    const db = getDatabase();
+    const { smelt_data_file } = require("./config.js");
 
-    addToQueue(() => {
-        db.prepare('DELETE FROM smelt_data').run();
-
-        const stmt = db.prepare(`
-            INSERT INTO smelt_data (user_id, data, updated_at)
-            VALUES (?, ?, CURRENT_TIMESTAMP)
-        `);
-
-        for (const [userid, userData] of Object.entries(data)) {
-            stmt.run(userid, JSON.stringify(userData));
-        }
-    }, 5);
+    writeJsonSync(smelt_data_file, data);
 };
 
 /*
@@ -896,32 +615,15 @@ function save_smelt_data(data) {
 */
 
 function loadDvoiceData() {
-    const db = getDatabase();
-    const rows = db.prepare('SELECT * FROM dvoice').all();
+    const { dvoice_data_file } = require("./config.js");
 
-    const result = {};
-    for (const row of rows) {
-        result[row.channel_id] = safeJSONParse(row.data, {});
-    };
-
-    return result;
+    return readJsonSync(dvoice_data_file);
 };
 
 function saveDvoiceData(data) {
-    const db = getDatabase();
+    const { dvoice_data_file } = require("./config.js");
 
-    addToQueue(() => {
-        db.prepare('DELETE FROM dvoice').run();
-
-        const stmt = db.prepare(`
-            INSERT INTO dvoice (channel_id, data, updated_at)
-            VALUES (?, ?, CURRENT_TIMESTAMP)
-        `);
-
-        for (const [channelId, channelData] of Object.entries(data)) {
-            stmt.run(channelId, JSON.stringify(channelData));
-        };
-    }, 5);
+    writeJsonSync(dvoice_data_file, data);
 };
 
 /*
@@ -966,50 +668,43 @@ function getDynamicVoice(guildID) {
 */
 
 function load_music_data() {
-    const db = getDatabase();
-    const rows = db.prepare('SELECT * FROM music').all();
+    const { music_data_file } = require("./config.js");
+    const music_emptyeg = find_default_value("music.json", {});
 
-    const result = {};
-    for (const row of rows) {
-        result[row.voice_channel_id] = {
-            queue: safeJSONParse(row.queue, []),
-            currentIndex: row.current_index,
-            isPlaying: row.is_playing === 1,
-            volume: row.volume,
-            loopMode: row.loop_mode,
-            textChannelId: row.text_channel_id
-        };
+    if (!existsSync(music_data_file)) {
+        writeJsonSync(music_data_file, music_emptyeg);
+
+        return music_emptyeg;
     };
 
-    return result;
+    return readJsonSync(music_data_file);
 };
 
 function save_music_data(data) {
-    const db = getDatabase();
+    const { music_data_file } = require("./config.js");
 
-    addToQueue(() => {
-        db.prepare('DELETE FROM music').run();
+    // 確保每個語音頻道的資料結構完整
+    for (const [voiceChannelId, channelData] of Object.entries(data)) {
+        if (!channelData.queue) channelData.queue = [];
+        if (typeof channelData.currentIndex !== 'number') channelData.currentIndex = 0;
+        if (typeof channelData.isPlaying !== 'boolean') channelData.isPlaying = false;
+        if (typeof channelData.volume !== 'number') channelData.volume = 1.0;
+        if (!channelData.loopMode) channelData.loopMode = "off";
+        if (!channelData.textChannelId) channelData.textChannelId = "";
 
-        const stmt = db.prepare(`
-            INSERT INTO music (
-                voice_channel_id, queue, current_index, is_playing,
-                volume, loop_mode, text_channel_id, updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-        `);
+        // 確保 queue 中的每首歌都有必要的欄位
+        channelData.queue = channelData.queue.map(song => ({
+            url: song.url || "",
+            title: song.title || "未知標題",
+            duration: song.duration || "0:00",
+            requestedBy: song.requestedBy || "",
+            thumbnail: song.thumbnail || "",
+            addedAt: song.addedAt || new Date().toISOString(),
+            ...song
+        }));
+    };
 
-        for (const [channelId, musicData] of Object.entries(data)) {
-            stmt.run(
-                channelId,
-                JSON.stringify(musicData.queue || []),
-                musicData.currentIndex || 0,
-                musicData.isPlaying ? 1 : 0,
-                musicData.volume || 1.0,
-                musicData.loopMode || 'off',
-                musicData.textChannelId || ''
-            );
-        };
-    }, 5);
+    writeJsonSync(music_data_file, data);
 };
 
 function get_music_data(voiceChannelId) {
@@ -1046,15 +741,15 @@ function update_music_data(voiceChannelId, newData) {
 };
 
 function delete_music_data(voiceChannelId) {
-    const db = getDatabase();
+    const musicData = load_music_data();
 
-    addToQueue(() => {
-        const stmt = db.prepare('DELETE FROM music WHERE voice_channel_id = ?');
-        const result = stmt.run(voiceChannelId);
-        return result.changes > 0;
-    }, 5);
+    if (musicData[voiceChannelId]) {
+        delete musicData[voiceChannelId];
+        save_music_data(musicData);
+        return true;
+    };
 
-    return true;
+    return false;
 };
 
 module.exports = {

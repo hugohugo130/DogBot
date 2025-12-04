@@ -60,7 +60,7 @@ async function onlineDB_uploadFile(filepath) {
         // === 備份遠端檔案 ===
         filepath = join_db_folder(filepath);
         const filename = path.basename(filepath);
-        const filenameWithoutExt = filename.replace(/\.(json|db)$/, "");
+        const filenameWithoutExt = filename.replace(/\.json$/, "");
         const fileExt = path.extname(filename);
         const now = new Date();
         const pad = n => n.toString().padStart(2, '0');
@@ -118,8 +118,6 @@ async function onlineDB_deleteFile(filename) {
 async function onlineDB_checkFileContent(filename, maxRetries = 3) {
     const { stringify } = require("./file.js");
 
-    const isSqlFile = filename.endsWith('.db');
-
     const [same, localContent, remoteContent] = await compareLocalRemote(filename, logger, maxRetries);
     const rl = get_areadline();
 
@@ -132,27 +130,23 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
             console.log('1. 上載本地檔案到遠端');
             console.log('2. 下載遠端檔案到本地');
             console.log('3. 不做任何事');
-            if (!isSqlFile) {
-                console.log('4. 查看本地檔案內容')
-                console.log('5. 查看遠端檔案內容')
-            }
+            console.log('4. 查看本地檔案內容')
+            console.log('5. 查看遠端檔案內容')
 
-            answer = await rl.question(isSqlFile ? '請選擇操作 (1/2/3): ' : '請選擇操作 (1/2/3/4/5): ');
+            answer = await rl.question('請選擇操作 (1/2/3/4/5): ');
 
-            if (!isSqlFile) {
-                switch (answer.trim()) {
-                    case '4':
-                        console.log(JSON.parse(stringify(localContent)));
-                        break;
-                    case '5':
-                        console.log(JSON.parse(stringify(remoteContent)));
-                        break;
-                    default:
-                        break;
-                };
-            }
+            switch (answer.trim()) {
+                case '4':
+                    console.log(JSON.parse(stringify(localContent)));
+                    break;
+                case '5':
+                    console.log(JSON.parse(stringify(remoteContent)));
+                    break;
+                default:
+                    break;
+            };
 
-            const validOptions = isSqlFile ? ['1', '2', '3'] : ['1', '2', '3', '4', '5'];
+            const validOptions = ['1', '2', '3', '4', '5'];
             if (!validOptions.includes(answer.trim())) {
                 console.log(`請輸入有效的選項 (${validOptions.join('/')})`);
             };
@@ -186,6 +180,8 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
 // === 批量檢查所有資料庫檔案 ===
 async function checkAllDatabaseFilesContent() {
     let executed = false;
+
+    logger.info(`正在檢查資料庫檔案內容...`);
 
     for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         const res = await onlineDB_checkFileContent(file);
@@ -229,67 +225,38 @@ async function downloadAllFiles() {
 };
 
 async function uploadChangedDatabaseFiles() {
-    for (const file of onlineDB_Files.filter(e => existsSync(join_db_folder(e)))) {
-        const localPath = join_db_folder(file);
-
-        if (fs.existsSync(localPath)) {
-            const isSqlFile = file.endsWith('.db');
+    for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
+        if (fs.existsSync(file)) {
             let localContent;
-
             try {
-                if (isSqlFile) {
-                    // SQL 檔案：讀取為 buffer 並計算 hash
-                    localContent = fs.readFileSync(localPath);
-                } else {
-                    // JSON 檔案：讀取並格式化
-                    localContent = fs.readFileSync(localPath, 'utf8');
-                    localContent = JSON.stringify(JSON.parse(localContent));
-                }
+                localContent = fs.readFileSync(file, 'utf8');
+                localContent = JSON.stringify(JSON.parse(localContent)); // 格式化本地內容
             } catch (err) {
-                const errorStack = util.inspect(err, { depth: null });
-
-                logger.error(`讀取本地檔案內容時遇到錯誤: ${errorStack}`);
+                logger.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
                 continue;
             };
 
             let remoteContent;
             try {
-                if (isSqlFile) {
-                    // SQL 檔案：下載為 buffer
-                    const response = await axios.get(`${SERVER_URL}/files/${file}`, { responseType: 'arraybuffer' });
-                    remoteContent = Buffer.from(response.data);
-                } else {
-                    // JSON 檔案
-                    const response = await axios.get(`${SERVER_URL}/files/${file}`);
-                    remoteContent = JSON.stringify(response.data);
-                };
+                const response = await axios.get(`${SERVER_URL}/files/${file}`);
+                remoteContent = JSON.stringify(response.data);
             } catch (err) {
                 if (err.response?.status === 404) {
-                    logger.info(`遠端無 ${file} 檔案，準備上傳本地檔案`);
+                    logger.info(`遠端無 ${file} 檔案準備上傳本地檔案`);
                     await onlineDB_uploadFile(file);
                 } else {
-                    const errorStack = util.inspect(err, { depth: null });
-
-                    logger.error(`獲取遠端檔案內容時遇到錯誤: ${errorStack}`);
+                    logger.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
                 };
 
                 continue;
             };
 
-            // 比對內容
-            let isDifferent = false;
-            if (isSqlFile) {
-                isDifferent = !localContent.equals(remoteContent);
-            } else {
-                isDifferent = localContent !== remoteContent;
-            }
-
-            if (isDifferent) {
+            if (localContent !== remoteContent) {
                 logger.info(`資料庫檔案 ${file} 內容不同，上傳本地版本`);
                 await onlineDB_uploadFile(file);
             };
-        }
-    }
+        };
+    };
 };
 
 module.exports = {

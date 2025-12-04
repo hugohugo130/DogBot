@@ -9,8 +9,15 @@ const DEFAULT_IP = "192.168.0.156"
 const DEFAULT_PORT = 3003
 
 const DATABASE_FILES = [
+    "database.json",
+    "rpg_database.json",
+    "rpg_shop.json",
+    "bake_db.json",
+    "smelt_db.json",
     "serverIP.json",
-    "bot.db",
+    "dvoice_db.json",
+    "rpg_farm.json",
+    "music.json",
 ];
 
 const DEFAULT_VALUES = {
@@ -72,9 +79,23 @@ const DEFAULT_VALUES = {
 };
 
 const onlineDB_Files = [
-    "bot.db",
+    "database.json",
+    "rpg_database.json",
+    "rpg_shop.json",
+    "bake_db.json",
+    "smelt_db.json",
+    "dvoice_db.json",
+    "rpg_farm.json",
 ];
 
+const database_file = join(database_folder, "database.json")
+const rpg_database_file = join(database_folder, "rpg_database.json");
+const rpg_shop_file = join(database_folder, "rpg_shop.json");
+const rpg_farm_file = join(database_folder, "rpg_farm.json");
+const bake_data_file = join(database_folder, "bake_db.json");
+const smelt_data_file = join(database_folder, "smelt_db.json");
+const music_data_file = join(database_folder, "music.json");
+const dvoice_data_file = join(database_folder, "dvoice_db.json");
 const serverIPFile = join(database_folder, "serverIP.json");
 
 const cogsFolder = `${cwd()}/cogs`
@@ -331,7 +352,15 @@ module.exports = {
     DATABASE_FILES,
     onlineDB_Files,
 
+    database_file,
+    rpg_database_file,
+    rpg_shop_file,
+    bake_data_file,
     serverIPFile,
+    smelt_data_file,
+    dvoice_data_file,
+    rpg_farm_file,
+    music_data_file,
 
     DEFAULT_VALUES,
     BETA,

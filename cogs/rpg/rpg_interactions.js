@@ -20,7 +20,7 @@ function show_transactions(userid) {
     return transactions
         .slice(-10)
         .map(({ timestamp, originalUser, targetUser, amount, type }) =>
-            `- <t:${timestamp}:R> ${originalUser} \`>\` ${targetUser} \`${amount.toLocaleString()}$\` (${type})`
+            `- <t:${timestamp}:R> ${originalUser} \`>\` ${targetUser} \`${amount?.toLocaleString()}$\` (${type})`
         ).join('\n');
 };
 

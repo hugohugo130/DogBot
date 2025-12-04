@@ -2,7 +2,6 @@ const { uploadAllDatabaseFiles } = require("./onlineDB.js");
 const { get_logger, shutdown } = require("./logger.js");
 const { BotName } = require("./config.js");
 const { saveDvoiceData } = require("./file.js");
-const { closeDatabase } = require('./SQLdatabase.js');
 
 async function safeshutdown(client) {
     try {
@@ -18,8 +17,6 @@ async function safeshutdown(client) {
         };
 
         await shutdown(true, 200);
-
-        closeDatabase();
     } finally {
         if (client?.destroy) await client.destroy();
         process.exit();
