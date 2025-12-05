@@ -129,6 +129,8 @@ const item_amount_limit = 999999999;
 
 const cannot_sell = ["raw_hugo", "hugo"];
 
+const admins = ["898836485397180426"];
+
 /*
 https://discord.js.org/docs/packages/discord.js/14.24.0/ColorResolvable:TypeAlias
 - ColorResolvable -
@@ -363,6 +365,7 @@ module.exports = {
     setJobDelay,
     item_amount_limit,
     cannot_sell,
+    admins,
 
     failed,
     probabilities,

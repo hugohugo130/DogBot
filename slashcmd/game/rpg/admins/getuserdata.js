@@ -55,8 +55,13 @@ module.exports = {
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
     async execute(interaction) {
         const { load_rpg_data } = require("../../../../utils/file.js");
-        const { embed_default_color } = require("../../../../utils/config.js");
+        const { embed_default_color, admins } = require("../../../../utils/config.js");
         await interaction.deferReply();
+
+        if (!admins.includes(interaction.user.id)) {
+            return await interaction.editReply({ content: "你沒有權限使用這個指令" });
+        };
+
         const user = interaction.options.getUser("user");
         const rpg_data = load_rpg_data(user.id);
 
