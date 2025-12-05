@@ -1133,6 +1133,23 @@ function error_analyze(errorStack) {
         analyzes.push(sample);
     };
 
+    // Expected: expected.length <= 100
+    const error_length_match = errorStack.match(/Expected: expected.length <= (\d+)/);
+    if (
+        error_length_match
+        && errorStack.includes("ExpectedConstraintError > s.string().lengthLessThanOrEqual()")
+        && errorStack.includes("Invalid string length")
+    ) {
+        const length = error_length_match[1];
+
+        const sample = structuredClone(template);
+
+        sample.title = "糟糕! 你的輸入太長了!";
+        sample.description = `discord限制代碼中的一些字元長度，不能超過 ${length} 字元`;
+
+        analyzes.push(sample);
+    };
+
     return analyzes;
 };
 
