@@ -1265,7 +1265,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 return await message.reply({ embeds });
             };
 
-            if ((rpg_data.hunger + add) > max_hunger) {
+            if (rpg_data.hunger >= max_hunger) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你已經吃太飽了`)
