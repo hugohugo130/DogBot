@@ -1351,11 +1351,13 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
 
 const jobs = {
     "fisher": { // 漁夫
+        "command": "fish",
         "emoji": "fisher",
         "desc": "是個需要勞力的職業，你必須要努力勤奮的抓魚，才會獲得收益",
         "name": "漁夫",
     },
     "pharmacist": { // 藥劑師
+        "command": "brew",
         "emoji": "potion",
         "desc": "這個世界神秘力量的來源，製作藥水以及科學實驗來幫助成長",
         "name": "藥劑師",
@@ -1371,11 +1373,13 @@ const jobs = {
         "name": "廚師",
     },
     "miner": { // 礦工
+        "command": "mine",
         "emoji": "ore",
         "desc": "這個世界各類金屬的來源，挖取原礦並轉賣給鐵匠",
         "name": "礦工",
     },
     "herder": { // 牧農
+        "command": "herd",
         "emoji": "cow",
         "desc": "肉類的來源，養殖各類動物",
         "name": "牧農",
@@ -1386,11 +1390,14 @@ const jobs = {
         "name": "鐵匠",
     },
     "lumberjack": { // 伐木工
+        "command": "fell",
         "emoji": "wood",
         "desc": "在森林中砍伐木頭，是木頭的來源",
         "name": "伐木工",
     },
 };
+
+const workCmdJobs = Object.fromEntries(Object.entries(jobs).filter(([_, value]) => value.command).map(([key, value]) => [value.command, [key, value]]));
 
 const oven_slots = 3;
 const farm_slots = 4;
@@ -1428,10 +1435,11 @@ module.exports = {
     job_delay_embed,
     choose_job_row,
     get_emoji_object,
+    jobs,
+    workCmdJobs,
     oven_slots,
     farm_slots,
     smelter_slots,
-    jobs,
 
     // rpg functions
     BetterEval,
