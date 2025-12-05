@@ -905,9 +905,10 @@ function BetterEval(obj) {
  * 
  * @param {Object} rpg_data 
  * @param {string} command
+ * @param {DogClient} client
  * @returns {Promise<EmbedBuilder | null>}
  */
-async function wrong_job_embed(rpg_data, command) {
+async function wrong_job_embed(rpg_data, command, client = global._client) {
     const workJobShouldBe = workCmdJobs[command];
 
     if (workJobShouldBe?.length > 1) {

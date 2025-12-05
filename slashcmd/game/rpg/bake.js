@@ -57,7 +57,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     let rpg_data = load_rpg_data(userId);
     const bake_data = load_bake_data()[userId];
 
-    const wrongJobEmbed = await wrong_job_embed(rpg_data, "/bake");
+    const wrongJobEmbed = await wrong_job_embed(rpg_data, "/bake", interaction.client);
     if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
 
     const oven_remain_slots = oven_slots - (bake_data?.length || 0);

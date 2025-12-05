@@ -220,7 +220,7 @@ module.exports = {
         const rpg_data = load_rpg_data(userId);
         const farm_data = load_farm_data(userId);
 
-        const wrongJobEmbed = await wrong_job_embed(rpg_data, "/farm");
+        const wrongJobEmbed = await wrong_job_embed(rpg_data, "/farm", interaction.client);
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
 
         const emoji_farmer = await get_emoji(client, "farmer");

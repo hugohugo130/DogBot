@@ -105,7 +105,7 @@ module.exports = {
         const smelt_data_all = load_smelt_data();
         const smelt_data = smelt_data_all[userId];
 
-        const wrongJobEmbed = await wrong_job_embed(rpg_data, "/smelt");
+        const wrongJobEmbed = await wrong_job_embed(rpg_data, "/smelt", interaction.client);
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
 
         if (subcommand === "smelt") {

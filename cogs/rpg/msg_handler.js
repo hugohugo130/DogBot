@@ -1939,7 +1939,7 @@ function find_redirect_targets_from_id(id) {
 async function rpg_handler({ client, message, d, mode = 0 }) {
     const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
     const { get_help_command } = require("./rpg_interactions.js");
-    const { get_failed_embed, get_cooldown_embed, wrong_job_embed, workCmdJobs, foods } = require("../../utils/rpg.js");
+    const { get_failed_embed, get_cooldown_embed, wrong_job_embed, foods } = require("../../utils/rpg.js");
 
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
 
@@ -1969,7 +1969,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     const userid = message.author.id;
     const rpg_data = load_rpg_data(userid);
 
-    const wrongJobEmbed = await wrong_job_embed(rpg_data, command);
+    const wrongJobEmbed = await wrong_job_embed(rpg_data, command, client);
     if (wrongJobEmbed) {
         if (mode === 1) return { embeds: [wrongJobEmbed] };
 
