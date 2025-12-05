@@ -31,10 +31,13 @@ const CHANNEL_MAPPING = {
     verbose: config.log_channel_id
 };
 
+function splitStringByLength(text, maxLength = 3900) {
+    const result = [];
+    for (let i = 0; i < text.length; i += maxLength) {
+        result.push(text.slice(i, i + maxLength));
+    };
 
-function truncateContent(content, maxLength = 1500) {
-    if (content.length <= maxLength) return content;
-    return '...' + content.slice(-(maxLength - 3));
+    return result;
 };
 
 // 自定義 Discord Transport
@@ -104,7 +107,7 @@ const consoleFormat = winston.format.combine(
 
 async function send_msg(channel, level, color, logger_name, message, timestamp = null, embed = null) {
     const EmbedBuilder = require('./customs/embedBuilder.js');
-    
+
     if (message) message = message.replace("```", "");
 
     if (!embed) {
@@ -250,7 +253,7 @@ function get_logger(options = {}) {
 // 處理發送隊列
 async function process_send_queue(client) {
     const EmbedBuilder = require('./customs/embedBuilder.js');
-    
+
     while (global.sendQueue.length > 0) {
         const info = global.sendQueue[0];
         if (DEBUG) console.debug(`[DEBUG] [process_send_queue] handling send Queue ${JSON.stringify(info, null, 4)}`)
@@ -258,7 +261,7 @@ async function process_send_queue(client) {
         try {
             const level = info.level ? info.level.toUpperCase() : 'INFO';
             const logger_name = info.module || 'unknown';
-            let message = info.stack || info.message;
+            const message = info.stack || info.message;
             const color = LEVEL_COLORS[info.level] || 0x000000;
             const channel_id = info.channel_id || CHANNEL_MAPPING[info.level];
             const timestamp = Date.parse(info.timestamp);
@@ -293,14 +296,12 @@ async function process_send_queue(client) {
                     embeds: [embed],
                     flags: MessageFlags.SuppressNotifications
                 });
-                client.last_send_log = embed.data.description || embed.data.title || 'embed';
             } else {
-                if (message && message.length >= 1000) {
-                    message = truncateContent(message, 1484);
-                };
+                const send_messages = splitStringByLength(message);
 
-                await send_msg(channel, level, color, logger_name, message, timestamp);
-                client.last_send_log = message;
+                for (const msg of send_messages) {
+                    await send_msg(channel, level, color, logger_name, msg, timestamp);
+                };
             };
 
             global.sendQueue.shift();

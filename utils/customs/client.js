@@ -43,7 +43,6 @@ class DogClient extends Client {
 
         super(options);
 
-        this.last_send_log = "";
         this.dvoice = loadDvoiceData();
         this.commands = loadslashcmd(true);
         this.author = authorName || "哈狗";
