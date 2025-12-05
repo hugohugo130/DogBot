@@ -1389,11 +1389,13 @@ const jobs = {
         "name": "藥劑師",
     },
     "farmer": { // 農夫
+        "command": "/farm",
         "emoji": "farmer",
         "desc": "和漁夫是差不多辛勤的職業，只是會遇到颱風之類的災難",
         "name": "農夫",
     },
     "cook": { // 廚師
+        "command": "/bake",
         "emoji": "cook",
         "desc": "需購買食材，烘烤食物並轉賣來獲得收益 (新手不建議)",
         "name": "廚師",
@@ -1411,6 +1413,7 @@ const jobs = {
         "name": "牧農",
     },
     "blacksmith": { // 鐵匠
+        "command": "/smelt",
         "emoji": "anvil",
         "desc": "熔煉各類原礦轉換成有價值的礦物 (新手不建議)",
         "name": "鐵匠",

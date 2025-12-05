@@ -205,7 +205,7 @@ module.exports = {
         await interaction.deferReply();
 
         const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
-        const { farm_slots, get_name_of_id, userHaveEnoughItems, notEnoughItemEmbed } = require("../../../utils/rpg.js");
+        const { farm_slots, get_name_of_id, userHaveEnoughItems, notEnoughItemEmbed, wrong_job_embed } = require("../../../utils/rpg.js");
         const { is_cooldown_finished } = require("../../../cogs/rpg/msg_handler.js");
         const { randint } = require("../../../utils/random.js");
         const { get_emoji } = require("../../../utils/rpg.js");
@@ -217,14 +217,17 @@ module.exports = {
         const userId = user.id;
         const subcommand = interaction.options.getSubcommand();
 
+        const rpg_data = load_rpg_data(userId);
         const farm_data = load_farm_data(userId);
+
+        const wrongJobEmbed = await wrong_job_embed(rpg_data, "/farm");
+        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
 
         const emoji_farmer = await get_emoji(client, "farmer");
         const emoji_cross = await get_emoji(client, "crosS");
         const emoji_check = await get_emoji(client, "check");
 
         if (subcommand === "plant") {
-            const rpg_data = load_rpg_data(userId);
             const amount = interaction.options.getInteger("amount") ?? 1;
             const hoe = interaction.options.getString("hoe");
 
@@ -310,7 +313,6 @@ module.exports = {
 
             const items = get_harvest_items(farmlands);
             const items_str = Object.entries(items).map(([item, amount]) => `${amount} 個${get_name_of_id(item)}`).join("、");
-            const rpg_data = load_rpg_data(userId);
             for (const [item, amount] of Object.entries(items)) {
                 if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
                 rpg_data.inventory[item] += amount;
@@ -328,7 +330,6 @@ module.exports = {
 
             return await interaction.editReply({ embeds: [embed] });
         } else if (subcommand === "water") {
-            const rpg_data = load_rpg_data(userId);
             const cooldown_key = `farm_water`;
 
             const { is_finished, endsAts } = is_cooldown_finished(cooldown_key, rpg_data);

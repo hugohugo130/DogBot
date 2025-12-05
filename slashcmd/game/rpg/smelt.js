@@ -99,7 +99,14 @@ module.exports = {
         const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
         const { load_rpg_data, load_smelt_data, save_smelt_data, save_rpg_data } = require("../../../utils/file.js");
         const { notEnoughItemEmbed, name, smelter_slots, smeltable_items } = require("../../../utils/rpg.js");
-        const { get_emoji, get_loophole_embed, get_id_of_name } = require("../../../utils/rpg.js");
+        const { get_emoji, get_loophole_embed, get_id_of_name, wrong_job_embed } = require("../../../utils/rpg.js");
+
+        let rpg_data = load_rpg_data(userId);
+        const smelt_data_all = load_smelt_data();
+        const smelt_data = smelt_data_all[userId];
+
+        const wrongJobEmbed = await wrong_job_embed(rpg_data, "/smelt");
+        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
 
         if (subcommand === "smelt") {
             await interaction.deferReply();
@@ -107,8 +114,6 @@ module.exports = {
             const emoji_cross = await get_emoji(interaction.client, "crosS");
             const emoji_furnace = await get_emoji(interaction.client, "furnace");
 
-            let rpg_data = load_rpg_data(userId);
-            const smelt_data = load_smelt_data()[userId];
             if (smelt_data && smelt_data.length >= smelter_slots) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
@@ -204,7 +209,6 @@ module.exports = {
         } else if (subcommand === "info") {
             await interaction.deferReply();
 
-            const smelt_data = load_smelt_data()[userId];
             const emoji_furnace = await get_emoji(interaction.client, "furnace");
 
             const used_slots = smelt_data ? smelt_data.length : 0;
@@ -242,10 +246,6 @@ module.exports = {
             await interaction.editReply({ embeds: [embed] });
         } else if (subcommand === "get") {
             await interaction.deferReply();
-
-            const smelt_data_all = load_smelt_data();
-            const smelt_data = smelt_data_all[userId];
-            const rpg_data = load_rpg_data(userId);
 
             const emoji_cross = await get_emoji(interaction.client, "crosS");
             const emoji_furnace = await get_emoji(interaction.client, "furnace");

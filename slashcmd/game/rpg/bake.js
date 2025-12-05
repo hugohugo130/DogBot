@@ -45,7 +45,7 @@ function divide(amount, by) {
  */
 async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const { load_rpg_data, load_bake_data } = require("../../../utils/file.js");
-    const { notEnoughItemEmbed, get_name_of_id, name, oven_slots } = require("../../../utils/rpg.js");
+    const { notEnoughItemEmbed, get_name_of_id, wrong_job_embed, name, oven_slots } = require("../../../utils/rpg.js");
     const { get_emoji } = require("../../../utils/rpg.js");
     const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 
@@ -56,6 +56,9 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
 
     let rpg_data = load_rpg_data(userId);
     const bake_data = load_bake_data()[userId];
+
+    const wrongJobEmbed = await wrong_job_embed(rpg_data, "/bake");
+    if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
 
     const oven_remain_slots = oven_slots - (bake_data?.length || 0);
 
