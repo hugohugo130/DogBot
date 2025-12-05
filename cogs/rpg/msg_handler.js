@@ -1939,7 +1939,7 @@ function find_redirect_targets_from_id(id) {
 async function rpg_handler({ client, message, d, mode = 0 }) {
     const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
     const { get_help_command } = require("./rpg_interactions.js");
-    const { get_failed_embed, get_cooldown_embed, workCmdJobs } = require("../../utils/rpg.js");
+    const { get_failed_embed, get_cooldown_embed, workCmdJobs, foods } = require("../../utils/rpg.js");
 
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
 
@@ -1966,7 +1966,9 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     command = redirect_data[command] || command;
     if (command.length === 0 || content === prefix) return;
 
+    const userid = message.author.id;
     const rpg_data = load_rpg_data(userid);
+
     const workJobShouldBe = workCmdJobs[command];
     if (workJobShouldBe?.length > 1) {
         const rpg_data = load_rpg_data(message.author.id);
@@ -2030,13 +2032,10 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     };
 
     const execute = cmd_data[2];
-    const userid = message.author.id;
     const action = cmd_data[0];
 
     if (rpg_work.includes(command)) {
         if (rpg_data.hunger === 0) {
-            const { foods } = require("../../utils/rpg.js");
-
             const food_items = Object.keys(foods);
             let found_food = rpg_data.inventory.find(item => food_items.includes(item.name))[0];
 
