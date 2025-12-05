@@ -2027,7 +2027,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     if (rpg_work.includes(command)) {
         if (rpg_data.hunger === 0) {
             const food_items = Object.keys(foods);
-            let found_food = rpg_data.inventory.find(item => food_items.includes(item.name))[0];
+            let found_food = Object.keys(rpg_data.inventory).find(item => food_items.includes(item.name))[0];
 
             if (found_food) {
                 // 嘗試自動吃掉一個食物
