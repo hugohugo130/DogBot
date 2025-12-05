@@ -1072,6 +1072,44 @@ function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
     return rpg_data.money;
 };
 
+/**
+ * 
+ * @param {string} errorStack 
+ * @returns {Array<Object>}
+ */
+function error_analyze(errorStack) {
+    const analyzes = [];
+    const template = {
+        title: "",
+        description: "",
+    };
+
+    if (errorStack.includes("is not a function")) {
+        const sample = structuredClone(template);
+
+        sample.title = "無效的函數";
+        sample.description = "不好! 哈狗的代碼出錯了! (使用了錯誤的函數)";
+
+        analyzes.push(sample);
+    };
+
+    const match_read_prop = errorStack.match(/^TypeError: Cannot read properties of (\w+) \(reading '(\w+)'\)$/)
+    if (match_read_prop) {
+        const object = match_read_prop[1];
+        const property = match_read_prop[2];
+
+        const sample = structuredClone(template);
+
+        sample.title = "無效的屬性";
+        sample.description = `${object} 沒有 ${property} 這個屬性餒 :(`;
+
+        analyzes.push(sample);
+    };
+
+    return analyzes;
+};
+
+
 async function get_loophole_embed(client = global._client, text) {
     const emoji_cross = await get_emoji(client, "crosS");
 
@@ -1093,6 +1131,16 @@ async function get_loophole_embed(client = global._client, text) {
         .setTitle(`${emoji_cross} | 你戳到了一個漏洞！`)
         .setDescription(text)
         .setEmbedFooter();
+    
+    const error_analyzes = error_analyze(text);
+    if (error_analyzes.length) {
+        for (const analyze of error_analyzes) {
+            embed.addFields({
+                name: analyze.title,
+                value: analyze.description,
+            });
+        };
+    };
 
     return embed;
 };
