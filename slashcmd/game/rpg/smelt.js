@@ -96,6 +96,8 @@ module.exports = {
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
 
+        await interaction.deferReply();
+
         const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
         const { load_rpg_data, load_smelt_data, save_smelt_data, save_rpg_data } = require("../../../utils/file.js");
         const { notEnoughItemEmbed, name, smelter_slots, smeltable_items } = require("../../../utils/rpg.js");
@@ -109,8 +111,6 @@ module.exports = {
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
 
         if (subcommand === "smelt") {
-            await interaction.deferReply();
-
             const emoji_cross = await get_emoji(interaction.client, "crosS");
             const emoji_furnace = await get_emoji(interaction.client, "furnace");
 
@@ -207,8 +207,6 @@ module.exports = {
 
             await interaction.editReply({ embeds: [embed], components: [row] });
         } else if (subcommand === "info") {
-            await interaction.deferReply();
-
             const emoji_furnace = await get_emoji(interaction.client, "furnace");
 
             const used_slots = smelt_data ? smelt_data.length : 0;
@@ -245,8 +243,6 @@ module.exports = {
 
             await interaction.editReply({ embeds: [embed] });
         } else if (subcommand === "get") {
-            await interaction.deferReply();
-
             const emoji_cross = await get_emoji(interaction.client, "crosS");
             const emoji_furnace = await get_emoji(interaction.client, "furnace");
 
