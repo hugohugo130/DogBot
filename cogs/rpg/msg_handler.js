@@ -1939,7 +1939,7 @@ function find_redirect_targets_from_id(id) {
 async function rpg_handler({ client, message, d, mode = 0 }) {
     const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
     const { get_help_command } = require("./rpg_interactions.js");
-    const { get_failed_embed, get_cooldown_embed, wrong_job_embed, foods } = require("../../utils/rpg.js");
+    const { get_failed_embed, get_cooldown_embed, wrong_job_embed, foods, food_data } = require("../../utils/rpg.js");
 
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
 
@@ -2027,7 +2027,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     if (rpg_work.includes(command)) {
         if (rpg_data.hunger === 0) {
             const food_items = Object.keys(foods);
-            let found_food = Object.keys(rpg_data.inventory).find(item => food_items.includes(item.name))[0];
+            let found_food = Object.keys(rpg_data.inventory).filter(item => food_items.includes(item) && food_data[item] <= max_hunger)[0];
 
             if (found_food) {
                 // 嘗試自動吃掉一個食物

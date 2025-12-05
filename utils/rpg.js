@@ -287,8 +287,6 @@ const animal_products = {
     pig: "raw_pork",
 };
 
-const foods = { ...foods_crops, ...foods_meat };
-
 const shop_lowest_price = {
     // ==============材料==============
     egg: 50,
@@ -515,6 +513,14 @@ const food_data = {
     hugo: 100,
     egg: 1,
 };
+
+let foods = { ...foods_crops, ...foods_meat };
+
+// 透過food_data排序foods, 從高到低
+foods = Object.keys(foods).sort((a, b) => food_data[b] - food_data[a]).reduce((obj, key) => {
+    obj[key] = foods[key];
+    return obj;
+}, {});
 
 const brew = {
     cough_potion: "cough_potion",
