@@ -1869,7 +1869,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
     }],
     job: ["職業", "選擇職業", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { get_name_of_id, choose_job_row } = require("../../utils/rpg.js");
-        const { jobs } = require("../../utils/config.js");
+        const { jobs } = require("../../utils/rpg.js");
 
         const emoji_job = await get_emoji(client, "job");
         const emoji_nekoWave = await get_emoji(client, "nekoWave");

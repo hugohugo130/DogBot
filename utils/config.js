@@ -311,41 +311,6 @@ const probabilities = {
     },
 };
 
-const jobs = {
-    "fisher": { // 漁夫
-        "emoji": "fisher",
-        "desc": "是個需要勞力的職業，你必須要努力勤奮的抓魚，才會獲得收益",
-    },
-    "pharmacist": { // 藥劑師
-        "emoji": "potion",
-        "desc": "這個世界神秘力量的來源，製作藥水以及科學實驗來幫助成長",
-    },
-    "farmer": { // 農夫
-        "emoji": "farmer",
-        "desc": "和漁夫是差不多辛勤的職業，只是會遇到颱風之類的災難",
-    },
-    "cook": { // 廚師
-        "emoji": "cook",
-        "desc": "需購買食材，烘烤食物並轉賣來獲得收益 (新手不建議)",
-    },
-    "miner": { // 礦工
-        "emoji": "ore",
-        "desc": "這個世界各類金屬的來源，挖取原礦並轉賣給鐵匠",
-    },
-    "herder": { // 牧農
-        "emoji": "cow",
-        "desc": "肉類的來源，養殖各類動物",
-    },
-    "blacksmith": { // 鐵匠
-        "emoji": "anvil",
-        "desc": "熔煉各類原礦轉換成有價值的礦物 (新手不建議)",
-    },
-    "lumberjack": { // 伐木工
-        "emoji": "wood",
-        "desc": "在森林中砍伐木頭，是木頭的來源",
-    },
-};
-
 module.exports = {
     INDENT,
     database_folder,
@@ -401,5 +366,4 @@ module.exports = {
 
     failed,
     probabilities,
-    jobs,
 };
