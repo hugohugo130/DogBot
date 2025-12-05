@@ -434,7 +434,7 @@ module.exports = {
     execute: async function (client, interaction) {
         try {
             const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data, load_bake_data, save_bake_data, load_smelt_data, save_smelt_data, loadData, find_default_value } = require("../../utils/file.js");
-            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, bake, smeltable_items, name, smelter_slots, oven_slots } = require("../../utils/rpg.js");
+            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, bake, smeltable_items, name, jobs,smelter_slots, oven_slots } = require("../../utils/rpg.js");
             const { ls_function, rpg_handler, MockMessage } = require("./msg_handler.js");
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
 
@@ -1111,7 +1111,7 @@ module.exports = {
                 const emoji_job = await get_emoji(client, "job");
 
                 const job = interaction.values[0];
-                const job_name = get_name_of_id(job);
+                const job_name = jobs?.[job]?.name;
 
                 const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
@@ -1136,7 +1136,7 @@ module.exports = {
             } else if (interaction.customId.startsWith("job_confirm")) {
 
                 const [_, __, job] = interaction.customId.split("|");
-                const job_name = get_name_of_id(job);
+                const job_name = jobs?.[job]?.name;
 
                 const emoji_job = await get_emoji(client, "job");
 

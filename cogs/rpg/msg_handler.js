@@ -1878,7 +1878,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const job = rpg_data.job;
 
         if (job) {
-            const job_name = get_name_of_id(job);
+            const job_name = jobs?.[job]?.name;
 
             const embed = new EmbedBuilder()
                 .setColor(embed_job_color)
