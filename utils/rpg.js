@@ -903,6 +903,32 @@ function BetterEval(obj) {
 
 /**
  * 
+ * @param {Object} rpg_data 
+ * @param {string} command
+ * @returns {Promise<EmbedBuilder | null>}
+ */
+async function wrong_job_embed(rpg_data, command) {
+    const workJobShouldBe = workCmdJobs[command];
+
+    if (workJobShouldBe?.length > 1) {
+        if (rpg_data.job !== workJobShouldBe?.[0]) {
+            const shouldBeJobName = workJobShouldBe?.[1]?.name;
+
+            const emoji_cross = await get_emoji(client, "crosS");
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 你的職業不是${shouldBeJobName}`)
+                .setEmbedFooter();
+
+            return embed;
+        };
+    };
+
+    return null;
+};
+
+/**
+ * 
  * @param {string} name 
  * @param {DogClient} client 
  * @returns {Promise<Emoji>}
@@ -1131,7 +1157,7 @@ async function get_loophole_embed(client = global._client, text) {
         .setTitle(`${emoji_cross} | 你戳到了一個漏洞！`)
         .setDescription(text)
         .setEmbedFooter();
-    
+
     const error_analyzes = error_analyze(text);
     if (error_analyzes.length) {
         for (const analyze of error_analyzes) {
@@ -1435,6 +1461,7 @@ module.exports = {
     job_delay_embed,
     choose_job_row,
     get_emoji_object,
+    wrong_job_embed,
     jobs,
     workCmdJobs,
     oven_slots,

@@ -1939,7 +1939,7 @@ function find_redirect_targets_from_id(id) {
 async function rpg_handler({ client, message, d, mode = 0 }) {
     const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
     const { get_help_command } = require("./rpg_interactions.js");
-    const { get_failed_embed, get_cooldown_embed, workCmdJobs, foods } = require("../../utils/rpg.js");
+    const { get_failed_embed, get_cooldown_embed, wrong_job_embed, workCmdJobs, foods } = require("../../utils/rpg.js");
 
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
 
@@ -1969,21 +1969,11 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     const userid = message.author.id;
     const rpg_data = load_rpg_data(userid);
 
-    const workJobShouldBe = workCmdJobs[command];
-    if (workJobShouldBe?.length > 1) {
-        const rpg_data = load_rpg_data(message.author.id);
-        if (rpg_data.job !== workJobShouldBe?.[0]) {
-            const shouldBeJobName = workJobShouldBe?.[1]?.name;
+    const wrongJobEmbed = await wrong_job_embed(rpg_data, command);
+    if (wrongJobEmbed) {
+        if (mode === 1) return { embeds: [wrongJobEmbed] };
 
-            const emoji_cross = await get_emoji(client, "crosS");
-            const embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 你的職業不是${shouldBeJobName}`)
-                .setEmbedFooter();
-
-            if (mode === 1) return { embeds: [embed] };
-            return await message.reply({ embeds: [embed] });
-        };
+        return await message.reply({ embeds: [wrongJobEmbed] });
     };
 
     const cmd_data = rpg_commands[command];
