@@ -130,9 +130,9 @@ module.exports = {
             // 找到該 smeltable_item 的配方
             const smelt_recipe = smeltable_items.find(item => item.input[0].item === item_id);
             if (!smelt_recipe) {
-                const embed = await get_loophole_embed(interaction.client, "找不到該熔鍊配方");
+                const embeds = await get_loophole_embed(interaction.client, "找不到該熔鍊配方");
 
-                return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds, flags: MessageFlags.Ephemeral });
             };
 
             if (allMats) {

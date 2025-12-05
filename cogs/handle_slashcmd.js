@@ -71,8 +71,8 @@ module.exports = {
             const errorStack = util.inspect(error, { depth: null });
             logger.error(`執行斜線指令 ${fullCommand} 時出錯：${errorStack}`);
 
-            const embed = await get_loophole_embed(interaction.client, errorStack);
-            await interaction.followUp({ embeds: [embed] });
+            const embeds = await get_loophole_embed(interaction.client, errorStack);
+            await interaction.followUp({ embeds });
         };
     },
 };

@@ -246,8 +246,8 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
         if (!name[item]) {
-            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`);
-            return await message.reply({ embeds: [embed] });
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`);
+            return await message.reply({ embeds });
         };
 
         if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
@@ -288,8 +288,8 @@ const rpg_commands = {
         const log_name = name[item];
 
         if (!name[item]) {
-            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
-            return await message.reply({ embeds: [embed] });
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
+            return await message.reply({ embeds });
         };
 
         let description;
@@ -321,8 +321,8 @@ const rpg_commands = {
 
         const { item: random_animal, amount } = random_item;
         if (!animal_products[random_animal]) {
-            const embed = await get_loophole_embed(`找不到${random_animal}的動物產品: ${animal_products[random_animal]}`);
-            return await message.reply({ embeds: [embed] });
+            const embeds = await get_loophole_embed(`找不到${random_animal}的動物產品: ${animal_products[random_animal]}`);
+            return await message.reply({ embeds });
         };
 
         const product = animal_products[random_animal];
@@ -367,8 +367,8 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
         if (!name[item]) {
-            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`);
-            return await message.reply({ embeds: [embed] });
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`);
+            return await message.reply({ embeds });
         };
 
         if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
@@ -396,8 +396,8 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
         if (!name[item]) {
-            const embed = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
-            return await message.reply({ embeds: [embed] });
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
+            return await message.reply({ embeds });
         };
 
         if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
@@ -1257,12 +1257,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             const add = food_data[food_id]
             if (!add) {
-                const embed = await get_loophole_embed(client, `food_data[${food_id}] is ${add}`);
+                const embeds = await get_loophole_embed(client, `food_data[${food_id}] is ${add}`);
 
                 logger.warn(`食物${food_name} (${food_id})在food_data中沒有這個食物的數據`);
 
-                if (mode === 1) return { embeds: [embed] };
-                return await message.reply({ embeds: [embed] });
+                if (mode === 1) return { embeds };
+                return await message.reply({ embeds });
             };
 
             if ((rpg_data.hunger + add) > max_hunger) {
@@ -1411,10 +1411,10 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 .addComponents(howToEatButton, buyFoodButton);
 
             if (errors.length > 0) {
-                const embed = await get_loophole_embed(client, errors);
+                const embeds = await get_loophole_embed(client, errors);
 
-                if (mode === 1) return { embeds: [embed] };
-                await message.reply({ embeds: [embed] });
+                if (mode === 1) return { embeds };
+                await message.reply({ embeds });
             };
 
             if (mode === 1) return { embeds: [embed], components: [row] };
@@ -1496,10 +1496,10 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         const price = sell_data[item_id];
         if (!price) {
-            const embed = await get_loophole_embed(client, `詳細資訊: sell_data[${item_id}]為${price}`);
+            const embeds = await get_loophole_embed(client, `詳細資訊: sell_data[${item_id}]為${price}`);
 
-            if (mode === 1) return { embeds: [embed] };
-            return await message.reply({ embeds: [embed] });
+            if (mode === 1) return { embeds };
+            return await message.reply({ embeds });
         };
         const total_price = Math.round(price * amount);
 
@@ -2255,7 +2255,8 @@ module.exports = {
                 logger.error(`處理rpg遊戲訊息時發生錯誤: ${errorStack}`);
             };
 
-            await message.reply({ embeds: [await get_loophole_embed(client, errorStack)] });
+            const loophole_embeds = await get_loophole_embed(client, errorStack);
+            await message.reply({ embeds: loophole_embeds });
         } finally {
             delete client.lock.rpg_handler[userId];
         };

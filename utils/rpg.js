@@ -1176,17 +1176,22 @@ async function get_loophole_embed(client = global._client, text) {
         .setDescription(text)
         .setEmbedFooter();
 
+    const error_analyze_embed = new EmbedBuilder()
+        .setColor(embed_error_color)
+        .setTitle("錯誤分析")
+        .setEmbedFooter();
+
     const error_analyzes = error_analyze(text);
     if (error_analyzes.length) {
         for (const analyze of error_analyzes) {
-            embed.addFields({
+            error_analyze_embed.addFields({
                 name: analyze.title,
                 value: analyze.description,
             });
         };
     };
 
-    return embed;
+    return [embed, error_analyze_embed];
 };
 
 /**
