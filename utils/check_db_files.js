@@ -92,6 +92,7 @@ async function make_db_compatible(users, guilds) {
     };
 
     for (const guild of guilds) {
+        continue;
         if (guild instanceof Guild) {
             /*
             2025 12 05:
@@ -99,6 +100,7 @@ async function make_db_compatible(users, guilds) {
             -> prefix: "&" -> prefix: ["&"]
             */
 
+            /*
             const guild_data = loadData(guild.id);
 
             const prefix = guild_data.prefix;
@@ -107,6 +109,7 @@ async function make_db_compatible(users, guilds) {
             };
 
             saveData(guild.id, guild_data);
+            */
         };
     };
 };
