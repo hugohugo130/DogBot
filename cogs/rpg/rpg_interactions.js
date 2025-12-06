@@ -1083,7 +1083,7 @@ module.exports = {
 
                 const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
-                    if (!interaction.replied || !interaction.deferred) await interaction.deferReply();
+                    if (!interaction.deferred) await interaction.deferReply();
 
                     return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                 } else {
@@ -1093,7 +1093,7 @@ module.exports = {
                         .setDescription("轉職後一個禮拜不能更動職業!")
                         .setEmbedFooter();
 
-                    const row = choose_job_row(user.id);
+                    const row = await choose_job_row(user.id);
 
                     return await interaction.update({ embeds: [embed], components: [row] });
                 };
