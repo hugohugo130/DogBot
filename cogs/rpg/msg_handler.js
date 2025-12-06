@@ -1555,15 +1555,15 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
     // }, false],
     top: ["金錢排行榜", "who!誰是世界首富!是不是你!", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_rpg_data } = require("../../utils/file.js");
-        const guild = message.guild;
 
-        const members = (await get_members_of_guild(guild.id, client)).filter(member => !member.user.bot);
+        const users = client.users.cache.values();
 
         const userDataList = [];
-        for (const member of members.values()) {
-            const userid = member.user.id;
+        for (const user of users) {
+            const userid = user.id;
+
             userDataList.push({
-                user: member.user,
+                user,
                 money: load_rpg_data(userid).money,
             });
         };
@@ -1599,21 +1599,19 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
     last: ['"倒數"金錢排行榜', "讓我們看看誰最窮!嘿嘿", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_rpg_data } = require("../../utils/file.js");
 
-        const guild = message.guild;
-
-        const members = (await get_members_of_guild(guild.id, client)).filter(member => !member.user.bot);
+        const users = client.users.cache.values();
 
         const userDataList = [];
-        for (const member of members.values()) {
-            const userid = member.user.id;
+        for (const user of users) {
+            const userid = user.id;
+
             userDataList.push({
-                user: member.user,
+                user,
                 money: load_rpg_data(userid).money,
             });
         };
 
-        // 按金錢排序（從高到低）
-        userDataList.sort((a, b) => b.money - a.money);
+        userDataList.sort((a, b) => a.money - b.money);
 
         const emoji_decrease = await get_emoji(client, "decrease");
 
@@ -1623,8 +1621,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             .setEmbedFooter();
 
         let description = "";
-        const topUsers = userDataList.slice(-10);
-        topUsers.reverse();
+        const topUsers = userDataList.slice(0, 10);
 
         for (let i = 0; i < topUsers.length; i++) {
             const userData = topUsers[i];
