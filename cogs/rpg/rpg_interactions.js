@@ -1,6 +1,6 @@
 const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, CommandInteraction, ButtonStyle, ButtonBuilder } = require("discord.js");
 const EmbedBuilder = require('../../utils/customs/embedBuilder.js');
-const { embed_default_color, embed_error_color, embed_job_color } = require("../../utils/config.js");
+const { embed_default_color, embed_error_color, embed_job_color, reserved_prefixes } = require("../../utils/config.js");
 const { get_logger } = require("../../utils/logger.js");
 const util = require('node:util');
 const DogClient = require("../../utils/customs/client.js");
@@ -363,14 +363,12 @@ function get_help_embed(category, user) {
  */
 function get_help_command(category, command_name, guildID, client = global._client) {
     const { find_redirect_targets_from_id } = require("./msg_handler.js");
-    const { loadData } = require("../../utils/file.js");
+    const { firstPrefix } = require("../../utils/rpg.js");
 
     const command_data = help.group[category][command_name];
     if (!command_data) return new EmbedBuilder().setTitle("指令不存在");
 
-    const guildData = loadData(guildID);
-
-    const prefix = guildData.prefix ?? "&";
+    const prefix = firstPrefix(guildID);
 
     /*
     Field name: 使用方法
@@ -434,7 +432,7 @@ module.exports = {
     execute: async function (client, interaction) {
         try {
             const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data, load_bake_data, save_bake_data, load_smelt_data, save_smelt_data, loadData, find_default_value } = require("../../utils/file.js");
-            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, bake, smeltable_items, name, jobs,smelter_slots, oven_slots } = require("../../utils/rpg.js");
+            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, bake, smeltable_items, name, jobs, smelter_slots, oven_slots } = require("../../utils/rpg.js");
             const { ls_function, rpg_handler, MockMessage } = require("./msg_handler.js");
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
 
@@ -443,6 +441,8 @@ module.exports = {
 
             const message = interaction.message;
             const user = interaction.user;
+
+            const prefix = firstPrefix(interaction.guild.id);
 
             if (message.author.id !== client.user.id) return;
 
@@ -632,10 +632,6 @@ module.exports = {
             } else if (interaction.customId.startsWith('choose_command')) {
                 await interaction.deferUpdate();
 
-                const guildData = loadData(interaction.guild.id);
-
-                const prefix = guildData.prefix ?? "&";
-
                 const [_, __, command] = interaction.customId.split('|');
 
                 const message = new MockMessage(`${prefix}${command}`, interaction.channel, interaction.user, interaction.guild);
@@ -646,10 +642,6 @@ module.exports = {
                 await interaction.editReply(response);
             } else if (interaction.customId.startsWith('ls')) {
                 await interaction.deferReply({ flags: MessageFlags.Ephemeral })
-
-                const guildData = loadData(interaction.guild.id);
-
-                const prefix = guildData.prefix ?? "&";
 
                 const [_, userId] = interaction.customId.split("|");
                 const message = new MockMessage(`${prefix}ls`, interaction.message.channel, interaction.user, interaction.guild);

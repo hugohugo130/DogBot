@@ -73,7 +73,7 @@ const DEFAULT_VALUES = {
         "database.json": {
             "rpg": false,
             "dynamicVoice": false,
-            "prefix": "&",
+            "prefix": ["&"],
         },
     },
 };
@@ -130,6 +130,8 @@ const item_amount_limit = 999999999;
 const cannot_sell = ["raw_hugo", "hugo"];
 
 const admins = ["898836485397180426"];
+
+const reserved_prefixes = [`<@${BotID}>`];
 
 /*
 https://discord.js.org/docs/packages/discord.js/14.24.0/ColorResolvable:TypeAlias
@@ -366,6 +368,7 @@ module.exports = {
     item_amount_limit,
     cannot_sell,
     admins,
+    reserved_prefixes,
 
     failed,
     probabilities,

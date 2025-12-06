@@ -2,7 +2,7 @@ const { Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBu
 const EmbedBuilder = require('../../utils/customs/embedBuilder.js');
 const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
-const { embed_default_color, embed_error_color, embed_job_color, embed_marry_color } = require("../../utils/config.js");
+const { embed_default_color, embed_error_color, embed_job_color, embed_marry_color, reserved_prefixes } = require("../../utils/config.js");
 const { randint, choice } = require("../../utils/random.js");
 const { BetterEval, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished } = require("../../utils/rpg.js");
 const util = require('node:util');
@@ -85,26 +85,25 @@ async function redirect({ client, message, command, mode = 0 }) {
     m = 1: 只回傳訊息參數
     */
 
-    const { loadData } = require("../../utils/file.js");
     const { mentions_users } = require("../../utils/message.js");
+    const { firstPrefix, Include_prefixes } = require("../../utils/rpg.js");
     if (![0, 1].includes(mode)) throw new TypeError("Invalid mode");
 
     const guild = message.guild;
-    const guildData = loadData(guild.id);
 
-    const prefix = guildData.prefix ?? "&";
-
-    if (command.includes(prefix)) {
+    if (Include_prefixes(guild.id, command)) {
         try {
-            throw new Error(`傳送包含${prefix}的指令名已棄用，現在只需要傳送指令名稱`);
+            throw new Error(`傳送包含${pf}的指令名已棄用，現在只需要傳送指令名稱`);
         } catch (e) {
             process.emitWarning(e.stack, {
                 type: "DeprecationWarning",
                 code: "HR_COMMAND_NAME_WITH_HR",
-                hint: `請使用不含${prefix}的指令名稱`
+                hint: `請使用不含${pf}的指令名稱`
             });
         };
     };
+
+    const prefix = firstPrefix(guild.id);
 
     if (!command.includes(prefix)) command = prefix + command;
     const msg = new MockMessage(command, message.channel, message.author, message.guild, (await mentions_users(message)).first());
@@ -1939,7 +1938,7 @@ function find_redirect_targets_from_id(id) {
 async function rpg_handler({ client, message, d, mode = 0 }) {
     const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
     const { get_help_command } = require("./rpg_interactions.js");
-    const { get_failed_embed, get_cooldown_embed, wrong_job_embed, foods, food_data } = require("../../utils/rpg.js");
+    const { get_failed_embed, get_cooldown_embed, wrong_job_embed, startsWith_prefixes, foods, food_data } = require("../../utils/rpg.js");
 
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
 
@@ -1949,11 +1948,11 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     const data = loadData(guildID);
     if (!data["rpg"]) return;
 
-    const prefix = data.prefix ?? "&";
-
     let content = message.content.toLowerCase().trim();
-    if (!content.startsWith(prefix)) return;
-    content = content.replace(prefix, "").trim();
+    const allowPrefix = startsWith_prefixes(guildID, content);
+
+    if (!allowPrefix) return;
+    content = content.replace(allowPrefix, "").trim();
     let [command, ...args] = content.split(" ");
 
     // 移除所有元素的空白字元
@@ -1964,7 +1963,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
     command = command.toLowerCase().trim();
     command = redirect_data[command] || command;
-    if (command.length === 0 || content === prefix) return;
+    if (command.length === 0 || content === allowPrefix) return;
 
     const userid = message.author.id;
     const rpg_data = load_rpg_data(userid);
@@ -2014,7 +2013,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             rows.push(row);
         };
 
-        embed.setDescription(`你是不是指：\n${similarCommands.map(cmd => `- ${prefix}${cmd}`).join('\n')}`);
+        embed.setDescription(`你是不是指：\n${similarCommands.map(cmd => `- ${allowPrefix}${cmd}`).join('\n')}`);
         if (rows.length > 5) rows.length = 5;
 
         if (mode === 1) return { embeds: [embed], components: rows };

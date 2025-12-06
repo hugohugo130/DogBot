@@ -416,14 +416,66 @@ function setRPG(guildID, enable) {
  * 
  * @param {string} guildID 
  * @param {string} prefix 
+ * @returns {string | null}
  */
-function setPrefix(guildID, prefix) {
+function addPrefix(guildID, prefix) {
     if (!typeof prefix === "string") throw new Error(`Invalid prefix: ${enable}`)
 
     const data = loadData(guildID);
-    data["prefix"] = prefix;
+
+    // 舊兼容
+    if (!Array.isArray(data["prefix"])) {
+        data["prefix"] = [data["prefix"]];
+    };
+
+    if (data["prefix"].includes(prefix)) return null;
+
+    data["prefix"].push(prefix);
 
     saveData(guildID, data);
+
+    return prefix;
+};
+
+/**
+ * 
+ * @param {string} guildID 
+ * @param {string} prefix 
+ * @returns {string | null}
+ */
+function rmPrefix(guildID, prefix) {
+    if (!typeof prefix === "string") throw new Error(`Invalid prefix: ${enable}`)
+
+    // 舊兼容
+    if (!Array.isArray(data["prefix"])) {
+        data["prefix"] = [data["prefix"]];
+    };
+
+    if (!data["prefix"].includes(prefix)) return null;
+
+    const data = loadData(guildID);
+    data["prefix"] = data["prefix"].filter(p => p !== prefix);
+
+    saveData(guildID, data);
+
+    return prefix;
+};
+
+/**
+ * 
+ * @param {string} guildID 
+ * @returns {string[]}
+ */
+function getPrefixes(guildID) {
+    const data = loadData(guildID);
+
+    // 舊兼容
+    if (!Array.isArray(data["prefix"])) {
+        data["prefix"] = [data["prefix"]];
+        saveData(guildID, data);
+    };
+
+    return data["prefix"];
 };
 
 function load_rpg_data(userid) {
@@ -784,7 +836,9 @@ module.exports = {
     saveData,
     // RPG
     setRPG,
-    setPrefix,
+    addPrefix,
+    rmPrefix,
+    getPrefixes,
     load_rpg_data,
     save_rpg_data,
     load_shop_data,

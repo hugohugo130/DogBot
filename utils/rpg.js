@@ -1,6 +1,6 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji } = require("discord.js");
 const { wait_until_ready } = require("./wait_until_ready.js");
-const { embed_default_color, embed_error_color, embed_fell_color } = require("./config.js");
+const { embed_default_color, embed_error_color, embed_fell_color, reserved_prefixes } = require("./config.js");
 const EmbedBuilder = require('./customs/embedBuilder.js');
 const DogClient = require("./customs/client.js");
 
@@ -1303,10 +1303,9 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
     const { loadData } = require("./file.js");
 
     if (!rpg_data.privacy.includes(privacy_data["ls"]) && !PASS) {
-
         const guildData = loadData(message.guild.id);
 
-        const prefix = guildData.prefix ?? "&";
+        const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
 
         const bag_emoji = await get_emoji(client, "bag");
 
@@ -1404,6 +1403,125 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
     return await message.reply({ embeds: [embed] });
 };
 
+function firstPrefix(guildID) {
+    const { loadData } = require("./file.js");
+    const { reserved_prefixes } = require("./config.js");
+
+    const guildData = loadData(guildID);
+
+    const prefix = guildData.prefix?.[0] ?? reserved_prefixes[0];
+
+    return prefix;
+};
+
+/**
+ * 
+ * @param {string} guildID 
+ * @param {string} prefix 
+ * @returns {boolean}
+ */
+function InPrefix(guildID, prefix) {
+    const { loadData } = require("./file.js");
+    const { reserved_prefixes } = require("./config.js");
+
+    const guildData = loadData(guildID);
+
+    const prefixes = (guildData.prefix ?? [])
+        .concat(reserved_prefixes);
+
+    return prefixes.includes(prefix);
+};
+
+/**
+ * 
+ * @param {string} guildID 
+ * @param {string} prefix 
+ * @returns {boolean | string}
+ */
+function Include_prefixes(guildID, prefix) {
+    const { loadData } = require("./file.js");
+    const { reserved_prefixes } = require("./config.js");
+
+    const guildData = loadData(guildID);
+
+    const prefixes = (guildData.prefix ?? [])
+        .concat(reserved_prefixes);
+
+    for (const p of prefixes) {
+        if (prefix.includes(p)) {
+            return p;
+        };
+    };
+
+    return false;
+};
+
+/**
+ * 
+ * @param {string} guildID 
+ * @param {string} prefix 
+ * @returns {boolean | string}
+ */
+function startsWith_prefixes(guildID, prefix) {
+    const { loadData } = require("./file.js");
+    const { reserved_prefixes } = require("./config.js");
+
+    const guildData = loadData(guildID);
+
+    const prefixes = (guildData.prefix ?? [])
+        .concat(reserved_prefixes);
+
+    for (const p of prefixes) {
+        if (prefix.startsWith(p)) {
+            return p;
+        };
+    };
+
+    return false;
+};
+
+function any(iterable) {
+    if (iterable == null) {
+        throw new TypeError('any() argument must be an iterable');
+    };
+
+    for (const element of iterable) {
+        if (element) {
+            return true;
+        };
+    };
+
+    return false;
+};
+
+function all(iterable, defaultValue = true) {
+    if (iterable == null) {
+        if (arguments.length === 1) {
+            throw new TypeError('all() argument must be an iterable');
+        };
+
+        return defaultValue;
+    };
+
+    // 处理不可迭代的情况
+    if (typeof iterable[Symbol.iterator] !== 'function') {
+        throw new TypeError('all() argument must be an iterable');
+    };
+
+    // 使用 for...of 遍历
+    try {
+        for (const element of iterable) {
+            if (!element) {
+                return false;
+            };
+        };
+    } catch (error) {
+        throw new TypeError('all() argument must be an iterable');
+    };
+
+    return true;
+};
+
 const jobs = {
     "fisher": { // 漁夫
         "command": "fish",
@@ -1494,6 +1612,12 @@ module.exports = {
     choose_job_row,
     get_emoji_object,
     wrong_job_embed,
+    firstPrefix,
+    InPrefix,
+    Include_prefixes,
+    startsWith_prefixes,
+    all,
+    any,
     jobs,
     workCmdJobs,
     oven_slots,
