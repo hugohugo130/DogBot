@@ -1288,6 +1288,16 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                     newadd = new_newadd;
                 };
 
+                if (amount < 1) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 錯誤的數量`)
+                        .setEmbedFooter();
+
+                    if (mode === 1) return { embeds: [embed] };
+                    return await message.reply({ embeds: [embed] });
+                };
+
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你會吃太飽撐死!`)
