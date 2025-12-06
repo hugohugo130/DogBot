@@ -218,11 +218,13 @@ module.exports = {
 
             const BtnLinks = [];
 
-            BtnLinks.push(new ButtonBuilder()
-                .setLabel("圖標")
-                .setStyle(ButtonStyle.Link)
-                .setURL(serverIconURL)
-            );
+            if (serverIconURL) {
+                BtnLinks.push(new ButtonBuilder()
+                    .setLabel("圖標")
+                    .setStyle(ButtonStyle.Link)
+                    .setURL(serverIconURL)
+                );
+            };
 
             if (serverBanner) {
                 BtnLinks.push(new ButtonBuilder()
@@ -240,10 +242,10 @@ module.exports = {
                 );
             };
 
-            const row = new ActionRowBuilder()
-                .addComponents(BtnLinks);
+            const row = BtnLinks ? new ActionRowBuilder()
+                .addComponents(BtnLinks) : null;
 
-            await interaction.editReply({ embeds: [embed], components: [row] });
+            await interaction.editReply({ embeds: [embed], components: row ? [row] : [] });
         } else if (subcommand === "bot") {
             const serverCount = interaction.client.guilds.cache.size;
             const userCount = interaction.client.users.cache.size;
