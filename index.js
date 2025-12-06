@@ -1,4 +1,4 @@
-const { Events } = require('discord.js');
+const { Events, Collection } = require('discord.js');
 const DogClient = require("./utils/customs/client.js");
 const { checkDBFilesExists, checkDBFilesCorrupted } = require('./utils/check_db_files.js');
 const { checkAllDatabaseFilesContent } = require('./utils/onlineDB.js');
@@ -98,6 +98,7 @@ async function handle_shutdown(sign) {
 
 (async () => {
     global._client = null;
+    global.perloadResponse = new Collection();
     global.oven_sessions = {};
     global.smelter_sessions = {};
 

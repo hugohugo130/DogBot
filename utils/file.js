@@ -232,7 +232,19 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
 
         // 從遠端伺服器獲取檔案
         try {
-            const response = await axios.get(`${SERVER_URL}/files/${basename_filename}`);
+            const url = `${SERVER_URL}/files/${basename_filename}`;
+
+            let response;
+
+            const resp = global.perloadResponse.get(url);
+            if (resp) {
+                response = resp;
+            };
+
+            if (!response?.data) {
+                response = await axios.get(url);
+            };
+
             remoteContent = stringify(response.data);
         } catch (err) {
             if (err.response?.status === 404) {

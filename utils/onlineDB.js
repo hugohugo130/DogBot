@@ -9,6 +9,7 @@ const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
 const { get_logger } = require("./logger.js");
 const { existsSync, compareLocalRemote, join_db_folder } = require("./file.js");
 const { get_areadline } = require("./readline.js");
+const { Collection } = require("discord.js");
 
 const { IP: serverIP, PORT } = getServerIPSync();
 const SERVER_URL = `http://${serverIP}:${PORT}`;
@@ -177,17 +178,64 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
     return !same;
 };
 
-// === 批量檢查所有資料庫檔案 ===
-async function checkAllDatabaseFilesContent() {
-    let executed = false;
+/**
+ * 
+ * @param {string} file 
+ */
+async function preloadDBfilesResponse(file) {
+    if (!global.perloadResponse) global.perloadResponse = new Collection();
 
-    logger.info(`正在檢查資料庫檔案內容...`);
+    const basename_filename = path.basename(file);
+
+    try {
+        const url = `${SERVER_URL}/files/${basename_filename}`;
+
+        const response = await axios.get(url)
+
+        global.perloadResponse.set(url, response);
+    } catch (error) {
+        const errorStack = util.inspect(error, { depth: null });
+
+        logger.error(`Error fetching ${basename_filename}:\n${errorStack}`);
+    };
+};
+
+/**
+ * 
+ * @returns {Promise<void[]>}
+ */
+async function preloadAllDBfilesResponse() {
+    const promises = DATABASE_FILES.filter(e => onlineDB_Files.includes(e)).map(file => preloadDBfilesResponse(file));
+    return await Promise.all(promises);
+};
+
+/**
+ * 批量檢查所有資料庫檔案內容
+ * @returns {Promise<boolean>}
+ */
+async function onlineDB_checkAllFileContent() {
+    let executed = false;
 
     for (const file of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
         const res = await onlineDB_checkFileContent(file);
         // logger.debug(`正在檢查資料庫檔案內容 - ${file} - ${res}`);
         if (!executed && res) executed = true;
     };
+
+    return executed;
+};
+
+// === 批量檢查所有資料庫檔案 ===
+async function checkAllDatabaseFilesContent() {
+    logger.info(`正在檢查資料庫檔案內容...`);
+
+    const [_, executed] = await Promise.all([
+        preloadAllDBfilesResponse(),
+        onlineDB_checkAllFileContent(),
+    ]);
+
+    // 不需要 global.perloadResponse 了，刪除它
+    delete global.perloadResponse;
 
     if (executed) console.log("=".repeat(30));
 };
