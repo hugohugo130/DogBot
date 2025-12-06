@@ -332,14 +332,15 @@ module.exports = {
         const { get_emoji } = require("../../../utils/rpg.js");
         const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 
+        const bake_data_all = load_bake_data();
+        const bake_data = bake_data_all[userId];
+        const rpg_data = load_rpg_data(userId);
+
         const wrongJobEmbed = await wrong_job_embed(rpg_data, "/bake", interaction.client);
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
 
         if (subcommand === "bake") {
             const emoji_cross = await get_emoji(interaction.client, "crosS");
-
-            let rpg_data = load_rpg_data(userId);
-            const bake_data = load_bake_data()[userId];
 
             const oven_remain_slots = oven_slots - (bake_data?.length || 0);
             const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
@@ -438,7 +439,6 @@ module.exports = {
                 await bake_bake(interaction, userId, item, amount, index === 0 ? 1 : 2);
             };
         } else if (subcommand === "info") {
-            const bake_data = load_bake_data()[userId];
             const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
 
             const used_slots = bake_data ? bake_data.length : 0;
@@ -475,10 +475,6 @@ module.exports = {
 
             await interaction.editReply({ embeds: [embed] });
         } else if (subcommand === "get") {
-            const bake_data_all = load_bake_data();
-            const bake_data = bake_data_all[userId];
-            const rpg_data = load_rpg_data(userId);
-
             const emoji_cross = await get_emoji(interaction.client, "crosS");
             const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
 
