@@ -1,14 +1,21 @@
-const { Events } = require("discord.js");
+const { Events, AutocompleteInteraction } = require("discord.js");
 // const { searchVideos } = require("../utils/youtubeSearch.js");
 const { get_logger } = require("../utils/logger.js");
+const DogClient = require("../utils/customs/client.js");
 
 const logger = get_logger();
 
 module.exports = {
     name: Events.InteractionCreate,
+    /**
+     * 
+     * @param {DogClient} client 
+     * @param {AutocompleteInteraction} interaction 
+     * @returns 
+     */
     execute: async function (client, interaction) {
         const { load_rpg_data } = require("../utils/file.js");
-        const { get_name_of_id, bake, smeltable_recipe } = require("../utils/rpg.js");
+        const { wrong_job_embed, get_name_of_id, bake, smeltable_recipe } = require("../utils/rpg.js");
         if (!interaction.isAutocomplete()) return;
 
         const smeltable_items = smeltable_recipe.reduce((acc, item) => {
@@ -35,6 +42,9 @@ module.exports = {
             const userid = interaction.user.id;
             const rpg_data = await load_rpg_data(userid);
 
+            const wrong_job = await wrong_job_embed(rpg_data, "/bake");
+            if (wrong_job) return await interaction.respond([]);
+
             const focusedValue = interaction.options.getFocused();
             const choices = Object.keys(rpg_data.inventory)
                 .filter(item =>
@@ -52,6 +62,9 @@ module.exports = {
         } else if (interaction.commandName === "smelt") {
             const userid = interaction.user.id;
             const rpg_data = await load_rpg_data(userid);
+
+            const wrong_job = await wrong_job_embed(rpg_data, "/smelt");
+            if (wrong_job) return await interaction.respond([]);
 
             const focusedValue = interaction.options.getFocused();
             const choices = Object.keys(rpg_data.inventory)
