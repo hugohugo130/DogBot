@@ -8,8 +8,19 @@ module.exports = {
     name: Events.InteractionCreate,
     execute: async function (client, interaction) {
         const { load_rpg_data } = require("../utils/file.js");
-        const { get_name_of_id, bake } = require("../utils/rpg.js");
+        const { get_name_of_id, bake, smeltable_recipe } = require("../utils/rpg.js");
         if (!interaction.isAutocomplete()) return;
+
+        const smeltable_items = smeltable_recipe.reduce((acc, item) => {
+            const key = item.input[0].item;
+
+            acc[key] = {
+                I_amount: item.input[0].amount,
+                O_item_id: item.output,
+                O_amount: item.amount
+            };
+            return acc;
+        }, {});
 
         if (interaction.commandName === "play") {
             // const focusedValue = interaction.options.getFocused();
@@ -23,17 +34,53 @@ module.exports = {
         } else if (interaction.commandName === "bake") {
             const userid = interaction.user.id;
             const rpg_data = await load_rpg_data(userid);
+
             const focusedValue = interaction.options.getFocused();
-            const choices = Object.keys(rpg_data.inventory).filter(choice =>
-                Object.keys(bake).includes(choice)
-                && (
-                    choice.startsWith(focusedValue)
-                    || get_name_of_id(choice).startsWith(focusedValue)
+            const choices = Object.keys(rpg_data.inventory)
+                .filter(item =>
+                    Object.keys(bake).includes(item)
+                    && (
+                        item.startsWith(focusedValue)
+                        || get_name_of_id(item).startsWith(focusedValue)
+                    )
                 )
-            ).slice(0, 25);
+                .slice(0, 25);
 
             await interaction.respond(
-                choices.map(choice => ({ name: get_name_of_id(choice), value: choice })),
+                choices.map(item => ({ name: get_name_of_id(item), value: item })),
+            );
+        } else if (interaction.commandName === "smelt") {
+            const userid = interaction.user.id;
+            const rpg_data = await load_rpg_data(userid);
+
+            const focusedValue = interaction.options.getFocused();
+            const choices = Object.keys(rpg_data.inventory)
+                .filter(item =>
+                    Object.keys(smeltable_items).includes(item)
+                    && (
+                        item.startsWith(focusedValue)
+                        || get_name_of_id(item).startsWith(focusedValue)
+                    )
+                )
+                .map(item => {
+                    const smelt_data = smeltable_items[item];
+
+                    const I_item_id = item;
+                    const { I_amount, O_item_id, O_amount } = smelt_data;
+
+                    return [
+                        `${get_name_of_id(I_item_id)} x${I_amount} => ${get_name_of_id(O_item_id)} x${O_amount}`,
+                        item,
+                    ];
+                })
+                .slice(0, 25);
+
+            await interaction.respond(
+                choices.map(data => {
+                    const [text, item] = data;
+
+                    return { name: text, value: item };
+                }),
             );
         };
     },

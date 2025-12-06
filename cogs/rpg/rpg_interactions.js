@@ -432,7 +432,7 @@ module.exports = {
     execute: async function (client, interaction) {
         try {
             const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data, load_bake_data, save_bake_data, load_smelt_data, save_smelt_data, loadData, find_default_value } = require("../../utils/file.js");
-            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, bake, smeltable_items, name, jobs, smelter_slots, oven_slots } = require("../../utils/rpg.js");
+            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, bake, smeltable_recipe, name, jobs, smelter_slots, oven_slots } = require("../../utils/rpg.js");
             const { ls_function, rpg_handler, MockMessage } = require("./msg_handler.js");
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
 
@@ -947,7 +947,7 @@ module.exports = {
 
                 save_rpg_data(userId, rpg_data)
 
-                const output_item_id = smeltable_items.find(a => a.input[0].item === item_id).output;
+                const output_item_id = smeltable_recipe.find(a => a.input[0].item === item_id).output;
                 const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
 
                 let smelt_data = load_smelt_data();

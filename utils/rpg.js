@@ -165,7 +165,7 @@ Object.entries(logs).forEach(([logKey, logValue]) => {
     };
 });
 
-const smeltable_items = [
+const smeltable_recipe = [
     {
         input: [
             { item: "iron_ore", amount: 2 }
@@ -1591,7 +1591,7 @@ module.exports = {
     name,
     name_reverse,
     recipes,
-    smeltable_items,
+    smeltable_recipe,
     animals,
     animal_products,
     shop_lowest_price,
