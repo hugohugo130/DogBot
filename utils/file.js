@@ -446,6 +446,8 @@ function addPrefix(guildID, prefix) {
 function rmPrefix(guildID, prefix) {
     if (!typeof prefix === "string") throw new Error(`Invalid prefix: ${enable}`)
 
+    const data = loadData(guildID);
+
     // 舊兼容
     if (!Array.isArray(data["prefix"])) {
         data["prefix"] = [data["prefix"]];
@@ -453,7 +455,6 @@ function rmPrefix(guildID, prefix) {
 
     if (!data["prefix"].includes(prefix)) return null;
 
-    const data = loadData(guildID);
     data["prefix"] = data["prefix"].filter(p => p !== prefix);
 
     saveData(guildID, data);
