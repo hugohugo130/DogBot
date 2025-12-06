@@ -45,7 +45,7 @@ function divide(amount, by) {
  */
 async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const { load_rpg_data, load_bake_data } = require("../../../utils/file.js");
-    const { notEnoughItemEmbed, get_name_of_id, wrong_job_embed, name, oven_slots } = require("../../../utils/rpg.js");
+    const { notEnoughItemEmbed, get_name_of_id, name, oven_slots } = require("../../../utils/rpg.js");
     const { get_emoji } = require("../../../utils/rpg.js");
     const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 
@@ -56,9 +56,6 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
 
     let rpg_data = load_rpg_data(userId);
     const bake_data = load_bake_data()[userId];
-
-    const wrongJobEmbed = await wrong_job_embed(rpg_data, "/bake", interaction.client);
-    if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
 
     const oven_remain_slots = oven_slots - (bake_data?.length || 0);
 
@@ -327,12 +324,16 @@ module.exports = {
         ),
     async execute(interaction) {
         await interaction.deferReply();
+
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
         const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
-        const { name, oven_slots, notEnoughItemEmbed } = require("../../../utils/rpg.js");
+        const { name, oven_slots, notEnoughItemEmbed, wrong_job_embed } = require("../../../utils/rpg.js");
         const { get_emoji } = require("../../../utils/rpg.js");
         const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
+
+        const wrongJobEmbed = await wrong_job_embed(rpg_data, "/bake", interaction.client);
+        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
 
         if (subcommand === "bake") {
             const emoji_cross = await get_emoji(interaction.client, "crosS");
