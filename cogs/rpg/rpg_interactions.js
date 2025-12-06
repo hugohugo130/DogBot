@@ -1083,7 +1083,7 @@ module.exports = {
 
                 const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
-                    if (!interaction.deferred) await interaction.deferReply();
+                    if (!interaction.deferred) await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
                     return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                 } else {
