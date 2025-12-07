@@ -799,6 +799,7 @@ function check_item_data() {
         .flat()
         .filter(item => !item.startsWith("#"))
         .filter(item => !jobs[item])
+        .filter(item => !Object.keys(animal_products).includes(item))
         .filter(item => !Object.values(animals).includes(item));
 
     const work_productions = [
