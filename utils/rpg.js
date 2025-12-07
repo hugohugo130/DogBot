@@ -895,15 +895,14 @@ async function notEnoughItemEmbed(item_datas, client = global._client) {
             return item_data;
         };
 
-        const length = Object.keys(item_data).length;
-        if (!item_data.item || !item_data.amount || length !== 2) {
-            logger.warn(`item_data應該只有item和amount屬性，但：\n${JSON.stringify(item_data, null, 4)}`)
-        };
-
-
         if (item_data.name && !item_data.item) {
             logger.warn(`item_data應該使用item屬性，但使用了name：\n${JSON.stringify(item_data, null, 4)}`)
             item_data.item = item_data.name;
+        };
+
+        const length = Object.keys(item_data).length;
+        if (!item_data.item || !item_data.amount || length !== 2) {
+            logger.warn(`item_data應該只有item和amount屬性，但：\n${JSON.stringify(item_data, null, 4)}`)
         };
 
         return `${get_name_of_id(item_data.item)} \`x${item_data.amount}\`個`;
