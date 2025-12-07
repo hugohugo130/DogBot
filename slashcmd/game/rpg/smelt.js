@@ -68,7 +68,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
 
         if (have_amount < need_amount) {
             item_missing.push({
-                name: name[current_item_id] || need_item,
+                item: name[current_item_id] || need_item,
                 amount: need_amount - have_amount,
             });
         };
