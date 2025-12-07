@@ -74,7 +74,7 @@ client.once(Events.ClientReady, async () => {
         } else if (input === "fstop") {
             process.exit(0);
         } else if (input === "logger") {
-            logger.log(`
+            logger.info(`
 loggerManager:
 ${Object.keys(loggerManager).join("\n")}
 loggerManager_log:
