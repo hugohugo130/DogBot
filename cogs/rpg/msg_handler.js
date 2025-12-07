@@ -332,27 +332,30 @@ const rpg_commands = {
 
         const product_name = name[product];
         const animal_name = product_name.replace("生", "").replace("肉", "");
-        const emoji = await get_emoji(client, rpg_emojis["herd"]);
+        const emoji_cow = await get_emoji(client, "cow");
 
         let title = `是${animal_name}`;
         let description = `你宰了一隻${animal_name}，獲得了 \`${amount}\` 個${product_name}！`;
         if (product === "raw_chicken") {
             const egg_amount = randint(1, 3);
-            description += `\n不僅如此！你還發現了${egg_amount}顆${get_name_of_id("egg")}！`
+            description += `\n不僅如此！你還發現了 \`${egg_amount}\` 顆 ${get_name_of_id("egg")}！`
             if (!rpg_data.inventory["egg"]) rpg_data.inventory["egg"] = 0;
             rpg_data.inventory["egg"] += egg_amount;
         } else if (product === "raw_pork") {
             title = "佩佩豬";
         } else if (product === "raw_duck") {
-            title = `${emoji} | 呱!`;
+            title = `${emoji_cow} | 呱!`;
             description = `呱呱呱呱呱，呱呱呱呱 \`${amount}\` 呱呱呱！`;
+        } else if (product === "dogdog") {
+            title = `🐶 汪!`
+            description = `你偷走了機器犬的幼崽！拿到了 \`${amount}\` 隻 ${get_name_of_id("dogdog")}`
         };
 
         save_rpg_data(userid, rpg_data);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
-            .setTitle(`${emoji} | ${title}`)
+            .setTitle(`${emoji_cow} | ${title}`)
             .setDescription(description)
             .setEmbedFooter('', rpg_data);
 

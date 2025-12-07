@@ -255,14 +255,15 @@ const probabilities = {
         "raw_whale": [15, 1, 2],
     },
     "herd": {
-        "escape": [2, 1, 1],
-        "epidemic": [2, 1, 1],
-        "a_chicken": [25, 1, 2],
-        "pig": [20, 1, 1],
-        "cow": [20, 1, 1],
-        "a_duck": [20, 1, 1],
-        "a_sheep": [15, 1, 1],
-        "a_hugo": [1, 1, 1]
+        "escape": [20, 1, 1],
+        "epidemic": [20, 1, 1],
+        "a_chicken": [250, 1, 2],
+        "pig": [200, 1, 1],
+        "cow": [200, 1, 1],
+        "a_duck": [200, 1, 1],
+        "a_sheep": [150, 1, 1],
+        "a_hugo": [10, 1, 1],
+        "a_dog": [1, 1, 1],
     },
     "mine": {
         "boom": [2, 1, 1],

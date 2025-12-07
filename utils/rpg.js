@@ -145,7 +145,15 @@ const recipes = {
         ],
         output: "wooden_hoe",
         amount: 1
-    }
+    },
+    god_stick: {
+        input: [
+            { item: "gold", amount: 1 },
+            { item: "stick", amount: 1 }
+        ],
+        output: "god_stick",
+        amount: 1
+    },
 };
 
 // 動態生成木材到木板的合成配方，比例 1:4
@@ -185,6 +193,13 @@ const smeltable_recipe = [
             { item: "diamond_ore", amount: 1 }
         ],
         output: "diamond",
+        amount: 1
+    },
+    {
+        input: [
+            { item: "gold_ore", amount: 5 }
+        ],
+        output: "gold",
         amount: 1
     },
 ];
@@ -281,8 +296,9 @@ const animals = [
 const animal_products = {
     a_chicken: "raw_chicken",
     a_duck: "raw_duck",
-    a_sheep: "raw_mutton",
+    a_sheep: "raw_mutton",  
     a_hugo: "raw_hugo",
+    a_dog: "dogdog",
     cow: "raw_beef",
     pig: "raw_pork",
 };
@@ -362,13 +378,13 @@ const shop_lowest_price = {
     diamond_ore: 150,
     stone: 50,
     emerald_ore: 270,
-    gold_ore: 300,
+    gold_ore: 200,
     ruby_ore: 230,
     sapphire_ore: 230,
     // ==============熔煉物==============
     diamond: 750,
     emerald: 50,
-    gold: 50,
+    gold: 500,
     iron: 250,
     ruby: 50,
     sapphire: 50,
@@ -435,6 +451,8 @@ const shop_lowest_price = {
     iron_armor: 1200,
     wooden_hoe: 25,
     iron_hoe: 50,
+    // =============其他===============
+    dogdog: 1000,
     // ============================
 };
 
@@ -599,20 +617,21 @@ for (const raw_food of Object.keys(foods_meat).filter(e => e.startsWith("raw_"))
 const name = {
     // ==============礦物==============
     coal: "煤炭",
-    diamond: "鑽石",
     diamond_ore: "鑽石礦",
-    emerald: "綠寶石",
     emerald_ore: "綠寶石礦",
-    gold: "金",
     gold_ore: "金礦",
-    iron: "鐵",
     iron_ore: "鐵礦",
-    ruby: "紅寶石",
     ruby_ore: "紅寶石礦",
-    sapphire: "藍寶石",
     sapphire_ore: "藍寶石礦",
-    steel: "鋼鐵",
     stone: "石頭",
+    // ==============熔煉物==============
+    diamond: "鑽石",
+    emerald: "綠寶石",
+    gold: "黃金",
+    iron: "鐵",
+    ruby: "紅寶石",
+    sapphire: "藍寶石",
+    steel: "鋼鐵",
     // ==============木材==============
     acacia_planks: "金合歡木板",
     acacia_wood: "金合歡木",
@@ -632,9 +651,11 @@ const name = {
     oak_wood: "橡木",
     spruce_planks: "雲杉木板",
     spruce_wood: "雲杉木",
-    stick: "木棒",
     warped_planks: "凋零木板",
     warped_wood: "凋零木",
+
+    stick: "木棒",
+    god_stick: "神木棒",
     // ==============材料==============
     egg: "雞蛋",
     // ==============食物==============
@@ -747,6 +768,9 @@ const name = {
     herder: "牧農",
     blacksmith: "鐵匠",
     lumberjack: "伐木工",
+    // ==============其他==============
+    a_dog: "狗狗機器犬",
+    dogdog: "正在孵化的幼犬",
     // ==============....==============
 };
 
