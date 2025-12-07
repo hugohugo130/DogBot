@@ -1417,13 +1417,13 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             };
 
             const howToEatButton = new ButtonBuilder()
-                .setCustomId(`help|${message.author.id}|rpg|eat`)
+                .setCustomId(`help|any|rpg|eat`)
                 .setLabel('如何吃食物')
                 .setEmoji(food_emoji)
                 .setStyle(ButtonStyle.Primary);
 
             const buyFoodButton = new ButtonBuilder()
-                .setCustomId(`help|${message.author.id}|rpg|buy`)
+                .setCustomId(`help|any|rpg|buy`)
                 .setLabel('購買食物')
                 .setEmoji(store_emoji)
                 .setStyle(ButtonStyle.Primary);

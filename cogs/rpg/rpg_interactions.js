@@ -451,7 +451,7 @@ module.exports = {
             const originalUserId = customIdParts[1];
 
             // 驗證使用者身份
-            if (user.id !== originalUserId) {
+            if (originalUserId !== "any" && user.id !== originalUserId) {
                 try {
                     if (interaction.deferred) {
                         await interaction.followUp({ embeds: [await get_failed_embed(client)], flags: MessageFlags.Ephemeral });
