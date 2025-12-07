@@ -1,6 +1,6 @@
 const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, CommandInteraction, ButtonStyle, ButtonBuilder } = require("discord.js");
 const EmbedBuilder = require('../../utils/customs/embedBuilder.js');
-const { embed_default_color, embed_error_color, embed_job_color, reserved_prefixes } = require("../../utils/config.js");
+const { embed_default_color, embed_error_color, embed_job_color } = require("../../utils/config.js");
 const { get_logger } = require("../../utils/logger.js");
 const util = require('node:util');
 const DogClient = require("../../utils/customs/client.js");
@@ -400,11 +400,11 @@ function get_help_embed(category, user) {
  * @param {string} command_name 
  * @param {DogClient} client 
  * @param {string} guildID
- * @returns {EmbedBuilder | null}
+ * @returns {Promise<EmbedBuilder | null>}
  */
-function get_help_command(category, command_name, guildID, client = global._client) {
+async function get_help_command(category, command_name, guildID, client = global._client) {
     const { find_redirect_targets_from_id } = require("./msg_handler.js");
-    const { firstPrefix } = require("../../utils/rpg.js");
+    const { firstPrefix, get_emoji } = require("../../utils/rpg.js");
 
     const command_data = help.group[category][command_name];
     if (!command_data) return null;
@@ -444,7 +444,7 @@ function get_help_command(category, command_name, guildID, client = global._clie
 
     let emoji = "";
     if (command_data.emoji) {
-        emoji = get_emoji(command_data.emoji) ?? command_data.emoji;
+        emoji = await get_emoji(client, command_data.emoji) ?? command_data.emoji;
     };
 
     const embed = new EmbedBuilder()
@@ -521,7 +521,7 @@ module.exports = {
                 let row;
 
                 if (category) {
-                    embed = get_help_command(category, interaction?.values?.[0] || cmd || "buy", client);
+                    embed = await get_help_command(category, interaction?.values?.[0] || cmd || "buy", client);
                 } else {
                     [embed, row] = get_help_embed(interaction.values[0], user);
                 };

@@ -796,7 +796,7 @@ const rpg_commands = {
             return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
         } else if (args.length === 0) {
             return await message.reply({
-                embeds: [get_help_command("rpg", "buy", client)],
+                embeds: [await get_help_command("rpg", "buy", client)],
             });
         };
 
@@ -1054,7 +1054,27 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         return await message.reply({ embeds: [embed], components: [row] });
     }, true],
     help: ["查看指令", "查看指令", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const emoji_slash = await get_emoji(client, "slash")
+        const { get_help_command } = require("./rpg_interactions.js");
+
+        const specific_cmd = args[0];
+        if (specific_cmd && specific_cmd !== "help") {
+            const embed = await get_help_command("rpg", specific_cmd, message.guild.id, client);
+
+            if (!embed) {
+                const emoji_cross = await get_emoji(client, "crosS");
+
+                const error_embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 我不認識 ${specific_cmd}`)
+                    .setEmbedFooter();
+
+                return await message.reply({ embeds: [error_embed] });
+            };
+
+            return await message.reply({ embeds: [embed] });
+        };
+
+        const emoji_slash = await get_emoji(client, "slash");
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`help|${message.author.id}`)
@@ -2170,7 +2190,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     };
 
     if (need_arg && !args[0]) {
-        const embed = get_help_command("rpg", command, client);
+        const embed = await get_help_command("rpg", command, client);
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
