@@ -1294,7 +1294,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 if (amount < 1) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 錯誤的數量`)
+                        .setTitle(`${emoji_cross} | 你已經吃太飽了`)
+                        .setDescription("吃不下了拉 :(")
                         .setEmbedFooter();
 
                     if (mode === 1) return { embeds: [embed] };
