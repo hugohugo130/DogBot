@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, escapeMarkdown } = require("discord.js");
 const { wait_until_ready } = require("./wait_until_ready.js");
 const { embed_default_color, embed_error_color, embed_fell_color, reserved_prefixes } = require("./config.js");
 const EmbedBuilder = require('./customs/embedBuilder.js');
@@ -296,7 +296,7 @@ const animals = [
 const animal_products = {
     a_chicken: "raw_chicken",
     a_duck: "raw_duck",
-    a_sheep: "raw_mutton",  
+    a_sheep: "raw_mutton",
     a_hugo: "raw_hugo",
     a_dog: "dogdog",
     cow: "raw_beef",
@@ -1188,12 +1188,16 @@ function error_analyze(errorStack) {
 async function get_loophole_embed(client = global._client, text) {
     const emoji_cross = await get_emoji(client, "crosS");
 
-    if (text && !text.includes("```")) {
-        text = `\`\`\`${text}\`\`\``;
-    };
-
     if (typeof text !== 'string') {
         text = String(text);
+    };
+
+    if (text) {
+        text = escapeMarkdown(text);
+
+        if (!text.includes("```")) {
+            text = `\`\`\`${text}\`\`\``;
+        };
     };
 
     // embed 描述最長：4096 字元
