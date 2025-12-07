@@ -68,13 +68,13 @@ const help = {
         },
         rpg: {
             "brew": {
-                emoji: "💊💧",
+                emoji: "potion",
                 desc: "藥劑師研發藥水使用",
                 usage: [],
                 format: `{cmd}`,
             },
             "buy": {
-                emoji: "",
+                emoji: "buy",
                 desc: "購買商店裡的商品",
                 usage: [
                     {
@@ -84,8 +84,14 @@ const help = {
                 ],
                 format: "{cmd} @使用者 商品ID 數量",
             },
+            "divorce": {
+                emoji: "broken",
+                desc: "離婚指令",
+                usage: [],
+                format: "{cmd}",
+            },
             "eat": {
-                emoji: "",
+                emoji: "food",
                 desc: "吃東西回復飽食度",
                 usage: [
                     {
@@ -111,7 +117,7 @@ const help = {
 
             // },
             "fell": {
-                emoji: "",
+                emoji: "wood",
                 desc: "伐木工砍伐木頭使用",
                 usage: [],
                 format: "{cmd}",
@@ -120,19 +126,19 @@ const help = {
 
             // },
             "fish": {
-                emoji: "",
+                emoji: "fisher",
                 desc: "漁夫捕魚使用",
                 usage: [],
                 format: "{cmd}",
             },
             "herd": {
-                emoji: "",
+                emoji: "cow",
                 desc: "牧農放牧指令",
                 usage: [],
                 format: "{cmd}",
             },
             "items": {
-                emoji: "",
+                emoji: "bag",
                 desc: "取得你的背包裡有多少東西",
                 usage: [
                     {
@@ -142,11 +148,23 @@ const help = {
                 ],
                 format: "{cmd}",
             },
-            // "job": {
-
-            // },
+            "job": {
+                "emoji": "job",
+                "desc": "選擇職業",
+                "usage": [
+                    {
+                        "name": "在跳出的下拉選單選擇職業",
+                        "value": "&job"
+                    },
+                    {
+                        "name": "選擇冒險職業",
+                        "value": "&job fight"
+                    }
+                ],
+                "format": "{cmd}"
+            },
             "last": {
-                emoji: "",
+                emoji: "decrease",
                 desc: '"倒數"金錢排行榜',
                 usage: [
                     {
@@ -156,23 +174,48 @@ const help = {
                 ],
                 format: "{cmd}",
             },
-            // "make": {
-
-            // },
-            // "marry": {
-
-            // },
+            "make": {
+                "emoji": "toolbox",
+                "desc": "合成或製作出物品",
+                "usage": [
+                    {
+                        "name": "合成製作出石劍",
+                        "value": "&make 石劍"
+                    },
+                    {
+                        "name": "使用 2個木材 製作出木棒",
+                        "value": "&make stick"
+                    }
+                ],
+                "format": "{cmd} <目標物品ID> [數量]"
+            },
+            "marry": {
+                emoji: "wedding",
+                desc: "結婚指令",
+                usage: [
+                    {
+                        name: "查詢感情狀態",
+                        value: "&marry"
+                    },
+                    {
+                        name: "和{author}結婚",
+                        value: "&marry @{author}"
+                    },
+                    {
+                        name: "離婚 :((",
+                        value: "&divorce"
+                    }
+                ],
+                format: "{cmd} [使用者]",
+            },
             "mine": {
-                emoji: "",
+                emoji: "ore",
                 desc: "礦工挖礦使用指令",
                 usage: [],
                 format: "{cmd}",
             },
-            // "partner": {
-
-            // },
             "money": {
-                emoji: "",
+                emoji: "saving",
                 desc: "查看金錢及使用方法",
                 usage: [
                     {
@@ -186,8 +229,31 @@ const help = {
                 ],
                 format: "{cmd}",
             },
+            "partner": {
+                emoji: "pet",
+                desc: "夥伴系統",
+                usage: [
+                    {
+                        name: "和{author}結為夥伴",
+                        value: "&partner add @{author}"
+                    },
+                    {
+                        name: "離開你的夥伴",
+                        value: "&partner leave"
+                    },
+                    {
+                        name: "顯示你的夥伴",
+                        value: "&partner list"
+                    },
+                    {
+                        name: "餵食夥伴",
+                        value: "&feed @{author}"
+                    }
+                ],
+                format: "{cmd} [成員]",
+            },
             "pay": {
-                emoji: "",
+                emoji: "pay",
                 desc: "付款給其他使用者",
                 usage: [
                     {
@@ -198,13 +264,13 @@ const help = {
                 format: "{cmd} <使用者> <數量>",
             },
             "privacy": {
-                emoji: "",
+                emoji: "shield",
                 desc: "切換隱私權控制開關",
                 usage: [],
                 format: "{cmd}",
             },
             "sell": {
-                emoji: "",
+                emoji: "trade",
                 desc: "出售東西並換取金錢",
                 usage: [
                     {
@@ -223,7 +289,7 @@ const help = {
                 format: "{cmd} <物品ID> [數量]",
             },
             "shop": {
-                emoji: "",
+                emoji: "store",
                 desc: "商店系統 - 透過購買來活絡經濟",
                 usage: [
                     {
@@ -254,7 +320,7 @@ const help = {
                 format: "&shop <list|add|remove|open|close|on|off>",
             },
             "id": {
-                emoji: "",
+                emoji: "idCard",
                 desc: "獲取物品的ID(英文)",
                 usage: [
                     {
@@ -265,7 +331,7 @@ const help = {
                 format: "{cmd} <物品名稱>",
             },
             "name": {
-                emoji: "",
+                emoji: "idCard",
                 desc: "獲取物品的名稱(中文)",
                 usage: [
                     {
@@ -274,31 +340,6 @@ const help = {
                     },
                 ],
                 format: "{cmd} <物品ID>",
-            },
-            "marry": {
-                emoji: "",
-                desc: "結婚指令",
-                usage: [
-                    {
-                        name: "查詢感情狀態",
-                        value: "&marry"
-                    },
-                    {
-                        name: "和{author}結婚",
-                        value: "&marry @{author}"
-                    },
-                    {
-                        name: "離婚 :((",
-                        value: "&divorce"
-                    }
-                ],
-                format: "{cmd} [使用者]",
-            },
-            "divorce": {
-                emoji: "",
-                desc: "離婚指令",
-                usage: [],
-                format: "{cmd}",
             },
         },
         special: {
@@ -359,14 +400,14 @@ function get_help_embed(category, user) {
  * @param {string} command_name 
  * @param {DogClient} client 
  * @param {string} guildID
- * @returns {EmbedBuilder}
+ * @returns {EmbedBuilder | null}
  */
 function get_help_command(category, command_name, guildID, client = global._client) {
     const { find_redirect_targets_from_id } = require("./msg_handler.js");
     const { firstPrefix } = require("../../utils/rpg.js");
 
     const command_data = help.group[category][command_name];
-    if (!command_data) return new EmbedBuilder().setTitle("指令不存在");
+    if (!command_data) return null;
 
     const prefix = firstPrefix(guildID);
 
@@ -567,8 +608,8 @@ module.exports = {
 
                 const rpg_data = load_rpg_data(userId);
 
-                const [emoji_shield, emoji_backpack, emoji_partner] = await Promise.all(
-                    ["shield", "bag", "partner"].map(async (name) => {
+                const [emoji_shield, emoji_backpack, emoji_pet] = await Promise.all(
+                    ["shield", "bag", "pet"].map(async (name) => {
                         return await get_emoji(client, name);
                     }),
                 );
@@ -620,7 +661,7 @@ module.exports = {
                             label: '夥伴',
                             description: '夥伴的清單',
                             value: 'partner',
-                            emoji: emoji_partner,
+                            emoji: emoji_pet,
                             default: rpg_data.privacy.includes("partner"),
                         }
                     ]);

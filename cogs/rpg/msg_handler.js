@@ -1126,8 +1126,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         //     );
         // if (mode === 1) return { embeds: [embed], components: [row] };
         // return await message.reply({ embeds: [embed], components: [row] });
-        const emojiNames = ["bag", "partner", "shield"];
-        const [emoji_backpack, emoji_partner, emoji_shield] = await Promise.all(
+        const emojiNames = ["bag", "pet", "shield"];
+        const [emoji_backpack, emoji_pet, emoji_shield] = await Promise.all(
             emojiNames.map(name => get_emoji(client, name))
         );
 
@@ -1176,7 +1176,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                     label: '夥伴',
                     description: '夥伴的清單',
                     value: 'partner',
-                    emoji: emoji_partner,
+                    emoji: emoji_pet,
                     default: rpg_data.privacy.includes("partner"),
                 }
             ]);
