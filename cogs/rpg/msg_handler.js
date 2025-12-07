@@ -1283,7 +1283,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 const old_amount = amount;
 
                 const new_amount = Math.floor((max_hunger - rpg_data.hunger) / add);
-                const new_newadd = add * amount;
+                const new_newadd = add * new_amount;
 
                 if (!force_eat) {
                     amount = new_amount;
@@ -1310,7 +1310,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 if (force_eat) {
                     embed.setColor(embed_warn_color)
                     embed.setTitle(`${emoji_cross} | 爆體保護被停用！`)
-                        .setDescription(`你停用了爆體保護，浪費了 ${newadd - new_newadd} 飽食度`);
+                        .setDescription(`你停用了爆體保護，浪費了 \`${newadd - new_newadd}\` 飽食度`);
                 };
 
                 extra_embeds.push(embed);
