@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction } = require("discord.js");
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown } = require("discord.js");
 const EmbedBuilder = require('../utils/customs/embedBuilder.js');
 
 module.exports = {
@@ -121,7 +121,7 @@ module.exports = {
             const user_data_embed = new EmbedBuilder()
                 .setColor(embed_default_color)
                 .setThumbnail(user.displayAvatarURL({ size: 1024 }))
-                .setTitle(userTag)
+                .setTitle(escapeMarkdown(userTag))
                 .setFields(
                     {
                         name: `${emoji_idCard} ID`,
