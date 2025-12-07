@@ -931,6 +931,15 @@ function BetterEval(obj) {
     return Function(`"use strict";return ${obj}`)();
 };
 
+function chunkArray(array, chunkSize) {
+    const chunks = [];
+    for (let i = 0; i < array.length; i += chunkSize) {
+        chunks.push(array.slice(i, i + chunkSize));
+    };
+
+    return chunks;
+};
+
 /**
  * 
  * @param {Object} rpg_data 
@@ -1654,6 +1663,7 @@ module.exports = {
 
     // rpg functions
     BetterEval,
+    chunkArray,
     get_emoji,
     get_cooldown_embed,
     get_cooldown_time,
