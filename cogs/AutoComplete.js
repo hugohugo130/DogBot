@@ -81,16 +81,16 @@ module.exports = {
                     const I_item_id = item;
                     const { I_amount, O_item_id, O_amount } = smelt_data;
 
-                    return [
-                        `${get_name_of_id(I_item_id)} x${I_amount} => ${get_name_of_id(O_item_id)} x${O_amount}`,
+                    return {
+                        text: `${get_name_of_id(I_item_id)} x${I_amount} => ${get_name_of_id(O_item_id)} x${O_amount}`,
                         item,
-                    ];
+                    };
                 })
                 .slice(0, 25);
 
             await interaction.respond(
                 choices.map(data => {
-                    const [text, item] = data;
+                    const { text, item } = data;
 
                     return { name: text, value: item };
                 }),
