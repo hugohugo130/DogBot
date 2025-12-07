@@ -1,4 +1,4 @@
-const { EmbedBuilder: djsEmbedBuilder, MessageFlags, Embed } = require('discord.js');
+const { EmbedBuilder: djsEmbedBuilder, MessageFlags, Embed, escapeMarkdown } = require('discord.js');
 const winston = require('winston');
 const path = require("path");
 
@@ -109,6 +109,7 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
     const EmbedBuilder = require('./customs/embedBuilder.js');
 
     if (message) message = message.replace("```", "");
+    message = escapeMarkdown(message);
 
     if (!embed) {
         embed = new EmbedBuilder()
@@ -123,7 +124,7 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
 
     return await channel.send({
         embeds: [embed],
-        flags: MessageFlags.SuppressNotifications
+        flags: MessageFlags.SuppressNotifications,
     });
 };
 
@@ -268,7 +269,6 @@ async function process_send_queue(client) {
 
             const channel = await client.channels.fetch(channel_id);
             if (!channel) {
-                console.warn(`[WARN] channel id ${channel_id} not found, can't process send queue`);
                 global.sendQueue.shift();
                 continue;
             };
