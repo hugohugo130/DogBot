@@ -1,8 +1,7 @@
 const { Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User } = require("discord.js");
 const EmbedBuilder = require('../../utils/customs/embedBuilder.js');
-const { get_members_of_guild } = require("../../utils/discord.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
-const { embed_default_color, embed_error_color, embed_job_color, embed_marry_color, reserved_prefixes } = require("../../utils/config.js");
+const { embed_default_color, embed_error_color, embed_job_color, embed_marry_color } = require("../../utils/config.js");
 const { randint, choice } = require("../../utils/random.js");
 const { BetterEval, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished } = require("../../utils/rpg.js");
 const util = require('node:util');
@@ -1391,15 +1390,37 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             ];
 
             let errors = [];
+            const embed_field_value_limit = 1024;
 
             for (const category of categories) {
                 try {
-                    if (Object.keys(category.items).length > 0) {
-                        const itemsText = Object.entries(category.items)
-                            .map(([item, amount]) => `${name[item]} \`${amount.toLocaleString()}\` 個 (回復 \`${food_data[item]}\` ${drumstick_emoji})`)
-                            .join('\n');
+                    const category_items = category.items;
+                    if (Object.keys(category_items).length > 0) {
+                        const max_item_name_length = Math.max(...Object.keys(category_items).map(item => name[item].length));
+                        const max_item_amount_length = Math.max(...Object.values(category_items).map(amount => amount.toString().length));
+                        const max_food_saturation = Math.max(...Object.values(food_data));
+                        const max_length_per_food =
+                            max_item_name_length
+                            + max_item_amount_length
+                            + max_food_saturation.toString().length
+                            + "  個 (回復  :drumstick:)".length;
+                        const max_items_per_chunk = Math.floor(embed_field_value_limit / max_length_per_food);
 
-                        embed.addFields({ name: category.name, value: itemsText });
+                        // Split the items into chunks of max_items_per_chunk items
+                        const itemsArray = Object.entries(category_items);
+                        const chunkSize = max_items_per_chunk;
+                        const chunks = [];
+                        for (let i = 0; i < itemsArray.length; i += chunkSize) {
+                            chunks.push(itemsArray.slice(i, i + chunkSize));
+                        };
+
+                        for (const chunk of chunks) {
+                            const itemsText = chunk
+                                .map(([item, amount]) => `${name[item]} \`${amount.toLocaleString()}\` 個 (回復 \`${food_data[item]}\` ${drumstick_emoji})`)
+                                .join('\n');
+
+                            embed.addFields({ name: category.name, value: itemsText });
+                        };
                     };
                 } catch (err) {
                     const errorStack = util.inspect(err, { depth: null });
