@@ -43,7 +43,9 @@ module.exports = {
             const rpg_data = await load_rpg_data(userid);
 
             const wrong_job = await wrong_job_embed(rpg_data, "/bake");
-            if (wrong_job) return await interaction.respond([]);
+            if (wrong_job) return await interaction.respond([
+                { name: wrong_job.data.title ?? "", value: "nothing" }
+            ]);
 
             const focusedValue = interaction.options.getFocused();
             const choices = Object.keys(rpg_data.inventory)
@@ -64,7 +66,9 @@ module.exports = {
             const rpg_data = await load_rpg_data(userid);
 
             const wrong_job = await wrong_job_embed(rpg_data, "/smelt");
-            if (wrong_job) return await interaction.respond([]);
+            if (wrong_job) return await interaction.respond([
+                { name: wrong_job.data.title ?? "", value: "nothing" }
+            ]);
 
             const focusedValue = interaction.options.getFocused();
             const choices = Object.keys(rpg_data.inventory)
