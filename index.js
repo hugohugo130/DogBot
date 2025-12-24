@@ -110,7 +110,7 @@ async function handle_shutdown(sign) {
     await Promise.all([
         checkDBFilesCorrupted(),
     ]);
-    // await checkAllDatabaseFilesContent();
+    await checkAllDatabaseFilesContent();
     await checkDBFilesExists();
     check_item_data();
 
