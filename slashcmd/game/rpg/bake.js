@@ -1,16 +1,16 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
-const EmbedBuilder = require('../../../utils/customs/embedBuilder.js');
+const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 const { bake, oven_slots } = require("../../../utils/rpg.js");
 
 function divide(amount, by) {
     // 檢查 amount 和 by 是否為整數（沒有小數點）
     if (!Number.isInteger(amount) || !Number.isInteger(by)) {
-        throw new Error('amount 和 by 必須是整數');
-    }
+        throw new Error("amount 和 by 必須是整數");
+    };
 
     // 檢查 by 是否為 0
     if (by === 0) {
-        throw new Error('by 不能為 0');
+        throw new Error("by 不能為 0");
     };
 
     // 如果 amount 可以被 by 整除
@@ -51,8 +51,8 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
 
     if (![1, 2].includes(mode)) throw new Error("mode must be 1 or 2");
 
-    const emoji_cross = await get_emoji(interaction.client, "crosS");
-    const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
+    const emoji_cross = await get_emoji("crosS", interaction.client);
+    const emoji_drumstick = await get_emoji("drumstick", interaction.client);
 
     let rpg_data = load_rpg_data(userId);
     const bake_data = load_bake_data()[userId];
@@ -336,16 +336,16 @@ module.exports = {
         const bake_data = bake_data_all[userId];
         const rpg_data = load_rpg_data(userId);
 
-        const wrongJobEmbed = await wrong_job_embed(rpg_data, "/bake", interaction.client);
-        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
+        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/bake", userId, interaction.client);
+        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
 
         if (subcommand === "bake") {
-            const emoji_cross = await get_emoji(interaction.client, "crosS");
+            const emoji_cross = await get_emoji("crosS", interaction.client);
 
             const oven_remain_slots = oven_slots - (bake_data?.length || 0);
             const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
 
-            if (oven_remain_slots <= 0) {
+            if (oven_remain_slots < 1) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的烤箱已經滿了`)
@@ -359,10 +359,10 @@ module.exports = {
             let amounts = [interaction.options.getInteger("amount") ?? 1];
             const allFoods = interaction.options.getBoolean("all") ?? false;
 
-            if (!first_food && !amounts[0] && !allFoods && !auto_amount) {
+            if (!first_food && !allFoods && !auto_amount) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 洗勒烤 🤔 你什麼也不選`)
+                    .setTitle(`${emoji_cross} | 蛤？ 🤔 你什麼也不選`)
                     .setEmbedFooter();
 
                 return await interaction.followUp({ embeds: [embed] });
@@ -371,7 +371,7 @@ module.exports = {
             if (!first_food && amounts[0] && !allFoods && !auto_amount) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 洗勒烤 🤔 你選了數量但沒選食物`)
+                    .setTitle(`${emoji_cross} | 蛤？ 🤔 你選了數量但沒選食物`)
                     .setEmbedFooter();
 
                 return await interaction.followUp({ embeds: [embed] });
@@ -434,12 +434,12 @@ module.exports = {
 
             for (const [index, item] of items.entries()) {
                 const amount = amounts[index];
-                if (amount === 0) continue;
+                if (!amount) continue;
 
                 await bake_bake(interaction, userId, item, amount, index === 0 ? 1 : 2);
             };
         } else if (subcommand === "info") {
-            const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
+            const emoji_drumstick = await get_emoji("drumstick", interaction.client);
 
             const used_slots = bake_data ? bake_data.length : 0;
             const current_time = Math.floor(Date.now() / 1000);
@@ -475,8 +475,8 @@ module.exports = {
 
             await interaction.editReply({ embeds: [embed] });
         } else if (subcommand === "get") {
-            const emoji_cross = await get_emoji(interaction.client, "crosS");
-            const emoji_drumstick = await get_emoji(interaction.client, "drumstick");
+            const emoji_cross = await get_emoji("crosS", interaction.client);
+            const emoji_drumstick = await get_emoji("drumstick", interaction.client);
 
             if (!bake_data || bake_data.length === 0) {
                 const embed = new EmbedBuilder()
@@ -499,7 +499,7 @@ module.exports = {
                         .setTitle(`${emoji_cross} | 錯誤的物品編號`)
                         .setEmbedFooter();
 
-                    return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                    embeds.push(embed);
                 };
 
                 const item = bake_data[index];
@@ -510,13 +510,15 @@ module.exports = {
                         .setTitle(`${emoji_cross} | 烘烤還沒完成`)
                         .setEmbedFooter();
 
-                    return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                    embeds.push(embed);
                 };
 
                 // 將烘烤完成的物品加入背包
                 rpg_data.inventory[item.output_item_id] = (rpg_data.inventory[item.output_item_id] || 0) + item.amount;
+
                 // 從烤箱移除該物品
                 bake_data.splice(index, 1);
+
                 // 儲存資料
                 save_bake_data(bake_data_all);
                 save_rpg_data(userId, rpg_data);
@@ -533,4 +535,5 @@ module.exports = {
             return interaction.editReply({ embeds });
         };
     },
+    divide,
 };

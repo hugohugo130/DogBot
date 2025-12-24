@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, EmbedBuilder } = require("discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -78,16 +78,18 @@ module.exports = {
         )
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
     async execute(interaction) {
-        const { addPrefix, rmPrefix, getPrefixes } = require('../../../utils/file.js');
+        const { addPrefix, rmPrefix, getPrefixes } = require("../../../utils/file.js");
         const { embed_default_color, reserved_prefixes } = require("../../../utils/config.js");
         await interaction.deferReply();
 
         const subcommand = interaction.options.getSubcommand();
-        const prefix = interaction.options.getString("prefix").trim();
 
         if (!interaction.guild) return interaction.editReply({ content: "你不在伺服器內執行這個指令！" })
 
         if (subcommand === "add") {
+            const prefix = interaction.options.getString("prefix")?.trim();
+            if (!prefix) return;
+
             const guildID = interaction.guildId;
 
             const res = addPrefix(guildID, prefix);
@@ -96,6 +98,9 @@ module.exports = {
 
             await interaction.editReply({ content: `已增加前綴：${prefix}` });
         } else if (subcommand === "remove") {
+            const prefix = interaction.options.getString("prefix")?.trim();
+            if (!prefix) return;
+
             const guildID = interaction.guildId;
 
             if (reserved_prefixes.includes(prefix)) {
@@ -117,7 +122,7 @@ module.exports = {
                 .setColor(embed_default_color)
                 .setTitle("前綴")
                 .setDescription(prefixes.join("\n"))
-                .setFooter(`${prefixes.length} 個前綴`)
+                .setFooter({ text: `${prefixes.length} 個前綴` })
 
             // if (prefixes.length === 0) {
             // await interaction.editReply({ content: "此伺服器沒有設定任何前綴！" });

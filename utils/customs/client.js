@@ -1,6 +1,6 @@
-const { Client, GatewayIntentBits, Options } = require('discord.js');
-const { loadslashcmd } = require('../loadslashcmd.js');
-const { loadDvoiceData } = require('../file.js');
+const { Client, GatewayIntentBits, Options, Collection, VoiceChannel } = require("discord.js");
+const { loadslashcmd } = require("../loadslashcmd.js");
+const { loadDvoiceData } = require("../file.js");
 const { authorName } = require("../config.js");
 
 class DogClient extends Client {
@@ -43,9 +43,16 @@ class DogClient extends Client {
 
         super(options);
 
-        this.dvoice = loadDvoiceData();
+        this.dvoice = new Collection(Object.entries(loadDvoiceData()));
+
+        /** @type {Collection<string, any>} */
         this.commands = loadslashcmd(true);
+
+        /** @type {string} */
         this.author = authorName || "哈狗";
+
+        /** @type {Collection<string, any>} */
+        this.musicTrackSession = new Collection();
 
         /**
          * @type {Object.<string, Object.<string, Object.<string, string>>>}

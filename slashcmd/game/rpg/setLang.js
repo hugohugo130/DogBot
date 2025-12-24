@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const EmbedBuilder = require('../../../utils/customs/embedBuilder.js');
+const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -18,7 +18,7 @@ module.exports = {
     async execute(interaction) {
         // const { get_emoji } = require("../../../utils/rpg.js");
 
-        // const emoji = await get_emoji(interaction.client, "top");
+        // const emoji = await get_emoji("top", interaction.client));
         // const embed = new EmbedBuilder()
         //     .setColor(0x00BBFF)
         //     .setTitle(`${emoji} | 設定語言`)

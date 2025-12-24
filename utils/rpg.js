@@ -1,7 +1,9 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, escapeMarkdown } = require("discord.js");
+const util = require("util");
+
 const { wait_until_ready } = require("./wait_until_ready.js");
 const { embed_default_color, embed_error_color, embed_fell_color, reserved_prefixes } = require("./config.js");
-const EmbedBuilder = require('./customs/embedBuilder.js');
+const EmbedBuilder = require("./customs/embedBuilder.js");
 const DogClient = require("./customs/client.js");
 
 const mine_gets = [
@@ -158,7 +160,7 @@ const recipes = {
 
 // 動態生成木材到木板的合成配方，比例 1:4
 Object.entries(logs).forEach(([logKey, logValue]) => {
-    const plankKey = logKey.replace('_wood', '_planks');
+    const plankKey = logKey.replace("_wood", "_planks");
     if (planks[plankKey]) {
         recipes[planks[plankKey]] = {
             input: [
@@ -471,17 +473,16 @@ const food_data = {
     catfish: 3,
     chicken: 3,
     chocolate: 2,
-    clownfish: 1,
+    clownfish: 3,
     cod: 2,
     cookie: 2,
     crab: 2,
     duck: 3,
     eel: 4,
-    goldfish: 1,
-    jellyfish: 1,
-    koi: 1,
+    goldfish: 3,
+    jellyfish: 3,
+    koi: 3,
     lobster: 2,
-    melon_slice: 2,
     mutton: 3,
     octopus: 4,
     pork: 4,
@@ -491,7 +492,16 @@ const food_data = {
     corn: 1,
     cooked_corn: 3,
     pufferfish: 2,
-    pumpkin_pie: 3,
+    salmon: 3,
+    shrimp: 3,
+    squid: 4,
+    swordfish: 3,
+    tropical_fish: 2,
+    tuna: 3,
+    whale: 4,
+    raw_hugo: 20,
+    hugo: 100,
+    egg: 1,
     raw_beef: 1,
     raw_chicken: 1,
     raw_duck: 1,
@@ -520,16 +530,6 @@ const food_data = {
     raw_tropical_fish: 1,
     raw_tuna: 1,
     raw_whale: 1,
-    salmon: 3,
-    shrimp: 3,
-    squid: 4,
-    swordfish: 3,
-    tropical_fish: 2,
-    tuna: 3,
-    whale: 4,
-    raw_hugo: 20,
-    hugo: 100,
-    egg: 1,
 };
 
 let foods = { ...foods_crops, ...foods_meat };
@@ -610,6 +610,7 @@ let bake = {
 
 for (const raw_food of Object.keys(foods_meat).filter(e => e.startsWith("raw_"))) {
     if (bake[raw_food]) continue;
+
     const food = raw_food.replace("raw_", "");
     bake[raw_food] = food;
 };
@@ -898,6 +899,7 @@ async function notEnoughItemEmbed(item_datas, client = global._client) {
         if (item_data.name && !item_data.item) {
             logger.warn(`item_data應該使用item屬性，但使用了name：\n${JSON.stringify(item_data, null, 4)}`)
             item_data.item = item_data.name;
+            delete item_data.name;
         };
 
         const length = Object.keys(item_data).length;
@@ -908,7 +910,7 @@ async function notEnoughItemEmbed(item_datas, client = global._client) {
         return `${get_name_of_id(item_data.item)} \`x${item_data.amount}\`個`;
     }).join("、");
 
-    const emoji_cross = await get_emoji(client, "crosS");
+    const emoji_cross = await get_emoji("crosS", client);
     const embed = new EmbedBuilder()
         .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
         .setColor(embed_error_color)
@@ -944,27 +946,42 @@ function chunkArray(array, chunkSize) {
  * 
  * @param {Object} rpg_data 
  * @param {string} command
+ * @param {string} userId
  * @param {DogClient} client
  * @returns {Promise<EmbedBuilder | null>}
  */
-async function wrong_job_embed(rpg_data, command, client = global._client) {
+async function wrong_job_embed(rpg_data, command, userId, client = global._client) {
     const workJobShouldBe = workCmdJobs[command];
 
-    if (workJobShouldBe?.length > 1) {
+    if (workJobShouldBe?.length > 0) {
         if (rpg_data.job !== workJobShouldBe?.[0]) {
             const shouldBeJobName = workJobShouldBe?.[1]?.name;
 
-            const emoji_cross = await get_emoji(client, "crosS");
+            const emoji_cross = await get_emoji("crosS", client);
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你的職業不是${shouldBeJobName}`)
                 .setEmbedFooter();
 
-            return embed;
+            let row = null;
+
+            if (!rpg_data.job) {
+                embed.setTitle(`${emoji_cross} | 你沒有選擇職業`);
+
+                const chooseJobButton = new ButtonBuilder()
+                    .setCustomId(`job_menu|${userId}`)
+                    .setLabel("選擇職業")
+                    .setStyle(ButtonStyle.Primary);
+
+                row = new ActionRowBuilder()
+                    .addComponents(chooseJobButton);
+            };
+
+            return [embed, row];
         };
     };
 
-    return null;
+    return [null, null];
 };
 
 /**
@@ -987,22 +1004,28 @@ async function get_emoji_object(name, client = global._client) {
     return emoji;
 };
 
-async function get_emoji(client = global._client, name) {
+/**
+ * 
+ * @param {string} name 
+ * @param {DogClient} [client=global._client] 
+ * @returns {Promise<string>}
+ */
+async function get_emoji(name, client = global._client) {
     // await client.application.fetch();
     wait_until_ready(client);
 
-    let emoji = await get_emoji_object(name, client);
+    const emojiObject = await get_emoji_object(name, client);
 
     // if (!emoji) throw new Error(`找不到名為${name}的emoji`);
-    if (!emoji) return "";
-    emoji = `<${emoji.animated ? 'a' : ''}:${emoji.name}:${emoji.id}>`;
+    if (!emojiObject) return "";
+    const emoji = `<${emojiObject.animated ? "a" : ""}:${emojiObject.name}:${emojiObject.id}>`;
     return emoji;
 };
 
 async function get_cooldown_embed(remaining_time, client = global._client, action, count) {
     const { rpg_actions } = require("../cogs/rpg/msg_handler.js");
 
-    const emoji = await get_emoji(client, "crosS");
+    const emoji = await get_emoji("crosS", client);
 
     const timestamp = Math.floor(Date.now() / 1000) + Math.floor(remaining_time / 1000);
     const time = `<t:${timestamp}:T> (<t:${timestamp}:R>)`;
@@ -1055,34 +1078,34 @@ async function get_failed_embed(client = global._client, failed_reason, rpg_data
     let description = `${failed_reason}`;
 
     if (failed_reason === "boom") {
-        const emoji_bomb = await get_emoji(client, "bomb");
+        const emoji_bomb = await get_emoji("bomb", client);
         title = `${emoji_bomb} | 蹦!`;
         description = `你以為挖到了鑽石，但其實是一顆從二戰就埋藏在那的炸彈！`;
     } else if (failed_reason === "mouse") {
-        const emoji_wood = await get_emoji(client, "wood");
+        const emoji_wood = await get_emoji("wood", client);
         color = embed_fell_color;
         title = `${emoji_wood} | 山老鼠別跑`;
         description = `你來到了森林發現有山老鼠把木材都偷走了！`;
     } else if (failed_reason === "collapse") {
-        const emoji_bomb = await get_emoji(client, "bomb");
+        const emoji_bomb = await get_emoji("bomb", client);
         title = `${emoji_bomb} | 快逃!!`;
         description = `你努力地在暗黑的礦洞中尋找鑽石，但是別的同伴亂挖導致礦洞坍塌了！`;
     } else if (failed_reason === "storm") {
-        const emoji_fisher = await get_emoji(client, "fisher");
+        const emoji_fisher = await get_emoji("fisher", client);
         title = `${emoji_fisher} | 搖到快吐了`;
         description = `氣象明明說今天天氣很好怎麼會有暴風雨！`;
     } else if (failed_reason === "shark") {
-        const emoji_fisher = await get_emoji(client, "fisher");
+        const emoji_fisher = await get_emoji("fisher", client);
         title = `${emoji_fisher} | a`;
         description = `欸不是鯊魚 快跑`;
     } else if (failed_reason === "acid_rain") {
 
     } else if (failed_reason === "escape") {
-        const emoji_cow = await get_emoji(client, "cow");
+        const emoji_cow = await get_emoji("cow", client);
         title = `${emoji_cow} | 給我回來!`;
         description = `你放牧了一頭牛，結果一轉身他就不見了？！`;
     } else if (failed_reason === "epidemic") {
-        const emoji_cow = await get_emoji(client, "cow");
+        const emoji_cow = await get_emoji("cow", client);
         title = `${emoji_cow} | 瘟疫在搞欸`;
         description = `很不幸的最近禽類都染上瘟疫，導致動物都死光了`;
     };
@@ -1091,7 +1114,7 @@ async function get_failed_embed(client = global._client, failed_reason, rpg_data
         .setColor(color)
         .setTitle(title)
         .setDescription(description)
-        .setEmbedFooter('', rpg_data);
+        .setEmbedFooter("", { rpg_data });
 
     return embed;
 }
@@ -1100,8 +1123,8 @@ async function get_failed_embed(client = global._client, failed_reason, rpg_data
  * 增加錢
  * @param {Object} rpg_data 
  * @param {number} amount 
- * @param {string} originalUser 來源用戶 (系統 或者 '<@id>')
- * @param {string} targetUser 目標用戶 (只能是 '<@id>')
+ * @param {string} originalUser 來源用戶 (系統 或者 "<@id>")
+ * @param {string} targetUser 目標用戶 (只能是 "<@id>")
  * @param {string} type 交易類型
  * @returns {number}
  */
@@ -1121,8 +1144,8 @@ function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
  * 扣除錢
  * @param {Object} rpg_data 
  * @param {number} amount 
- * @param {string} originalUser 來源用戶 (系統 或者 '<@id>')
- * @param {string} targetUser 目標用戶 (只能是 '<@id>')
+ * @param {string} originalUser 來源用戶 (系統 或者 "<@id>")
+ * @param {string} targetUser 目標用戶 (只能是 "<@id>")
  * @param {string} type 交易類型
  * @returns {number}
  */
@@ -1138,6 +1161,13 @@ function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
     return rpg_data.money;
 };
 
+function generate_analyze_data(title, description) {
+    return {
+        title,
+        description,
+    };
+};
+
 /**
  * 
  * @param {string} errorStack 
@@ -1145,31 +1175,27 @@ function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
  */
 function error_analyze(errorStack) {
     const analyzes = [];
-    const template = {
-        title: "",
-        description: "",
-    };
 
     if (errorStack.includes("is not a function")) {
-        const sample = structuredClone(template);
+        const title = "無效的函數";
+        const description = "不好! 哈狗的代碼出錯了! (使用了錯誤的函數)";
 
-        sample.title = "無效的函數";
-        sample.description = "不好! 哈狗的代碼出錯了! (使用了錯誤的函數)";
+        const data = generate_analyze_data(title, description);
 
-        analyzes.push(sample);
+        analyzes.push(data);
     };
 
-    const match_read_prop = errorStack.match(/^TypeError: Cannot read properties of (\w+) \(reading '(\w+)'\)$/)
+    const match_read_prop = errorStack.match(/^TypeError: Cannot read properties of (\w+) \(reading ['"](\w+)['"]\)$/);
     if (match_read_prop) {
         const object = match_read_prop[1];
         const property = match_read_prop[2];
 
-        const sample = structuredClone(template);
+        const title = "無效的屬性";
+        const description = `${object} 沒有 ${property} 這個屬性餒 :(`;
 
-        sample.title = "無效的屬性";
-        sample.description = `${object} 沒有 ${property} 這個屬性餒 :(`;
+        const data = generate_analyze_data(title, description);
 
-        analyzes.push(sample);
+        analyzes.push(data);
     };
 
     // Expected: expected.length <= 100
@@ -1181,36 +1207,77 @@ function error_analyze(errorStack) {
     ) {
         const length = error_length_match[1];
 
-        const sample = structuredClone(template);
+        const title = "糟糕! 你的輸入太長了!";
+        const description = `discord限制代碼中的一些字元長度，不能超過 ${length} 字元`;
 
-        sample.title = "糟糕! 你的輸入太長了!";
-        sample.description = `discord限制代碼中的一些字元長度，不能超過 ${length} 字元`;
+        const data = generate_analyze_data(title, description);
 
-        analyzes.push(sample);
+        analyzes.push(data);
+    };
+
+    // at async Object.execute (path/to/file.usuallyJs:Line:Column)
+    // async may be missing
+    for (const errorStackLine of errorStack.split("\n")) {
+        const match_execute = errorStackLine.match(/^at\s+(?:async\s+)?[\w$.]+\s+\(((?:[a-zA-Z]:)?[^:]+?):(\d+):(\d+)\)$/);
+        if (match_execute) {
+            const file = match_execute[1].replace("/app/", ""); // 檔案路徑，並且移除 docker 路徑 /app/
+            const line = match_execute[2]; // 行
+            const column = match_execute[3]; // 列
+
+            const title = "代碼錯誤";
+            const description = `
+從錯誤中看出，這是斜線指令的錯誤:
+檔案: ${file}
+行: ${line}
+列: ${column}
+`.trim();
+
+            const data = generate_analyze_data(title, description);
+
+            analyzes.push(data);
+        };
+    };
+
+    // 如果沒有分析出來
+    if (!analyzes.length) {
+        const title = "未知的錯誤";
+        const description = "未知的錯誤";
+
+        const data = generate_analyze_data(title, description);
+
+        analyzes.push(data);
     };
 
     return analyzes;
 };
 
+/**
+ * 
+ * @param {string} text 
+ * @param {DogClient} [client=global._client] 
+ * @returns {Promise<EmbedBuilder[]>}
+ */
+async function get_loophole_embed(text, client = global._client) {
+    const emoji_cross = await get_emoji("crosS", client);
 
-async function get_loophole_embed(client = global._client, text) {
-    const emoji_cross = await get_emoji(client, "crosS");
+    if (typeof text instanceof Error) {
+        text = util.inspect(text, { depth: null });
+    };
 
-    if (typeof text !== 'string') {
+    if (typeof text !== "string") {
         text = String(text);
     };
 
-    if (text) {
-        text = escapeMarkdown(text);
+    text = escapeMarkdown(text, {
+        codeBlockContent: false,
+        codeBlock: true,
+    });
 
-        if (!text.includes("```")) {
-            text = `\`\`\`${text}\`\`\``;
-        };
-    };
+    text = `\`\`\`\n${text}\n\`\`\``;
 
     // embed 描述最長：4096 字元
-    if (text.length > 4000) {
-        text = text.slice(0, 4096) + "...";
+    if (text.length > 4096) {
+        text = text.slice(0, 4093) + "...";
     };
 
     const embed = new EmbedBuilder()
@@ -1225,13 +1292,11 @@ async function get_loophole_embed(client = global._client, text) {
         .setEmbedFooter();
 
     const error_analyzes = error_analyze(text);
-    if (error_analyzes.length) {
-        for (const analyze of error_analyzes) {
-            error_analyze_embed.addFields({
-                name: analyze.title,
-                value: analyze.description,
-            });
-        };
+    for (const analyze of error_analyzes) {
+        error_analyze_embed.addFields({
+            name: analyze.title,
+            value: analyze.description,
+        });
     };
 
     return [embed, error_analyze_embed];
@@ -1245,17 +1310,17 @@ async function get_loophole_embed(client = global._client, text) {
  */
 async function job_delay_embed(userId, client = global._client) {
     const { load_rpg_data } = require("./file.js");
-    const { convertToSecond, DateNowSecond } = require("./timestamp.js");
+    const { convertToSecondTimestamp, DateNowSecond } = require("./timestamp.js");
     const { setJobDelay } = require("./config.js");
 
     const rpg_data = await load_rpg_data(userId);
     const lastRunTimestamp = rpg_data.lastRunTimestamp ?? {};
-    const setJobTime = convertToSecond(lastRunTimestamp.job ?? 0);
+    const setJobTime = convertToSecondTimestamp(lastRunTimestamp.job ?? 0);
     const waitUntil = setJobTime + setJobDelay;
     const now = DateNowSecond();
 
     if (waitUntil > now) {
-        const emoji_cross = await get_emoji(client, "crosS");
+        const emoji_cross = await get_emoji("crosS", client);
         const embed = new EmbedBuilder()
             .setColor(embed_error_color)
             .setTitle(`${emoji_cross} | 轉職後一個禮拜不能更動職業!`)
@@ -1324,7 +1389,7 @@ async function amount_limit_embed(amount) {
         return null;
     };
 
-    const emoji_cross = await get_emoji(client, "crosS");
+    const emoji_cross = await get_emoji("crosS", client);
 
     const embed = new EmbedBuilder()
         .setColor(embed_error_color)
@@ -1344,7 +1409,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
 
         const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
 
-        const bag_emoji = await get_emoji(client, "bag");
+        const bag_emoji = await get_emoji("bag", client);
 
         let embed = new EmbedBuilder()
             .setTitle(`${bag_emoji} | 查看包包`)
@@ -1367,7 +1432,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
 
     const emojiNames = ["bag", "ore", "farmer", "cow", "swords", "potion"];
     const [bag_emoji, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await Promise.all(
-        emojiNames.map(name => get_emoji(client, name))
+        emojiNames.map(name => get_emoji(name, client))
     );
 
     // 分類物品
@@ -1412,13 +1477,13 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
     // 使用循環添加各類物品欄位
     const categories = [
         { items: ores, name: `${ore_emoji} 礦物` },
-        { items: log_items, name: '🪵 木材' },
+        { items: log_items, name: "🪵 木材" },
         { items: food_crops_items, name: `${farmer_emoji} 農作物` },
         { items: food_meat_items, name: `${cow_emoji} 肉類` },
         { items: fish_items, name: `🐟 魚類` },
         { items: weapons_armor_items, name: `${swords_emoji} 武器 & 防具` },
         { items: potions_items, name: `${potion_emoji} 藥水` },
-        { items: other_items, name: '📦 其他物品' }
+        { items: other_items, name: "📦 其他物品" }
     ];
 
     // 如果背包是空的
@@ -1429,7 +1494,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
             if (Object.keys(category.items).length > 0) {
                 const itemsText = Object.entries(category.items)
                     .map(([item, amount]) => `${get_name_of_id(item)} \`x${amount.toLocaleString()}\``)
-                    .join('\n');
+                    .join("\n");
                 embed.addFields({ name: category.name, value: String(itemsText), inline: true });
             };
         };
@@ -1455,7 +1520,7 @@ function firstPrefix(guildID) {
  * 
  * @param {string} guildID 
  * @param {string} prefix 
- * @returns {boolean}
+ * @returns {Array<string>}
  */
 function InPrefix(guildID, prefix) {
     const { loadData } = require("./file.js");
@@ -1466,31 +1531,13 @@ function InPrefix(guildID, prefix) {
     const prefixes = (guildData.prefix ?? [])
         .concat(reserved_prefixes);
 
-    return prefixes.includes(prefix);
-};
+    return prefixes
+        .map(p => {
+            if (prefix.includes(p)) return p;
 
-/**
- * 
- * @param {string} guildID 
- * @param {string} prefix 
- * @returns {boolean | string}
- */
-function Include_prefixes(guildID, prefix) {
-    const { loadData } = require("./file.js");
-    const { reserved_prefixes } = require("./config.js");
-
-    const guildData = loadData(guildID);
-
-    const prefixes = (guildData.prefix ?? [])
-        .concat(reserved_prefixes);
-
-    for (const p of prefixes) {
-        if (prefix.includes(p)) {
-            return p;
-        };
-    };
-
-    return false;
+            return null;
+        })
+        .filter(p => p);
 };
 
 /**
@@ -1519,7 +1566,7 @@ function startsWith_prefixes(guildID, prefix) {
 
 function any(iterable) {
     if (iterable == null) {
-        throw new TypeError('any() argument must be an iterable');
+        throw new TypeError("any() argument must be an iterable");
     };
 
     for (const element of iterable) {
@@ -1534,15 +1581,15 @@ function any(iterable) {
 function all(iterable, defaultValue = true) {
     if (iterable == null) {
         if (arguments.length === 1) {
-            throw new TypeError('all() argument must be an iterable');
+            throw new TypeError("all() argument must be an iterable");
         };
 
         return defaultValue;
     };
 
     // 处理不可迭代的情况
-    if (typeof iterable[Symbol.iterator] !== 'function') {
-        throw new TypeError('all() argument must be an iterable');
+    if (typeof iterable[Symbol.iterator] !== "function") {
+        throw new TypeError("all() argument must be an iterable");
     };
 
     // 使用 for...of 遍历
@@ -1553,7 +1600,7 @@ function all(iterable, defaultValue = true) {
             };
         };
     } catch (error) {
-        throw new TypeError('all() argument must be an iterable');
+        throw new TypeError("all() argument must be an iterable");
     };
 
     return true;
@@ -1651,7 +1698,6 @@ module.exports = {
     wrong_job_embed,
     firstPrefix,
     InPrefix,
-    Include_prefixes,
     startsWith_prefixes,
     all,
     any,

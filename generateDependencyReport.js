@@ -1,0 +1,1 @@
+console.log(require("@discordjs/voice").generateDependencyReport())

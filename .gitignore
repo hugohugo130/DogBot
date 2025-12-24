@@ -135,10 +135,11 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-**/package-lock.json
 db/
-auto_register.cmd.data
 .bailurules/
 ai_update/
 database_recovery/
+temp/
+**/package-lock.json
+auto_register.cmd.data
 test.js

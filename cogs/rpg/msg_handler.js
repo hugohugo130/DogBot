@@ -1,10 +1,10 @@
 const { Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User } = require("discord.js");
-const EmbedBuilder = require('../../utils/customs/embedBuilder.js');
+const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
 const { embed_default_color, embed_error_color, embed_job_color, embed_marry_color } = require("../../utils/config.js");
 const { randint, choice } = require("../../utils/random.js");
-const { BetterEval, get_loophole_embed, get_emoji, add_money, remove_money, ls_function, is_cooldown_finished, chunkArray } = require("../../utils/rpg.js");
-const util = require('node:util');
+const { get_loophole_embed, get_emoji, ls_function, is_cooldown_finished, chunkArray } = require("../../utils/rpg.js");
+const util = require("node:util");
 const DogClient = require("../../utils/customs/client.js");
 
 const max_hunger = 20;
@@ -85,12 +85,14 @@ async function redirect({ client, message, command, mode = 0 }) {
     */
 
     const { mentions_users } = require("../../utils/message.js");
-    const { firstPrefix, Include_prefixes } = require("../../utils/rpg.js");
+    const { firstPrefix, InPrefix } = require("../../utils/rpg.js");
     if (![0, 1].includes(mode)) throw new TypeError("Invalid mode");
 
     const guild = message.guild;
 
-    if (Include_prefixes(guild.id, command)) {
+    const pf = InPrefix(guild.id, command)?.[0];
+
+    if (pf) {
         try {
             throw new Error(`傳送包含${pf}的指令名已棄用，現在只需要傳送指令名稱`);
         } catch (e) {
@@ -141,14 +143,14 @@ function setEmbedAuthor(client = global._client, embed, author = "") {
  * @returns {Promise<EmbedBuilder>}
  */
 async function show_marry_info(client, rpg_data) {
-    const { convertToSecond } = require("../../utils/timestamp.js");
+    const { convertToSecondTimestamp } = require("../../utils/timestamp.js");
 
     const marry_info = rpg_data?.marry ?? {};
     const married = marry_info.status ?? false;
     if (!married) throw new Error("not married but triggered show_marry_info");
 
-    const emoji_check = await get_emoji(client, "check");
-    const marryTime = convertToSecond(marry_info.time);
+    const emoji_check = await get_emoji("check", client);
+    const marryTime = convertToSecondTimestamp(marry_info.time);
 
     const embed = new EmbedBuilder()
         .setTitle(`${emoji_check} 結婚資訊`)
@@ -161,19 +163,6 @@ async function show_marry_info(client, rpg_data) {
         .setEmbedFooter();
 
     return embed;
-};
-
-const rpg_emojis = {
-    herd: "cow",
-    hew: "wood",
-    fell: "wood",
-    wood: "wood",
-    mine: "ore",
-    shop: "store",
-    ls: "backpack",
-    buy: "store",
-    sell: "trade",
-    cd: "timer",
 };
 
 /*
@@ -244,7 +233,7 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
         if (!name[item]) {
-            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`);
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`, client);
             return await message.reply({ embeds });
         };
 
@@ -252,7 +241,7 @@ const rpg_commands = {
         rpg_data.inventory[item] += amount;
         save_rpg_data(userid, rpg_data);
         const ore_name = name[item];
-        const emoji = await get_emoji(client, rpg_emojis["mine"]);
+        const emoji = await get_emoji("ore", client);
 
         let description;
         if (item === "stone") {
@@ -270,7 +259,7 @@ const rpg_commands = {
             .setColor(embed_default_color)
             .setTitle(`${emoji} | 挖礦`)
             .setDescription(description)
-            .setEmbedFooter('', rpg_data);
+            .setEmbedFooter("", { rpg_data });
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -286,7 +275,7 @@ const rpg_commands = {
         const log_name = name[item];
 
         if (!name[item]) {
-            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`, client);
             return await message.reply({ embeds });
         };
 
@@ -301,13 +290,13 @@ const rpg_commands = {
         rpg_data.inventory[item] += amount;
         save_rpg_data(userid, rpg_data);
 
-        const emoji = await get_emoji(client, rpg_emojis["hew"]);
+        const emoji = await get_emoji("wood", client);
 
         const embed = new EmbedBuilder()
             .setColor(embed_fell_color)
             .setTitle(`${emoji} | ${item === "god_wood" ? "是神?!" : "平常的一天"}`)
             .setDescription(description)
-            .setEmbedFooter('', rpg_data);
+            .setEmbedFooter("", { rpg_data });
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -319,7 +308,7 @@ const rpg_commands = {
 
         const { item: random_animal, amount } = random_item;
         if (!animal_products[random_animal]) {
-            const embeds = await get_loophole_embed(`找不到${random_animal}的動物產品: ${animal_products[random_animal]}`);
+            const embeds = await get_loophole_embed(`找不到${random_animal}的動物產品: ${animal_products[random_animal]}`, client);
             return await message.reply({ embeds });
         };
 
@@ -331,10 +320,10 @@ const rpg_commands = {
 
         const product_name = name[product];
         const animal_name = product_name.replace("生", "").replace("肉", "");
-        const emoji_cow = await get_emoji(client, "cow");
+        const emoji_cow = await get_emoji("cow", client);
 
         let title = `是${animal_name}`;
-        let description = `你宰了一隻${animal_name}，獲得了 \`${amount}\` 個${product_name}！`;
+        let description = `你宰了一隻${animal_name}，獲得了 \`${amount}\` 個 ${product_name}！`;
         if (product === "raw_chicken") {
             const egg_amount = randint(1, 3);
             description += `\n不僅如此！你還發現了 \`${egg_amount}\` 顆 ${get_name_of_id("egg")}！`
@@ -345,6 +334,9 @@ const rpg_commands = {
         } else if (product === "raw_duck") {
             title = `${emoji_cow} | 呱!`;
             description = `呱呱呱呱呱，呱呱呱呱 \`${amount}\` 呱呱呱！`;
+        }else if (product === "raw_hugo") {
+            title = `${emoji_cow} | 哈狗!`;
+            description = `你把哈狗的巢穴連根拔起，並且抓到了 \`${amount}\` 隻 ${get_name_of_id("raw_hugo")} 並逃走了！`;
         } else if (product === "dogdog") {
             title = `🐶 汪!`
             description = `你偷走了機器犬的幼崽！拿到了 \`${amount}\` 隻 ${get_name_of_id("dogdog")}`
@@ -356,7 +348,7 @@ const rpg_commands = {
             .setColor(embed_default_color)
             .setTitle(`${emoji_cow} | ${title}`)
             .setDescription(description)
-            .setEmbedFooter('', rpg_data);
+            .setEmbedFooter("", { rpg_data });
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -368,7 +360,7 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
         if (!name[item]) {
-            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`);
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`, client);
             return await message.reply({ embeds });
         };
 
@@ -377,12 +369,12 @@ const rpg_commands = {
         rpg_data.inventory[item] += amount;
         save_rpg_data(userid, rpg_data);
 
-        const emoji_potion = await get_emoji(client, "potion");
+        const emoji_potion = await get_emoji("potion", client);
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${emoji_potion} | 釀造`)
             .setDescription(`你研究了許久，獲得了 \`${amount}\` 個${potion_name}`)
-            .setEmbedFooter('', rpg_data);
+            .setEmbedFooter("", { rpg_data });
         // .setTitle(`${emoji_potion} | 回復藥水可以幹嘛?`)
         // .setDescription(`你研究了許久，獲得了 \`${amount}\` 個${potion_name}\n\n之後推出的冒險可以用上`);
 
@@ -397,7 +389,7 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
         if (!name[item]) {
-            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`);
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`, client);
             return await message.reply({ embeds });
         };
 
@@ -427,12 +419,12 @@ const rpg_commands = {
             };
         };
 
-        const emoji = await get_emoji(client, "fisher");
+        const emoji = await get_emoji("fisher", client);
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${emoji} | ${fish_text}`)
             .setDescription(description)
-            .setEmbedFooter('', rpg_data);
+            .setEmbedFooter("", { rpg_data });
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -440,14 +432,14 @@ const rpg_commands = {
     shop: ["商店", "對你的商店進行任何操作", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_shop_data, save_shop_data, save_rpg_data } = require("../../utils/file.js");
         const { mentions_users } = require("../../utils/message.js");
-        const { name, mine_gets, ingots, foods, shop_lowest_price, get_name_of_id } = require("../../utils/rpg.js");
+        const { name, mine_gets, ingots, foods, shop_lowest_price, get_name_of_id, get_id_of_name } = require("../../utils/rpg.js");
         const subcommand = args[0];
 
         switch (subcommand) {
             case "add": {
                 const userid = message.author.id;
-                const emoji = await get_emoji(client, "store");
-                const emoji_cross = await get_emoji(client, "crosS");
+                const emoji = await get_emoji("store", client);
+                const emoji_cross = await get_emoji("crosS", client);
                 const shop_data = load_shop_data(userid);
                 const status = shop_data.status ? "營業中" : "打烊";
                 /*
@@ -457,10 +449,11 @@ const rpg_commands = {
                 */
                 let [_, item_name, amount, price] = args;
                 item_name = get_name_of_id(item_name); // 物品名稱
-                const item = Object.keys(name).find(key => name[key] === item_name); // 物品id
+                const item = get_id_of_name(item_name); // 物品id
 
                 if (amount === "all") amount = get_number_of_items(item, userid); // 獲取所有物品數量
-                if (!Object.keys(name).includes(args[1]) && !Object.values(name).includes(args[1])) {
+
+                if (!Object.keys(name).concat(Object.values(name)).includes(args[1])) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji} | 未知的物品`)
@@ -474,7 +467,7 @@ const rpg_commands = {
                 amount = parseInt(amount);
                 if (isNaN(amount)) amount = 1;
                 if (amount < 1) {
-                    const emoji = await get_emoji(client, "crosS");
+                    const emoji = await get_emoji("crosS", client);
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji} | 錯誤的數量`)
@@ -487,7 +480,7 @@ const rpg_commands = {
                 // let price = parseInt(args[3]) || item_exist?.price || shop_lowest_price[item];
                 price = parseInt(price) || item_exist?.price;
                 if (!price || price < 1 || price >= 1000000000) {
-                    const emoji = await get_emoji(client, "crosS");
+                    const emoji = await get_emoji("crosS", client);
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji} | 錯誤的價格`)
@@ -498,7 +491,7 @@ const rpg_commands = {
                 };
 
                 if (price < shop_lowest_price[item]) {
-                    const emoji = await get_emoji(client, "crosS");
+                    const emoji = await get_emoji("crosS", client);
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji} | 價格低於最低價格`)
@@ -560,10 +553,11 @@ const rpg_commands = {
             }
             case "remove": {
                 const userid = message.author.id;
-                const emoji = await get_emoji(client, "store");
-                const emoji_cross = await get_emoji(client, "crosS");
+                const emoji = await get_emoji("store", client);
+                const emoji_cross = await get_emoji("crosS", client);
                 const shop_data = load_shop_data(userid);
                 const item = args[1];
+
                 if (!item) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -573,6 +567,7 @@ const rpg_commands = {
                     if (mode === 1) return { embeds: [embed] };
                     return await message.reply({ embeds: [embed] });
                 };
+
                 const item_name = name[item] || item;
                 const item_id = Object.keys(name).find(key => name[key] === item_name); // 物品id
                 const item_exist = shop_data.items[item_id];
@@ -582,19 +577,28 @@ const rpg_commands = {
                         .setTitle(`${emoji_cross} | 你的商店沒有這個物品`)
                         .setEmbedFooter();
 
+                    if (mode === 1) return { embeds: [embed] };
+                    return await message.reply({ embeds: [embed] });
+                };
+
+                const remove_amount = args[2];
+                if (!rpg_data.inventory[item_id]) rpg_data.inventory[item_id] = 0;
+                const amount = parseInt(remove_amount) || item_exist.amount;
+
+                if (amount < 1) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 錯誤的數量`)
+                        .setEmbedFooter();
 
                     if (mode === 1) return { embeds: [embed] };
                     return await message.reply({ embeds: [embed] });
                 };
 
-                const remove_amount = args[2] || undefined;
-                if (!rpg_data.inventory[item_id]) rpg_data.inventory[item_id] = 0;
-                const amount = remove_amount ? parseInt(remove_amount) : shop_data.items[item_id].amount;
-
                 if (amount > shop_data.items[item_id].amount) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 你沒有足夠的物品`)
+                        .setTitle(`${emoji_cross} | 商店沒有足夠的物品`)
                         .setEmbedFooter();
 
                     if (mode === 1) return { embeds: [embed] };
@@ -603,13 +607,14 @@ const rpg_commands = {
 
                 rpg_data.inventory[item_id] += amount;
 
-                save_rpg_data(userid, rpg_data);
                 shop_data.items[item_id].amount -= amount;
                 if (shop_data.items[item_id].amount <= 0) {
                     delete shop_data.items[item_id];
                 };
 
+                save_rpg_data(userid, rpg_data);
                 save_shop_data(userid, shop_data);
+
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
                     .setTitle(`${emoji} | 成功下架了 \`${amount.toLocaleString()}\` 個 ${item_name}`)
@@ -622,10 +627,10 @@ const rpg_commands = {
                 const user = (await mentions_users(message)).first() || message.author;
                 const userid = user.id;
 
-                const emoji_cross = await get_emoji(client, "crosS");
-                const emoji_store = await get_emoji(client, "store");
-                const ore_emoji = await get_emoji(client, "ore");
-                const food_emoji = await get_emoji(client, "bread");
+                const emoji_cross = await get_emoji("crosS", client);
+                const emoji_store = await get_emoji("store", client);
+                const ore_emoji = await get_emoji("ore", client);
+                const bread_emoji = await get_emoji("bread", client);
                 const shop_data = load_shop_data(userid);
 
                 if (!shop_data.status && user.id != message.author.id) {
@@ -653,7 +658,7 @@ const rpg_commands = {
                     .filter(([item]) => Object.values(mine_gets).includes(item) || Object.values(ingots).includes(item))
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([item, data]) => `${name[item]} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
-                    .join('\n');
+                    .join("\n");
                 if (minerals) embed.addFields({ name: `${ore_emoji} 礦物`, value: minerals, inline: false });
 
                 // 食物
@@ -661,15 +666,15 @@ const rpg_commands = {
                     .filter(([item]) => Object.values(foods).includes(item))
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([item, data]) => `${name[item]} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
-                    .join('\n');
-                if (food) embed.addFields({ name: `${food_emoji} 食物`, value: food, inline: false });
+                    .join("\n");
+                if (food) embed.addFields({ name: `${bread_emoji} 食物`, value: food, inline: false });
 
                 // 其他
                 const others = Object.entries(shop_data.items)
                     .filter(([item]) => !Object.values(mine_gets).includes(item) && !Object.values(ingots).includes(item) && !Object.values(foods).includes(item))
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([item, data]) => `${name[item]} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
-                    .join('\n');
+                    .join("\n");
                 if (others) embed.addFields({ name: `其他`, value: others, inline: false });
 
                 const nothing_sell = !minerals && !food && !others;
@@ -682,7 +687,7 @@ const rpg_commands = {
 
                 const buyItemButton = new ButtonBuilder()
                     .setCustomId(`help|${message.author.id}|rpg|buy`)
-                    .setLabel('購買食物')
+                    .setLabel("購買食物")
                     .setEmoji(emoji_store)
                     .setStyle(ButtonStyle.Primary);
 
@@ -695,7 +700,7 @@ const rpg_commands = {
             case "open":
             case "on": {
                 const userid = message.author.id;
-                const emoji = await get_emoji(client, "store");
+                const emoji = await get_emoji("store", client);
                 const shop_data = load_shop_data(userid);
                 shop_data.status = true;
                 save_shop_data(userid, shop_data);
@@ -711,7 +716,7 @@ const rpg_commands = {
             case "close":
             case "off": {
                 const userid = message.author.id;
-                const emoji = await get_emoji(client, "store");
+                const emoji = await get_emoji("store", client);
                 const shop_data = load_shop_data(userid);
                 shop_data.status = false;
                 save_shop_data(userid, shop_data);
@@ -726,7 +731,7 @@ const rpg_commands = {
             }
             case "status": {
                 const userid = message.author.id;
-                const emoji = await get_emoji(client, "store");
+                const emoji = await get_emoji("store", client);
                 const shop_data = load_shop_data(userid);
                 const status = shop_data.status ? "營業中" : "打烊";
                 const embed = new EmbedBuilder()
@@ -757,8 +762,8 @@ const rpg_commands = {
         const { mentions_users } = require("../../utils/message.js");
 
         const userid = message.author.id;
-        const emoji_cross = await get_emoji(client, "crosS");
-        const emoji_store = await get_emoji(client, "store");
+        const emoji_cross = await get_emoji("crosS", client);
+        const emoji_store = await get_emoji("store", client);
 
         const target_users = await mentions_users(message);
         const target_user = target_users.first();
@@ -837,7 +842,7 @@ const rpg_commands = {
             amount = item_exist.amount;
         } else if (amount) {
             // 過濾amount中任何非數字的字元 e.g: $100 -> 100
-            amount = amount.toString().replace(/\D/g, '');
+            amount = amount.toString().replace(/\D/g, "");
 
             amount = parseInt(amount);
         };
@@ -845,7 +850,7 @@ const rpg_commands = {
         if (typeof amount !== "number") amount = parseInt(amount);
 
         if (!amount) amount = 1;
-        if (amount <= 0 || amount > item_exist.amount) {
+        if (amount < 1 || amount > item_exist.amount) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 錯誤的數量`)
@@ -883,13 +888,13 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
         const confirmButton = new ButtonBuilder()
             .setCustomId(`buy|${message.author.id}|${target_user.id}|${amount}|${item_exist.price}|${item}`)
-            .setLabel('確認購買')
+            .setLabel("確認購買")
             .setDisabled(!shop_data.status)
             .setStyle(ButtonStyle.Success);
 
         const cancelButton = new ButtonBuilder()
             .setCustomId(`cancel|${message.author.id}`)
-            .setLabel('取消')
+            .setLabel("取消")
             .setStyle(ButtonStyle.Danger);
 
         const row = new ActionRowBuilder()
@@ -898,7 +903,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         if (!shop_data.status) {
             const solderConfirmButton = new ButtonBuilder()
                 .setCustomId(`buyc|${target_user.id}|${target_user.id}|${amount}|${item_exist.price}|${item}`)
-                .setLabel('店主確認')
+                .setLabel("店主確認")
                 .setStyle(ButtonStyle.Primary);
 
             row.addComponents(solderConfirmButton);
@@ -910,7 +915,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
     m: ["查看餘額", "查看自己的餘額", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const button = new ButtonBuilder()
             .setCustomId(`rpg_transaction|${message.author.id}`)
-            .setLabel('查看交易紀錄')
+            .setLabel("查看交易紀錄")
             .setStyle(ButtonStyle.Primary);
 
         const row = new ActionRowBuilder()
@@ -990,8 +995,8 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const target_users = await mentions_users(message);
         const target_user = target_users.first();
 
-        const emoji_cross = await get_emoji(client, "crosS");
-        const emoji_top = await get_emoji(client, "top");
+        const emoji_cross = await get_emoji("crosS", client);
+        const emoji_top = await get_emoji("top", client);
 
         if (!target_user) {
             return await redirect({ client, message, command: `help`, mode });
@@ -1033,12 +1038,12 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
         const confirmButton = new ButtonBuilder()
             .setCustomId(`pay_confirm|${message.author.id}|${target_user.id}|${amount}`)
-            .setLabel('確認付款')
+            .setLabel("確認付款")
             .setStyle(ButtonStyle.Danger);
 
         const cancelButton = new ButtonBuilder()
             .setCustomId(`cancel|${message.author.id}`)
-            .setLabel('取消付款')
+            .setLabel("取消付款")
             .setStyle(ButtonStyle.Success);
 
         const row = new ActionRowBuilder()
@@ -1047,7 +1052,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${emoji_top} | 確認付款`)
-            .setDescription(`你確定要付款 \`${amount.toLocaleString()}$\` 給 <@${target_user.id}> ?`)
+            .setDescription(`你確定要付款 \`${amount.toLocaleString()}$\` 給 ${target_user.toString()} ?`)
             .setEmbedFooter();
 
         if (mode === 1) return { embeds: [embed], components: [row] };
@@ -1061,7 +1066,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             const embed = await get_help_command("rpg", specific_cmd, message.guild.id, client);
 
             if (!embed) {
-                const emoji_cross = await get_emoji(client, "crosS");
+                const emoji_cross = await get_emoji("crosS", client);
 
                 const error_embed = new EmbedBuilder()
                     .setColor(embed_error_color)
@@ -1074,7 +1079,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             return await message.reply({ embeds: [embed] });
         };
 
-        const emoji_slash = await get_emoji(client, "slash");
+        const emoji_slash = await get_emoji("slash", client);
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`help|${message.author.id}`)
@@ -1125,7 +1130,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return await message.reply({ embeds: [embed], components: [row] });
     }, false],
     privacy: ["隱私權", "修改隱私權", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        // const emoji_shield = await get_emoji(client, "shield");
+        // const emoji_shield = await get_emoji("shield", client);
 
         // const embed = new EmbedBuilder()
         //     .setColor(embed_default_color)
@@ -1137,18 +1142,18 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         //     .addComponents(
         //         new ButtonBuilder()
         //             .setCustomId(`rpg_privacy_menu|${message.author.id}|true`)
-        //             .setLabel('確認')
+        //             .setLabel("確認")
         //             .setStyle(ButtonStyle.Success),
         //         new ButtonBuilder()
         //             .setCustomId(`rpg_privacy_menu|${message.author.id}|false`)
-        //             .setLabel('取消')
+        //             .setLabel("取消")
         //             .setStyle(ButtonStyle.Danger)
         //     );
         // if (mode === 1) return { embeds: [embed], components: [row] };
         // return await message.reply({ embeds: [embed], components: [row] });
         const emojiNames = ["bag", "pet", "shield"];
         const [emoji_backpack, emoji_pet, emoji_shield] = await Promise.all(
-            emojiNames.map(name => get_emoji(client, name))
+            emojiNames.map(name => get_emoji(name, client))
         );
 
         rpg_data.privacy.sort((a, b) => {
@@ -1158,7 +1163,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         let text;
         if (rpg_data.privacy.length > 0) {
-            text = rpg_data.privacy.join('、');
+            text = rpg_data.privacy.join("、");
             text = text.replace("money", "金錢").replace("backpack", "背包").replace("partner", "夥伴");
         } else text = "無";
 
@@ -1174,28 +1179,28 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`rpg_privacy_menu|${message.author.id}`)
-            .setPlaceholder('選擇要允許的項目')
+            .setPlaceholder("選擇要允許的項目")
             .setMinValues(0)
             .setMaxValues(3)
             .addOptions([
                 {
-                    label: '金錢',
-                    description: '擁有的金錢數量、交易記錄',
-                    value: 'money',
-                    emoji: '💰',
+                    label: "金錢",
+                    description: "擁有的金錢數量、交易記錄",
+                    value: "money",
+                    emoji: "💰",
                     default: rpg_data.privacy.includes("money"),
                 },
                 {
-                    label: '背包',
-                    description: '背包內的物品',
-                    value: 'backpack',
+                    label: "背包",
+                    description: "背包內的物品",
+                    value: "backpack",
                     emoji: emoji_backpack,
                     default: rpg_data.privacy.includes("backpack"),
                 },
                 {
-                    label: '夥伴',
-                    description: '夥伴的清單',
-                    value: 'partner',
+                    label: "夥伴",
+                    description: "夥伴的清單",
+                    value: "partner",
                     emoji: emoji_pet,
                     default: rpg_data.privacy.includes("partner"),
                 }
@@ -1222,7 +1227,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             if (mode === 1) return { embeds };
             return await message.reply({ embeds });
         } else {
-            const emoji_cross = await get_emoji(client, "crosS");
+            const emoji_cross = await get_emoji("crosS", client);
 
             const embed = new EmbedBuilder()
                 .setTitle(`${emoji_cross} | 太懶了辣！`)
@@ -1242,8 +1247,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const user = message.author;
         const userid = user.id;
 
-        const emoji_cross = await get_emoji(client, "crosS");
-        const drumstick_emoji = await get_emoji(client, "drumstick");
+        const emoji_cross = await get_emoji("crosS", client);
+        const drumstick_emoji = await get_emoji("drumstick", client);
 
         if (args.length > 0) {
             const extra_embeds = [];
@@ -1255,11 +1260,33 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             // if (amount === "all") amount = get_number_of_items(item, userid);
             // amount = parseInt(amount);
             // if (isNaN(amount)) amount = 1;
+
+            if (!rpg_data.inventory[food_id]) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你沒有這個食物`)
+                    .setEmbedFooter();
+
+                if (mode === 1) return { embeds: [embed] };
+                return await message.reply({ embeds: [embed] });
+            };
+
             let amount = get_amount(food_id, user, args[1]);
+
             if (amount < 1) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 錯誤的數量`)
+                    .setEmbedFooter();
+
+                if (mode === 1) return { embeds: [embed] };
+                return await message.reply({ embeds: [embed] });
+            };
+
+            if (amount > rpg_data.inventory[food_id]) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你沒有那麼多的食物`)
                     .setEmbedFooter();
 
                 if (mode === 1) return { embeds: [embed] };
@@ -1278,7 +1305,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             const add = food_data[food_id]
             if (!add) {
-                const embeds = await get_loophole_embed(client, `food_data[${food_id}] is ${add}`);
+                const embeds = await get_loophole_embed(`food_data[${food_id}] is ${add}`, client);
 
                 logger.warn(`食物${food_name} (${food_id})在food_data中沒有這個食物的數據`);
 
@@ -1336,16 +1363,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 extra_embeds.push(embed);
             };
 
-            if (!rpg_data.inventory[food_id]) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你沒有這個食物`)
-                    .setEmbedFooter();
-
-                if (mode === 1) return { embeds: [embed] };
-                return await message.reply({ embeds: [embed] });
-            };
-
             rpg_data.hunger += newadd;
             rpg_data.hunger = Math.min(rpg_data.hunger, max_hunger);
 
@@ -1399,10 +1416,10 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 return await message.reply({ embeds: [embed] });
             };
 
-            const farmer_emoji = await get_emoji(client, "farmer");
-            const cow_emoji = await get_emoji(client, "cow");
-            const food_emoji = await get_emoji(client, "food");
-            const store_emoji = await get_emoji(client, "store");
+            const farmer_emoji = await get_emoji("farmer", client);
+            const cow_emoji = await get_emoji("cow", client);
+            const food_emoji = await get_emoji("food", client);
+            const store_emoji = await get_emoji("store", client);
 
             const categories = [
                 { items: food_crops_items, name: `${farmer_emoji} 農作物` },
@@ -1424,7 +1441,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                         const chunks = chunkArray(itemsTexts, itemsPerChunk);
 
                         for (const chunk of chunks) {
-                            const itemsText = chunk.join('\n');
+                            const itemsText = chunk.join("\n");
 
                             embed.addFields({ name: category.name, value: itemsText });
                         };
@@ -1438,13 +1455,13 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             const howToEatButton = new ButtonBuilder()
                 .setCustomId(`help|any|rpg|eat`)
-                .setLabel('如何吃食物')
+                .setLabel("如何吃食物")
                 .setEmoji(food_emoji)
                 .setStyle(ButtonStyle.Primary);
 
             const buyFoodButton = new ButtonBuilder()
                 .setCustomId(`help|any|rpg|buy`)
-                .setLabel('購買食物')
+                .setLabel("購買食物")
                 .setEmoji(store_emoji)
                 .setStyle(ButtonStyle.Primary);
 
@@ -1452,7 +1469,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 .addComponents(howToEatButton, buyFoodButton);
 
             if (errors.length > 0) {
-                const embeds = await get_loophole_embed(client, errors);
+                const embeds = await get_loophole_embed(errors.join("\n"), client);
 
                 if (mode === 1) return { embeds };
                 await message.reply({ embeds });
@@ -1470,12 +1487,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const item_id = get_id_of_name(args[0]);
 
         const isFarmer = rpg_data.job === "farmer";
-        const isHoe = item_id?.endsWith('hoe') ?? false;
+        const isHoe = item_id?.endsWith("hoe") ?? false;
 
-        const emoji_trade = await get_emoji(client, "trade");
+        const emoji_trade = await get_emoji("trade", client);
 
         if (!name[item_id]) {
-            const emoji_cross = await get_emoji(client, "crosS");
+            const emoji_cross = await get_emoji("crosS", client);
 
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -1487,7 +1504,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         };
 
         if (!rpg_data.inventory[item_id]) {
-            const emoji_cross = await get_emoji(client, "crosS");
+            const emoji_cross = await get_emoji("crosS", client);
 
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -1500,11 +1517,11 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         const amount = get_amount(item_id, message.author, args[1]) || 1;
         if (rpg_data.inventory[item_id] < amount) {
-            const emoji_cross = await get_emoji(client, "crosS");
+            const emoji_cross = await get_emoji("crosS", client);
 
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 你沒有這麼多的物品哦`)
+                .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
                 .setEmbedFooter();
 
             if (mode === 1) return { embeds: [embed] };
@@ -1512,7 +1529,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         };
 
         if (cannot_sell.includes(item_id)) {
-            const emoji_cross = await get_emoji(client, "crosS");
+            const emoji_cross = await get_emoji("crosS", client);
 
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -1524,7 +1541,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         };
 
         if (isFarmer && isHoe) {
-            const emoji_cross = await get_emoji(client, "crosS");
+            const emoji_cross = await get_emoji("crosS", client);
 
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -1537,7 +1554,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         const price = sell_data[item_id];
         if (!price) {
-            const embeds = await get_loophole_embed(client, `詳細資訊: sell_data[${item_id}]為${price}`);
+            const embeds = await get_loophole_embed(`詳細資訊: sell_data[${item_id}]為${price}`, client);
 
             if (mode === 1) return { embeds };
             return await message.reply({ embeds });
@@ -1612,7 +1629,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         userDataList.sort((a, b) => b.money - a.money);
 
-        const emoji_top = await get_emoji(client, "top");
+        const emoji_top = await get_emoji("top", client);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
@@ -1638,7 +1655,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
     }, false],
-    last: ['"倒數"金錢排行榜', "讓我們看看誰最窮!嘿嘿", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+    last: ["「倒數」金錢排行榜", "讓我們看看誰最窮!嘿嘿", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_rpg_data } = require("../../utils/file.js");
 
         const users = client.users.cache.values();
@@ -1655,7 +1672,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         userDataList.sort((a, b) => a.money - b.money);
 
-        const emoji_decrease = await get_emoji(client, "decrease");
+        const emoji_decrease = await get_emoji("decrease", client);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
@@ -1758,7 +1775,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const marry_with = marry_info.with ?? null;
         const married = marry_info.status ?? false;
 
-        const emoji_cross = await get_emoji(client, "crosS");
+        const emoji_cross = await get_emoji("crosS", client);
 
         const target_users = await mentions_users(message);
         const target_user = target_users.first();
@@ -1825,7 +1842,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`❤️ | 求婚`)
-            .setDescription(`<@${message.author.id}> 向你求婚!`)
+            .setDescription(`${message.author.toString()} 向你求婚!`)
             .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Drawn_love_hearts.svg/1200px-Drawn_love_hearts.svg.png")
             .setEmbedFooter();
 
@@ -1843,8 +1860,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const row = new ActionRowBuilder()
             .addComponents(deny_button, accept_button);
 
-        if (mode === 1) return { content: `<@${target_user.id}>`, embeds: [embed], components: [row] };
-        return await message.reply({ content: `<@${target_user.id}>`, embeds: [embed], components: [row] });
+        if (mode === 1) return { content: `${target_user.toString()}`, embeds: [embed], components: [row] };
+        return await message.reply({ content: `${target_user.toString()}`, embeds: [embed], components: [row] });
     }, (_, userid) => {
         const { load_rpg_data } = require("../../utils/file.js");
 
@@ -1855,7 +1872,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return !married;
     }],
     divorce: ["結婚", "與某人結婚", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const emoji_cross = await get_emoji(client, "crosS");
+        const emoji_cross = await get_emoji("crosS", client);
 
         const userid = message.author.id;
 
@@ -1906,11 +1923,11 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return !married;
     }],
     job: ["職業", "選擇職業", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { get_name_of_id, choose_job_row } = require("../../utils/rpg.js");
+        const { choose_job_row } = require("../../utils/rpg.js");
         const { jobs } = require("../../utils/rpg.js");
 
-        const emoji_job = await get_emoji(client, "job");
-        const emoji_nekoWave = await get_emoji(client, "nekoWave");
+        const emoji_job = await get_emoji("job", client);
+        const emoji_nekoWave = await get_emoji("nekoWave", client);
 
         const userid = message.author.id;
         const job = rpg_data.job;
@@ -1997,33 +2014,33 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     // 移除所有元素的空白字元
     args = args.map(arg => arg.trim());
 
-    // 移除所有空白的元素 ''
-    args = args.filter(arg => arg !== '');
+    // 移除所有空白的元素 ""
+    args = args.filter(arg => arg !== "");
 
     command = command.toLowerCase().trim();
     command = redirect_data[command] || command;
     if (command.length === 0 || content === allowPrefix) return;
 
     const userid = message.author.id;
-    const rpg_data = load_rpg_data(userid);
+    let rpg_data = load_rpg_data(userid);
 
-    const wrongJobEmbed = await wrong_job_embed(rpg_data, command, client);
+    const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, command, userid, client);
     if (wrongJobEmbed) {
-        if (mode === 1) return { embeds: [wrongJobEmbed] };
+        if (mode === 1) return { embeds: [wrongJobEmbed], components: row ? [row] : [] };
 
-        return await message.reply({ embeds: [wrongJobEmbed] });
+        return await message.reply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
     };
 
     const cmd_data = rpg_commands[command];
 
     if (!cmd_data) {
         const commands = Object.keys(rpg_commands);
-        const cross_emoji = await get_emoji(client, "crosS");
+        const cross_emoji = await get_emoji("crosS", client);
 
-        command = command.replace(/[^a-zA-Z0-9]/g, '');
+        command = command.replace(/[^a-zA-Z0-9]/g, "");
 
         const firstChar = command.charAt(0);
-        const similarCommands = commands.filter(cmd => cmd.startsWith(firstChar) && !rpg_commands[cmd][3]);
+        const similarCommands = commands.filter(cmd => cmd.startsWith(firstChar) && !rpg_commands[cmd][3] && !redirect_data[cmd]);
 
         const embed = new EmbedBuilder()
             .setColor(embed_error_color)
@@ -2052,7 +2069,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             rows.push(row);
         };
 
-        embed.setDescription(`你是不是指：\n${similarCommands.map(cmd => `- ${allowPrefix}${cmd}`).join('\n')}`);
+        embed.setDescription(`你是不是指：\n${similarCommands.map(cmd => `- ${allowPrefix}${cmd}`).join("\n")}`);
         if (rows.length > 5) rows.length = 5;
 
         if (mode === 1) return { embeds: [embed], components: rows };
@@ -2063,7 +2080,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     const action = cmd_data[0];
 
     if (rpg_work.includes(command)) {
-        if (rpg_data.hunger === 0) {
+        if (rpg_data.hunger <= 0) {
             const food_items = Object.keys(foods);
             let found_food = food_items.filter(food => Object.keys(rpg_data.inventory).includes(food) && food_data[food] < max_hunger)[0];
 
@@ -2077,11 +2094,13 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
                         data,
                         args: [found_food, "all"],
                         mode: 1
+                        // {client, message, rpg_data, data, args, mode, random_item }
                     });
+
 
                     // 5秒超時
                     const timeoutPromise = new Promise((_, reject) => {
-                        setTimeout(() => reject(new Error('eat timeout')), 5000);
+                        setTimeout(() => reject(new Error("eat timeout")), 5000);
                     });
 
                     const res = await Promise.race([
@@ -2089,36 +2108,40 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
                         timeoutPromise,
                     ]);
 
-                    if (mode === 1) return res;
-
                     if (res.embeds && res.embeds.length > 1) {
                         res.embeds.length = 1;
                     };
 
+                    if (mode === 1) return res;
                     await message.reply(res);
                 };
-            } else {
-                const emoji_cross = await get_emoji(client, "crosS");
-
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你已經餓到沒有食物可以吃了！請先補充食物！`);
-
-                if (mode === 1) return { embeds: [embed] };
-                return await message.reply({ embeds: [embed] });
             };
 
-            /*
-            const emoji_cross = await get_emoji(client, "crosS");
+            rpg_data = load_rpg_data(userid);
 
-            const embed = new EmbedBuilder()
-                .setTitle(`${emoji_cross} | 你的體力不足了！`)
-                .setColor(embed_error_color)
-                .setEmbedFooter();
+            if (rpg_data.hunger <= 0) {
+                if (!found_food) {
+                    const emoji_cross = await get_emoji("crosS", client);
 
-            if (mode === 1) return { embeds: [embed] };
-            return await message.reply({ embeds: [embed] });
-            */
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你已經餓到沒有食物可以吃了！請先補充食物！`);
+
+                    if (mode === 1) return { embeds: [embed] };
+                    return await message.reply({ embeds: [embed] });
+                } else { // 正常是不會發生這種事情拉
+                    const emoji_cross = await get_emoji("crosS", client);
+
+                    const embed = new EmbedBuilder()
+                        .setTitle(`${emoji_cross} | 你的體力不足了！`)
+                        .setColor(embed_error_color)
+                        .setEmbedFooter();
+
+                    if (mode === 1) return { embeds: [embed] };
+                    return await message.reply({ embeds: [embed] });
+                };
+            };
+
         };
     };
 
@@ -2248,6 +2271,7 @@ module.exports = {
     execute: async function (client, message) {
         const { embed_error_color } = require("../../utils/config.js");
         const { loadData } = require("../../utils/file.js");
+        const { InPrefix } = require("../../utils/rpg.js")
 
         const userId = message.author.id;
         const guildID = message.guild.id;
@@ -2256,10 +2280,13 @@ module.exports = {
         if (!client.lock.rpg_handler) client.lock.rpg_handler = {};
 
         const data = loadData(guildID);
+        const inpref = InPrefix(guildID, message.content.trim());
+
         if (!data["rpg"]) return;
+        if (!inpref.length) return;
 
         if (client.lock.rpg_handler.hasOwnProperty(userId)) {
-            const emoji_cross = await get_emoji(client, "crosS");
+            const emoji_cross = await get_emoji("crosS", client);
             const running_cmd = client.lock.rpg_handler[userId] ?? "?";
 
             const embed = new EmbedBuilder()
@@ -2271,39 +2298,48 @@ module.exports = {
 
         try {
             const command = message.content.split(" ")[0].toLowerCase();
-            client.lock.rpg_handler[userId] = command;
 
+            if (rpg_commands[command]) {
+                let cmdName = structuredClone(command);
+
+                for (const pref of inpref) {
+                    cmdName = cmdName.replace(pref, "");
+                };
+
+                client.lock.rpg_handler[userId] = cmdName;
+            };
 
             // 超時機制
             const TIMEOUT = 30000; // 30 秒超時
             const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error('指令執行超時')), TIMEOUT);
+                setTimeout(() => reject(new Error("指令執行超時")), TIMEOUT);
             });
 
             await Promise.race([
                 rpg_handler({ client, message }),
-                timeoutPromise
+                timeoutPromise,
             ]);
+
         } catch (error) {
             const errorStack = util.inspect(error, { depth: null });
 
-            if (error.message === '指令執行超時') {
+            if (error.message === "指令執行超時") {
                 logger.error(`RPG 指令執行超時: userId=${userId}, command=${client.lock.rpg_handler[userId]}`);
             } else {
                 logger.error(`處理rpg遊戲訊息時發生錯誤: ${errorStack}`);
             };
 
-            const loophole_embeds = await get_loophole_embed(client, errorStack);
+            const loophole_embeds = await get_loophole_embed(errorStack, client);
             await message.reply({ embeds: loophole_embeds });
         } finally {
             delete client.lock.rpg_handler[userId];
         };
     },
+
     max_hunger,
     rpg_cooldown,
     rpg_work,
     rpg_commands,
-    rpg_emojis,
     redirect_data,
     redirect_data_reverse,
     privacy_data,
@@ -2316,13 +2352,4 @@ module.exports = {
     MockMessage,
     rpg_handler,
     find_redirect_targets_from_id,
-
-    // moved to utils/rpg.js, require that instead.
-    BetterEval,
-    get_loophole_embed,
-    get_emoji,
-    add_money,
-    remove_money,
-    ls_function,
-    is_cooldown_finished,
 };

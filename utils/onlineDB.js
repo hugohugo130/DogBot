@@ -1,8 +1,8 @@
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
-const FormData = require('form-data');
-const util = require('node:util');
+const FormData = require("form-data");
+const util = require("node:util");
 
 const { getServerIPSync } = require("./getSeverIPSync.js");
 const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
@@ -31,14 +31,14 @@ async function onlineDB_listFiles() {
 // 下載檔案
 async function onlineDB_downloadFile(filename, savePath = null) {
     try {
-        const res = await axios.get(`${SERVER_URL}/files/${filename}`, { responseType: 'stream' });
+        const res = await axios.get(`${SERVER_URL}/files/${filename}`, { responseType: "stream" });
 
         if (savePath === null) savePath = join_db_folder(filename);
         const writer = fs.createWriteStream(savePath);
         res.data.pipe(writer);
         await new Promise((resolve, reject) => {
-            writer.on('finish', resolve);
-            writer.on('error', reject);
+            writer.on("finish", resolve);
+            writer.on("error", reject);
         });
 
         return savePath;
@@ -64,7 +64,7 @@ async function onlineDB_uploadFile(filepath) {
         const filenameWithoutExt = filename.replace(/\.json$/, "");
         const fileExt = path.extname(filename);
         const now = new Date();
-        const pad = n => n.toString().padStart(2, '0');
+        const pad = n => n.toString().padStart(2, "0");
         const year = now.getFullYear();
         const month = pad(now.getMonth() + 1);
         const backupDir = `backup/${year}-${month}/${filenameWithoutExt}`;
@@ -85,10 +85,10 @@ async function onlineDB_uploadFile(filepath) {
         };
 
         const form = new FormData();
-        form.append('file', fs.createReadStream(filepath));
+        form.append("file", fs.createReadStream(filepath));
 
         const stats = fs.statSync(filepath);
-        form.append('mtime', stats.mtime.getTime());
+        form.append("mtime", stats.mtime.getTime());
         const res = await axios.post(`${SERVER_URL}/files`, form, { headers: form.getHeaders() });
         return res.data;
     } catch (err) {
@@ -113,7 +113,14 @@ async function onlineDB_deleteFile(filename) {
             logger.error(`刪除檔案時遇到未知錯誤: ${errorStack}`);
             return [err, `刪除檔案時遇到未知錯誤: ${errorStack}`];
         };
-    }
+    };
+};
+
+function diff(localContent, remoteContent) {
+    const jsdiff = require("diff");
+
+    const diffResult = jsdiff.diffLines(localContent, remoteContent);
+    return diffResult;
 };
 
 async function onlineDB_checkFileContent(filename, maxRetries = 3) {
@@ -128,41 +135,45 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
         do {
             console.log("=".repeat(30));
             console.log(`檔案 ${filename} 內容不同:`);
-            console.log('1. 上載本地檔案到遠端');
-            console.log('2. 下載遠端檔案到本地');
-            console.log('3. 不做任何事');
-            console.log('4. 查看本地檔案內容')
-            console.log('5. 查看遠端檔案內容')
+            console.log("1. 上載本地檔案到遠端");
+            console.log("2. 下載遠端檔案到本地");
+            console.log("3. 不做任何事");
+            console.log("4. 查看本地檔案內容");
+            console.log("5. 查看遠端檔案內容");
+            console.log("6. 查看檔案差異");
 
-            answer = await rl.question('請選擇操作 (1/2/3/4/5): ');
+            answer = await rl.question("請選擇操作 (1/2/3/4/5): ");
 
             switch (answer.trim()) {
-                case '4':
+                case "4":
                     console.log(JSON.parse(stringify(localContent)));
                     break;
-                case '5':
+                case "5":
                     console.log(JSON.parse(stringify(remoteContent)));
+                    break;
+                case "6":
+                    console.log(diff(localContent, remoteContent));
                     break;
                 default:
                     break;
             };
 
-            const validOptions = ['1', '2', '3', '4', '5'];
+            const validOptions = ["1", "2", "3", "4", "5"];
             if (!validOptions.includes(answer.trim())) {
-                console.log(`請輸入有效的選項 (${validOptions.join('/')})`);
+                console.log(`請輸入有效的選項 (${validOptions.join("/")})`);
             };
-        } while (!['1', '2', '3'].includes(answer.trim()));
+        } while (!["1", "2", "3"].includes(answer.trim()));
 
         console.log(`已選擇: ${answer.trim()}`);
         switch (answer.trim()) {
-            case '1':
+            case "1":
                 await onlineDB_uploadFile(filename);
                 return 1;
-            case '2':
+            case "2":
                 await onlineDB_downloadFile(filename);
                 return 2;
-            case '3':
-                console.log('未進行任何操作');
+            case "3":
+                console.log("未進行任何操作");
                 return false;
         };
     } else if (localContent && !remoteContent) {
@@ -253,7 +264,7 @@ async function uploadAllDatabaseFiles() {
 async function downloadDatabaseFile(src, dst = null) {
     // 預設下載到 download/ 資料夾
     if (!dst) {
-        const downloadDir = path.join(process.cwd(), 'download');
+        const downloadDir = path.join(process.cwd(), "download");
         if (!existsSync(downloadDir)) fs.mkdirSync(downloadDir);
         dst = path.join(downloadDir, path.basename(src));
     } else {
@@ -277,7 +288,7 @@ async function uploadChangedDatabaseFiles() {
         if (fs.existsSync(file)) {
             let localContent;
             try {
-                localContent = fs.readFileSync(file, 'utf8');
+                localContent = fs.readFileSync(file, "utf8");
                 localContent = JSON.stringify(JSON.parse(localContent)); // 格式化本地內容
             } catch (err) {
                 logger.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);

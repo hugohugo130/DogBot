@@ -35,7 +35,7 @@ async function handleMoneyCommand(message, args) {
     rpg_data.money += amount;
     save_rpg_data(user.id, rpg_data);
 
-    return message.reply(`done adding <@${user.id}>'s money. +${amount}`);
+    return message.reply(`done adding ${user.toString()}'s money. +${amount}`);
 };
 
 async function handleInvCommand(message, args) {
@@ -55,7 +55,7 @@ async function handleInvCommand(message, args) {
     rpg_data.inventory[item] = amount;
     save_rpg_data(user.id, rpg_data);
 
-    return message.reply(`done setting <@${user.id}>'s ${item} to ${amount}`);
+    return message.reply(`done setting ${user.toString()}'s ${item} to ${amount}`);
 };
 
 async function handleGive2Command(message, args) {
@@ -93,16 +93,16 @@ async function handleGive2Command(message, args) {
 
         try {
             add_item(rpg_data, item, parseInt(amount))
-            log += `added ${get_name_of_id(item)}\\*${amount} to user <@${user.id}>'s inventory\n`;
+            log += `added ${get_name_of_id(item)}\\*${amount} to user ${user.toString()}'s inventory\n`;
         } catch (err) {
-            await message.reply(`error adding item ${item} to user <@${user.id}>'s inventory: ${err.message}`);
+            await message.reply(`error adding item ${item} to user ${user.toString()}'s inventory: ${err.message}`);
             continue;
         };
     };
 
     save_rpg_data(user.id, rpg_data);
 
-    return message.reply(`done adding user <@${user.id}> 's inventory:\n${log}`);
+    return message.reply(`done adding user ${user.toString()} 's inventory:\n${log}`);
 };
 
 module.exports = {
@@ -118,9 +118,9 @@ module.exports = {
             // 提取指令和參數
             let args = message.content.split(" ");
             args = args.map(arg => arg.trim());
-            args = args.filter(arg => arg !== '');
+            args = args.filter(arg => arg !== "");
 
-            const command = args[0].substring(1); // 移除開頭的 '!'
+            const command = args[0].substring(1); // 移除開頭的 "!"
             const commandArgs = args.slice(1); // 獲取所有參數
 
             // 使用 switch 處理不同的指令
@@ -132,7 +132,7 @@ module.exports = {
                 case "give2":
                     let give2args = message.content.split(" ");
                     give2args = give2args.map(arg => arg.trim());
-                    give2args = give2args.filter(arg => arg !== '');
+                    give2args = give2args.filter(arg => arg !== "");
                     give2args = give2args.slice(1);
 
                     const userMention = give2args[0];
@@ -186,7 +186,7 @@ module.exports = {
                 const rpg_data = add_item(load_rpg_data(user.id), item, parseInt(amount));
                 save_rpg_data(user.id, rpg_data);
 
-                return message.reply(`done adding user <@${user.id}> 's inventory: ${item}*${amount}`);
+                return message.reply(`done adding user ${user.toString()} 's inventory: ${item}*${amount}`);
             };
 
             async function handleRunCommand(message, args) {
@@ -229,7 +229,7 @@ module.exports = {
             const errorStack = util.inspect(err, { depth: null });
 
             logger.error(`admin cmds 錯誤: ${errorStack}`);
-            await message.reply({ embeds: await get_loophole_embed(client, errorStack) });
+            await message.reply({ embeds: await get_loophole_embed(errorStack, client) });
         };
     },
 }

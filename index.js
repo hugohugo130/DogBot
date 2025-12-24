@@ -1,16 +1,19 @@
-const { Events, Collection } = require('discord.js');
+require("./utils/check.env.js") // check .env file
+const { Events, Collection } = require("discord.js");
 const DogClient = require("./utils/customs/client.js");
-const { checkDBFilesExists, checkDBFilesCorrupted } = require('./utils/check_db_files.js');
-const { checkAllDatabaseFilesContent } = require('./utils/onlineDB.js');
+const { checkDBFilesExists, checkDBFilesCorrupted } = require("./utils/check_db_files.js");
+const { checkAllDatabaseFilesContent } = require("./utils/onlineDB.js");
 const { load_cogs } = require("./utils/load_cogs.js");
-const { get_logger, loggerManager, loggerManager_log, loggerManager_nodc } = require('./utils/logger.js');
-const { safeshutdown } = require('./utils/safeshutdown.js');
-const { get_areadline } = require('./utils/readline.js');
-const { check_item_data } = require('./utils/rpg.js');
-const { should_register_cmd } = require('./utils/auto_register.js');
-const { registcmd } = require('./register_commands.js');
+const { get_logger, loggerManager, loggerManager_log, loggerManager_nodc } = require("./utils/logger.js");
+const { safeshutdown } = require("./utils/safeshutdown.js");
+const { get_areadline } = require("./utils/readline.js");
+const { check_item_data } = require("./utils/rpg.js");
+const { should_register_cmd } = require("./utils/auto_register.js");
+const { registcmd } = require("./register_commands.js");
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
-const util = require('node:util');
+// const { Player } = require("discord-player");
+// const { YoutubeExtractor } = require("discord-player-youtube");
+const util = require("node:util");
 require("dotenv").config();
 
 const client = new DogClient();
@@ -18,7 +21,7 @@ const client = new DogClient();
 const logger = get_logger();
 
 // 未捕獲的 Promise Rejection 處理
-process.on('unhandledRejection', (reason, promise) => {
+process.on("unhandledRejection", (reason, promise) => {
     let errorStack = reason;
     if (reason?.stack) errorStack = reason.stack;
     if (reason instanceof Error) {
@@ -29,7 +32,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // 未捕獲的異常處理
-process.on('uncaughtException', (error) => {
+process.on("uncaughtException", (error) => {
     const errorStack = util.inspect(error, { depth: null });
     logger.error(`未捕獲的異常:\n${errorStack}`);
 });
@@ -87,10 +90,12 @@ ${Object.keys(loggerManager_nodc).join("\n")}`);
 
 async function handle_shutdown(sign) {
     logger.info(`收到 ${sign} 信號，準備安全關閉...`);
+
     try {
         await safeshutdown(client);
     } catch (error) {
         const errorStack = util.inspect(error, { depth: null });
+
         logger.error(`安全關閉時發生錯誤: ${errorStack}`);
         process.exit(1);
     };
@@ -102,8 +107,10 @@ async function handle_shutdown(sign) {
     global.oven_sessions = {};
     global.smelter_sessions = {};
 
-    await checkDBFilesCorrupted();
-    await checkAllDatabaseFilesContent();
+    await Promise.all([
+        checkDBFilesCorrupted(),
+    ]);
+    // await checkAllDatabaseFilesContent();
     await checkDBFilesExists();
     check_item_data();
 
@@ -118,12 +125,12 @@ async function handle_shutdown(sign) {
 
     await client.login(process.env.TOKEN);
 
-    process.on('SIGTERM', async () => {
-        await handle_shutdown('SIGTERM');
+    process.on("SIGTERM", async () => {
+        await handle_shutdown("SIGTERM");
     });
 
-    process.on('SIGINT', async () => {
-        await handle_shutdown('SIGINT');
+    process.on("SIGINT", async () => {
+        await handle_shutdown("SIGINT");
     });
 
     global._client = client;

@@ -1,6 +1,6 @@
 const { Collection } = require("discord.js");
-const fs = require('fs');
-const path = require('node:path');
+const fs = require("fs");
+const path = require("node:path");
 
 const { readdirSync } = require("./file.js");
 const { get_logger } = require("./logger.js");
@@ -25,10 +25,10 @@ function processDirectory(bot, dirPath) {
             } else {
                 commands.push(...subCommands);
             };
-        } else if (item.endsWith('.js')) {
+        } else if (item.endsWith(".js")) {
             delete require.cache[require.resolve(itemPath)];
             const command = require(itemPath);
-            if ('data' in command && 'execute' in command) {
+            if ("data" in command && "execute" in command) {
                 if (bot) {
                     commands.set(command.data.name, command);
                 } else {
@@ -49,7 +49,7 @@ function processDirectory(bot, dirPath) {
  * @returns {Collection<string, any> | any[]}
  */
 function loadslashcmd(bot) {
-    const commandsPath = path.join(process.cwd(), 'slashcmd');
+    const commandsPath = path.join(process.cwd(), "slashcmd");
 
     const commands = processDirectory(bot, commandsPath);
     return commands;

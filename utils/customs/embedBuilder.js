@@ -1,4 +1,5 @@
-const { EmbedBuilder: djsEmbedBuilder } = require('discord.js');
+const { EmbedBuilder: djsEmbedBuilder } = require("discord.js");
+const { load_rpg_data } = require("../file.js");
 const DogClient = require("./client.js");
 
 class EmbedBuilder extends djsEmbedBuilder {
@@ -8,21 +9,19 @@ class EmbedBuilder extends djsEmbedBuilder {
 
     /**
      * 
-     * @param {string} [text=""]
-     * @param {object | string | null} [rpg_data=null] 顯示飽食度，傳入rpg_data或user id
-     * @param {boolean} [force=false] text參數將不會增加飽食度或機器犬文字
-     * @param {DogClient} [client=global._client]
+     * @param {import("discord.js").Interaction | string} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
+     * @param {{text?: string, rpg_data?: object | string | null, force?: boolean, client?: DogClient}} [param1]
+     * @remark rpg_data 為 rpg_data 或 user id (顯示剩餘飽食度)
+     * @remark force: text參數是否不會增加飽食度或機器犬文字
      * @returns {EmbedBuilder}
      */
-    setEmbedFooter(text = "", rpg_data = null, force = false, client = global._client) {
-        const { load_rpg_data } = require("../file.js");
-        
+    setEmbedFooter(interaction = "zh-TW", { text = "", rpg_data = null, force = false, client = global._client } = {}) {
         if (text.includes("飽食度剩餘")) {
             const { get_logger, getCallerModuleName } = require("../logger.js");
             const logger = get_logger({ nodc: true });
             logger.warn(`[DEPRECATED] give rpg_data or user id instead add to the text\ncalled from ${getCallerModuleName(null)}`);
-        }
-        
+        };
+
         let data;
         if (rpg_data) {
             if (rpg_data instanceof String) { // userid
@@ -32,16 +31,14 @@ class EmbedBuilder extends djsEmbedBuilder {
             };
         };
 
+        let locale;
+        if (interaction instanceof String) locale = interaction;
+        else if (interaction?.locale) locale = interaction.locale;
+        else locale = "zh-TW"; // default
+
         if (!force && data) text += `飽食度剩餘 ${data.hunger}`;
         if (!force) text += "\n狗狗機器犬 ∙ 由哈狗製作";
         text = text.trim();
-
-        if (!this.setFooter) {
-            const { get_logger, getCallerModuleName } = require("../logger.js");
-            const logger = get_logger({ nodc: true });
-            logger.warn(`？為什麼阿，embed沒有setFooter方法？\n${this.toJSON?.() || this.toString?.() || String(this)}\ncalled from ${getCallerModuleName(null)}`);
-            return this;
-        };
 
         this.setFooter({
             text,

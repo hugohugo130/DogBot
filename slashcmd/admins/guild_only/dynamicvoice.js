@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChannelType } = require('discord.js');
+const { SlashCommandBuilder, ChannelType } = require("discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -28,7 +28,7 @@ module.exports = {
         )
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
     async execute(interaction) {
-        const { setDynamicVoice } = require('../../../utils/file.js');
+        const { setDynamicVoice } = require("../../../utils/file.js");
 
         await interaction.deferReply();
 

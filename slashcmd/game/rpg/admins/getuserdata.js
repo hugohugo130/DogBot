@@ -1,5 +1,5 @@
-const { SlashCommandBuilder } = require('discord.js');
-const EmbedBuilder = require('../../../../utils/customs/embedBuilder.js');
+const { SlashCommandBuilder } = require("discord.js");
+const EmbedBuilder = require("../../../../utils/customs/embedBuilder.js");
 
 function split_msg(content, split = 2000) {
     let messages = [];
@@ -24,7 +24,7 @@ function show_transactions(userid) {
         .slice(-10)
         .map(({ timestamp, originalUser, targetUser, amount, type }) =>
             `- <t:${timestamp}:R> ${originalUser} \`>\` ${targetUser} \`${amount.toLocaleString()}$\` (${type})`
-        ).join('\n');
+        ).join("\n");
 };
 
 module.exports = {
@@ -54,8 +54,9 @@ module.exports = {
         )
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
     async execute(interaction) {
-        const { load_rpg_data } = require("../../../../utils/file.js");
+        const { load_rpg_data, writeJson, join_temp_folder } = require("../../../../utils/file.js");
         const { embed_default_color, admins } = require("../../../../utils/config.js");
+        const { DateNow } = require("../../../../utils/timestamp.js");
         await interaction.deferReply();
 
         if (!admins.includes(interaction.user.id)) {
@@ -83,42 +84,12 @@ module.exports = {
             "privacy": [],
         */
 
+        const filename = `rpg_data@${user.id}@${Math.floor(rpg_data)}`
+        await writeJson(join_temp_folder(filename));
+
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${user.username}的RPG數據`)
-            .addFields(
-                { name: "金錢", value: String(rpg_data?.money), inline: true },
-                { name: "飽食度", value: String(rpg_data?.hunger), inline: true },
-                { name: "工作", value: String(rpg_data?.job), inline: true },
-                { name: "戰鬥工作", value: String(rpg_data?.fightjob), inline: true },
-                { name: "徽章", value: String(rpg_data?.badge), inline: true },
-                { name: "結婚狀態", value: String(rpg_data?.marry.status), inline: true },
-                { name: "結婚對象", value: String(rpg_data?.marry.with), inline: true },
-                { name: "結婚時間", value: String(rpg_data?.marry.time), inline: true },
-                { name: "交易", value: String(rpg_data?.transactions), inline: true },
-                { name: "隱私", value: String(rpg_data?.privacy), inline: true },
-                {
-                    name: "物品",
-                    value: Object.entries(rpg_data?.inventory || {})
-                        .map(([key, value]) => `${key}: ${value}`)
-                        .join("\n"),
-                    inline: false
-                },
-                {
-                    name: "上次執行時間",
-                    value: Object.entries(rpg_data?.lastRunTimestamp || {})
-                        .map(([key, value]) => `${key}: ${value}`)
-                        .join("\n"),
-                    inline: false
-                },
-                {
-                    name: "計數",
-                    value: Object.entries(rpg_data?.count || {})
-                        .map(([key, value]) => `${key}: ${value}`)
-                        .join("\n"),
-                    inline: false
-                },
-            )
             .setTimestamp();
 
         await interaction.editReply({ embeds: [embed] });

@@ -3,7 +3,7 @@ const path = require("path");
 const { wait_until_ready } = require("./wait_until_ready.js");
 const { asleep } = require("./sleep.js");
 const { get_logger } = require("./logger.js");
-const util = require('node:util');
+const util = require("node:util");
 
 const logger = get_logger({ nodc: true });
 let run_lock = {};
@@ -43,8 +43,8 @@ async function setup_schedule(per_sec, execute, file, client = null, ...args) {
     }, 0);
 
     // const workerScript = `
-    //     parentPort.once('message', async ({ per_sec, args }) => {
-    //         await interval(per_sec, require('${__filename}').scheduleFunc, ...args);
+    //     parentPort.once("message", async ({ per_sec, args }) => {
+    //         await interval(per_sec, require("${__filename}").scheduleFunc, ...args);
     //     });
     // `;
 
@@ -73,7 +73,7 @@ async function wait_for_lock(basename, timeout = 5000, check_per = 100) {
 };
 
 async function scheduleFunc(client, file, per) {
-    const basename = path.basename(file, '.js');
+    const basename = path.basename(file, ".js");
 
     // 等待鎖釋放
     const lockAcquired = await wait_for_lock(basename, 20000);

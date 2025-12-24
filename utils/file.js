@@ -1,9 +1,10 @@
+const { Logger } = require("winston");
+const { VoiceChannel } = require("discord.js");
+const { finished } = require('stream/promises');
 const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
-const util = require('node:util');
-const { Logger } = require("winston");
-const { VoiceChannel } = require("discord.js");
+const util = require("node:util");
 const axios = require("axios");
 
 const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder, probabilities } = require("./config.js");
@@ -32,7 +33,7 @@ function readFileSync(file_path, options = null) {
     const filename = path.basename(file_path);
 
     if (!existsSync(file_path) && DATABASE_FILES.includes(filename)) {
-        if (typeof options === 'object' && options?.return) return stringify(options.return);
+        if (typeof options === "object" && options?.return) return stringify(options.return);
 
         const default_value = DEFAULT_VALUES.single[filename]
         const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
@@ -69,11 +70,11 @@ function safeJSONParse(jsonString, defaultValue = {}) {
 };
 
 function needsStringify(obj) {
-    if (typeof obj === 'string') {
+    if (typeof obj === "string") {
         return false;
     };
 
-    if (typeof obj !== 'object' || obj === null) {
+    if (typeof obj !== "object" || obj === null) {
         return false;
     };
 
@@ -139,15 +140,15 @@ function readScheduleSync() {
     const { scheduleEverysec, scheduleEverymin, scheduleEvery5min } = require("./config.js");
 
     const everysec = existsSync(scheduleEverysec) ? readdirSync(scheduleEverysec, { recursive: true })
-        .filter(file => file.endsWith('.js'))
+        .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEverysec}/${file}`) : [];
 
     const everymin = existsSync(scheduleEverymin) ? readdirSync(scheduleEverymin, { recursive: true })
-        .filter(file => file.endsWith('.js'))
+        .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEverymin}/${file}`) : [];
 
     const every5min = existsSync(scheduleEvery5min) ? readdirSync(scheduleEvery5min, { recursive: true })
-        .filter(file => file.endsWith('.js'))
+        .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEvery5min}/${file}`) : [];
 
     return [
@@ -159,12 +160,32 @@ function readScheduleSync() {
 
 /**
  * 
+ * @param {fs.WriteStream} writer 
+ * @returns {Promise<void>}
+ */
+async function waitForWriterFinish(writer) {
+    return await finished(writer);
+};
+
+/**
+ * @warning filename will be converted to basename
+ * @param {string} folder 
+ * @param {string} filename 
+ * @returns {string}
+ */
+function join_folder(folder, filename) {
+    const basename = path.basename(filename);
+    return join(folder, basename);
+};
+
+/**
+ * @warning filename will be converted to basename
  * @param {string} filename 
  * @returns {string}
  */
 function join_db_folder(filename) {
     const basename = path.basename(filename);
-    return join(database_folder, basename);
+    return join_folder(database_folder, basename);
 };
 
 /**
@@ -174,12 +195,12 @@ function join_db_folder(filename) {
 async function readSchedule() {
     const { scheduleEverysec, scheduleEverymin } = require("./config.js");
     const everysec = await readdir(scheduleEverysec, { recursive: true })
-        .filter(file => file.endsWith('.js'))
+        .filter(file => file.endsWith(".js"))
         .map(file => `../schedule/everysec/${file}`);
 
 
     const everymin = await readdir(scheduleEverymin, { recursive: true })
-        .filter(file => file.endsWith('.js'))
+        .filter(file => file.endsWith(".js"))
         .map(file => `../schedule/everysec/${file}`);
 
     return {
@@ -250,7 +271,7 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
             if (err.response?.status === 404) {
                 log.warn(`遠端檔案不存在: ${basename_filename}`);
                 remoteContent = null;
-            } else if (err.code === 'ECONNRESET' || err.message?.includes("socket hang up")) {
+            } else if (err.code === "ECONNRESET" || err.message?.includes("socket hang up")) {
                 if (attempt < maxRetries) {
                     log.warn(`連接遠端伺服器時中斷，正在重試 (${attempt}/${maxRetries})...`);
                     sleep(1000);
@@ -724,100 +745,39 @@ function getDynamicVoice(guildID) {
 };
 
 /*
-███╗   ███╗██╗   ██╗███████╗██╗ ██████╗
-████╗ ████║██║   ██║██╔════╝██║██╔════╝
-██╔████╔██║██║   ██║███████╗██║██║     
-██║╚██╔╝██║██║   ██║╚════██║██║██║     
-██║ ╚═╝ ██║╚██████╔╝███████║██║╚██████╗
-╚═╝     ╚═╝ ╚═════╝ ╚══════╝╚═╝ ╚═════╝
+████████╗███████╗███╗   ███╗██████╗ 
+╚══██╔══╝██╔════╝████╗ ████║██╔══██╗
+   ██║   █████╗  ██╔████╔██║██████╔╝
+   ██║   ██╔══╝  ██║╚██╔╝██║██╔═══╝ 
+   ██║   ███████╗██║ ╚═╝ ██║██║     
+   ╚═╝   ╚══════╝╚═╝     ╚═╝╚═╝     
 */
 
-function load_music_data() {
-    const { music_data_file } = require("./config.js");
-    const music_emptyeg = find_default_value("music.json", {});
+/**
+ * @warning filename will be converted to basename
+ * @param {string} filename 
+ * @returns {string}
+ */
+function join_temp_folder(filename) {
+    const temp_folder = get_temp_folder();
 
-    if (!existsSync(music_data_file)) {
-        writeJsonSync(music_data_file, music_emptyeg);
-
-        return music_emptyeg;
-    };
-
-    return readJsonSync(music_data_file);
+    const basename = path.basename(filename);
+    return join_folder(temp_folder, basename);
 };
 
-function save_music_data(data) {
-    const { music_data_file } = require("./config.js");
+function get_temp_folder() {
+    const { temp_folder } = require("./config.js");
 
-    // 確保每個語音頻道的資料結構完整
-    for (const [voiceChannelId, channelData] of Object.entries(data)) {
-        if (!channelData.queue) channelData.queue = [];
-        if (typeof channelData.currentIndex !== 'number') channelData.currentIndex = 0;
-        if (typeof channelData.isPlaying !== 'boolean') channelData.isPlaying = false;
-        if (typeof channelData.volume !== 'number') channelData.volume = 1.0;
-        if (!channelData.loopMode) channelData.loopMode = "off";
-        if (!channelData.textChannelId) channelData.textChannelId = "";
-
-        // 確保 queue 中的每首歌都有必要的欄位
-        channelData.queue = channelData.queue.map(song => ({
-            url: song.url || "",
-            title: song.title || "未知標題",
-            duration: song.duration || "0:00",
-            requestedBy: song.requestedBy || "",
-            thumbnail: song.thumbnail || "",
-            addedAt: song.addedAt || new Date().toISOString(),
-            ...song
-        }));
+    if (!existsSync(temp_folder)) {
+        mkdirSync(temp_folder, { recursive: true });
     };
 
-    writeJsonSync(music_data_file, data);
-};
-
-function get_music_data(voiceChannelId) {
-    const musicData = load_music_data();
-    const music_emptyeg = find_default_value("music.json", {});
-    const channel_emptyeg = music_emptyeg[Object.keys(music_emptyeg)[0]] || {
-        queue: [],
-        currentIndex: 0,
-        isPlaying: false,
-        volume: 1.0,
-        loopMode: "off",
-        textChannelId: ""
-    };
-
-    if (!musicData[voiceChannelId]) {
-        musicData[voiceChannelId] = { ...channel_emptyeg };
-        save_music_data(musicData);
-    };
-
-    return musicData[voiceChannelId];
-};
-
-function update_music_data(voiceChannelId, newData) {
-    const musicData = load_music_data();
-
-    if (!musicData[voiceChannelId]) {
-        musicData[voiceChannelId] = {};
-    };
-
-    musicData[voiceChannelId] = { ...musicData[voiceChannelId], ...newData };
-    save_music_data(musicData);
-
-    return musicData[voiceChannelId];
-};
-
-function delete_music_data(voiceChannelId) {
-    const musicData = load_music_data();
-
-    if (musicData[voiceChannelId]) {
-        delete musicData[voiceChannelId];
-        save_music_data(musicData);
-        return true;
-    };
-
-    return false;
+    return temp_folder;
 };
 
 module.exports = {
+    // file operations
+    createWriteStream,
     readFileSync,
     writeSync,
     read,
@@ -838,15 +798,20 @@ module.exports = {
     full_path,
     basename,
     dirname,
+
     // tools
+    waitForWriterFinish,
+    join_folder,
     join_db_folder,
     compareLocalRemote,
     find_default_value,
     get_probability_of_id,
     order_data,
+
     // database
     loadData,
     saveData,
+
     // RPG
     setRPG,
     addPrefix,
@@ -862,17 +827,17 @@ module.exports = {
     save_bake_data,
     load_smelt_data,
     save_smelt_data,
+
     // dvoice
     loadDvoiceData,
     saveDvoiceData,
+
     // features
     setDynamicVoice,
     getDynamicVoice,
     stringify,
-    // music
-    load_music_data,
-    save_music_data,
-    get_music_data,
-    update_music_data,
-    delete_music_data,
+
+    // temp
+    get_temp_folder,
+    join_temp_folder,
 };

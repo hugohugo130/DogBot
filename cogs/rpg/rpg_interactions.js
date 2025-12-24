@@ -1,9 +1,10 @@
-const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, CommandInteraction, ButtonStyle, ButtonBuilder } = require("discord.js");
-const EmbedBuilder = require('../../utils/customs/embedBuilder.js');
+const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, CommandInteraction, ButtonStyle, ButtonBuilder, ButtonInteraction, StringSelectMenuInteraction } = require("discord.js");
 const { embed_default_color, embed_error_color, embed_job_color } = require("../../utils/config.js");
 const { get_logger } = require("../../utils/logger.js");
-const util = require('node:util');
+const util = require("node:util");
+const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
+const { Soundcloud } = require("soundcloud.ts");
 
 const logger = get_logger();
 
@@ -21,7 +22,7 @@ function show_transactions(userid) {
         .slice(-10)
         .map(({ timestamp, originalUser, targetUser, amount, type }) =>
             `- <t:${timestamp}:R> ${originalUser} \`>\` ${targetUser} \`${amount?.toLocaleString()}$\` (${type})`
-        ).join('\n');
+        ).join("\n");
 };
 
 function get_transaction_embed(interaction) {
@@ -42,7 +43,7 @@ function get_transaction_embed(interaction) {
 async function get_failed_embed(client = global._client) {
     const { get_emoji } = require("../../utils/rpg.js");
 
-    const emoji = await get_emoji(client, "crosS");
+    const emoji = await get_emoji("crosS", client);
 
     const embed = new EmbedBuilder()
         .setColor(embed_error_color)
@@ -165,7 +166,7 @@ const help = {
             },
             "last": {
                 emoji: "decrease",
-                desc: '"倒數"金錢排行榜',
+                desc: "「倒數」金錢排行榜",
                 usage: [
                     {
                         name: "顯示倒數金錢排行榜",
@@ -444,7 +445,7 @@ async function get_help_command(category, command_name, guildID, client = global
 
     let emoji = "";
     if (command_data.emoji) {
-        emoji = await get_emoji(client, command_data.emoji) ?? command_data.emoji;
+        emoji = await get_emoji(command_data.emoji, client) ?? command_data.emoji;
     };
 
     const embed = new EmbedBuilder()
@@ -467,15 +468,17 @@ module.exports = {
     /**
      * 
      * @param {DogClient} client 
-     * @param {CommandInteraction} interaction 
+     * @param {ButtonInteraction | StringSelectMenuInteraction} interaction 
      * @returns {Promise<void>}
      */
     execute: async function (client, interaction) {
         try {
-            const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data, load_bake_data, save_bake_data, load_smelt_data, save_smelt_data, loadData, find_default_value } = require("../../utils/file.js");
-            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, bake, smeltable_recipe, name, jobs, smelter_slots, oven_slots } = require("../../utils/rpg.js");
-            const { ls_function, rpg_handler, MockMessage } = require("./msg_handler.js");
+            const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data, load_bake_data, save_bake_data, load_smelt_data, save_smelt_data, find_default_value } = require("../../utils/file.js");
+            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, ls_function, bake, smeltable_recipe, name, jobs, smelter_slots, oven_slots } = require("../../utils/rpg.js");
+            const { rpg_handler, MockMessage } = require("./msg_handler.js");
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
+            const { getQueue } = require("../../utils/music/music.js");
+            const { convertToSecond, formatMinutesSeconds } = require("../../utils/timestamp.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
             if (interaction.customId.startsWith("vote_")) return;
@@ -488,7 +491,7 @@ module.exports = {
             if (message.author.id !== client.user.id) return;
 
             // 從 customId 提取 UserID
-            const customIdParts = interaction.customId.split('|');
+            const customIdParts = interaction.customId.split("|");
             const originalUserId = customIdParts[1];
 
             // 驗證使用者身份
@@ -508,13 +511,13 @@ module.exports = {
 
             logger.info(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`);
 
-            if (interaction.customId.startsWith('rpg_transaction')) {
+            if (interaction.customId.startsWith("rpg_transaction")) {
                 await interaction.deferUpdate();
                 const embed = get_transaction_embed(interaction);
 
                 await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
-            } else if (interaction.customId.startsWith('help')) {
-                const [_, __, category, cmd = null] = interaction.customId.split('|');
+            } else if (interaction.customId.startsWith("help")) {
+                const [_, __, category, cmd = null] = interaction.customId.split("|");
 
                 await interaction.deferUpdate();
                 let embed;
@@ -531,11 +534,11 @@ module.exports = {
                     components: row ? [row] : [],
                     flags: MessageFlags.Ephemeral,
                 });
-            } else if (interaction.customId.startsWith('pay_confirm')) {
+            } else if (interaction.customId.startsWith("pay_confirm")) {
                 await interaction.deferUpdate();
-                const emoji_cross = await get_emoji(client, "crosS");
-                const emoji_top = await get_emoji(client, "top");
-                const [_, userId, targetUserId, amount] = interaction.customId.split('|');
+                const emoji_cross = await get_emoji("crosS", client);
+                const emoji_top = await get_emoji("top", client);
+                const [_, userId, targetUserId, amount] = interaction.customId.split("|");
                 const rpg_data = load_rpg_data(userId);
                 const target_user_rpg_data = load_rpg_data(targetUserId);
 
@@ -576,13 +579,13 @@ module.exports = {
                     .setEmbedFooter();
 
                 await interaction.editReply({ embeds: [embed], components: [] });
-            } else if (interaction.customId.startsWith('setLang')) {
+            } else if (interaction.customId.startsWith("setLang")) {
                 // const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                // const { get_emoji } = require("./msg_handler.js");
+                // const { get_emoji } = require("../../utils/rpg.js");
 
                 // await interaction.deferUpdate();
-                // const emoji_tick = get_emoji(client, "Tick");
-                // const emoji_cross = get_emoji(client, "crosS");
+                // const emoji_tick = get_emoji("Tick", client);
+                // const emoji_cross = get_emoji("crosS", client);
                 // const embed = new EmbedBuilder()
                 //     .setColor(embed_default_color)
                 //     .setTitle(`${emoji_tick} | 語言設定成功`)
@@ -601,16 +604,16 @@ module.exports = {
                 // };
 
                 // await interaction.editReply({ embeds: [embed], components: [] });
-            } else if (interaction.customId.startsWith('rpg_privacy_menu')) {
+            } else if (interaction.customId.startsWith("rpg_privacy_menu")) {
                 await interaction.deferUpdate();
 
-                const [_, userId] = interaction.customId.split('|');
+                const [_, userId] = interaction.customId.split("|");
 
                 const rpg_data = load_rpg_data(userId);
 
                 const [emoji_shield, emoji_backpack, emoji_pet] = await Promise.all(
                     ["shield", "bag", "pet"].map(async (name) => {
-                        return await get_emoji(client, name);
+                        return await get_emoji(name, client);
                     }),
                 );
 
@@ -624,7 +627,7 @@ module.exports = {
 
                 let text = "無";
                 if (rpg_data.privacy.length > 0) {
-                    text = rpg_data.privacy.join('、');
+                    text = rpg_data.privacy.join("、");
                     text = text.replace("money", "金錢").replace("backpack", "背包").replace("partner", "夥伴");
                 };
 
@@ -639,28 +642,28 @@ module.exports = {
 
                 const selectMenu = new StringSelectMenuBuilder()
                     .setCustomId(`rpg_privacy_menu|${userId}`)
-                    .setPlaceholder('選擇要允許的項目')
+                    .setPlaceholder("選擇要允許的項目")
                     .setMinValues(0)
                     .setMaxValues(3)
                     .addOptions([
                         {
-                            label: '金錢',
-                            description: '擁有的金錢數量、交易記錄',
-                            value: 'money',
-                            emoji: '💰',
+                            label: "金錢",
+                            description: "擁有的金錢數量、交易記錄",
+                            value: "money",
+                            emoji: "💰",
                             default: rpg_data.privacy.includes("money"),
                         },
                         {
-                            label: '背包',
-                            description: '背包內的物品',
-                            value: 'backpack',
+                            label: "背包",
+                            description: "背包內的物品",
+                            value: "backpack",
                             emoji: emoji_backpack,
                             default: rpg_data.privacy.includes("backpack"),
                         },
                         {
-                            label: '夥伴',
-                            description: '夥伴的清單',
-                            value: 'partner',
+                            label: "夥伴",
+                            description: "夥伴的清單",
+                            value: "partner",
                             emoji: emoji_pet,
                             default: rpg_data.privacy.includes("partner"),
                         }
@@ -670,18 +673,19 @@ module.exports = {
                     .addComponents(selectMenu);
 
                 return await interaction.editReply({ embeds: [embed], components: [row] });
-            } else if (interaction.customId.startsWith('choose_command')) {
+            } else if (interaction.customId.startsWith("choose_command")) {
                 await interaction.deferUpdate();
 
-                const [_, __, command] = interaction.customId.split('|');
+                const [_, __, command] = interaction.customId.split("|");
 
                 const message = new MockMessage(`${prefix}${command}`, interaction.channel, interaction.user, interaction.guild);
                 let response = await rpg_handler({ client: client, message, d: true, mode: 1 });
+                if (!response) return;
 
                 response.components ??= [];
 
                 await interaction.editReply(response);
-            } else if (interaction.customId.startsWith('ls')) {
+            } else if (interaction.customId.startsWith("ls")) {
                 await interaction.deferReply({ flags: MessageFlags.Ephemeral })
 
                 const [_, userId] = interaction.customId.split("|");
@@ -710,7 +714,7 @@ module.exports = {
 
                 save_rpg_data(userId, rpg_data);
 
-                const emoji_trade = await get_emoji(client, "trade");
+                const emoji_trade = await get_emoji("trade", client);
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
                     .setTitle(`${emoji_trade} | 成功售出了 ${amount} 個 ${get_name_of_id(item_id)}`)
@@ -720,7 +724,7 @@ module.exports = {
             } else if (interaction.customId.startsWith("cancel")) {
                 await interaction.deferUpdate();
 
-                const emoji_cross = await get_emoji(client, "crosS");
+                const emoji_cross = await get_emoji("crosS", client);
 
                 const [_, __, special = null] = interaction.customId.split("|");
 
@@ -735,7 +739,7 @@ module.exports = {
                         const title = data.title ?? null;
                         const description = data.description ?? null;
 
-                        // 把title和description中的{xxx}改成await get_emoji(client, xxx)
+                        // 把title和description中的{xxx}改成await get_emoji(xxx, client)
                         const regex = /\{([^}]+)\}/g;
                         const replaceAsync = async (str, regex, replacer) => {
                             const promises = [];
@@ -747,8 +751,8 @@ module.exports = {
                             return str.replace(regex, () => replacements.shift());
                         };
 
-                        title = await replaceAsync(title, regex, async (match, p1) => await get_emoji(client, p1));
-                        description = await replaceAsync(description, regex, async (match, p1) => await get_emoji(client, p1));
+                        title = await replaceAsync(title, regex, async (match, p1) => await get_emoji(p1, client));
+                        description = await replaceAsync(description, regex, async (match, p1) => await get_emoji(p1, client));
 
                         embed.setTitle(title);
                         embed.setDescription(description);
@@ -756,15 +760,18 @@ module.exports = {
                 };
 
                 await interaction.editReply({ embeds: [embed], components: [] });
-            } else if (interaction.customId.startsWith('buy') || interaction.customId.startsWith('buyc')) {
-                const [_, buyerUserId, targetUserId, amount, price, item] = interaction.customId.split('|');
+            } else if (interaction.customId.startsWith("buy") || interaction.customId.startsWith("buyc")) {
+                let [_, buyerUserId, targetUserId, amount, price, item] = interaction.customId.split("|");
 
                 await interaction.deferUpdate();
 
-                const isConfirm = interaction.customId.startsWith('buyc');
+                const isConfirm = interaction.customId.startsWith("buyc");
 
-                const emoji_cross = await get_emoji(client, "crosS");
-                const emoji_store = await get_emoji(client, "store");
+                amount = parseInt(amount);
+                price = parseInt(price);
+
+                const emoji_cross = await get_emoji("crosS", client);
+                const emoji_store = await get_emoji("store", client);
 
                 const buyerRPGData = load_rpg_data(buyerUserId);
                 const targetUserRPGData = load_rpg_data(targetUserId);
@@ -784,7 +791,7 @@ module.exports = {
                 if (item_data.amount < amount) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 沒有販賣這麼多物品`)
+                        .setTitle(`${emoji_cross} | 沒有販賣那麼多物品`)
                         .setEmbedFooter();
 
                     return await interaction.editReply({ embeds: [embed], components: [] });
@@ -800,7 +807,10 @@ module.exports = {
                     targetUser: `<@${targetUserId}>`,
                     type: `購買物品付款`,
                 });
+
+                if (!buyerRPGData.inventory[item]) buyerRPGData.inventory[item] = 0;
                 buyerRPGData.inventory[item] += amount;
+
                 targetUserRPGData.money = add_money({
                     rpg_data: targetUserRPGData,
                     amount: total_price,
@@ -808,7 +818,10 @@ module.exports = {
                     targetUser: `<@${targetUserId}>`,
                     type: `購買物品付款`,
                 });
+
+                if (!targetUserShopData.items[item].amount) targetUserShopData.items[item].amount = 0;
                 targetUserShopData.items[item].amount -= amount;
+
                 save_rpg_data(buyerUserId, buyerRPGData);
                 save_rpg_data(targetUserId, targetUserRPGData);
                 save_shop_data(targetUserId, targetUserShopData);
@@ -825,7 +838,7 @@ module.exports = {
                     .setEmbedFooter();
 
                 return await interaction.editReply({ embeds: [embed], components: [] });
-            } else if (interaction.customId.startsWith('oven_bake')) {
+            } else if (interaction.customId.startsWith("oven_bake")) {
                 await interaction.deferUpdate();
 
                 // oven_bake|${userId}|${item_id}|${amount}|${coal_amount}|${duration}|${session_id}
@@ -839,8 +852,7 @@ module.exports = {
                 // 從全域變數中取得 item_need 資料
                 const item_need = global.oven_sessions?.[session_id];
                 if (!item_need) {
-
-                    const emoji_cross = await get_emoji(client, "crosS");
+                    const emoji_cross = await get_emoji("crosS", client);
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 烘烤會話已過期`)
@@ -854,7 +866,7 @@ module.exports = {
                 let bake_data = load_bake_data();
 
                 if (bake_data[userId] && bake_data[userId].length >= oven_slots) {
-                    const emoji_cross = get_emoji(client, "crosS");
+                    const emoji_cross = get_emoji("crosS", client);
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -925,7 +937,7 @@ module.exports = {
                 // 清理 session 資料
                 delete global.oven_sessions[session_id];
 
-                const emoji_drumstick = await get_emoji(client, "drumstick");
+                const emoji_drumstick = await get_emoji("drumstick", client);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
@@ -938,7 +950,7 @@ module.exports = {
                 await interaction.deferUpdate();
 
                 const [_, userId, item_id, amount, coal_amount, duration, output_amount, session_id] = interaction.customId.split("|");
-                const emoji_cross = await get_emoji(client, "crosS");
+                const emoji_cross = await get_emoji("crosS", client);
 
                 // 確保所有數值都被正確解析為整數
                 const parsedAmount = parseInt(amount);
@@ -969,7 +981,7 @@ module.exports = {
 
                     if (!userHaveEnoughItems(userId, current_item_id, need_amount)) {
                         item_missing.push({
-                            name: get_name_of_id(current_item_id),
+                            item: get_name_of_id(current_item_id),
                             amount: need_amount - have_amount,
                         });
                     };
@@ -1021,7 +1033,7 @@ module.exports = {
                 // 清理 session 資料
                 delete global.smelter_sessions[session_id];
 
-                const emoji_furnace = await get_emoji(client, "furnace");
+                const emoji_furnace = await get_emoji("furnace", client);
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
                     .setTitle(`${emoji_furnace} | 成功放進煉金爐內`)
@@ -1036,8 +1048,8 @@ module.exports = {
             } else if (interaction.customId.startsWith("marry_accept")) {
                 await interaction.deferUpdate();
 
-                const emoji_cross = await get_emoji(client, "crosS");
-                const emoji_check = await get_emoji(client, "check");
+                const emoji_cross = await get_emoji("crosS", client);
+                const emoji_check = await get_emoji("check", client);
 
                 const [_, targetUserId, userId] = interaction.customId.split("|");
 
@@ -1088,7 +1100,7 @@ module.exports = {
 
                 await interaction.deferReply();
 
-                const emoji_cross = await get_emoji(client, "cross");
+                const emoji_cross = await get_emoji("crosS", client);
 
                 const rpg_data = load_rpg_data(userId);
                 const with_User_rpg_data = load_rpg_data(with_UserId);
@@ -1120,7 +1132,7 @@ module.exports = {
                 if (mode === 1) return { embeds: [embed] };
                 return await interaction.editReply({ embeds: [embed] });
             } else if (interaction.customId.startsWith("job_transfer")) {
-                const emoji_job = await get_emoji(client, "job");
+                const emoji_job = await get_emoji("job", client);
 
                 const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
@@ -1134,14 +1146,14 @@ module.exports = {
                         .setDescription("轉職後一個禮拜不能更動職業!")
                         .setEmbedFooter();
 
-                    const row = await choose_job_row(user.id);
+                    const rows = await choose_job_row(user.id);
 
-                    return await interaction.update({ embeds: [embed], components: [row] });
+                    return await interaction.update({ embeds: [embed], components: rows });
                 };
             } else if (interaction.customId.startsWith("job_choose")) {
                 if (!interaction.isStringSelectMenu()) return;
 
-                const emoji_job = await get_emoji(client, "job");
+                const emoji_job = await get_emoji("job", client);
 
                 const job = interaction.values[0];
                 const job_name = jobs?.[job]?.name;
@@ -1171,7 +1183,7 @@ module.exports = {
                 const [_, __, job] = interaction.customId.split("|");
                 const job_name = jobs?.[job]?.name;
 
-                const emoji_job = await get_emoji(client, "job");
+                const emoji_job = await get_emoji("job", client);
 
                 const delay_embed = await job_delay_embed(user.id);
                 if (delay_embed) {
@@ -1198,6 +1210,56 @@ module.exports = {
                     .setEmbedFooter();
 
                 return await interaction.update({ embeds: [embed], components: [] });
+            } else if (interaction.customId.startsWith("play-s")) {
+                // 下拉式選單
+                await interaction.deferUpdate();
+
+                if (!global._sc) {
+                    global._sc = new Soundcloud();
+                };
+
+                const queue = getQueue(interaction.guildId);
+
+                const [trackSessionID, trackID] = interaction.values[0].split("|");
+                const trackSession = client.musicTrackSession.get(trackSessionID)?.[trackID]?.[0];
+
+                if (!trackSession) {
+                    const emoji_cross = await get_emoji("crosS", client);
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 音樂會話已過期`)
+                        .setDescription(`請重新執行播放指令`)
+                        .setEmbedFooter();
+
+                    return await interaction.followUp({ content: "", embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
+                };
+
+                client.musicTrackSession.delete(trackSessionID);
+
+                const { track, source } = trackSession;
+
+                const trackInfo = await global._sc.tracks.get(track.id);
+                queue.addTrack(track);
+
+                const progressBlack = 14;
+
+                const emoji_playGrad = await get_emoji("playGrad", client);
+                const emoji_progressDot = await get_emoji("progressDot", client);
+                const emoji_progressBlack = await get_emoji("progressBlack", client);
+                const emoji_progressEnd = await get_emoji("progressEnd", client);
+
+                const embed = new EmbedBuilder()
+                    .setAuthor({ name: trackInfo.user.username })
+                    .setDescription(`[**${track.title}**](<${track.url}>)`)
+                    .setThumbnail(track.thumbnail)
+                    .setFooter({ text: `時長: ${formatMinutesSeconds(convertToSecond(track.duration))}` })
+                    .setEmbedAuthor();
+
+                // if (!queue.isPlaying()) {
+                await queue.play(track.id, track.url, source);
+                // };
+
+                return await interaction.editReply({ content: "", embeds: [embed], conponents: [] });
             };
         } catch (err) {
             const { get_loophole_embed } = require("../../utils/rpg.js");
@@ -1206,13 +1268,10 @@ module.exports = {
 
             logger.error(errorStack);
 
-            const loophole_embeds = await get_loophole_embed(client, errorStack);
+            const loophole_embeds = await get_loophole_embed(errorStack, client);
 
-            if (interaction.deferred) {
-                await interaction.followUp({ embeds: loophole_embeds, flags: MessageFlags.Ephemeral });
-            } else {
-                await interaction.reply({ embeds: loophole_embeds, flags: MessageFlags.Ephemeral });
-            };
+            if (!interaction.deferred) await interaction.deferReply();
+            await interaction.followUp({ embeds: loophole_embeds, flags: MessageFlags.Ephemeral });
         };
     },
     get_help_embed,

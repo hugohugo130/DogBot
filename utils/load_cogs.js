@@ -1,11 +1,18 @@
 const fs = require("fs");
 const path = require("path");
-const util = require('node:util');
+const util = require("node:util");
 const { get_logger } = require("./logger.js");
+const DogClient = require("./customs/client.js");
 
 const load_skiplist = [];
 const logger = get_logger();
 
+/**
+ * 
+ * @param {DogClient} client 
+ * @param {any} cog 
+ * @param {string} itemPath 
+ */
 function load_cog(client, cog, itemPath) {
     async function run_execute(...args) {
         try {
@@ -22,6 +29,10 @@ function load_cog(client, cog, itemPath) {
         const once = cog.once ?? false;
         if (once) client.once(event_name, run_execute);
         else client.on(event_name, run_execute);
+    } else if (cog.execute) {
+        setTimeout(async () => {
+            await run_execute(client);
+        });
     } else {
         logger.warn(`找不到 cog ${itemPath} 的 name 和 execute 屬性`);
         return 0;
@@ -41,7 +52,7 @@ function processDirectory(client, dirPath) {
 
         if (stat.isDirectory()) {
             loadedFiles += processDirectory(client, itemPath);
-        } else if (item.endsWith('.js')) {
+        } else if (item.endsWith(".js")) {
             try {
                 delete require.cache[require.resolve(itemPath)];
                 const cog = require(itemPath);

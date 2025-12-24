@@ -63,7 +63,7 @@ async function make_db_compatible(users, guilds) {
             /*
             if (!rpg_data.count) rpg_data.count = {};
 
-            const keys = ['mine', 'hew', 'herd', 'brew', 'fish', 'fell'];
+            const keys = ["mine", "hew", "herd", "brew", "fish", "fell"];
             for (const key of keys) {
                 if (!rpg_data.count.work) {
                     rpg_data.count.work = 0

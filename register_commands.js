@@ -4,6 +4,9 @@ const { loadslashcmd } = require("./utils/loadslashcmd.js");
 const { Logger } = require("winston");
 const { get_logger } = require("./utils/logger.js");
 const { should_register_cmd, update_cmd_hash } = require("./utils/auto_register.js");
+const util = require("node:util");
+
+const args = process.argv.slice(2);
 
 function log(logger, message) {
     if (logger) logger.info(message);
@@ -56,17 +59,22 @@ if (require.main === module) {
     (async () => {
         const res = await should_register_cmd();
         console.log("should_register_cmd: " + res);
-        const force = false; // 改為 false，只在檢測到變化時註冊
+
+        const force = args.includes("force");
         console.log(`force: ${force}`);
+
+        const quiet = args.includes("quiet");
+        console.log(`quiet: ${quiet}`);
+
         if (res || force) {
             try {
-                await registcmd(false, false, true); // 註冊成功後自動更新 hash
+                await registcmd(quiet, false, true); // 註冊成功後自動更新 hash
                 console.log("命令註冊完成！");
             } catch (error) {
-                console.error("命令註冊失敗，hash 文件未更新");
-            }
+                console.error(`命令註冊失敗，hash 文件未更新\n${util.inspect(error, { depth: null })}`);
+            };
         } else {
-            console.log("無需註冊命令（無變化）");
+            console.log("無需註冊命令");
         }
     })();
 };

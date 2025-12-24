@@ -1,9 +1,9 @@
-const { EmbedBuilder: djsEmbedBuilder, MessageFlags, Embed, escapeMarkdown } = require('discord.js');
-const winston = require('winston');
+const { EmbedBuilder: djsEmbedBuilder, MessageFlags, Embed, escapeMarkdown } = require("discord.js");
+const winston = require("winston");
 const path = require("path");
 
-const { time2 } = require('./time.js');
-const config = require('./config.js');
+const { time2 } = require("./time.js");
+const config = require("./config.js");
 
 // 全局管理器
 const loggerManager = new Map();
@@ -44,14 +44,14 @@ function splitStringByLength(text, maxLength = 3900) {
 class DiscordTransport extends winston.Transport {
     constructor(opts) {
         super(opts);
-        this.name = 'discord';
-        this.level = opts.level || 'info';
+        this.name = "discord";
+        this.level = opts.level || "info";
         this.levels = winston.config.npm.levels;
     };
 
     log(info, callback) {
         setImmediate(() => {
-            this.emit('logged', info);
+            this.emit("logged", info);
         });
 
         if (DEBUG) console.debug(`[DEBUG] [DiscordTransport] pushed info to sendQueue: ${JSON.stringify(info, null, 4)}`);
@@ -67,15 +67,15 @@ class DiscordTransport extends winston.Transport {
 class BackendTransport extends winston.Transport {
     constructor(opts) {
         super(opts);
-        this.name = 'backend';
-        this.level = opts.level || 'info';
+        this.name = "backend";
+        this.level = opts.level || "info";
         this.levels = winston.config.npm.levels;
         this.channel_id = config.backend_channel_id;
     };
 
     log(info, callback) {
         setImmediate(() => {
-            this.emit('logged', info);
+            this.emit("logged", info);
         });
 
         // 設置 channel_id 到 info 物件
@@ -94,7 +94,7 @@ class BackendTransport extends winston.Transport {
 const consoleFormat = winston.format.combine(
     winston.format.timestamp(),
     winston.format((info) => {
-        if (info.message && typeof info.message === 'object' && info.message.data) {
+        if (info.message && typeof info.message === "object" && info.message.data) {
             return false; // 返回 false 表示過濾掉此日誌
         };
 
@@ -105,25 +105,35 @@ const consoleFormat = winston.format.combine(
     }),
 );
 
-async function send_msg(channel, level, color, logger_name, message, timestamp = null, embed = null) {
-    const EmbedBuilder = require('./customs/embedBuilder.js');
+async function send_msg(channel, level, color, logger_name, message, timestamp = null) {
+    const EmbedBuilder = require("./customs/embedBuilder.js");
 
     if (message) message = message.replace("```", "");
-    message = escapeMarkdown(message);
+    message = escapeMarkdown(message, {
+        codeBlockContent: false,
+        codeBlock: true,
+    });
 
-    if (!embed) {
-        embed = new EmbedBuilder()
+    const embeds = [];
+    const messages = splitStringByLength(message, 4000);
+
+    for (const msg of messages) {
+        const embed = new EmbedBuilder()
+            .setColor(color)
             .setTitle(`${level.toUpperCase()} - ${path.basename(logger_name, ".js")}`)
-            .setDescription(`\`\`\`\n${message}\n\`\`\``)
-            .setColor(color);
-    } else {
-        embed.setColor(color);
+            .setDescription(`\`\`\`\n${msg}\n\`\`\``);
+
+        embeds.push(embed);
     };
 
-    if (timestamp) embed.setTimestamp(timestamp);
+    if (timestamp) {
+        for (const embed of embeds) {
+            embed.setTimestamp(timestamp);
+        };
+    };
 
     return await channel.send({
-        embeds: [embed],
+        embeds,
         flags: MessageFlags.SuppressNotifications,
     });
 };
@@ -140,11 +150,11 @@ function getCallerModuleName(depth = 4) {
         return err.stack || err;
     };
 
-    let res = 'unknown';
+    let res = "unknown";
     try {
         const err = new Error();
 
-        const stackLines = err.stack.split('\n');
+        const stackLines = err.stack.split("\n");
         const callerLine = stackLines[depth] || stackLines[stackLines.length - 1];
 
         const match = callerLine.match(/\((.*):\d+:\d+\)$/) ||
@@ -153,10 +163,10 @@ function getCallerModuleName(depth = 4) {
         if (match) {
             const fullPath = match[1];
             const fileName = fullPath.split(/[\\/]/).pop();
-            res = fileName.replace('.js', '');
+            res = fileName.replace(".js", "");
         }
     } catch {
-        res = 'unknown'
+        res = "unknown"
     };
 
     if (res !== "unknown") {
@@ -214,20 +224,20 @@ function get_logger(options = {}) {
     const transports = [
         new winston.transports.Console({
             format: consoleFormat,
-            level: 'debug' // 控制台显示所有級別
+            level: "debug" // 控制台显示所有級別
         }),
     ];
 
     if (!nodc) {
         transports.push(new DiscordTransport({
-            level: 'warn',
+            level: "warn",
         }));
     };
 
     if (backend) {
         transports.length = 0;
         transports.push(new BackendTransport({
-            level: 'info',
+            level: "info",
         }));
     };
 
@@ -251,17 +261,17 @@ function get_logger(options = {}) {
     return logger;
 };
 
-// 處理發送隊列
+// 處理發送佇列
 async function process_send_queue(client) {
-    const EmbedBuilder = require('./customs/embedBuilder.js');
+    const EmbedBuilder = require("./customs/embedBuilder.js");
 
     while (global.sendQueue.length > 0) {
         const info = global.sendQueue[0];
         if (DEBUG) console.debug(`[DEBUG] [process_send_queue] handling send Queue ${JSON.stringify(info, null, 4)}`)
 
         try {
-            const level = info.level ? info.level.toUpperCase() : 'INFO';
-            const logger_name = info.module || 'unknown';
+            const level = info.level ? info.level.toUpperCase() : "INFO";
+            const logger_name = info.module || "unknown";
             const message = info.stack || info.message;
             const color = LEVEL_COLORS[info.level] || 0x000000;
             const channel_id = info.channel_id || CHANNEL_MAPPING[info.level];
@@ -277,7 +287,7 @@ async function process_send_queue(client) {
             if (
                 message
                 && (
-                    (typeof message === 'object' && message.data)
+                    (typeof message === "object" && message.data)
                     || message instanceof djsEmbedBuilder
                     || message instanceof EmbedBuilder
                     || message instanceof Embed
@@ -297,16 +307,18 @@ async function process_send_queue(client) {
                     flags: MessageFlags.SuppressNotifications
                 });
             } else {
-                const send_messages = splitStringByLength(message);
+                const send_messages = splitStringByLength(message, 4000);
 
                 for (const msg of send_messages) {
+                    if (!msg) continue;
+
                     await send_msg(channel, level, color, logger_name, msg, timestamp);
                 };
             };
 
             global.sendQueue.shift();
         } catch (error) {
-            console.error('Failed to process queued message:', error);
+            console.error("Failed to process queued message:", error);
             global.sendQueue.shift();
         };
     };

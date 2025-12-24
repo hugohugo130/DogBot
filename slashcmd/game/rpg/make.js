@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, MessageFlags } = require("discord.js");
-const EmbedBuilder = require('../../../utils/customs/embedBuilder.js');
+const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 const { recipes, get_name_of_id } = require("../../../utils/rpg.js");
 
 module.exports = {
@@ -118,7 +118,7 @@ module.exports = {
         rpg_data.inventory[item_id] += output_amount;
         save_rpg_data(userid, rpg_data);
 
-        const emoji = await get_emoji(interaction.client, "toolbox");
+        const emoji = await get_emoji("toolbox", interaction.client);
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${emoji} | 製作物品`)

@@ -1,5 +1,5 @@
 const { get_logger } = require("../../utils/logger.js");
-const util = require('node:util');
+const util = require("node:util");
 
 const logger = get_logger();
 

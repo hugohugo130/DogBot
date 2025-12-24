@@ -20,7 +20,7 @@ function get_hash_of_datas(file_datas) {
     }
 
     // 計算 SHA256 哈希值
-    const hash = crypto.createHash('sha256').update(combined_data).digest('hex');
+    const hash = crypto.createHash("sha256").update(combined_data).digest("hex");
 
     return [length, hash];
 };

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown } = require("discord.js");
-const EmbedBuilder = require('../utils/customs/embedBuilder.js');
+const EmbedBuilder = require("../utils/customs/embedBuilder.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -55,7 +55,7 @@ module.exports = {
                 "zh-TW": "機器人",
                 "zh-CN": "机器人",
             })
-            .setDescription("Getting bot's information")
+            .setDescription("Getting bot information")
             .setDescriptionLocalizations({
                 "zh-TW": "查詢機器人的資訊",
                 "zh-CN": "查询机器人的資訊",
@@ -69,7 +69,7 @@ module.exports = {
         const { load_rpg_data } = require("../utils/file.js");
         const { get_emoji } = require("../utils/rpg.js");
         const { max_hunger } = require("../cogs/rpg/msg_handler.js");
-        const { convertToSecond } = require("../utils/timestamp.js");
+        const { convertToSecondTimestamp } = require("../utils/timestamp.js");
         const { embed_default_color } = require("../utils/config.js");
 
         await interaction.deferReply();
@@ -77,16 +77,16 @@ module.exports = {
         const client = interaction.client;
         const subcommand = interaction.options.getSubcommand();
 
-        const emoji_idCard = await get_emoji(client, "idCard");
-        const emoji_timer = await get_emoji(client, "timer");
-        const emoji_job = await get_emoji(client, "job");
-        const emoji_adventure = await get_emoji(client, "adventure");
-        const emoji_drumstick = await get_emoji(client, "drumstick");
-        const emoji_badge = await get_emoji(client, "badge");
-        const emoji_user = await get_emoji(client, "user");
-        const emoji_boost2 = await get_emoji(client, "boost2");
-        const emoji_server = await get_emoji(client, "server");
-        const emoji_memory = await get_emoji(client, "memory");
+        const emoji_idCard = await get_emoji("idCard", client);
+        const emoji_timer = await get_emoji("timer", client);
+        const emoji_job = await get_emoji("job", client);
+        const emoji_adventure = await get_emoji("adventure", client);
+        const emoji_drumstick = await get_emoji("drumstick", client);
+        const emoji_badge = await get_emoji("badge", client);
+        const emoji_user = await get_emoji("user", client);
+        const emoji_boost2 = await get_emoji("boost2", client);
+        const emoji_server = await get_emoji("server", client);
+        const emoji_memory = await get_emoji("memory", client);
 
         const memUsage = process.memoryUsage();
 
@@ -112,11 +112,11 @@ module.exports = {
             const marry_data = rpg_data.marry || {};
             const marry_str = marry_data.status ? `
 和 <@${marry_data.with}>
-結婚紀念日 <t:${convertToSecond(marry_data.time)}:R>
+結婚紀念日 <t:${convertToSecondTimestamp(marry_data.time)}:R>
 ` : "單身";
-            // const job_emoji = await get_emoji(client, job_emojis[job]);
+            // const job_emoji = await get_emoji(job_emojis[job], client);
 
-            const createdAt = convertToSecond(user.createdAt.getTime());
+            const createdAt = convertToSecondTimestamp(user.createdAt.getTime());
 
             const user_data_embed = new EmbedBuilder()
                 .setColor(embed_default_color)
@@ -182,7 +182,7 @@ module.exports = {
             const serverIconURL = guild.iconURL({ dynamic: true });
             const serverBanner = guild.bannerURL({ dynamic: true });
             const serverInviteBG = guild.splashURL({ dynamic: true });
-            const createdAt = convertToSecond(interaction.guild.createdAt.getTime());
+            const createdAt = convertToSecondTimestamp(interaction.guild.createdAt.getTime());
 
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
@@ -242,14 +242,16 @@ module.exports = {
                 );
             };
 
-            const row = BtnLinks ? new ActionRowBuilder()
-                .addComponents(BtnLinks) : null;
+            const row = BtnLinks.length ?
+                new ActionRowBuilder()
+                    .addComponents(BtnLinks)
+                : null;
 
             await interaction.editReply({ embeds: [embed], components: row ? [row] : [] });
         } else if (subcommand === "bot") {
             const serverCount = interaction.client.guilds.cache.size;
             const userCount = interaction.client.users.cache.size;
-            const readyAt = convertToSecond(interaction.client.readyAt.getTime());
+            const readyAt = convertToSecondTimestamp(interaction.client.readyAt.getTime());
 
             let embed = new EmbedBuilder()
                 .setColor(embed_default_color)
@@ -274,7 +276,7 @@ module.exports = {
                         value: `\`${fix(memUsage.heapUsed)} MB\` / \`${fix(memUsage.heapTotal)} MB\` / \`${fix(memUsage.rss)} MB\``,
                     },
                 )
-                .setEmbedFooter("我們使用 discord.js 製作這個機器人", null, true)
+                .setEmbedFooter("我們使用 discord.js 製作這個機器人", { force: true })
                 .setEmbedAuthor(`${client.user.tag}🤖`);
 
             await interaction.editReply({ embeds: [embed] });

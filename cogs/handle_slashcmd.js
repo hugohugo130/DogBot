@@ -1,17 +1,18 @@
-const { Events } = require('discord.js');
-const EmbedBuilder = require('../utils/customs/embedBuilder.js');
-const { get_logger } = require('../utils/logger.js');
-const util = require('node:util');
+const { Events, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
+const EmbedBuilder = require("../utils/customs/embedBuilder.js");
+const { get_logger } = require("../utils/logger.js");
+const util = require("node:util");
+const DogClient = require("../utils/customs/client.js");
 
 function parseOptions(options) {
-    if (!options || options.length === 0) return '';
+    if (!options || options.length === 0) return "";
     return options.map(option => {
         if (option.type === 1 || option.type === 2) { // 1: SUB_COMMAND, 2: SUB_COMMAND_GROUP
-            return `${option.name}${option.options && option.options.length > 0 ? `(${parseOptions(option.options)})` : ''}`;
+            return `${option.name}${option.options && option.options.length > 0 ? `(${parseOptions(option.options)})` : ""}`;
         } else {
             return `${option.name}: ${option.value}`;
         }
-    }).join(', ');
+    }).join(", ");
 };
 
 function getFullCommandPath(options) {
@@ -34,6 +35,12 @@ function getFinalOptions(options) {
 
 module.exports = {
     name: Events.InteractionCreate,
+    /**
+     * 
+     * @param {DogClient} client 
+     * @param {ChatInputCommandInteraction} interaction 
+     * @returns 
+     */
     async execute(client, interaction) {
         if (!interaction.isChatInputCommand()) return;
         const logger = get_logger();
@@ -48,31 +55,43 @@ module.exports = {
         };
 
         let subPath = getFullCommandPath(interaction.options.data);
-        let fullCommand = [interaction.commandName, ...subPath].join(' ');
+        let fullCommand = [interaction.commandName, ...subPath].join(" ");
         let finalOptions = getFinalOptions(interaction.options.data);
-        let optionsStr = finalOptions.map(option => `${option.name}: ${option.value}`).join(', ');
+        let optionsStr = finalOptions.map(option => `${option.name}: ${option.value}`).join(", ");
 
         try {
+            const guild = interaction.guild;
+            const channel = interaction.channel;
 
             logger.info(`${username} 正在執行斜線指令: ${fullCommand}${optionsStr ? `, 選項: ${optionsStr}` : ""}`);
 
             const embed = new EmbedBuilder()
                 .setTitle("指令執行")
-                .addFields({ name: '指令執行者', value: interaction.user.toString() })
-                .addFields({ name: '指令名稱', value: fullCommand })
-                .addFields({ name: '選項', value: optionsStr ? optionsStr : '無' });
+                .addFields({ name: "指令執行者", value: interaction.user.toString() })
+                .addFields({ name: "指令名稱", value: fullCommand })
+                .addFields({ name: "選項", value: optionsStr ? optionsStr : "無" })
+                .addFields({ name: "伺服器", value: `${guild.name} (${guild.id})` })
+                .addFields({ name: "頻道", value: `${channel.name} (${channel.id})` })
+                .addFields({ name: "跳轉至訊息", value: `[點擊此處](${await (interaction.fetchReply()).url})` });
 
             backend_logger.info(embed);
 
-            await command.execute(interaction);
+            interaction.client = client;
+            await command.execute(interaction, client);
         } catch (error) {
-            const { get_loophole_embed } = require('../utils/rpg.js');
+            const { get_loophole_embed } = require("../utils/rpg.js");
 
             const errorStack = util.inspect(error, { depth: null });
             logger.error(`執行斜線指令 ${fullCommand} 時出錯：${errorStack}`);
 
-            const embeds = await get_loophole_embed(interaction.client, errorStack);
-            await interaction.followUp({ embeds });
+            const embeds = await get_loophole_embed(errorStack, client);
+            try {
+                if (interaction.replied || interaction.deferred) {
+                    await interaction.editReply({ content: "", embeds, components: [], flags: MessageFlags.Ephemeral });
+                } else {
+                    await interaction.followUp({ content: "", embeds, components: [], flags: MessageFlags.Ephemeral });
+                };
+            } catch (_) { };
         };
     },
 };

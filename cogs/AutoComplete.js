@@ -29,6 +29,8 @@ module.exports = {
             return acc;
         }, {});
 
+        const userid = interaction.user.id;
+
         if (interaction.commandName === "play") {
             // const focusedValue = interaction.options.getFocused();
             // const choices = await searchVideos(focusedValue);
@@ -39,10 +41,9 @@ module.exports = {
             //     logger.error(err);
             // };
         } else if (interaction.commandName === "bake") {
-            const userid = interaction.user.id;
             const rpg_data = await load_rpg_data(userid);
 
-            const wrong_job = await wrong_job_embed(rpg_data, "/bake");
+            const [wrong_job, _] = await wrong_job_embed(rpg_data, "/bake", userid);
             if (wrong_job) return await interaction.respond([
                 { name: wrong_job.data.title ?? "", value: "nothing" }
             ]);
@@ -62,10 +63,9 @@ module.exports = {
                 choices.map(item => ({ name: get_name_of_id(item), value: item })),
             );
         } else if (interaction.commandName === "smelt") {
-            const userid = interaction.user.id;
             const rpg_data = await load_rpg_data(userid);
 
-            const wrong_job = await wrong_job_embed(rpg_data, "/smelt");
+            const [wrong_job, _] = await wrong_job_embed(rpg_data, "/smelt", userid);
             if (wrong_job) return await interaction.respond([
                 { name: wrong_job.data.title ?? "", value: "nothing" }
             ]);

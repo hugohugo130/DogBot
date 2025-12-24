@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, User } = require("discord.js");
-const EmbedBuilder = require('../../../utils/customs/embedBuilder.js');
+const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 const { get_id_of_name, farm_slots } = require("../../../utils/rpg.js");
 const DogClient = require("../../../utils/customs/client.js");
 
@@ -13,18 +13,18 @@ async function get_farm_info_embed(user, client = global._client) {
     const { load_farm_data } = require("../../../utils/file.js");
     const { get_emoji } = require("../../../utils/rpg.js");
     const { get_name_of_id } = require("../../../utils/rpg.js");
-    const { convertToSecond, DateNowSecond } = require("../../../utils/timestamp.js");
+    const { convertToSecondTimestamp, DateNowSecond } = require("../../../utils/timestamp.js");
     const { embed_default_color } = require("../../../utils/config.js");
 
-    const emoji_farmer = await get_emoji(client, "farmer");
-    const emoji_hoe = await get_emoji(client, "hoe");
-    const emoji_update = await get_emoji(client, "update");
+    const emoji_farmer = await get_emoji("farmer", client);
+    const emoji_hoe = await get_emoji("hoe", client);
+    const emoji_update = await get_emoji("update", client);
     const farm_data = load_farm_data(user.id);
 
     let waterAt = farm_data.waterAt;
 
     // 判斷water at是秒還是毫秒，毫秒轉換成秒
-    waterAt = convertToSecond(waterAt);
+    waterAt = convertToSecondTimestamp(waterAt);
 
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
@@ -206,9 +206,8 @@ module.exports = {
 
         const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
         const { farm_slots, get_name_of_id, userHaveEnoughItems, notEnoughItemEmbed, wrong_job_embed } = require("../../../utils/rpg.js");
-        const { is_cooldown_finished } = require("../../../cogs/rpg/msg_handler.js");
         const { randint } = require("../../../utils/random.js");
-        const { get_emoji } = require("../../../utils/rpg.js");
+        const { get_emoji, is_cooldown_finished } = require("../../../utils/rpg.js");
         const { DateNow, DateNowSecond } = require("../../../utils/timestamp.js");
         const { embed_default_color, embed_error_color, rpg_lvlUp_per } = require("../../../utils/config.js");
 
@@ -220,12 +219,12 @@ module.exports = {
         const rpg_data = load_rpg_data(userId);
         const farm_data = load_farm_data(userId);
 
-        const wrongJobEmbed = await wrong_job_embed(rpg_data, "/farm", interaction.client);
-        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
+        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/farm", userId, interaction.client);
+        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
 
-        const emoji_farmer = await get_emoji(client, "farmer");
-        const emoji_cross = await get_emoji(client, "crosS");
-        const emoji_check = await get_emoji(client, "check");
+        const emoji_farmer = await get_emoji("farmer", client);
+        const emoji_cross = await get_emoji("crosS", client);
+        const emoji_check = await get_emoji("check", client);
 
         if (subcommand === "plant") {
             const amount = interaction.options.getInteger("amount") ?? 1;
@@ -289,7 +288,7 @@ module.exports = {
                 .setColor(embed_default_color)
                 .setTitle(`${emoji_check} | 成功使用了 ${amount} 個鐵鋤`)
                 .setDescription(`消耗 ${need_hunger} 點體力`)
-                .setEmbedFooter('', rpg_data);
+                .setEmbedFooter("", { rpg_data });
 
             return await interaction.editReply({ embeds: [success_embed] });
         } else if (subcommand === "info") {

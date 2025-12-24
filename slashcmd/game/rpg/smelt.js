@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
-const EmbedBuilder = require('../../../utils/customs/embedBuilder.js');
+const { divide } = require("./bake.js");
+const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
 /**
  * 
@@ -19,8 +20,8 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     const rpg_data = await load_rpg_data();
     const smelt_data = await load_smelt_data()[userId];
 
-    const emoji_cross = await get_emoji(interaction.client, "crosS");
-    const emoji_furnace = await get_emoji(interaction.client, "furnace");
+    const emoji_cross = await get_emoji("crosS", interaction.client);
+    const emoji_furnace = await get_emoji("furnace", interaction.client);
 
     if (smelt_data && smelt_data.length >= smelter_slots) {
         const embed = new EmbedBuilder()
@@ -36,7 +37,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     // 找到該 smeltable_item 的配方
     const smelt_recipe = smeltable_recipe.find(item => item.input[0].item === item_id);
     if (!smelt_recipe) {
-        const embeds = await get_loophole_embed(interaction.client, "找不到該熔鍊配方");
+        const embeds = await get_loophole_embed("找不到該熔鍊配方", interaction.client);
 
         return await interaction.editReply({ embeds, flags: MessageFlags.Ephemeral });
     };
@@ -48,6 +49,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     const input_amount = smelt_recipe.input[0].amount * amount;
     const output_amount = smelt_recipe.amount * amount;
     const duration = 5 * 60 * amount;
+    const coal_used = Math.ceil(amount / 2);
 
     let item_need = [
         {
@@ -56,7 +58,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
         },
         {
             item: get_id_of_name("煤炭", "coal"),
-            amount: Math.ceil(amount / 2),
+            amount: coal_used,
         },
     ];
     let item_missing = [];
@@ -85,8 +87,8 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
         .setTitle(`${emoji_furnace} | 熔鍊確認`)
         .setDescription(
             `將要熔鍊 \`${input_amount}\` 組 \`${get_name_of_id(item_id)}\`
-花費 \`${Math.ceil(input_amount / 2)}\` 個煤炭
-預估時間：\`${duration / 60}\` 分鐘`)
+花費 \`${coal_used}\` 個煤炭
+預估時間：\`${Math.floor(duration / 60)}\` 分鐘`)
         .setEmbedFooter();
 
     // 生成一個簡短的識別碼
@@ -99,7 +101,8 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     global.smelter_sessions[session_id] = item_need;
 
     const confirm_button = new ButtonBuilder()
-        .setCustomId(`smelter_smelt|${userId}|${item_id}|${input_amount}|${Math.ceil(amount / 2)}|${duration}|${output_amount}|${session_id}`)
+        // const [_, userId, item_id, amount, coal_amount, duration, output_amount, session_id] = interaction.customId.split("|");
+        .setCustomId(`smelter_smelt|${userId}|${item_id}|${input_amount}|${coal_used}|${duration}|${output_amount}|${session_id}`)
         .setLabel("確認")
         .setStyle(ButtonStyle.Success);
 
@@ -139,29 +142,51 @@ module.exports = {
             .setNameLocalizations({
                 "zh-TW": "熔鍊",
                 "zh-CN": "熔鍊",
-                "en-US": "smelt",
             })
-            .setDescription("熔鍊礦物")
+            .setDescription("Smelt ores")
             .setDescriptionLocalizations({
                 "zh-TW": "熔鍊礦物",
                 "zh-CN": "熔炼矿物",
-                "en-US": "Smelt ores",
             })
             .addStringOption(option =>
-                option.setName("配方")
-                    .setDescription("要熔鍊的配方")
+                option.setName("recipe")
+                    .setNameLocalizations({
+                        "zh-TW": "配方",
+                        "zh-CN": "配方",
+                    })
+                    .setDescription("the recipe to smelt")
+                    .setDescriptionLocalizations({
+                        "zh-TW": "熔鍊的配方",
+                        "zh-CN": "熔炼的配方",
+                    })
                     .setAutocomplete(true)
                     .setRequired(true),
             )
             .addIntegerOption(option =>
-                option.setName("數量")
-                    .setDescription("熔鍊數量")
+                option.setName("amount")
+                    .setNameLocalizations({
+                        "zh-TW": "數量",
+                        "zh-CN": "数量",
+                    })
+                    .setDescription("the amount of ores to smelt")
+                    .setDescriptionLocalizations({
+                        "zh-TW": "熔鍊數量",
+                        "zh-CN": "熔炼数量",
+                    })
                     .setMinValue(1)
                     .setRequired(false),
             )
             .addBooleanOption(option =>
-                option.setName("全部")
-                    .setDescription("熔鍊全部選擇的礦物")
+                option.setName("all")
+                    .setNameLocalizations({
+                        "zh-TW": "全部",
+                        "zh-CN": "全部",
+                    })
+                    .setDescription("smelt all selected ores")
+                    .setDescriptionLocalizations({
+                        "zh-TW": "熔鍊全部選擇的礦物",
+                        "zh-CN": "熔炼全部选择的矿物",
+                    })
                     .setRequired(false),
             ),
         )
@@ -206,19 +231,22 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
         const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
         const { load_rpg_data, load_smelt_data, save_smelt_data, save_rpg_data } = require("../../../utils/file.js");
-        const { get_emoji, wrong_job_embed, name, smelter_slots } = require("../../../utils/rpg.js");
+        const { get_emoji, wrong_job_embed, notEnoughItemEmbed, name, smelter_slots } = require("../../../utils/rpg.js");
 
         let rpg_data = load_rpg_data(userId);
         const smelt_data_all = load_smelt_data();
         const smelt_data = smelt_data_all[userId];
 
-        const wrongJobEmbed = await wrong_job_embed(rpg_data, "/smelt", interaction.client);
-        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], flags: MessageFlags.Ephemeral });
-        const emoji_cross = await get_emoji(interaction.client, "crosS");
-        const emoji_furnace = await get_emoji(interaction.client, "furnace");
+        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/smelt", userId, interaction.client);
+        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
+
+        const emoji_cross = await get_emoji("crosS", interaction.client);
+        const emoji_furnace = await get_emoji("furnace", interaction.client);
 
         if (subcommand === "smelt") {
-            if (smelt_data && smelt_data.length >= smelter_slots) {
+            const smelt_remain_slots = smelter_slots - (smelt_data?.length || 0);
+
+            if (smelt_remain_slots < 1) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的煉金爐已經滿了`)
@@ -227,10 +255,92 @@ module.exports = {
                 return await interaction.followUp({ embeds: [embed] });
             };
 
-            let item_id = interaction.options.getString("配方");
-            let amount = interaction.options.getInteger("數量") ?? 1;
+            const item_id = interaction.options.getString("recipe");
+            let items = item_id ? [item_id] : [];
+            let choosedAmount = Boolean(interaction.options.getInteger("amount"));
+            let amounts = [interaction.options.getInteger("amount") ?? 1];
+            const allAmount = interaction.options.getBoolean("all") ?? false;
+            const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
 
-            await smelt_smelt(interaction, item_id, amount);
+            if (!item_id && !choosedAmount &&!allAmount && !auto_amount) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 蛤？ 🤔 你什麼也不選`)
+                    .setEmbedFooter();
+
+                return await interaction.followUp({ embeds: [embed] });
+            };
+
+            if (!item_id && amounts[0] && !allAmount && !auto_amount) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 蛤？ 🤔 你選了數量但沒選食物`)
+                    .setEmbedFooter();
+
+                return await interaction.followUp({ embeds: [embed] });
+            };
+
+            if (item_id && auto_amount === "foods") {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 什麼拉🤣 你選了食物又選了自動選擇食物 那我要選什麼阿`)
+                    .setEmbedFooter();
+
+                return await interaction.followUp({ embeds: [embed] });
+            };
+
+            if (allAmount && auto_amount) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 什麼拉🤣 你選了全部食物又選了自動選擇食物 那我要選什麼阿`)
+                    .setEmbedFooter();
+
+                return await interaction.followUp({ embeds: [embed] });
+            };
+
+            if (!item_id && auto_amount === "amount") {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你選了自動選擇數量但沒選食物 蛤？`)
+                    .setEmbedFooter();
+
+                return await interaction.followUp({ embeds: [embed] });
+            };
+
+            if (allFoods && !auto_amount) {
+                amounts = [rpg_data.inventory[first_food] || 1];
+            } else if (auto_amount) {
+                if (auto_amount === "amount") {
+                    amounts = divide(rpg_data.inventory[first_food], smelt_remain_slots);
+                } else { // auto_amount === "foods"
+                    const entries = Object.entries(rpg_data.inventory)
+                        .filter(([key]) => key in bake) // 過濾掉不可熔鍊的物品
+                        .sort(([, valueA], [, valueB]) => valueB - valueA) // 按數量降序排序
+                        .slice(0, smelt_remain_slots); // 取前 {smelt_remain_slots} 個物品
+
+                    items = entries.map(([key]) => key);
+                    amounts = entries.map(([, value]) => value);
+                };
+            };
+
+            const total_need_coal = Math.ceil(amounts.reduce((sum, amount) => sum + amount, 0) / 2);
+            const coal_amount = rpg_data.inventory["coal"] || 0;
+
+            if (coal_amount < total_need_coal) {
+                const item_list = [{
+                    name: "coal",
+                    amount: total_need_coal - coal_amount,
+                }];
+
+                return await interaction.followUp({ embeds: [await notEnoughItemEmbed(item_list)] });
+            };
+
+            for (const [index, item] of items.entries()) {
+                const amount = amounts[index];
+                if (!amount) continue;
+
+                await smelt_smelt(interaction, userId, item, amount, index === 0 ? 1 : 2);
+            };
         } else if (subcommand === "info") {
             const used_slots = smelt_data ? smelt_data.length : 0;
             const current_time = Math.floor(Date.now() / 1000);

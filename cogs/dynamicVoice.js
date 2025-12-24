@@ -1,12 +1,12 @@
-const { Events, ChannelType, VoiceState, PermissionFlagsBits } = require("discord.js");
-const util = require('node:util');
+const { Events, ChannelType, VoiceState, PermissionFlagsBits, Collection } = require("discord.js");
+const util = require("node:util");
 const DogClient = require("../utils/customs/client.js");
 
 const pattern = /^└⳺.*⳻ 的頻道$/;
 const format = String(pattern)
-    .replace(/^\/\^/, '')
-    .replace(/\$\//, '')
-    .replace(/\.\*/g, '{user}');
+    .replace(/^\/\^/, "")
+    .replace(/\$\//, "")
+    .replace(/\.\*/g, "{user}");
 
 module.exports = {
     name: Events.VoiceStateUpdate,
@@ -30,35 +30,28 @@ module.exports = {
             const member = newState.member || oldState.member;
             if (!member) return;
 
-            // 確保 client.dvoice 已初始化
-            if (!client.dvoice) client.dvoice = new Map();
-
             const mainchannelID = getDynamicVoice(guild.id);
-
             if (!mainchannelID) return;
 
             const oldChannel = oldState.channel;
             const newChannel = newState.channel;
 
-            if (oldChannel?.id && newChannel?.id && oldChannel?.id === newChannel?.id) return;
+            if (!oldChannel?.id && !newChannel?.id) return;
+            if (oldChannel?.id === newChannel?.id) return;
 
             // 成員加入語音頻道
             if (newChannel && newChannel.id === mainchannelID) {
                 try {
                     // 檢查機器人權限
-                    const botMember = await guild.members.fetch(client.user.id);
-                    if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels)) {
-                        logger.error("機器人缺少管理頻道權限");
-                        return;
-                    };
+                    const botMember = await guild.members.fetchMe();
+                    if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return;
 
                     let channel;
-                    const data = client.dvoice[newChannel.id];
+                    const data = client.dvoice.find(d => d.owner === member.id);
+
                     if (data) {
                         channel = data.channel || newChannel;
-                    };
-
-                    if (!data) {
+                    } else {
                         channel = await guild.channels.create({
                             name: format.replace("{user}", member.user.username),
                             type: ChannelType.GuildVoice,
@@ -68,41 +61,46 @@ module.exports = {
                                     id: member.id,
                                     allow: [PermissionFlagsBits.Connect, PermissionFlagsBits.Speak, PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels],
                                 },
+                                {
+                                    id: client.user.id,
+                                    allow: [PermissionFlagsBits.Connect, PermissionFlagsBits.Speak, PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels],
+                                },
                             ],
                         });
                     };
 
                     await newState.setChannel(channel);
 
-                    client.dvoice[channel.id] = {
+                    if (!data) client.dvoice.set(channel.id, {
                         owner: member.id,
                         channel: channel,
                         guild: guild.id
-                    };
+                    });
                 } catch (error) {
                     const errorStack = util.inspect(error, { depth: null });
                     logger.error(`建立頻道失敗: ${errorStack}`);
-                }
+                };
             };
 
             // 成員離開語音頻道
             if (oldChannel && oldChannel.id !== mainchannelID) {
-                const data = client.dvoice[oldChannel.id];
-                if (!data) {
-                    if (!pattern.test(oldChannel.name)) return;
-                    logger.warn(`頻道 ${oldChannel.name} 不在動態語音記錄中，但疑似由動態語音建立`);
-                };
-
                 // 檢查頻道是否為空
                 if (oldChannel.members.size === 0) {
+                    const data = client.dvoice.find(e => e === oldChannel.id);
+
+                    if (!data && !pattern.test(oldChannel.name)) return;
+
                     try {
                         await oldChannel.delete();
-                        if (data) delete client.dvoice[oldChannel.id];
+
+                        if (data) client.dvoice = client.dvoice.filter(e => e !== oldChannel.id);
                     } catch (error) {
-                        logger.error(`刪除頻道失敗: ${error.message}`);
+                        const errorStack = util.inspect(error, { depth: null });
+
+                        logger.error(`刪除頻道失敗: ${errorStack}`);
 
                         // 即使刪除失敗也要清理記錄
-                        if (data) delete client.dvoice[oldChannel.id];
+                        if (data) client.dvoice = client.dvoice.filter(e => e !== oldChannel.id);
                     };
                 };
             };

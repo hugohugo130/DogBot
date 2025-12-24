@@ -1,6 +1,6 @@
 const { get_logger } = require("../../utils/logger.js");
 const DogClient = require("../../utils/customs/client.js");
-const util = require('node:util');
+const util = require("node:util");
 
 const logger = get_logger();
 
@@ -34,7 +34,7 @@ module.exports = {
                             modified = true;
                         } catch (_) {
                             // 過濾掉非數字的字符
-                            const filteredAmount = amount.replace(/[^0-9]/g, '');
+                            const filteredAmount = amount.replace(/[^0-9]/g, "");
                             backpack[item] = parseInt(filteredAmount) || 0;
 
                             modified = true;
