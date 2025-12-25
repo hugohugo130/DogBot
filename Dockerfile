@@ -3,7 +3,11 @@ FROM node:latest
 WORKDIR /app
 
 # 安裝ffmpeg
-RUN apt install ffmpeg
+USER root
+
+RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+
+USER node
 
 # 安裝編譯依賴 (某些套件會需要)
 RUN apt install python3 make g++ git
