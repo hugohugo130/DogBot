@@ -10,7 +10,7 @@ const DogClient = require("../utils/customs/client.js");
 
 const logger = get_logger();
 
-async function handle_shutdown(sign) {
+async function handle_shutdown(sign, client) {
     logger.info(`收到 ${sign} 信號，準備安全關閉...`);
 
     try {
@@ -49,11 +49,11 @@ module.exports = {
         });
 
         process.on("SIGTERM", async () => {
-            await handle_shutdown("SIGTERM");
+            await handle_shutdown("SIGTERM", client);
         });
 
         process.on("SIGINT", async () => {
-            await handle_shutdown("SIGINT");
+            await handle_shutdown("SIGINT", client);
         });
 
         await checkDBFilesDefault(client);
