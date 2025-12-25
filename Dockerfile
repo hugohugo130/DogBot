@@ -5,15 +5,16 @@ WORKDIR /app
 # 安裝ffmpeg
 USER root
 
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
-
-USER node
+RUN apt-get update && apt-get install -y ffmpeg
 
 # 安裝編譯依賴 (某些套件會需要)
-RUN apt install python3 make g++ git
+RUN apt install python3 make g++ git -y
 
 # 安裝各種東西
-RUN apt install curl
+RUN apt install curl -y
+
+# 換回node的使用者
+USER node
 
 # 複製 package.json / package-lock.json
 COPY package*.json ./
