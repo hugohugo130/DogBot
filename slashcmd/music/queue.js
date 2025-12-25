@@ -85,13 +85,13 @@ module.exports = {
                     .setColor(embed_default_color);
 
                 if (currentTrack) {
-                    const queueString = queue.tracks
+                    const queueString = queue.tracks.length ? queue.tracks
                         .slice(0, 25)
-                        .map(track, index => {
+                        .map((track, index) => {
                             const duration = formatMinutesSeconds(track.duration);
 
                             return `\`${index + 1}.\` [${track.title}](<${track.url}>) - ${duration}`;
-                        });
+                        }) : "沒有音樂在佇列裡";
 
                     embed.setDescription(`
 ${emoji_playGrad} 正在播放
@@ -103,7 +103,7 @@ ${queueString}`);
                     embed.setDescription(`${emoji_cross} | 清單是空的`);
                 };
 
-                embed.setFooter("第 1 / 1 頁");
+                embed.setFooter({ text: "第 1 / 1 頁" });
 
                 return await interaction.editReply({ embeds: [embed] });
             case "remove":

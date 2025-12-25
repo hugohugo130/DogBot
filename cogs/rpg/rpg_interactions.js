@@ -1238,7 +1238,6 @@ module.exports = {
 
                 const { track, source } = trackSession;
 
-                const trackInfo = await global._sc.tracks.get(track.id);
                 queue.addTrack(track);
 
                 const progressBlack = 14;
@@ -1251,19 +1250,21 @@ module.exports = {
                 const formattedDuration = formatMinutesSeconds(track.duration);
 
                 const embed = new EmbedBuilder()
-                    .setAuthor({ name: trackInfo.user.username })
-                    .setTitle(`[**${track.title}**](<${track.url}>)`)
+                    .setAuthor({ name: track.author })
+                    .setURL(track.url)
+                    .setTitle(`**${track.title}**`)
                     .setDescription(`
 ${emoji_playGrad} 00:00${emoji_progressDot}${emoji_progressBlack.repeat(progressBlack)}${emoji_progressEnd}${formattedDuration}
 
                     [使用教學](<無>) ∙ [機器人狀態](<https://hugostatus.904037.xyz>)
 `)
+                    .setEmbedFooter();
 
                 if (!queue.isPlaying()) {
                     await queue.play(track.id, track.url, source);
                 };
 
-                return await interaction.editReply({ content: "", embeds: [embed], conponents: [] });
+                return await interaction.editReply({ content: "", embeds: [embed], components: [] });
             };
         } catch (err) {
             const { get_loophole_embed } = require("../../utils/rpg.js");

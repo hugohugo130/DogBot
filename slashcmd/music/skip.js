@@ -1,19 +1,18 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
-const { joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
-const DogClient = require("../../utils/customs/client");
+const DogClient = require("../../utils/customs/client.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("join")
-        .setDescription("make bot join your voice channel")
+        .setName("skip")
+        .setDescription("Skip the current song")
         .setNameLocalizations({
-            "zh-TW": "加入語音頻道",
-            "zh-CN": "加入语音频道"
+            "zh-TW": "跳過",
+            "zh-CN": "跳过"
         })
         .setDescriptionLocalizations({
-            "zh-TW": "讓機器人加入你的語音頻道",
-            "zh-CN": "让机器人加入你的语音频道"
+            "zh-TW": "跳過正在播放的音樂",
+            "zh-CN": "跳过正在播放的音乐"
         }),
     /**
      * 
@@ -21,9 +20,9 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        return
-        const { embed_error_color } = require("../../utils/config.js");
+        const { embed_error_color, embed_default_color } = require("../../utils/config.js");
         const { get_emoji } = require("../../utils/rpg.js");
+        const { getQueue } = require("../../utils/music/music.js");
 
         const voiceChannel = interaction.member.voice.channel;
         await interaction.deferReply();
@@ -54,8 +53,24 @@ module.exports = {
             };
         };
 
-        await clientMember.voice.setChannel(voiceChannel);
+        const queue = getQueue(interaction.guildId, false);
 
-        return interaction.reply(`🎵 | 加入了 \`${interaction.user.username}\` 的語音頻道`);
+        if (!queue || !queue.isPlaying()) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
+                .setEmbedFooter();
+
+            return interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+        };
+
+        queue.nextTrack();
+
+        const embed = new EmbedBuilder()
+            .setColor(embed_default_color)
+            .setTitle(`⏭️ | 跳過了當前歌曲`)
+            .setEmbedFooter();
+
+        return interaction.editReply({ embeds: [embed] });
     },
 };

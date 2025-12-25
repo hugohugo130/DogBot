@@ -336,8 +336,8 @@ class MusicQueue {
         this.currentTrack = null;
     };
 
-    nextTrack() {
-        this.stopPlaying();
+    nextTrack(force = false) {
+        this.stopPlaying(force);
 
         if (this.tracks.length > 0) {
             this.play(this.tracks[0].id, this.tracks[0].url, this.tracks[0].source);
