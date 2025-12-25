@@ -17,14 +17,24 @@ function convertToSecondTimestamp(timestamp) {
 
 /**
  * 
- * @param {number} number 
+ * @param {number} number
  * @returns {number}
  */
 function convertToSecond(number) {
     return Math.floor(number / 1000);
 };
 
-function formatMinutesSeconds(seconds) {
+/**
+ * 
+ * @param {number} seconds
+ * @param {boolean} [convertToSec=true]
+ * @returns {string}
+ */
+function formatMinutesSeconds(seconds, convertToSec = true) {
+    if (convertToSec) {
+        seconds = convertToSecond(seconds);
+    };
+
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
 

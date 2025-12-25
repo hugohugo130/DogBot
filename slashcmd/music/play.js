@@ -51,10 +51,10 @@ module.exports = {
                     "zh-TW": "音量",
                     "zh-CN": "音量",
                 })
-                .setDescription("Set the volume of the music. Default 50/100")
+                .setDescription("Set the volume of the music. 0~100 (Default 100)")
                 .setDescriptionLocalizations({
-                    "zh-TW": "設定音樂的音量 預設50",
-                    "zh-CN": "设置音乐的音量 默认50",
+                    "zh-TW": "設定音樂的音量 0~100 (預設50)",
+                    "zh-CN": "设置音乐的音量 0~100 (默认50)",
                 })
                 .setRequired(false)
                 .setMinValue(0)
@@ -94,13 +94,13 @@ module.exports = {
     async execute(interaction, client) {
         const { get_emoji } = require("../../utils/rpg.js");
         const { getQueue, saveQueue, search_until, getTrack } = require("../../utils/music/music.js");
-        const { convertToSecond, formatMinutesSeconds } = require("../../utils/timestamp.js");
+        const { formatMinutesSeconds } = require("../../utils/timestamp.js");
         const { embed_error_color } = require("../../utils/config.js");
 
         await interaction.deferReply();
 
         const keywordOrUrl = interaction.options.getString("keyword_or_url") ?? "wellerman";
-        const volume = interaction.options.getInteger("volume") ?? 50;
+        const volume = interaction.options.getInteger("volume");
         const leaveOnEmpty = !interaction.options.getBoolean("24/7") ?? true;
 
         const voiceChannel = interaction.member.voice.channel;
@@ -136,6 +136,7 @@ module.exports = {
         };
 
         const queue = getQueue(guildId);
+        if (volume) queue.volume = volume;
 
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
@@ -181,7 +182,7 @@ module.exports = {
                     .addOptions(
                         ...tracks.map((track) => ({
                             label: track.title,
-                            description: `${track.author} · ${formatMinutesSeconds(convertToSecond(track.duration))}`,
+                            description: `${track.author} · ${formatMinutesSeconds(track.duration)}`,
                             value: `${trackSessionID}|${track.id}`
                         }))
                     ),

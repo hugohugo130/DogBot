@@ -239,8 +239,11 @@ const rpg_commands = {
 
         if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
         rpg_data.inventory[item] += amount;
+
         save_rpg_data(userid, rpg_data);
+
         const ore_name = name[item];
+
         const emoji = await get_emoji("ore", client);
 
         let description;
@@ -334,7 +337,7 @@ const rpg_commands = {
         } else if (product === "raw_duck") {
             title = `${emoji_cow} | 呱!`;
             description = `呱呱呱呱呱，呱呱呱呱 \`${amount}\` 呱呱呱！`;
-        }else if (product === "raw_hugo") {
+        } else if (product === "raw_hugo") {
             title = `${emoji_cow} | 哈狗!`;
             description = `你把哈狗的巢穴連根拔起，並且抓到了 \`${amount}\` 隻 ${get_name_of_id("raw_hugo")} 並逃走了！`;
         } else if (product === "dogdog") {
@@ -420,6 +423,7 @@ const rpg_commands = {
         };
 
         const emoji = await get_emoji("fisher", client);
+
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${emoji} | ${fish_text}`)

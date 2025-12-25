@@ -16,6 +16,9 @@ const { getServerIPSync } = require("./utils/getSeverIPSync.js");
 const util = require("node:util");
 require("dotenv").config();
 
+const args = process.argv.slice(2);
+const debug = args.includes("--debug");
+
 const client = new DogClient();
 
 const logger = get_logger();
@@ -88,29 +91,14 @@ ${Object.keys(loggerManager_nodc).join("\n")}`);
     });
 });
 
-async function handle_shutdown(sign) {
-    logger.info(`收到 ${sign} 信號，準備安全關閉...`);
-
-    try {
-        await safeshutdown(client);
-    } catch (error) {
-        const errorStack = util.inspect(error, { depth: null });
-
-        logger.error(`安全關閉時發生錯誤: ${errorStack}`);
-        process.exit(1);
-    };
-};
-
 (async () => {
     global._client = null;
     global.perloadResponse = new Collection();
     global.oven_sessions = {};
     global.smelter_sessions = {};
 
-    await Promise.all([
-        checkDBFilesCorrupted(),
-    ]);
-    await checkAllDatabaseFilesContent();
+    await checkDBFilesCorrupted();
+    if (!debug) await checkAllDatabaseFilesContent();
     await checkDBFilesExists();
     check_item_data();
 
@@ -124,14 +112,6 @@ async function handle_shutdown(sign) {
     logger.info(`已加載 ${client.commands.size} 個斜線指令`);
 
     await client.login(process.env.TOKEN);
-
-    process.on("SIGTERM", async () => {
-        await handle_shutdown("SIGTERM");
-    });
-
-    process.on("SIGINT", async () => {
-        await handle_shutdown("SIGINT");
-    });
 
     global._client = client;
 })();

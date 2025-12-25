@@ -1,6 +1,5 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { ChatInputCommandInteraction, SlashCommandSubcommandBuilder, MessageFlags } = require("discord.js");
-const { formatMinutesSeconds, convertToSecond } = require("../../utils/timestamp.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder");
 const DogClient = require("../../utils/customs/client");
 
@@ -51,13 +50,14 @@ module.exports = {
             ),
         ),
     /**
-     * 
+     *
      * @param {ChatInputCommandInteraction} interaction 
      * @param {DogClient} client 
-     */
+    */
     execute: async (interaction, client) => {
         const { get_emoji } = require("../../utils/rpg.js");
         const { getQueue } = require("../../utils/music/music.js");
+        const { formatMinutesSeconds } = require("../../utils/timestamp.js");
         const { embed_default_color, embed_error_color } = require("../../utils/config.js");
 
         await interaction.deferReply();
@@ -68,7 +68,7 @@ module.exports = {
         const emoji_skip = await get_emoji("skip", client);
 
         // 檢查有沒有歌在佇列裡面
-        if (!queue?.tracks?.length) {
+        if (!queue.isPlaying() && !queue?.tracks?.length) {
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 佇列內沒有歌曲`)
@@ -88,14 +88,14 @@ module.exports = {
                     const queueString = queue.tracks
                         .slice(0, 25)
                         .map(track, index => {
-                            const duration = formatMinutesSeconds(convertToSecond(track.duration));
+                            const duration = formatMinutesSeconds(track.duration);
 
                             return `\`${index + 1}.\` [${track.title}](<${track.url}>) - ${duration}`;
                         });
 
                     embed.setDescription(`
 ${emoji_playGrad} 正在播放
-${currentTrack.title} - ${currentTrack.author} - ${formatMinutesSeconds(convertToSecond(currentTrack.duration))}
+${currentTrack.title} - ${currentTrack.author} - ${formatMinutesSeconds(currentTrack.duration)}
 ${emoji_skip} 播放佇列
 ${queueString}`);
 

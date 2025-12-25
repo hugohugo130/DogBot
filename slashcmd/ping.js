@@ -36,6 +36,6 @@ module.exports = {
             )
             .setEmbedFooter();
 
-        return msg.edit({ content: `Pong! ${client.ws.ping}ms`, embeds: [embed] });
+        return interaction.editReply({ content: `Pong! ${client.ws.ping}ms`, embeds: [embed] });
     },
 };

@@ -128,6 +128,10 @@ const cannot_sell = ["raw_hugo", "hugo"];
 // 也會用在檔案名稱 (engine_id.mp3)
 const musicSearchEngine = ["soundcloud"];
 
+// link
+const DOCS = "";
+const STATUS_PAGE = "https://hugostatus.904037.xyz";
+
 // misc
 const admins = ["898836485397180426"];
 const reserved_prefixes = [`<@${BotID}>`];
@@ -321,40 +325,59 @@ const probabilities = {
 };
 
 module.exports = {
+    DEFAULT_IP,
+    DEFAULT_PORT,
+
     INDENT,
     database_folder,
+
     DATABASE_FILES,
+    DEFAULT_VALUES,
     onlineDB_Files,
+
+    priorityUserIDs,
+    priorityGuildIDs,
 
     database_file,
     rpg_database_file,
     rpg_shop_file,
+    rpg_farm_file,
     bake_data_file,
-    serverIPFile,
     smelt_data_file,
     dvoice_data_file,
-    rpg_farm_file,
-
-    DEFAULT_VALUES,
-    DEFAULT_IP,
-    DEFAULT_PORT,
+    serverIPFile,
 
     cogsFolder,
     musicFileFolder,
-    backend_channel_id,
     scheduleEverysec,
     scheduleEverymin,
     scheduleEvery5min,
 
+    backend_channel_id,
     log_channel_id,
     warn_channel_id,
     error_channel_id,
 
     BotID,
     BotName,
+    authorName,
+
     enable_auto_register_cmd,
     auto_register_cmd_file,
-    authorName,
+
+    rpg_lvlUp_per,
+    setJobDelay,
+    item_amount_limit,
+    cannot_sell,
+
+    musicSearchEngine,
+
+    DOCS,
+    STATUS_PAGE,
+
+    admins,
+    reserved_prefixes,
+    temp_folder,
 
     embed_default_color,
     embed_warn_color,
@@ -362,18 +385,6 @@ module.exports = {
     embed_fell_color,
     embed_job_color,
     embed_marry_color,
-
-    priorityUserIDs,
-    priorityGuildIDs,
-    rpg_lvlUp_per,
-
-    setJobDelay,
-    item_amount_limit,
-    cannot_sell,
-    musicSearchEngine,
-    admins,
-    reserved_prefixes,
-    temp_folder,
 
     failed,
     probabilities,

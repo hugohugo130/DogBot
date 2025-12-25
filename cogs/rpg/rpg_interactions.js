@@ -478,7 +478,7 @@ module.exports = {
             const { rpg_handler, MockMessage } = require("./msg_handler.js");
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
             const { getQueue } = require("../../utils/music/music.js");
-            const { convertToSecond, formatMinutesSeconds } = require("../../utils/timestamp.js");
+            const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
             if (interaction.customId.startsWith("vote_")) return;
@@ -1248,16 +1248,20 @@ module.exports = {
                 const emoji_progressBlack = await get_emoji("progressBlack", client);
                 const emoji_progressEnd = await get_emoji("progressEnd", client);
 
+                const formattedDuration = formatMinutesSeconds(track.duration);
+
                 const embed = new EmbedBuilder()
                     .setAuthor({ name: trackInfo.user.username })
-                    .setDescription(`[**${track.title}**](<${track.url}>)`)
-                    .setThumbnail(track.thumbnail)
-                    .setFooter({ text: `時長: ${formatMinutesSeconds(convertToSecond(track.duration))}` })
-                    .setEmbedAuthor();
+                    .setTitle(`[**${track.title}**](<${track.url}>)`)
+                    .setDescription(`
+${emoji_playGrad} 00:00${emoji_progressDot}${emoji_progressBlack.repeat(progressBlack)}${emoji_progressEnd}${formattedDuration}
 
-                // if (!queue.isPlaying()) {
-                await queue.play(track.id, track.url, source);
-                // };
+                    [使用教學](<無>) ∙ [機器人狀態](<https://hugostatus.904037.xyz>)
+`)
+
+                if (!queue.isPlaying()) {
+                    await queue.play(track.id, track.url, source);
+                };
 
                 return await interaction.editReply({ content: "", embeds: [embed], conponents: [] });
             };

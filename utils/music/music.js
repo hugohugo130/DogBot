@@ -10,7 +10,7 @@ const { Soundcloud } = require("soundcloud.ts");
 
 const { get_logger } = require("../logger.js");
 const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
-const { convertToSecond, formatMinutesSeconds } = require("../timestamp.js");
+const { formatMinutesSeconds } = require("../timestamp.js");
 const { get_emoji } = require("../rpg.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
@@ -244,7 +244,7 @@ class MusicQueue {
                     .setTitle("🎵 | 正在播放")
                     .setDescription(`[**${this.currentTrack.title}**](<${this.currentTrack.url}>)`)
                     .setThumbnail(this.currentTrack.thumbnail)
-                    .setFooter({ text: `時長: ${formatMinutesSeconds(convertToSecond(this.currentTrack.duration))}` })
+                    .setFooter({ text: `時長: ${formatMinutesSeconds(this.currentTrack.duration)}` })
 
                 if (this.textChannel?.send) {
                     this.textChannel.send({ embeds: [embed] });
@@ -295,6 +295,10 @@ class MusicQueue {
      * @param {string} source
      */
     async play(id, url, source) {
+        if (this.playing) {
+            this.stopPlaying(true);
+        };
+
         if (!this.connection && this.voiceChannel) {
             const connection = getVoiceConnection(this.guildID);
             if (connection) {
@@ -312,7 +316,8 @@ class MusicQueue {
         let track = await global._sc.tracks.get(id);
         track = fixStructure([track])[0];
 
-        const resource = createAudioResource(audioPath);
+        const resource = createAudioResource(audioPath, { inlineVolume: true });
+        resource.volume?.setVolume(this.volume / 100);
 
         this.player.play(resource);
 
