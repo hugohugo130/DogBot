@@ -21,11 +21,14 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        return
         const { embed_error_color } = require("../../utils/config.js");
         const { get_emoji } = require("../../utils/rpg.js");
+        const { getQueue, saveQueue } = require("../../utils/music/music.js");
 
         const voiceChannel = interaction.member.voice.channel;
+        const guildId = interaction.guild.id;
+        const queue = getQueue(guildId);
+
         await interaction.deferReply();
 
         const emoji_cross = get_emoji("crosS", client);
@@ -54,8 +57,20 @@ module.exports = {
             };
         };
 
-        await clientMember.voice.setChannel(voiceChannel);
+        let connection = getVoiceConnection(guildId);
+        if (!connection) {
+            connection = joinVoiceChannel({
+                channelId: voiceChannel.id,
+                guildId: interaction.guild.id,
+                adapterCreator: interaction.guild.voiceAdapterCreator,
+            });
+        };
 
-        return interaction.reply(`🎵 | 加入了 \`${interaction.user.username}\` 的語音頻道`);
+        queue.connection = connection;
+        queue.voiceChannel = voiceChannel;
+
+        saveQueue(guildId, queue);
+
+        return interaction.editReply(`🎵 | 加入了 \`${interaction.user.username}\` 的語音頻道`);
     },
 };
