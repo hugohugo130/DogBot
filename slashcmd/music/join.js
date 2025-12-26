@@ -31,8 +31,8 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const emoji_cross = get_emoji("crosS", client);
-        const emoji_voice = get_emoji("voice", client);
+        const emoji_cross = await get_emoji("crosS", client);
+        const emoji_voice = await get_emoji("voice", client);
 
         if (!voiceChannel) {
             const error_embed = new EmbedBuilder()

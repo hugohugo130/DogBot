@@ -2,11 +2,16 @@ const { uploadAllDatabaseFiles } = require("./onlineDB.js");
 const { get_logger, shutdown } = require("./logger.js");
 const { BotName } = require("./config.js");
 const { saveDvoiceData } = require("./file.js");
+const DogClient = require("./customs/client.js");
 
+/**
+ * 
+ * @param {DogClient} client 
+ */
 async function safeshutdown(client) {
     try {
         const success = await uploadAllDatabaseFiles();
-        saveDvoiceData(client.dvoice || {});
+        saveDvoiceData(client.dvoice.toJSON() || {});
 
         if (client) {
             const logger = get_logger();

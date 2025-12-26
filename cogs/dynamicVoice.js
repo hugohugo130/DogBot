@@ -19,6 +19,8 @@ module.exports = {
      */
     async execute(client, oldState, newState) {
         const { get_logger } = require("../utils/logger.js");
+        const { channelExists } = require("../utils/discord.js");
+
         const logger = get_logger();
 
         try {
@@ -47,11 +49,27 @@ module.exports = {
                     if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return;
 
                     let channel;
+                    let createChannel = true;
+
                     const data = client.dvoice.find(d => d.owner === member.id);
 
                     if (data) {
                         channel = data.channel || newChannel;
-                    } else {
+
+                        if (channel?.type !== ChannelType.GuildVoice) logger.warn(`超奇怪的，為什麼channel的類型(${channel.type}) 不是guild voice(2)?`);
+
+                        if (
+                            (channel?.type &&
+                                channel?.type === ChannelType.GuildVoice
+                            ) && (
+                                await channelExists(guild, channel.id)
+                            )
+                        ) {
+                            createChannel = false;
+                        };
+                    };
+
+                    if (createChannel) {
                         channel = await guild.channels.create({
                             name: format.replace("{user}", member.user.username),
                             type: ChannelType.GuildVoice,
@@ -74,11 +92,11 @@ module.exports = {
                     if (!data) client.dvoice.set(channel.id, {
                         owner: member.id,
                         channel: channel,
-                        guild: guild.id
                     });
                 } catch (error) {
                     const errorStack = util.inspect(error, { depth: null });
-                    logger.error(`建立頻道失敗: ${errorStack}`);
+
+                    logger.error(`[${guild.name}(${guild.id})] 建立頻道失敗: ${errorStack}`);
                 };
             };
 
@@ -86,21 +104,21 @@ module.exports = {
             if (oldChannel && oldChannel.id !== mainchannelID) {
                 // 檢查頻道是否為空
                 if (oldChannel.members.size === 0) {
-                    const data = client.dvoice.find(e => e === oldChannel.id);
+                    const data = client.dvoice.get(oldChannel.id);
 
                     if (!data && !pattern.test(oldChannel.name)) return;
 
                     try {
                         await oldChannel.delete();
 
-                        if (data) client.dvoice = client.dvoice.filter(e => e !== oldChannel.id);
+                        if (data) client.delete(oldChannel.id);
                     } catch (error) {
                         const errorStack = util.inspect(error, { depth: null });
 
                         logger.error(`刪除頻道失敗: ${errorStack}`);
 
                         // 即使刪除失敗也要清理記錄
-                        if (data) client.dvoice = client.dvoice.filter(e => e !== oldChannel.id);
+                        if (data) client.delete(oldChannel.id);
                     };
                 };
             };

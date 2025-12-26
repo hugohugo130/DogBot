@@ -37,8 +37,8 @@ async function get_user(userID, client = global._client) {
 
 /**
  * 
- * @param {string} guildID 
- * @param {DogClient} client 
+ * @param {string} guildID
+ * @param {DogClient} client
  * @returns {Promise<Guild>}
  */
 async function get_guild(guildID, client = global.client) {
@@ -47,12 +47,28 @@ async function get_guild(guildID, client = global.client) {
 
 /**
  * 
- * @param {Guild} guild 
- * @returns {Promise<GuildChannel>>}
+ * @param {Guild} guild
+ * @returns {Promise<GuildChannel>}
 */
 async function get_channels(guild) {
     const channels = guild.channels.cache.get(guild.id) || await guild.channels.fetch();
     return channels.filter(channel => channel.isTextBased()).values();
+};
+
+/**
+ * 
+ * @param {Guild} guild
+ * @param {string} channelId
+ * @returns {Promise<boolean>}
+ */
+async function channelExists(guild, channelId) {
+    try {
+        await guild.channels.fetch(channelId);
+
+        return true;
+    } catch (_) {
+        return false;
+    };
 };
 
 module.exports = {
@@ -61,4 +77,5 @@ module.exports = {
     get_user,
     get_guild,
     get_channels,
+    channelExists,
 };
