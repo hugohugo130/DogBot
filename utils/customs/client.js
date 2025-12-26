@@ -43,13 +43,14 @@ class DogClient extends Client {
 
         super(options);
 
+        /** @type {string} */
+        this.author = authorName || "哈狗";
+
+        /** @type {Collection<string, object} */
         this.dvoice = new Collection(Object.entries(loadDvoiceData()));
 
         /** @type {Collection<string, any>} */
         this.commands = loadslashcmd(true);
-
-        /** @type {string} */
-        this.author = authorName || "哈狗";
 
         /** @type {Collection<string, any>} */
         this.musicTrackSession = new Collection();
