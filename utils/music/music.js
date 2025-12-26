@@ -247,7 +247,7 @@ class MusicQueue {
                     .setFooter({ text: `時長: ${formatMinutesSeconds(this.currentTrack.duration)}` })
 
                 if (this.textChannel?.send) {
-                    this.textChannel.send({ embeds: [embed] });
+                    await this.textChannel.send({ embeds: [embed] });
                 };
             } else if (
                 oldState.status === AudioPlayerStatus.Playing &&

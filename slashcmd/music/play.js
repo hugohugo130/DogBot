@@ -136,7 +136,6 @@ module.exports = {
         };
 
         const queue = getQueue(guildId);
-        if (volume) queue.volume = volume;
 
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
@@ -161,6 +160,9 @@ module.exports = {
             return interaction.editReply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
+        if (volume) queue.volume = volume;
+        queue.textChannel = interaction.channel;
+        queue.voiceChannel = voiceChannel;
         queue.connection = voiceConnection;
         queue.subscribe();
 
