@@ -27,6 +27,8 @@ module.exports = {
         const voiceChannel = interaction.member.voice.channel;
         const queue = getQueue(interaction.guildId);
 
+        await interaction.deferReply({ ephemeral: true });
+
         const emoji_cross = await get_emoji("crosS", client);
 
         if (!voiceChannel) {
@@ -51,7 +53,7 @@ module.exports = {
                 .setTitle(`${emoji_cross} | 我不在一個語音頻道`)
                 .setEmbedFooter();
 
-            return interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
         } else if (queue.voiceChannel.id !== voiceChannel.id) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -63,6 +65,6 @@ module.exports = {
         };
 
         queue.destroy();
-        await interaction.reply(`👋 | 掰掰`);
+        await interaction.editReply(`👋 | 掰掰`);
     },
 };
