@@ -375,9 +375,9 @@ class MusicQueue {
 };
 
 /**
- * 
- * @param {string} guildID
- * @param {boolean} create
+ *
+ * @param {string} [guildID]
+ * @param {boolean} [create=true]
  * @returns {MusicQueue}
  */
 function getQueue(guildID, create = true) {
@@ -397,7 +397,15 @@ function getQueue(guildID, create = true) {
 };
 
 /**
- * 
+ *
+ * @returns {Collection<any, MusicQueue>}
+ */
+function getQueues() {
+    return queues;
+};
+
+/**
+ *
  * @param {string} guildID
  * @param {MusicQueue} queue
  * @returns {MusicQueue}
@@ -670,6 +678,7 @@ async function convertToOgg(inputFile, outputFile) {
 
 module.exports = {
     getQueue,
+    getQueues,
     saveQueue,
     getTrack,
     search_until,

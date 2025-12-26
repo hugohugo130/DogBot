@@ -1,18 +1,17 @@
 require("./utils/check.env.js") // check .env file
 const { Events, Collection } = require("discord.js");
-const DogClient = require("./utils/customs/client.js");
 const { checkDBFilesExists, checkDBFilesCorrupted } = require("./utils/check_db_files.js");
 const { checkAllDatabaseFilesContent } = require("./utils/onlineDB.js");
 const { load_cogs } = require("./utils/load_cogs.js");
-const { get_logger, loggerManager, loggerManager_log, loggerManager_nodc } = require("./utils/logger.js");
+const { get_logger } = require("./utils/logger.js");
 const { safeshutdown } = require("./utils/safeshutdown.js");
 const { get_areadline } = require("./utils/readline.js");
 const { check_item_data } = require("./utils/rpg.js");
 const { should_register_cmd } = require("./utils/auto_register.js");
 const { registcmd } = require("./register_commands.js");
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
-// const { Player } = require("discord-player");
-// const { YoutubeExtractor } = require("discord-player-youtube");
+const { getQueues } = require("./utils/music/music.js");
+const DogClient = require("./utils/customs/client.js");
 const util = require("node:util");
 require("dotenv").config();
 
@@ -79,14 +78,15 @@ client.once(Events.ClientReady, async () => {
             await safeshutdown(client);
         } else if (input === "fstop") {
             process.exit(0);
-        } else if (input === "logger") {
-            logger.info(`
-loggerManager:
-${Object.keys(loggerManager).join("\n")}
-loggerManager_log:
-${Object.keys(loggerManager_log).join("\n")}
-loggerManager_nodc:
-${Object.keys(loggerManager_nodc).join("\n")}`);
+        } else if (input === "music") {
+            const musicQueues = getQueues();
+
+            const playersCount = musicQueues.size;
+            const totalTracks = musicQueues.reduce((acc, queue) => {
+                return acc + queue.isPlaying() ? queue.tracks.length : 0;
+            }, 0);
+
+            logger.info(`目前有 ${playersCount} 個音樂播放器，總共有 ${totalTracks} 首音樂正在播放。`);
         };
     });
 });
