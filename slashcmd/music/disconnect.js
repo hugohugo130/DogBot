@@ -27,7 +27,7 @@ module.exports = {
         const voiceChannel = interaction.member.voice.channel;
         const queue = getQueue(interaction.guildId);
 
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply();
 
         const emoji_cross = await get_emoji("crosS", client);
 
