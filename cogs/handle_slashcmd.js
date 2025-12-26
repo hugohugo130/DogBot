@@ -71,8 +71,7 @@ module.exports = {
                 .addFields({ name: "指令名稱", value: fullCommand })
                 .addFields({ name: "選項", value: optionsStr ? optionsStr : "無" })
                 .addFields({ name: "伺服器", value: `${guild.name} (${guild.id})` })
-                .addFields({ name: "頻道", value: `${channel.name} (${channel.id})` })
-                .addFields({ name: "跳轉至訊息", value: `[點擊此處](${await (interaction.fetchReply()).url})` });
+                .addFields({ name: "頻道", value: `${channel.name} (${channel.id})` });
 
             backend_logger.info(embed);
 
