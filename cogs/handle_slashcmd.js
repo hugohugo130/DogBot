@@ -85,11 +85,7 @@ module.exports = {
 
             const embeds = await get_loophole_embed(errorStack, client);
             try {
-                if (interaction.replied || interaction.deferred) {
-                    await interaction.editReply({ content: "", embeds, components: [], flags: MessageFlags.Ephemeral });
-                } else {
-                    await interaction.followUp({ content: "", embeds, components: [], flags: MessageFlags.Ephemeral });
-                };
+                await interaction.followUp({ content: "", embeds, components: [], flags: MessageFlags.Ephemeral });
             } catch (_) { };
         };
     },
