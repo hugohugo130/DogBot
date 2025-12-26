@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
-const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 const { bake, oven_slots } = require("../../../utils/rpg.js");
+const { generateSessionId} = require("../../../utils/random.js");
+const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
 function divide(amount, by) {
     // 檢查 amount 和 by 是否為整數（沒有小數點）
@@ -124,10 +125,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
         .setEmbedFooter();
 
     // 生成一個簡短的識別碼來代替完整的 item_need JSON
-    const min = 1000000000;
-    const max = 9999999999;
-    const random10DigitNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-    const session_id = `${userId}_${Date.now()}_${random10DigitNumber}`;
+    const session_id = `${userId}_${generateSessionId(16)}`;
 
     // 將 item_need 資料儲存在全域變數或快取中
     if (!global.oven_sessions) global.oven_sessions = {};

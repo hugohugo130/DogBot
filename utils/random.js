@@ -1,3 +1,5 @@
+const crypto = require('crypto');
+
 /**
  * Return random integer in range [a, b], including both end points.
  * @param {number} min 
@@ -18,7 +20,17 @@ function choice(array) {
     return array[randomIndex];
 };
 
+/**
+ * 
+ * @param {number} length 
+ * @returns {string}
+ */
+function generateSessionId(length = 32) {
+    return crypto.randomBytes(length).toString('hex');
+};
+
 module.exports = {
     randint,
-    choice
+    choice,
+    generateSessionId,
 };
