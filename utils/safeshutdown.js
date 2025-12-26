@@ -10,8 +10,9 @@ const DogClient = require("./customs/client.js");
  */
 async function safeshutdown(client) {
     try {
-        const success = await uploadAllDatabaseFiles();
         saveDvoiceData(client.dvoice.toJSON() || {});
+
+        const success = await uploadAllDatabaseFiles();
 
         if (client) {
             const logger = get_logger();
