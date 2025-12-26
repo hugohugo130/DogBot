@@ -850,7 +850,7 @@ module.exports = {
                 const parsedDuration = parseInt(duration);
 
                 // 從全域變數中取得 item_need 資料
-                const item_need = global.oven_sessions?.[session_id];
+                const item_need = client.oven_sessions.get(session_id);
                 if (!item_need) {
                     const emoji_cross = await get_emoji("crosS", client);
                     const embed = new EmbedBuilder()
@@ -935,7 +935,7 @@ module.exports = {
                 save_bake_data(bake_data);
 
                 // 清理 session 資料
-                delete global.oven_sessions[session_id];
+                client.oven_sessions.delete(session_id);
 
                 const emoji_drumstick = await get_emoji("drumstick", client);
 

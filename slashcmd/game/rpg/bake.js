@@ -1,6 +1,6 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Collection } = require("discord.js");
 const { bake, oven_slots } = require("../../../utils/rpg.js");
-const { generateSessionId} = require("../../../utils/random.js");
+const { generateSessionId } = require("../../../utils/random.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
 function divide(amount, by) {
@@ -37,10 +37,10 @@ function divide(amount, by) {
 
 /**
  * 
- * @param {ChatInputCommandInteraction} interaction 
- * @param {string} userId 
- * @param {string} item_id 
- * @param {number} amount 
+ * @param {ChatInputCommandInteraction} interaction
+ * @param {string} userId
+ * @param {string} item_id
+ * @param {number} amount
  * @param {number} mode 1 = interaction.editReply, 2 = interaction.followUp
  * @returns {Promise<number>}
  */
@@ -128,8 +128,9 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const session_id = `${userId}_${generateSessionId(16)}`;
 
     // 將 item_need 資料儲存在全域變數或快取中
-    if (!global.oven_sessions) global.oven_sessions = {};
-    global.oven_sessions[session_id] = item_need;
+    if (!interaction.client.oven_sessions) interaction.client.oven_sessions = new Collection();
+
+    interaction.client.oven_sessions.set(session_id, item_need);
 
     const confirm_button = new ButtonBuilder()
         .setCustomId(`oven_bake|${userId}|${item_id}|${amount}|${coal_amount}|${duration}|${session_id}`)

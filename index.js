@@ -94,7 +94,6 @@ ${Object.keys(loggerManager_nodc).join("\n")}`);
 (async () => {
     global._client = null;
     global.perloadResponse = new Collection();
-    global.oven_sessions = {};
     global.smelter_sessions = {};
 
     await checkDBFilesCorrupted();
