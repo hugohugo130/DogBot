@@ -32,6 +32,7 @@ module.exports = {
         await interaction.deferReply();
 
         const emoji_cross = get_emoji("crosS", client);
+        const emoji_voice = get_emoji("voice", client);
 
         if (!voiceChannel) {
             const error_embed = new EmbedBuilder()
@@ -71,6 +72,6 @@ module.exports = {
 
         saveQueue(guildId, queue);
 
-        return interaction.editReply(`🎵 | 加入了 \`${interaction.user.username}\` 的語音頻道`);
+        return interaction.editReply(`${emoji_voice} | 加入了 \`${interaction.user.username}\` 的語音頻道`);
     },
 };
