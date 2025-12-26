@@ -121,29 +121,5 @@ ${queueString}`);
 
                 break;
         };
-
-        // 獲取正在播放的歌曲
-        const currentTrack = queue.currentTrack;
-        const currentTrackString = currentTrack ? `[**${currentTrack.title}**](<${currentTrack.url}>)` : "沒有正在播放的歌曲";
-
-        // 獲取佇列內前十首歌
-        const queueString = queue.tracks.slice(0, 10).map((track, i) => {
-            return `${i}. [${track.duration}秒]\` [${track.title}](<${track.url}>)`
-        }).join("\n");
-
-        const embed = new EmbedBuilder()
-            .setColor(embed_default_color)
-            .setTitle("🎵 | 音樂佇列")
-            .setDescription(`
-**正在播放**
-${currentTrackString}
-
-**佇列**
-${queueString}
-`)
-            .setFooter({ text: `時長: ${currentTrack.duration}` })
-            .setThumbnail(currentTrack.thumbnail);
-
-        await interaction.editReply({ embeds: [embed] })
     },
 };
