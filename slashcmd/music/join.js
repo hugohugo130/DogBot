@@ -41,7 +41,7 @@ module.exports = {
                 .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
                 .setEmbedFooter();
 
-            return interaction.editReply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+            return await interaction.editReply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
         };
 
         const clientMember = await interaction.guild.members.fetchMe();
@@ -51,7 +51,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
-                    .setDescription(`你必須待在 <#${queue.connection?.channel?.id}> 裡面`)
+                    .setDescription(`你必須待在 <#${queue.connection?.joinConfig?.channelId || queue.voiceChannel.id}> 裡面`)
                     .setEmbedFooter();
 
                 return interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
@@ -72,6 +72,6 @@ module.exports = {
 
         saveQueue(guildId, queue);
 
-        return interaction.editReply(`${emoji_voice} | 加入了 \`${interaction.user.username}\` 的語音頻道`);
+        return await interaction.editReply(`${emoji_voice} | 加入了 \`${interaction.user.username}\` 的語音頻道`);
     },
 };
