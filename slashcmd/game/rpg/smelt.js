@@ -307,7 +307,7 @@ module.exports = {
                 return await interaction.followUp({ embeds: [embed] });
             };
 
-            if (allFoods && !auto_amount) {
+            if (allAmount && !auto_amount) {
                 amounts = [rpg_data.inventory[first_food] || 1];
             } else if (auto_amount) {
                 if (auto_amount === "amount") {
