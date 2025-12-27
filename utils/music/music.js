@@ -558,7 +558,7 @@ async function downloadTracks(tracks) {
  */
 async function getTrack({ track, id, url, source }) {
     const { existsSync, join_temp_folder } = require("../file.js");
-    const { download_track } = require(`./${source ?? "soundcloud"}.js`);
+    const engine = require(`./${source ?? "soundcloud"}.js`);
 
     let actualSavePath;
     const savePath = join_temp_folder(`${source}_${id}.mp3`);
@@ -574,8 +574,8 @@ async function getTrack({ track, id, url, source }) {
         url = track.url;
     } else if (!url && !track) throw new Error(`無效的參數`);
 
-    if (download_track) {
-        actualSavePath = await download_track(url, savePath);
+    if (engine.download_track && typeof engine.download_track === "function") {
+        actualSavePath = await engine.download_track(url, savePath);
     } else {
         actualSavePath = await downloadFile(url, savePath);
     };
