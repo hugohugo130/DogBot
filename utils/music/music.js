@@ -575,7 +575,7 @@ async function getTrack({ track, id, url, source }) {
     } else if (!url && !track) throw new Error(`無效的參數`);
 
     if (download_track) {
-        [_, actualSavePath] = await download_track(url, savePath);
+        actualSavePath = await download_track(url, savePath);
     } else {
         actualSavePath = await downloadFile(url, savePath);
     };

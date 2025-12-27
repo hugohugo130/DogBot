@@ -35,7 +35,7 @@ async function search_tracks(query) {
  * 
  * @param {import("soundcloud.ts").SoundcloudTrack} track
  * @param {null | string} [savePath=null]
- * @returns {Promise<[import("soundcloud.ts").SoundcloudTrack, string | null]>} 下載失敗時返回 [track, null]
+ * @returns {Promise<string | null>} 下載失敗時返回 null
  */
 async function download_track(track, savePath = null) {
     const { join_temp_folder } = require("../file.js");
@@ -47,12 +47,9 @@ async function download_track(track, savePath = null) {
         const filePath = await sc.util.downloadTrack(track, savePath);
         await convertToOgg(filePath);
 
-        return [track, filePath];
+        return filePath;
     } catch (error) {
-        // const errorStack = util.inspect(error, { depth: null });
-
-        // logger.error(`下載歌曲時發生錯誤:\n${errorStack}`);
-        return [track, null];
+        return null;
     };
 };
 
