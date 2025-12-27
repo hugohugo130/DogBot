@@ -237,37 +237,43 @@ class MusicQueue {
             // const { getVoiceConnection } = require("@discordjs/voice");
             // logger.debug(`[${this.guildID}] 音樂播放器狀態改變: ${oldState.status} -> ${newState.status}: ${Boolean(getVoiceConnection(this.guildID))}; ${require("util").inspect(this.tracks, { depth: null })}; ${require("util").inspect(this.currentTrack, { depth: null })}`);
 
-            if (newState.status === AudioPlayerStatus.Playing) {
-                // 正在播放
-                const embed = new EmbedBuilder()
-                    .setColor(embed_default_color)
-                    .setTitle("🎵 | 正在播放")
-                    .setDescription(`[**${this.currentTrack.title}**](<${this.currentTrack.url}>)`)
-                    .setThumbnail(this.currentTrack.thumbnail)
-                    .setFooter({ text: `時長: ${formatMinutesSeconds(this.currentTrack.duration)}` })
+            try {
+                if (newState.status === AudioPlayerStatus.Playing) {
+                    // 正在播放
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_default_color)
+                        .setTitle("🎵 | 正在播放")
+                        .setDescription(`[**${this.currentTrack.title}**](<${this.currentTrack.url}>)`)
+                        .setThumbnail(this.currentTrack.thumbnail)
+                        .setFooter({ text: `時長: ${formatMinutesSeconds(this.currentTrack.duration)}` })
 
-                if (this.textChannel?.send) {
-                    await this.textChannel.send({ embeds: [embed] });
-                };
-            } else if (
-                oldState.status === AudioPlayerStatus.Playing &&
-                newState.status === AudioPlayerStatus.Idle
-            ) {
-                // 閒置 (播完了)
-                this.playing = false;
-                this.currentTrack = null;
+                    if (this.textChannel?.send) {
+                        await this.textChannel.send({ embeds: [embed] });
+                    };
+                } else if (
+                    oldState.status === AudioPlayerStatus.Playing &&
+                    newState.status === AudioPlayerStatus.Idle
+                ) {
+                    // 閒置 (播完了)
+                    this.playing = false;
+                    this.currentTrack = null;
 
-                if (this.loop) {
-                    // 如果是單曲循環
-                    this.play(this.currentTrack.id, this.currentTrack.url, this.currentTrack.source);
-                } else if (this.loopQueue) {
-                    // 如果是循環播放清單
-                    this.tracks.push(this.tracks.shift());
-                    this.play(this.tracks[0].id, this.tracks[0].url, this.tracks[0].source);
-                } else {
-                    // 如果是正常播放
-                    this.nextTrack();
+                    if (this.loop) {
+                        // 如果是單曲循環
+                        this.play(this.currentTrack.id, this.currentTrack.url, this.currentTrack.source);
+                    } else if (this.loopQueue) {
+                        // 如果是循環播放清單
+                        this.tracks.push(this.tracks.shift());
+                        this.play(this.tracks[0].id, this.tracks[0].url, this.tracks[0].source);
+                    } else {
+                        // 如果是正常播放
+                        this.nextTrack();
+                    };
                 };
+            } catch (err) {
+                if (err.stack.includes("Missing Access")) return;
+
+                throw err;
             };
         });
     };

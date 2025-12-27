@@ -30,12 +30,15 @@ process.on("unhandledRejection", (reason, promise) => {
         errorStack = util.inspect(reason, { depth: null });
     };
 
+    if (errorStack.includes("Missing Access")) return;
+
     logger.error(`未捕獲的 Promise Rejection:\n${errorStack}`);
 });
 
 // 未捕獲的異常處理
 process.on("uncaughtException", (error) => {
     const errorStack = util.inspect(error, { depth: null });
+
     logger.error(`未捕獲的異常:\n${errorStack}`);
 });
 
