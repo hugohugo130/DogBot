@@ -1,8 +1,8 @@
-const ffmpeg = require('fluent-ffmpeg');
-const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const path = require("path");
-const axios = require("axios");
 const util = require("node:util");
+const child_process = require("child_process");
+const axios = require("axios");
+const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const { pipeline } = require("node:stream/promises");
 const { Collection, TextChannel, VoiceChannel, Subscription, Guild } = require("discord.js");
 const { createAudioResource, createAudioPlayer, AudioPlayerStatus, VoiceConnection, AudioPlayer, joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
@@ -15,7 +15,7 @@ const { get_emoji } = require("../rpg.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
 
-ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+
 
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
@@ -374,6 +374,8 @@ class MusicQueue {
     };
 };
 
+
+
 /**
  *
  * @param {string} [guildID]
@@ -530,6 +532,7 @@ async function downloadFile(url, outputPath) {
     };
 
     await pipeline(response.body, createWriteStream(outputPath));
+    await convertToOgg(outputPath);
 
     return outputPath;
 };
@@ -559,8 +562,12 @@ async function getTrack({ track, id, url, source }) {
 
     let actualSavePath;
     const savePath = join_temp_folder(`${source}_${id}.mp3`);
-    if (existsSync(savePath)) {
-        return savePath;
+    const oggPath = join_temp_folder(`${source}_${id}.ogg`);
+
+    for (const filePath of [savePath, oggPath]) {
+        if (existsSync(filePath)) {
+            return filePath;
+        };
     };
 
     if (!url && track) {
@@ -658,21 +665,51 @@ async function search_until(query, amount = 25) {
     return results;
 };
 
-async function convertToOgg(inputFile, outputFile) {
+function getFFmpegPath() {
+    const { exec } = require('child_process');
+
+    const command = process.platform === 'win32' ? 'cmd /C where ffmpeg' : 'which ffmpeg';
+
+    exec(command, (err, stdout, stderr) => {
+        const ffmpegPath = stdout.trim();
+
+        if (err || !ffmpegPath) {
+            return ffmpegInstaller.path;
+        };
+
+        return ffmpegPath
+    });
+}
+
+async function convertToOgg(inputFile, outputFile = null) {
     if (!fs.existsSync(inputFile)) {
         throw new Error(`輸入文件 ${inputFile} 不存在`);
     };
+    if (!outputFile) {
+        const fileExt = path.extname(inputFile);
+
+        outputFile = inputFile.replace(fileExt, ".ogg");
+    };
+
+    const ffmpegPath = getFFmpegPath();
+
+    /*
+     * -c:a libopus: 使用 libopus 編碼器進行音頻編碼。
+     * -b:a 96k: 設定音頻比特率為 96 kbps。
+     * -q:a 6: 設定音頻質量為 6（範圍通常是 0-10，0 表示最高質量）。
+     * -compression_level 10: 設定壓縮級別為 10（範圍通常是 0-10，10 表示最高壓縮）。
+     *
+    */
+    const command = `${ffmpegPath} -i "${inputFile}" -c:a libopus -b:a 96k -q:a 6 -compression_level 10 "${outputFile}"`;
 
     return new Promise((resolve, reject) => {
-        ffmpeg(inputFile)
-            .audioCodec('libopus')
-            .audioBitrate('96k')
-            .audioQuality(5)
-            .toFormat('ogg')
-            .output(outputFile)
-            .on('end', () => resolve(outputFile))
-            .on('error', (err) => reject(err))
-            .run();
+        child_process.exec(command, (error, stdout, stderr) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(outputFile);
+            };
+        });
     });
 };
 
@@ -682,4 +719,5 @@ module.exports = {
     saveQueue,
     getTrack,
     search_until,
+    convertToOgg,
 };

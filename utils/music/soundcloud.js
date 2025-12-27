@@ -1,6 +1,6 @@
-const { Soundcloud } = require("soundcloud.ts");
 const util = require("node:util");
 const path = require("path");
+const { Soundcloud } = require("soundcloud.ts");
 
 const { get_logger } = require("../logger.js");
 
@@ -39,11 +39,13 @@ async function search_tracks(query) {
  */
 async function download_track(track, savePath = null) {
     const { join_temp_folder } = require("../file.js");
+    const { convertToOgg } = require('./music.js');
 
     try {
         if (!savePath) savePath = join_temp_folder(`${SOURCE}_${track.id}.mp3`);
 
         const filePath = await sc.util.downloadTrack(track, savePath);
+        await convertToOgg(filePath);
 
         return [track, filePath];
     } catch (error) {
