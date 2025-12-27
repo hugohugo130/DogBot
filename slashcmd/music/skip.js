@@ -36,7 +36,7 @@ module.exports = {
                 .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
                 .setEmbedFooter();
 
-            return interaction.editReply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ embeds: [error_embed] });
         };
 
         const clientMember = await interaction.guild.members.fetchMe();
@@ -49,7 +49,7 @@ module.exports = {
                     .setDescription(`你必須待在 <#${queue.connection?.channel?.id}> 裡面`)
                     .setEmbedFooter();
 
-                return interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return interaction.editReply({ embeds: [embed] });
             };
         };
 
@@ -61,7 +61,7 @@ module.exports = {
                 .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
                 .setEmbedFooter();
 
-            return interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ embeds: [embed] });
         };
 
         queue.nextTrack();

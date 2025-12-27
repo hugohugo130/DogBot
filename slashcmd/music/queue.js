@@ -116,7 +116,7 @@ ${queueString}`);
                         .setTitle(`${emoji_cross} | 沒有這首歌`)
                         .setEmbedFooter();
 
-                    return await interaction.editReply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+                    return await interaction.editReply({ embeds: [error_embed] });
                 };
 
                 break;

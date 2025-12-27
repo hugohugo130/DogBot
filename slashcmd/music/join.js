@@ -29,8 +29,6 @@ module.exports = {
         const guildId = interaction.guild.id;
         const queue = getQueue(guildId);
 
-        await interaction.deferReply();
-
         const emoji_cross = await get_emoji("crosS", client);
         const emoji_voice = await get_emoji("voice", client);
 
@@ -41,24 +39,23 @@ module.exports = {
                 .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
                 .setEmbedFooter();
 
-            return await interaction.editReply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
-        };
-
-        const clientMember = await interaction.guild.members.fetchMe();
-
-        if (clientMember.voice.channelId) {
-            if (clientMember.voice.channelId !== voiceChannel.id) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
-                    .setDescription(`你必須待在 <#${queue.connection?.joinConfig?.channelId || queue.voiceChannel.id}> 裡面`)
-                    .setEmbedFooter();
-
-                return interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-            };
+            return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
         };
 
         let connection = getVoiceConnection(guildId);
+
+        if (connection && connection.joinConfig.channelId !== voiceChannel.id) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
+                .setDescription(`你必須待在 <#${queue.connection?.joinConfig?.channelId || queue.voiceChannel.id}> 裡面`)
+                .setEmbedFooter();
+
+            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+        };
+
+        await interaction.deferReply();
+
         if (!connection) {
             connection = joinVoiceChannel({
                 channelId: voiceChannel.id,

@@ -115,7 +115,7 @@ module.exports = {
                 .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
                 .setEmbedFooter();
 
-            return interaction.editReply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ embeds: [error_embed] });
         };
 
         // 檢查權限
@@ -124,7 +124,7 @@ module.exports = {
                 .setColor(embed_error_color)
                 .setDescription(`${emoji_cross} 我沒有權限加入這個語音頻道！`);
 
-            return interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ embeds: [embed] });
         };
 
         if (!voiceChannel.speakable) {
@@ -132,7 +132,7 @@ module.exports = {
                 .setColor(embed_error_color)
                 .setDescription(`${emoji_cross} 我沒有權限在這個語音頻道說話！`);
 
-            return interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ embeds: [embed] });
         };
 
         const queue = getQueue(guildId);
@@ -157,7 +157,7 @@ module.exports = {
                 .setDescription(`你必須待在 <#${voiceConnection.joinConfig.channelId}> 裡面`)
                 .setEmbedFooter();
 
-            return interaction.editReply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: "", embeds: [embed] });
         };
 
         if (volume) queue.volume = volume;

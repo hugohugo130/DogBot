@@ -104,7 +104,7 @@ module.exports = {
                 .setDescription(`你缺少了 ${items.join("、")}`)
                 .setEmbedFooter();
 
-            return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+            return await interaction.editReply({ embeds: [embed] });
         };
 
         for (const need_item in item_need) {

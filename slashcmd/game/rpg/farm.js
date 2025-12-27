@@ -220,7 +220,7 @@ module.exports = {
         const farm_data = load_farm_data(userId);
 
         const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/farm", userId, interaction.client);
-        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
+        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
 
         const emoji_farmer = await get_emoji("farmer", client);
         const emoji_cross = await get_emoji("crosS", client);
@@ -246,7 +246,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 最多只能同時使用四把鋤頭`)
                     .setEmbedFooter();
 
-                return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds: [embed] });
             };
 
             if (rpg_data.hunger < need_hunger) {
@@ -255,13 +255,13 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 你的體力不足了`)
                     .setEmbedFooter();
 
-                return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds: [embed] });
             };
 
             if (!userHaveEnoughItems(userId, hoe, amount)) {
                 const embed = await notEnoughItemEmbed([{ name: hoe, amount }]);
 
-                return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds: [embed] });
             };
 
             if (!farm_data.farms) {
@@ -303,7 +303,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 你的農田沒有正在種植的田地`)
                     .setEmbedFooter();
 
-                return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds: [embed] });
             };
 
             const farmlands = completed_farms.map(farm => {
@@ -340,7 +340,7 @@ module.exports = {
                     .setDescription(`請在 <t:${endsAts}:R> 再繼續澆水`)
                     .setEmbedFooter();
 
-                return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds: [embed] });
             };
 
             const get_exp = randint(50, 74);

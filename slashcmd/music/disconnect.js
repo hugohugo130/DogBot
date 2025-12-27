@@ -38,7 +38,7 @@ module.exports = {
                 .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
                 .setEmbedFooter();
 
-            return interaction.editReply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ embeds: [error_embed] });
         };
 
         const vconnection = getVoiceConnection(interaction.guildId);
@@ -53,7 +53,7 @@ module.exports = {
                 .setTitle(`${emoji_cross} | 我不在一個語音頻道`)
                 .setEmbedFooter();
 
-            return interaction.editReply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: "", embeds: [embed] });
         } else if (queue.voiceChannel.id !== voiceChannel.id) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -61,7 +61,7 @@ module.exports = {
                 .setDescription(`你必須待在 <#${queue.voiceChannel?.id}> 裡面`)
                 .setEmbedFooter();
 
-            return interaction.editReply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
+            return interaction.editReply({ content: "", embeds: [embed] });
         };
 
         queue.destroy();

@@ -39,7 +39,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     if (!smelt_recipe) {
         const embeds = await get_loophole_embed("找不到該熔鍊配方", interaction.client);
 
-        return await interaction.editReply({ embeds, flags: MessageFlags.Ephemeral });
+        return await interaction.editReply({ embeds });
     };
 
     if (allMats) {
@@ -79,7 +79,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     if (item_missing.length > 0) {
         const embed = await notEnoughItemEmbed(item_missing);
 
-        return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+        return await interaction.editReply({ embeds: [embed] });
     };
 
     const embed = new EmbedBuilder()
@@ -238,7 +238,7 @@ module.exports = {
         const smelt_data = smelt_data_all[userId];
 
         const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/smelt", userId, interaction.client);
-        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
+        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
 
         const emoji_cross = await get_emoji("crosS", interaction.client);
         const emoji_furnace = await get_emoji("furnace", interaction.client);
@@ -262,7 +262,7 @@ module.exports = {
             const allAmount = interaction.options.getBoolean("all") ?? false;
             const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
 
-            if (!item_id && !choosedAmount &&!allAmount && !auto_amount) {
+            if (!item_id && !choosedAmount && !allAmount && !auto_amount) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 蛤？ 🤔 你什麼也不選`)
@@ -382,7 +382,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 你的煉金爐是空的`)
                     .setEmbedFooter();
 
-                return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds: [embed] });
             };
 
             const index = interaction.options.getInteger("編號") - 1;
@@ -392,7 +392,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 錯誤的物品編號`)
                     .setEmbedFooter();
 
-                return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds: [embed] });
             };
 
             const item = smelt_data[index];
@@ -404,7 +404,7 @@ module.exports = {
                     .setFooter({ text: `等待至 <t:${item.end_time}:R>` })
                     .setEmbedFooter();
 
-                return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds: [embed] });
             };
 
             // 將熔鍊完成的物品加入背包

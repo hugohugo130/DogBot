@@ -107,7 +107,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
         const embed = await notEnoughItemEmbed(item_missing);
 
         if (mode === 0) {
-            await interaction.editReply({ embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
+            await interaction.editReply({ embeds: [embed], components: [] });
         } else {
             await interaction.followUp({ embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
         };
@@ -342,7 +342,7 @@ module.exports = {
         const rpg_data = load_rpg_data(userId);
 
         const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/bake", userId, interaction.client);
-        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
+        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
 
         if (subcommand === "bake") {
             const emoji_cross = await get_emoji("crosS", interaction.client);
@@ -489,7 +489,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 你的烤箱是空的`)
                     .setEmbedFooter();
 
-                return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return await interaction.editReply({ embeds: [embed] });
             };
 
             const loop_times = interaction.options.getBoolean("all") ? bake_data.length : 1;

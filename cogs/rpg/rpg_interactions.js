@@ -992,7 +992,7 @@ module.exports = {
                 if (item_missing.length > 0) {
                     const embed = await notEnoughItemEmbed(item_missing);
 
-                    return await interaction.editReply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                    return await interaction.editReply({ embeds: [embed] });
                 };
                 // ==================檢查物品==================
 
