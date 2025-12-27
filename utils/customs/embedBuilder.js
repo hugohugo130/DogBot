@@ -1,4 +1,4 @@
-const { EmbedBuilder: djsEmbedBuilder } = require("discord.js");
+const { EmbedBuilder: djsEmbedBuilder, BaseInteraction } = require("discord.js");
 const { load_rpg_data } = require("../file.js");
 const DogClient = require("./client.js");
 
@@ -15,7 +15,18 @@ class EmbedBuilder extends djsEmbedBuilder {
      * @remark force: text參數是否不會增加飽食度或機器犬文字
      * @returns {EmbedBuilder}
      */
-    setEmbedFooter(interaction = "zh-TW", { text = "", rpg_data = null, force = false, client = global._client } = {}) {
+    setEmbedFooter(interaction = null, { text = "", rpg_data = null, force = false, client = global._client } = {}) {
+        if (typeof interaction === "object" && !interaction instanceof BaseInteraction && interaction.text && interaction.rpg_data && interaction.force) { // interaction應為config
+            const { text: _text = "", rpg_data: _rpg_data = null, force: _force = false, client: _client = global._client } = interaction;
+
+            text = _text;
+            rpg_data = _rpg_data;
+            force = _force;
+            client = _client;
+        };
+
+        if (!interaction) interaction = "zh-TW";
+
         if (text.includes("飽食度剩餘")) {
             const { get_logger, getCallerModuleName } = require("../logger.js");
             const logger = get_logger({ nodc: true });
