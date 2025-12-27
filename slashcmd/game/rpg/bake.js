@@ -130,10 +130,16 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     // 將 item_need 資料儲存在全域變數或快取中
     if (!interaction.client.oven_sessions) interaction.client.oven_sessions = new Collection();
 
-    interaction.client.oven_sessions.set(session_id, item_need);
+    interaction.client.oven_sessions.set(session_id, {
+        item_id,
+        amount,
+        coal_amount,
+        duration,
+        item_need,
+    });
 
     const confirm_button = new ButtonBuilder()
-        .setCustomId(`oven_bake|${userId}|${item_id}|${amount}|${coal_amount}|${duration}|${session_id}`)
+        .setCustomId(`oven_bake|${userId}|${session_id}`)
         .setLabel("確認")
         .setStyle(ButtonStyle.Success);
 

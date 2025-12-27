@@ -842,16 +842,16 @@ module.exports = {
                 await interaction.deferUpdate();
 
                 // oven_bake|${userId}|${item_id}|${amount}|${coal_amount}|${duration}|${session_id}
-                const [_, userId, item_id, amount, coal_amount, duration, session_id] = interaction.customId.split("|");
+                const [_, userId, session_id] = interaction.customId.split("|");
 
                 // 確保所有數值都被正確解析為整數
                 const parsedAmount = parseInt(amount);
                 const parsedCoalAmount = parseInt(coal_amount);
                 const parsedDuration = parseInt(duration);
 
-                // 從全域變數中取得 item_need 資料
-                const item_need = client.oven_sessions.get(session_id);
-                if (!item_need) {
+                // 從全域變數中取得 oven_bake 資料
+                const oven_bake = client.oven_sessions.get(session_id);
+                if (!oven_bake) {
                     const emoji_cross = await get_emoji("crosS", client);
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -861,6 +861,8 @@ module.exports = {
 
                     return await interaction.editReply({ embeds: [embed], components: [] });
                 };
+
+                const { item_id, amount, coal_amount, duration, item_need } = oven_bake;
 
                 let rpg_data = load_rpg_data(userId)
                 let bake_data = load_bake_data();
