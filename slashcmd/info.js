@@ -276,7 +276,7 @@ module.exports = {
                         value: `\`${fix(memUsage.heapUsed)} MB\` / \`${fix(memUsage.heapTotal)} MB\` / \`${fix(memUsage.rss)} MB\``,
                     },
                 )
-                .setEmbedFooter("我們使用 discord.js 製作這個機器人", { force: true })
+                .setEmbedFooter({ text: "我們使用 discord.js 製作這個機器人", force: true })
                 .setEmbedAuthor(`${client.user.tag}🤖`);
 
             await interaction.editReply({ embeds: [embed] });

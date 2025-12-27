@@ -1114,7 +1114,7 @@ async function get_failed_embed(client = global._client, failed_reason, rpg_data
         .setColor(color)
         .setTitle(title)
         .setDescription(description)
-        .setEmbedFooter("", { rpg_data });
+        .setEmbedFooter({ text: "", rpg_data });
 
     return embed;
 }

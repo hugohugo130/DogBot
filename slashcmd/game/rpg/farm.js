@@ -288,7 +288,7 @@ module.exports = {
                 .setColor(embed_default_color)
                 .setTitle(`${emoji_check} | 成功使用了 ${amount} 個鐵鋤`)
                 .setDescription(`消耗 ${need_hunger} 點體力`)
-                .setEmbedFooter("", { rpg_data });
+                .setEmbedFooter({ text: "", rpg_data });
 
             return await interaction.editReply({ embeds: [success_embed] });
         } else if (subcommand === "info") {

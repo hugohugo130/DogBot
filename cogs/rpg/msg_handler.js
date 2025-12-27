@@ -127,7 +127,7 @@ async function redirect({ client, message, command, mode = 0 }) {
 // 向後兼容
 function setEmbedFooter(client = global._client, embed, text = "", rpg_data = null, force = false) {
     logger.warn(`setEmbedFooter 已棄用，請改用 EmbedBuilder.setEmbedFooter 方法, called from:\n${getCallerModuleName(null)}`)
-    return embed.setEmbedFooter(text, rpg_data, force, client);
+    return embed.setEmbedFooter({ text, rpg_data, force, client });
 };
 
 // [DEPRECATED] setEmbedFooter 和 setEmbedAuthor 已移至 EmbedBuilder 類別方法
@@ -262,7 +262,7 @@ const rpg_commands = {
             .setColor(embed_default_color)
             .setTitle(`${emoji} | 挖礦`)
             .setDescription(description)
-            .setEmbedFooter("", { rpg_data });
+            .setEmbedFooter({ text: "", rpg_data });
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -299,7 +299,7 @@ const rpg_commands = {
             .setColor(embed_fell_color)
             .setTitle(`${emoji} | ${item === "god_wood" ? "是神?!" : "平常的一天"}`)
             .setDescription(description)
-            .setEmbedFooter("", { rpg_data });
+            .setEmbedFooter({ text: "", rpg_data });
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -351,7 +351,7 @@ const rpg_commands = {
             .setColor(embed_default_color)
             .setTitle(`${emoji_cow} | ${title}`)
             .setDescription(description)
-            .setEmbedFooter("", { rpg_data });
+            .setEmbedFooter({ text: "", rpg_data });
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -377,7 +377,7 @@ const rpg_commands = {
             .setColor(embed_default_color)
             .setTitle(`${emoji_potion} | 釀造`)
             .setDescription(`你研究了許久，獲得了 \`${amount}\` 個${potion_name}`)
-            .setEmbedFooter("", { rpg_data });
+            .setEmbedFooter({ text: "", rpg_data });
         // .setTitle(`${emoji_potion} | 回復藥水可以幹嘛?`)
         // .setDescription(`你研究了許久，獲得了 \`${amount}\` 個${potion_name}\n\n之後推出的冒險可以用上`);
 
@@ -428,7 +428,7 @@ const rpg_commands = {
             .setColor(embed_default_color)
             .setTitle(`${emoji} | ${fish_text}`)
             .setDescription(description)
-            .setEmbedFooter("", { rpg_data });
+            .setEmbedFooter({ text: "", rpg_data });
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
