@@ -16,7 +16,7 @@ class EmbedBuilder extends djsEmbedBuilder {
      * @returns {EmbedBuilder}
      */
     setEmbedFooter(interaction = null, { text = "", rpg_data = null, force = false, client = global._client } = {}) {
-        if (typeof interaction === "object" && !interaction instanceof BaseInteraction && interaction.text && interaction.rpg_data && interaction.force) { // interaction應為config
+        if (interaction && typeof interaction === "object" && !(interaction instanceof BaseInteraction)) { // interaction應為config
             const { text: _text = "", rpg_data: _rpg_data = null, force: _force = false, client: _client = global._client } = interaction;
 
             text = _text;
