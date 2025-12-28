@@ -92,6 +92,8 @@ client.once(Events.ClientReady, async () => {
 
             logger.info(`\n連接用戶 (音樂播放器)：${playersCount}\n正在播放總人數: ${playingPlayers}\n${totalTracks} 首音樂正在播放。`);
         };
+
+        logger.info("=".repeat(20));
     });
 });
 
