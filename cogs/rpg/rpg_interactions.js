@@ -5,6 +5,7 @@ const util = require("node:util");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 const { Soundcloud } = require("soundcloud.ts");
+const { getVoiceConnection } = require("@discordjs/voice");
 
 const logger = get_logger();
 
@@ -477,7 +478,7 @@ module.exports = {
             const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, ls_function, bake, smeltable_recipe, name, jobs, smelter_slots, oven_slots } = require("../../utils/rpg.js");
             const { rpg_handler, MockMessage } = require("./msg_handler.js");
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
-            const { getQueue } = require("../../utils/music/music.js");
+            const { getQueue, saveQueue } = require("../../utils/music/music.js");
             const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
@@ -1221,6 +1222,20 @@ module.exports = {
                 };
 
                 const queue = getQueue(interaction.guildId);
+
+                // 連接到語音頻道
+                if (!getVoiceConnection(interaction.guildId)) {
+                    const voiceConnection = joinVoiceChannel({
+                        channelId: voiceChannel.id,
+                        guildId: guildId,
+                        selfDeaf: true,
+                        selfMute: false,
+                        adapterCreator: interaction.guild.voiceAdapterCreator,
+                    });
+
+                    queue.connection = voiceConnection;
+                    saveQueue(interaction.guildId, queue);
+                };
 
                 const [trackSessionID, trackID] = interaction.values[0].split("|");
                 const trackSession = client.musicTrackSession.get(trackSessionID)?.[trackID]?.[0];

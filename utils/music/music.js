@@ -240,6 +240,37 @@ class MusicQueue {
             // logger.debug(`[${this.guildID}] 音樂播放器狀態改變: ${oldState.status} -> ${newState.status}: ${Boolean(getVoiceConnection(this.guildID))}; ${require("util").inspect(this.tracks, { depth: null })}; ${require("util").inspect(this.currentTrack, { depth: null })}`);
 
             try {
+                if (!getVoiceConnection(this.guildID)) {
+                    if (this.voiceChannel) {
+                        const voiceConnection = joinVoiceChannel({
+                            channelId: this.voiceChannel.id,
+                            guildId: this.guildID,
+                            adapterCreator: this.voiceChannel.guild.voiceAdapterCreator
+                        });
+
+                        this.connection = voiceConnection;
+                        this.subscribe();
+                    } else {
+                        if (this.textChannel?.send) {
+                            const emoji_cross = await get_emoji("crosS", client);
+                            const embed = new EmbedBuilder()
+                                .setColor(embed_error_color)
+                                .setTitle(`${emoji_cross} | 播放語音時發生錯誤`)
+                                .setDescription(`找不到語音頻道，請重新執行播放指令`)
+                                .setEmbedFooter();
+
+                            await this.textChannel.send({ embeds: [embed] });
+
+                            // wait 500ms
+                            await new Promise(resolve => setTimeout(resolve, 500));
+
+                            this.destroy();
+                        } else {
+                            this.destroy();
+                        };
+                    };
+                };
+
                 if (newState.status === AudioPlayerStatus.Playing) {
                     // 正在播放
                     const embed = new EmbedBuilder()
