@@ -397,7 +397,7 @@ class MusicQueue {
         };
     };
 
-    destroy() { 
+    destroy() {
         this.unsubscribe();
         this.player.stop(true);
         this.connection.destroy();
@@ -576,6 +576,7 @@ async function downloadFile(url, outputPath) {
 async function downloadTracks(tracks) {
     const files = await Promise.all(tracks.map(async (track) => {
         const file = await getTrack(track);
+
         return { [track.id]: file };
     }));
 
@@ -636,10 +637,24 @@ async function search_until(query, amount = 25) {
             continue;
         };
 
-        let tracks;
+        let tracks = [];
+        let output;
 
         try {
-            tracks = await file.search_tracks(query);
+            if (file.get_track_info
+                && typeof file.get_track_info === "function"
+                && file.validateURL
+                && typeof file.validateURL === "function"
+                && file.validateURL(query)
+            ) {
+                try {
+                    output = [await file.get_track_info(query)];
+                } catch (_) {
+                    output = await file.search_tracks(query);
+                };
+            } else {
+                output = await file.search_tracks(query);
+            };
         } catch (err) {
             const errorStack = util.inspect(err, { depth: null });
 
@@ -647,12 +662,12 @@ async function search_until(query, amount = 25) {
             continue;
         };
 
-        if (!Array.isArray(tracks)) {
+        if (!Array.isArray(output)) {
             logger.warn(`API模塊 ${engine}.js 的 search_tracks 函數沒有返回陣列`);
             continue;
         };
 
-        tracks = tracks.slice(0, amount);
+        tracks = output.slice(0, amount);
         tracks = [...new Set(tracks)];
         tracks = fixStructure(tracks);
 

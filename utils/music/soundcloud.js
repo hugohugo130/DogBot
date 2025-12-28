@@ -53,8 +53,40 @@ async function download_track(track, savePath = null) {
     };
 };
 
+/**
+ * 
+ * @param {string} url
+ * @returns {import("soundcloud.ts").SoundcloudTrack}
+ */
+async function get_track_info(url) {
+    return await sc.tracks.get(url);
+};
+
+const Constants = {
+    SOUNDCLOUD_URL_REGEX: /^https?:\/\/(soundcloud\.com|snd\.sc)\/(.*)$/,
+    REGEX_TRACK: /^https?:\/\/(soundcloud\.com|snd\.sc)\/([A-Za-z0-9_-]+)\/([A-Za-z0-9_-]+)\/?$/,
+    REGEX_SET: /^https?:\/\/(soundcloud\.com|snd\.sc)\/([A-Za-z0-9_-]+)\/sets\/([A-Za-z0-9_-]+)\/?$/,
+    REGEX_ARTIST: /^https?:\/\/(soundcloud\.com|snd\.sc)\/([A-Za-z0-9_-]+)\/?$/,
+};
+
+function validateURL(url = null, type = "all") {
+    if (typeof url !== "string") return false;
+
+    switch (type) {
+        case "artist":
+            return Constants.REGEX_ARTIST.test(url);
+        case "playlist":
+            return Constants.REGEX_SET.test(url) || (url.match(/soundcloud.app.goo.gl/) && url.split("/").pop().length === 5);
+        case "track":
+            return Constants.REGEX_TRACK.test(url) || url.match(/soundcloud.app.goo.gl/) && url.split("/").pop().length > 5;
+        default:
+            return Constants.SOUNDCLOUD_URL_REGEX.test(url) || url.match(/soundcloud.app.goo.gl/);
+    };
+};
+
 module.exports = {
     NO_CACHE,
     search_tracks,
     download_track,
+    validateURL,
 };
