@@ -100,7 +100,9 @@ client.once(Events.ClientReady, async () => {
 (async () => {
     global._client = null;
     global.perloadResponse = new Collection();
+    global.oven_sessions = {};
     global.smelter_sessions = {};
+    global.convertToOggQueue = [];
 
     await checkDBFilesCorrupted();
     if (!debug) await checkAllDatabaseFilesContent();

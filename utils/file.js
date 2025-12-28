@@ -14,13 +14,14 @@ const { sleep } = require("./sleep.js");
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
 const mkdirSync = fs.mkdirSync;
-const mkdir = fsp.mkdir;
+const unlinkSync = fs.unlinkSync;
 const createWriteStream = fs.createWriteStream;
-const readdir = fsp.readdir;
 const join = path.join;
 const full_path = path.resolve;
 const basename = path.basename;
 const dirname = path.dirname;
+const mkdir = fsp.mkdir;
+const readdir = fsp.readdir;
 const logger = get_logger();
 
 /**
@@ -789,6 +790,7 @@ module.exports = {
     existsSync,
     readdirSync,
     readdir,
+    unlinkSync,
     mkdirSync,
     mkdir,
     createWriteStream,

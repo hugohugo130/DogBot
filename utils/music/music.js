@@ -1,3 +1,4 @@
+const fs = require("fs");
 const path = require("path");
 const util = require("node:util");
 const child_process = require("child_process");
@@ -14,8 +15,6 @@ const { formatMinutesSeconds } = require("../timestamp.js");
 const { get_emoji } = require("../rpg.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
-
-
 
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
@@ -589,17 +588,23 @@ async function downloadTracks(tracks) {
  * @returns {Promise<string>} 保存路徑
  */
 async function getTrack({ track, id, url, source }) {
-    const { existsSync, join_temp_folder } = require("../file.js");
+    const { existsSync, unlinkSync, join_temp_folder } = require("../file.js");
     const engine = require(`./${source ?? "soundcloud"}.js`);
 
     let actualSavePath;
     const savePath = join_temp_folder(`${source}_${id}.mp3`);
     const oggPath = join_temp_folder(`${source}_${id}.ogg`);
 
-    for (const filePath of [savePath, oggPath]) {
-        if (existsSync(filePath)) {
-            return filePath;
+    if (existsSync(oggPath)) {
+        if (existsSync(savePath)) {
+            unlinkSync(savePath);
         };
+
+        return oggPath;
+    };
+
+    if (existsSync(savePath)) {
+        return savePath;
     };
 
     if (!url && track) {
@@ -712,25 +717,22 @@ async function search_until(query, amount = 25) {
 };
 
 function getFFmpegPath() {
-    const { exec } = require('child_process');
+    const { execSync } = require('child_process');
 
     const command = process.platform === 'win32' ? 'cmd /C where ffmpeg' : 'which ffmpeg';
 
-    exec(command, (err, stdout, stderr) => {
-        const ffmpegPath = stdout.trim();
+    const stdout = execSync(command).toString();
 
-        if (err || !ffmpegPath) {
-            return ffmpegInstaller.path;
-        };
+    const ffmpegPath = stdout.trim() || ffmpegInstaller.path;
 
-        return ffmpegPath
-    });
-}
+    return ffmpegPath;
+};
 
-async function convertToOgg(inputFile, outputFile = null) {
+function convertToOgg(inputFile, outputFile = null) {
     if (!fs.existsSync(inputFile)) {
         throw new Error(`輸入文件 ${inputFile} 不存在`);
     };
+
     if (!outputFile) {
         const fileExt = path.extname(inputFile);
 
@@ -742,21 +744,14 @@ async function convertToOgg(inputFile, outputFile = null) {
     /*
      * -c:a libopus: 使用 libopus 編碼器進行音頻編碼。
      * -b:a 96k: 設定音頻比特率為 96 kbps。
-     * -q:a 6: 設定音頻質量為 6（範圍通常是 0-10，0 表示最高質量）。
+     * -vbr off: 禁用可變比特率（VBR）模式，使用固定比特率（CBR）。
      * -compression_level 10: 設定壓縮級別為 10（範圍通常是 0-10，10 表示最高壓縮）。
      *
     */
-    const command = `${ffmpegPath} -i "${inputFile}" -c:a libopus -b:a 96k -q:a 6 -compression_level 10 "${outputFile}"`;
+    const command = `${ffmpegPath} -i "${inputFile}" -c:a libopus -b:a 96k -vbr off -compression_level 10 "${outputFile}"`;
 
-    return new Promise((resolve, reject) => {
-        child_process.exec(command, (error, stdout, stderr) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(outputFile);
-            };
-        });
-    });
+    if (!global.convertToOggQueue) global.convertToOggQueue = [];
+    global.convertToOggQueue.push(command);
 };
 
 module.exports = {
