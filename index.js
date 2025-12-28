@@ -84,12 +84,13 @@ client.once(Events.ClientReady, async () => {
         } else if (input === "music") {
             const musicQueues = getQueues();
 
+            const playingPlayers = musicQueues.filter(queue => queue.isPlaying()).size;
             const playersCount = musicQueues.size;
             const totalTracks = musicQueues.reduce((acc, queue) => {
-                return acc + queue.isPlaying() ? queue.tracks.length : 0;
+                return acc + queue.isPlaying() ? 1 + queue.tracks.length : 0;
             }, 0);
 
-            logger.info(`目前有 ${playersCount} 個音樂播放器，總共有 ${totalTracks} 首音樂正在播放。`);
+            logger.info(`\n連接用戶 (音樂播放器)：${playersCount}\n正在播放總人數: ${playingPlayers}\n${totalTracks} 首音樂正在播放。`);
         };
     });
 });
