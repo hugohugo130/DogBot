@@ -27,9 +27,9 @@ module.exports = {
         const voiceChannel = interaction.member.voice.channel;
         const queue = getQueue(interaction.guildId);
 
-        if (!voiceChannel) {
-            const emoji_cross = await get_emoji("crosS", client);
+        const emoji_cross = await get_emoji("crosS", client);
 
+        if (!voiceChannel) {
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你需要先進到一個語音頻道`)
@@ -38,8 +38,6 @@ module.exports = {
 
             return interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
         };
-
-        await interaction.deferReply();
 
         const vconnection = getVoiceConnection(interaction.guildId);
         if (vconnection) {
@@ -53,7 +51,7 @@ module.exports = {
                 .setTitle(`${emoji_cross} | 我不在一個語音頻道`)
                 .setEmbedFooter();
 
-            return interaction.editReply({ content: "", embeds: [embed] });
+            return interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
         } else if (queue.voiceChannel.id !== voiceChannel.id) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -61,10 +59,10 @@ module.exports = {
                 .setDescription(`你必須待在 <#${queue.voiceChannel?.id}> 裡面`)
                 .setEmbedFooter();
 
-            return interaction.editReply({ content: "", embeds: [embed] });
+            return interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
         queue.destroy();
-        await interaction.editReply(`👋 | 掰掰`);
+        await interaction.reply(`👋 | 掰掰`);
     },
 };
