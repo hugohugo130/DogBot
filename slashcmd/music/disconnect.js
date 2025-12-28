@@ -27,19 +27,19 @@ module.exports = {
         const voiceChannel = interaction.member.voice.channel;
         const queue = getQueue(interaction.guildId);
 
-        await interaction.deferReply();
-
-        const emoji_cross = await get_emoji("crosS", client);
-
         if (!voiceChannel) {
+            const emoji_cross = await get_emoji("crosS", client);
+
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你需要先進到一個語音頻道`)
                 .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
                 .setEmbedFooter();
 
-            return interaction.editReply({ embeds: [error_embed] });
+            return interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
         };
+
+        await interaction.deferReply();
 
         const vconnection = getVoiceConnection(interaction.guildId);
         if (vconnection) {

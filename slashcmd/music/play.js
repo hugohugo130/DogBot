@@ -59,7 +59,7 @@ module.exports = {
                 .setRequired(false)
                 .setMinValue(0)
                 .setMaxValue(100)
-        )
+        ),
         // .addBooleanOption(option =>
         //     option.setName("shuffle")
         //         .setNameLocalizations({
@@ -73,19 +73,6 @@ module.exports = {
         //         })
         //         .setRequired(false),
         // )
-        .addBooleanOption(option =>
-            option.setName("24-7")
-                .setNameLocalizations({
-                    "zh-TW": "24小時不間斷播放",
-                    "zh-CN": "24小时不间断播放",
-                })
-                .setDescription("24/7 mode")
-                .setDescriptionLocalizations({
-                    "zh-TW": "24小時不間斷播放",
-                    "zh-CN": "24小时不间断播放",
-                })
-                .setRequired(false),
-        ),
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 
@@ -97,16 +84,10 @@ module.exports = {
         const { formatMinutesSeconds } = require("../../utils/timestamp.js");
         const { embed_error_color } = require("../../utils/config.js");
 
-        await interaction.deferReply();
-
         const keywordOrUrl = interaction.options.getString("keyword_or_url") ?? "wellerman";
         const volume = interaction.options.getInteger("volume");
-        const leaveOnEmpty = !interaction.options.getBoolean("24/7") ?? true;
 
         const voiceChannel = interaction.member.voice.channel;
-        const guildId = interaction.guildId;
-        const emoji_cross = await get_emoji("crosS", client);
-        const emoji_search = await get_emoji("search", client);
 
         if (!voiceChannel) {
             const error_embed = new EmbedBuilder()
@@ -115,8 +96,12 @@ module.exports = {
                 .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
                 .setEmbedFooter();
 
-            return interaction.editReply({ embeds: [error_embed] });
+            return interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
         };
+
+        const guildId = interaction.guildId;
+        const emoji_cross = await get_emoji("crosS", client);
+        const emoji_search = await get_emoji("search", client);
 
         // 檢查權限
         if (!voiceChannel.joinable) {
@@ -124,7 +109,7 @@ module.exports = {
                 .setColor(embed_error_color)
                 .setDescription(`${emoji_cross} 我沒有權限加入這個語音頻道！`);
 
-            return interaction.editReply({ embeds: [embed] });
+            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
         if (!voiceChannel.speakable) {
@@ -132,12 +117,10 @@ module.exports = {
                 .setColor(embed_error_color)
                 .setDescription(`${emoji_cross} 我沒有權限在這個語音頻道說話！`);
 
-            return interaction.editReply({ embeds: [embed] });
+            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
-        const queue = getQueue(guildId);
-
-        await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
+        await interaction.deferReply();
 
         let voiceConnection = getVoiceConnection(guildId);
 
@@ -157,8 +140,12 @@ module.exports = {
                 .setDescription(`你必須待在 <#${voiceConnection.joinConfig.channelId}> 裡面`)
                 .setEmbedFooter();
 
-            return interaction.editReply({ content: "", embeds: [embed] });
+            return interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
         };
+
+        const queue = getQueue(guildId);
+
+        await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
         if (volume) queue.volume = volume;
         queue.textChannel = interaction.channel;

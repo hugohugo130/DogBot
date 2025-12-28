@@ -204,6 +204,9 @@ class MusicQueue {
         /** @type {boolean} */
         this.loopQueue = false;
 
+        /** @type {boolean} */
+        this.paused = false;
+
         /** @type {TextChannel} */
         this.textChannel = null;
 
@@ -296,6 +299,14 @@ class MusicQueue {
 
     /**
      * 
+     * @returns {boolean}
+     */
+    isPaused() {
+        return this.paused;
+    };
+
+    /**
+     * 
      * @param {string} id
      * @param {string} url
      * @param {string} source
@@ -372,7 +383,21 @@ class MusicQueue {
         return false;
     };
 
-    destroy() {
+    pause() {
+        if (!this.paused) {
+            this.player.pause();
+            this.paused = true;
+        };
+    };
+
+    unpause() {
+        if (this.paused) {
+            this.player.unpause();
+            this.paused = false;
+        };
+    };
+
+    destroy() { 
         this.unsubscribe();
         this.player.stop(true);
         this.connection.destroy();
