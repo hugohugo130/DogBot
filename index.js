@@ -90,7 +90,7 @@ client.once(Events.ClientReady, async () => {
                 return acc + queue.isPlaying() ? 1 + queue.tracks.length : 0;
             }, 0);
 
-            logger.info(`\n連接用戶 (音樂播放器)：${playersCount}\n正在播放總人數: ${playingPlayers}\n${totalTracks} 首音樂正在播放。`);
+            logger.info(`\n- 連接用戶 (音樂播放器)：${playersCount}\n- 正在播放總人數: ${playingPlayers}\n- 正在播放 ${totalTracks} 首音樂。`);
         };
 
         logger.info("=".repeat(20));
