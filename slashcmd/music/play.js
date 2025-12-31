@@ -44,21 +44,6 @@ module.exports = {
                 })
                 .setRequired(true)
             // .setAutocomplete(true),
-        )
-        .addIntegerOption(option =>
-            option.setName("volume")
-                .setNameLocalizations({
-                    "zh-TW": "音量",
-                    "zh-CN": "音量",
-                })
-                .setDescription("Set the volume of the music. 0~100 (Default 100)")
-                .setDescriptionLocalizations({
-                    "zh-TW": "設定音樂的音量 0~100 (預設50)",
-                    "zh-CN": "设置音乐的音量 0~100 (默认50)",
-                })
-                .setRequired(false)
-                .setMinValue(0)
-                .setMaxValue(100)
         ),
         // .addBooleanOption(option =>
         //     option.setName("shuffle")
@@ -85,7 +70,6 @@ module.exports = {
         const { embed_error_color } = require("../../utils/config.js");
 
         const keywordOrUrl = interaction.options.getString("keyword_or_url") ?? "wellerman";
-        const volume = interaction.options.getInteger("volume");
 
         const voiceChannel = interaction.member.voice.channel;
 
@@ -147,7 +131,6 @@ module.exports = {
 
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
-        if (volume) queue.volume = volume;
         queue.textChannel = interaction.channel;
         queue.voiceChannel = voiceChannel;
         queue.connection = voiceConnection;

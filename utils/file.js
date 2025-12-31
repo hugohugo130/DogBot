@@ -16,6 +16,7 @@ const readdirSync = fs.readdirSync;
 const mkdirSync = fs.mkdirSync;
 const unlinkSync = fs.unlinkSync;
 const createWriteStream = fs.createWriteStream;
+const createReadStream = fs.createReadStream;
 const join = path.join;
 const full_path = path.resolve;
 const basename = path.basename;
@@ -779,6 +780,7 @@ function get_temp_folder() {
 module.exports = {
     // file operations
     createWriteStream,
+    createReadStream,
     readFileSync,
     writeSync,
     read,

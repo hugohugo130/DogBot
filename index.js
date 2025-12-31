@@ -10,7 +10,7 @@ const { check_item_data } = require("./utils/rpg.js");
 const { should_register_cmd } = require("./utils/auto_register.js");
 const { registcmd } = require("./register_commands.js");
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
-const { getQueues } = require("./utils/music/music.js");
+const { getQueues, clear_duplicate_temp } = require("./utils/music/music.js");
 const DogClient = require("./utils/customs/client.js");
 const util = require("node:util");
 require("dotenv").config();
@@ -106,8 +106,13 @@ client.once(Events.ClientReady, async () => {
 
     await checkDBFilesCorrupted();
     if (!debug) await checkAllDatabaseFilesContent();
-    await checkDBFilesExists();
-    check_item_data();
+
+    // Promise.all也可以用於非async函數
+    await Promise.all([
+        checkDBFilesExists(),
+        check_item_data(),
+        clear_duplicate_temp(),
+    ]);
 
     client.serverIP = getServerIPSync(client);
 

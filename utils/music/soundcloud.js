@@ -11,7 +11,7 @@ const SOURCE = path.basename(__filename, path.extname(__filename));
 
 const logger = get_logger();
 
-const NO_CACHE = false;
+const NO_CACHE = true;
 
 /**
  * 
@@ -45,7 +45,7 @@ async function download_track(track, savePath = null) {
         if (!savePath) savePath = join_temp_folder(`${SOURCE}_${track.id}.mp3`);
 
         const filePath = await sc.util.downloadTrack(track, savePath);
-        await convertToOgg(filePath);
+        convertToOgg(filePath);
 
         return filePath;
     } catch (error) {

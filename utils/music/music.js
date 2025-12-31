@@ -1,18 +1,17 @@
-const fs = require("fs");
 const path = require("path");
 const util = require("node:util");
-const child_process = require("child_process");
 const axios = require("axios");
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const { pipeline } = require("node:stream/promises");
 const { Collection, TextChannel, VoiceChannel, Subscription, Guild } = require("discord.js");
-const { createAudioResource, createAudioPlayer, AudioPlayerStatus, VoiceConnection, AudioPlayer, joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
+const { createAudioResource, createAudioPlayer, AudioPlayerStatus, VoiceConnection, AudioPlayer, joinVoiceChannel, getVoiceConnection, StreamType } = require("@discordjs/voice");
 const { Soundcloud } = require("soundcloud.ts");
 
 const { get_logger } = require("../logger.js");
-const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
+const { existsSync, createReadStream, get_temp_folder, join_temp_folder, basename, readdirSync, unlinkSync } = require("../file.js");
 const { formatMinutesSeconds } = require("../timestamp.js");
 const { get_emoji } = require("../rpg.js");
+const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
 
@@ -194,9 +193,6 @@ class MusicQueue {
         /** @type {import('soundcloud.ts').SoundcloudTrack | any} */
         this.currentTrack = null;
 
-        /** @type {number} */
-        this.volume = 100;
-
         /** @type {boolean} */
         this.loop = false;
 
@@ -363,8 +359,14 @@ class MusicQueue {
         let track = await global._sc.tracks.get(id);
         track = fixStructure([track])[0];
 
-        const resource = createAudioResource(audioPath, { inlineVolume: true });
-        resource.volume?.setVolume(this.volume / 100);
+        let inputType = path.extname(audioPath) === ".ogg"
+            ? StreamType.OggOpus
+            : StreamType.Arbitrary;
+
+        const resource = createAudioResource(
+            createReadStream(audioPath),
+            { inputType },
+        );
 
         this.player.play(resource);
 
@@ -593,7 +595,7 @@ async function downloadFile(url, outputPath) {
     };
 
     await pipeline(response.body, createWriteStream(outputPath));
-    await convertToOgg(outputPath);
+    convertToOgg(outputPath);
 
     return outputPath;
 };
@@ -760,7 +762,7 @@ function getFFmpegPath() {
 };
 
 function convertToOgg(inputFile, outputFile = null) {
-    if (!fs.existsSync(inputFile)) {
+    if (!existsSync(inputFile)) {
         throw new Error(`輸入文件 ${inputFile} 不存在`);
     };
 
@@ -769,6 +771,8 @@ function convertToOgg(inputFile, outputFile = null) {
 
         outputFile = inputFile.replace(fileExt, ".ogg");
     };
+
+    if (existsSync(outputFile)) return;
 
     const ffmpegPath = getFFmpegPath();
 
@@ -779,10 +783,33 @@ function convertToOgg(inputFile, outputFile = null) {
      * -compression_level 10: 設定壓縮級別為 10（範圍通常是 0-10，10 表示最高壓縮）。
      *
     */
-    const command = `${ffmpegPath} -i "${inputFile}" -c:a libopus -b:a 96k -vbr off -compression_level 10 "${outputFile}"`;
+    const commandData = {
+        cmd: `${ffmpegPath} -i "${inputFile}" -c:a libopus -b:a 96k -vbr off -compression_level 10 "${outputFile}"`,
+        input: inputFile,
+        output: outputFile,
+    };
 
     if (!global.convertToOggQueue) global.convertToOggQueue = [];
-    global.convertToOggQueue.push(command);
+    global.convertToOggQueue.push(commandData);
+};
+
+function clear_duplicate_temp() {
+    const temp_dir = get_temp_folder();
+
+    const files = readdirSync(temp_dir)
+        .filter(file => file.endsWith(".ogg"));
+
+    for (const oggfile of files) {
+        const filename = basename(oggfile, ".ogg");
+        const oggFilePath = join_temp_folder(oggfile);
+        const mp3FilePath = join_temp_folder(`${filename}.mp3`);
+
+        if (existsSync(oggFilePath)) {
+            try {
+                unlinkSync(mp3FilePath);
+            } catch (_) { };
+        };
+    };
 };
 
 module.exports = {
@@ -792,4 +819,5 @@ module.exports = {
     getTrack,
     search_until,
     convertToOgg,
+    clear_duplicate_temp,
 };
