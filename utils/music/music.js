@@ -575,7 +575,7 @@ function fixStructure(object) {
                 url: track.uri,
                 duration: track.duration,
                 thumbnail: track.artwork_url,
-                author: track.publisher_metadata?.artist || track.user?.full_name || track.user?.user_name || "Unknown",
+                author: track.publisher_metadata?.artist || track.user?.full_name || track.user?.username || "Unknown",
                 source: "soundcloud",
             };
         });
