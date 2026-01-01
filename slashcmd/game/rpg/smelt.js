@@ -130,7 +130,7 @@ module.exports = {
         .setNameLocalizations({
             "zh-TW": "煉金爐",
             "zh-CN": "炼金炉",
-            "en-US": "smelter",
+            "en-US": "smelt",
         })
         .setDescriptionLocalizations({
             "zh-TW": "煉金爐相關指令",
