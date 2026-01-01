@@ -174,7 +174,7 @@ module.exports = {
         .setNameLocalizations({
             "zh-TW": "烤箱",
             "zh-CN": "烤箱",
-            "en-US": "oven",
+            "en-US": "bake",
         })
         .setDescriptionLocalizations({
             "zh-TW": "烤箱相關指令",
