@@ -1,4 +1,4 @@
-const { Events, ChannelType, VoiceState, PermissionFlagsBits, Collection } = require("discord.js");
+const { Events, ChannelType, VoiceState, PermissionFlagsBits } = require("discord.js");
 const util = require("node:util");
 const DogClient = require("../utils/customs/client.js");
 
@@ -19,7 +19,7 @@ module.exports = {
      */
     async execute(client, oldState, newState) {
         const { get_logger } = require("../utils/logger.js");
-        const { channelExists } = require("../utils/discord.js");
+        const { get_channel } = require("../utils/discord.js");
 
         const logger = get_logger();
 
@@ -35,19 +35,28 @@ module.exports = {
             const mainchannelID = getDynamicVoice(guild.id);
             if (!mainchannelID) return;
 
+            const mainchannel = await get_channel(guild, mainchannelID);
+            if (!mainchannel) return;
+
             const oldChannel = oldState.channel;
             const newChannel = newState.channel;
 
             if (!oldChannel?.id && !newChannel?.id) return;
             if (oldChannel?.id === newChannel?.id) return;
 
+            const botMember = await guild.members.fetchMe();
+
+            // 檢查機器人是否有權限管理頻道
+            if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return;
+            if (!mainchannel.permissionsFor(guild.members.me).has(PermissionFlagsBits.ManageChannels)) return;
+
+            // 檢查機器人是否有權限移動成員
+            if (!botMember.permissions.has(PermissionFlagsBits.MoveMembers)) return;
+            if (!mainchannel.permissionsFor(guild.members.me).has(PermissionFlagsBits.MoveMembers)) return;
+
             // 成員加入語音頻道
             if (newChannel && newChannel.id === mainchannelID) {
                 try {
-                    // 檢查機器人權限
-                    const botMember = await guild.members.fetchMe();
-                    if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return;
-
                     let channel;
                     let createChannel = true;
 
@@ -56,13 +65,12 @@ module.exports = {
                     if (data) {
                         channel = data.channel || newChannel;
 
-                        if (channel?.type !== ChannelType.GuildVoice) logger.warn(`超奇怪的，為什麼channel的類型(${channel.type}) 不是guild voice(2)?`);
-
                         if (
-                            (channel?.type &&
+                            (
+                                channel?.type &&
                                 channel?.type === ChannelType.GuildVoice
                             ) && (
-                                await channelExists(guild, channel.id)
+                                await get_channel(guild, channel.id)
                             )
                         ) {
                             createChannel = false;
@@ -77,11 +85,21 @@ module.exports = {
                             permissionOverwrites: [
                                 {
                                     id: member.id,
-                                    allow: [PermissionFlagsBits.Connect, PermissionFlagsBits.Speak, PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels],
+                                    allow: [
+                                        PermissionFlagsBits.Connect,
+                                        PermissionFlagsBits.Speak,
+                                        PermissionFlagsBits.ViewChannel,
+                                    ],
                                 },
                                 {
                                     id: client.user.id,
-                                    allow: [PermissionFlagsBits.Connect, PermissionFlagsBits.Speak, PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ManageChannels],
+                                    allow: [
+                                        PermissionFlagsBits.Connect,
+                                        PermissionFlagsBits.Speak,
+                                        PermissionFlagsBits.ViewChannel,
+                                        PermissionFlagsBits.ManageChannels,
+                                        PermissionFlagsBits.MoveMembers,
+                                    ],
                                 },
                             ],
                         });
@@ -89,14 +107,14 @@ module.exports = {
 
                     await newState.setChannel(channel);
 
-                    if (!data) client.dvoice.set(channel.id, {
+                    if (createChannel) client.dvoice.set(channel.id, {
                         owner: member.id,
                         channel: channel,
                     });
                 } catch (error) {
                     const errorStack = util.inspect(error, { depth: null });
 
-                    logger.error(`[${guild.name}(${guild.id})] 建立頻道失敗: ${errorStack}`);
+                    logger.error(`[${guild.name} (${guild.id})] 建立頻道 & 移動成員失敗: ${errorStack} `);
                 };
             };
 
@@ -115,7 +133,7 @@ module.exports = {
                     } catch (error) {
                         const errorStack = util.inspect(error, { depth: null });
 
-                        logger.error(`刪除頻道失敗: ${errorStack}`);
+                        logger.error(`刪除頻道失敗: ${errorStack} `);
 
                         // 即使刪除失敗也要清理記錄
                         if (data) client.delete(oldChannel.id);
@@ -125,7 +143,7 @@ module.exports = {
         } catch (err) {
             const errorStack = util.inspect(err, { depth: null });
 
-            logger.error(`動態語音錯誤: ${errorStack}`);
+            logger.error(`動態語音錯誤: ${errorStack} `);
         };
     },
 }

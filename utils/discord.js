@@ -52,20 +52,20 @@ async function get_guild(guildID, client = global.client) {
 */
 async function get_channels(guild) {
     const channels = guild.channels.cache.get(guild.id) || await guild.channels.fetch();
-    return channels.filter(channel => channel.isTextBased()).values();
+    return channels.values();
 };
 
 /**
  * 
  * @param {Guild} guild
  * @param {string} channelId
- * @returns {Promise<boolean>}
+ * @returns {Promise<GuildChannel | false>}
  */
-async function channelExists(guild, channelId) {
+async function get_channel(guild, channelId) {
     try {
-        await guild.channels.fetch(channelId);
+        if (!guild || !channelId) return false;
 
-        return true;
+        return await guild.channels.fetch(channelId);
     } catch (_) {
         return false;
     };
@@ -77,5 +77,5 @@ module.exports = {
     get_user,
     get_guild,
     get_channels,
-    channelExists,
+    get_channel,
 };
