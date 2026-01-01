@@ -177,30 +177,34 @@ Object.entries(logs).forEach(([logKey, logValue]) => {
 
 const smeltable_recipe = [
     {
-        input: [
-            { item: "iron_ore", amount: 2 }
-        ],
+        input: {
+            item: "iron_ore",
+            amount: 2
+        },
         output: "iron",
         amount: 1
     },
     {
-        input: [
-            { item: "iron", amount: 3 }
-        ],
+        input: {
+            item: "iron",
+            amount: 3
+        },
         output: "steel",
         amount: 1
     },
     {
-        input: [
-            { item: "diamond_ore", amount: 1 }
-        ],
+        input: {
+            item: "diamond_ore",
+            amount: 1
+        },
         output: "diamond",
         amount: 1
     },
     {
-        input: [
-            { item: "gold_ore", amount: 5 }
-        ],
+        input: {
+            item: "gold_ore",
+            amount: 5
+        },
         output: "gold",
         amount: 1
     },

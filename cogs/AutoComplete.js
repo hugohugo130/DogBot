@@ -19,10 +19,10 @@ module.exports = {
         if (!interaction.isAutocomplete()) return;
 
         const smeltable_items = smeltable_recipe.reduce((acc, item) => {
-            const key = item.input[0].item;
+            const key = item.input.item;
 
             acc[key] = {
-                I_amount: item.input[0].amount,
+                I_amount: item.input.amount,
                 O_item_id: item.output,
                 O_amount: item.amount
             };

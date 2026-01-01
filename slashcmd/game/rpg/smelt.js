@@ -38,7 +38,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     const allMats = interaction.options.getBoolean("全部") ?? false;
 
     // 透過需要的物品id 尋找熔鍊的配方
-    const smelt_recipe = smeltable_recipe.find(item => item.input[0].item === item_id);
+    const smelt_recipe = smeltable_recipe.find(item => item.input.item === item_id);
     if (!smelt_recipe) {
         logger.warn(`找不到物品id ${item_id} 的熔鍊配方`);
         const embeds = await get_loophole_embed("找不到熔鍊配方", interaction.client);

@@ -1003,7 +1003,7 @@ module.exports = {
 
                 save_rpg_data(userId, rpg_data)
 
-                const output_item_id = smeltable_recipe.find(a => a.input[0].item === item_id).output;
+                const output_item_id = smeltable_recipe.find(a => a.input.item === item_id).output;
                 const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
 
                 let smelt_data = load_smelt_data();
