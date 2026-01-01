@@ -1,6 +1,9 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction } = require("discord.js");
 const { divide } = require("./bake.js");
+const { get_logger } = require("../../../utils/logger.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
+
+const logger = get_logger();
 
 /**
  * 
@@ -34,10 +37,11 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
 
     const allMats = interaction.options.getBoolean("全部") ?? false;
 
-    // 找到該 smeltable_item 的配方
+    // 透過需要的物品id 尋找熔鍊的配方
     const smelt_recipe = smeltable_recipe.find(item => item.input[0].item === item_id);
     if (!smelt_recipe) {
-        const embeds = await get_loophole_embed("找不到該熔鍊配方", interaction.client);
+        logger.warn(`找不到物品id ${item_id} 的熔鍊配方`);
+        const embeds = await get_loophole_embed("找不到熔鍊配方", interaction.client);
 
         return await interaction.editReply({ embeds });
     };
@@ -339,7 +343,7 @@ module.exports = {
                 const amount = amounts[index];
                 if (!amount) continue;
 
-                await smelt_smelt(interaction, userId, item, amount, index === 0 ? 1 : 2);
+                await smelt_smelt(interaction, item, amount, index === 0 ? 1 : 2);
             };
         } else if (subcommand === "info") {
             const used_slots = smelt_data ? smelt_data.length : 0;
