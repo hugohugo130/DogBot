@@ -374,6 +374,7 @@ class MusicQueue {
         this.currentTrack = track;
 
         this.tracks = this.tracks.filter(track => track.id !== this.currentTrack?.id);
+        return track;
     };
 
     stopPlaying(force = false) {
@@ -385,12 +386,22 @@ class MusicQueue {
         this.currentTrack = null;
     };
 
+    /**
+     * 
+     * @param {boolean} force - 是否強制停止播放器
+     * @returns {[import("soundcloud.ts").SoundcloudTrack, import("soundcloud.ts").SoundcloudTrack]} - [old_track, new_track]
+     */
     nextTrack(force = false) {
+        const old_track = this.currentTrack;
+        let new_track = null;
+
         this.stopPlaying(force);
 
         if (this.tracks.length > 0) {
-            this.play(this.tracks[0].id, this.tracks[0].url, this.tracks[0].source);
+            new_track = this.play(this.tracks[0].id, this.tracks[0].url, this.tracks[0].source);
         };
+
+        return [old_track, new_track]
     };
 
     subscribe() {

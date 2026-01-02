@@ -44,6 +44,8 @@ module.exports = {
 
         if (clientMember.voice.channelId) {
             if (clientMember.voice.channelId !== voiceChannel.id) {
+                const emoji_cross = await get_emoji("crosS", client);
+
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
@@ -57,6 +59,8 @@ module.exports = {
         const queue = getQueue(interaction.guildId, false);
 
         if (!queue || !queue.isPlaying()) {
+            const emoji_cross = await get_emoji("crosS", client);
+
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
@@ -65,11 +69,13 @@ module.exports = {
             return interaction.editReply({ embeds: [embed] });
         };
 
-        queue.nextTrack();
+        const emoji_skip = await get_emoji("skip", client);
+
+        const [skippedTrack, _] = queue.nextTrack();
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
-            .setTitle(`⏭️ | 跳過了當前歌曲`)
+            .setTitle(`${emoji_skip} | 跳過 \`${skippedTrack.title}\``)
             .setEmbedFooter();
 
         return interaction.editReply({ embeds: [embed] });
