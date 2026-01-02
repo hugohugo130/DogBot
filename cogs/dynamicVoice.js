@@ -129,14 +129,14 @@ module.exports = {
                     try {
                         await oldChannel.delete();
 
-                        if (data) client.delete(oldChannel.id);
+                        if (data) client.dvoice.delete(oldChannel.id);
                     } catch (error) {
                         const errorStack = util.inspect(error, { depth: null });
 
                         logger.error(`刪除頻道失敗: ${errorStack} `);
 
                         // 即使刪除失敗也要清理記錄
-                        if (data) client.delete(oldChannel.id);
+                        if (data) client.dvoice.delete(oldChannel.id);
                     };
                 };
             };
