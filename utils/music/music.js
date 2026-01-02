@@ -310,9 +310,14 @@ class MusicQueue {
     /**
      * 
      * @param {import('soundcloud.ts').SoundcloudTrack | any} track
+     * @param {number | null} [insert_at] - 要插入的位置，預設在結尾
      */
-    addTrack(track) {
-        this.tracks.push(track);
+    addTrack(track, insert_at = null) {
+        if (insert_at) {
+            this.tracks.splice(insert_at, 0, track);
+        } else {
+            this.tracks.push(track);
+        };
     };
 
     /**

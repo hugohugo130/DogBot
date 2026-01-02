@@ -44,6 +44,19 @@ module.exports = {
                 })
                 .setRequired(true)
             // .setAutocomplete(true),
+        )
+        .addBooleanOption(option =>
+            option.setName("next")
+                .setNameLocalizations({
+                    "zh-TW": "next",
+                    "zh-CN": "next",
+                })
+                .setDescription("Insert the music to be played into the next song (for single track use only)")
+                .setDescriptionLocalizations({
+                    "zh-TW": "將播放的音樂插入到下一首歌 (限單曲使用)",
+                    "zh-CN": "将播放的音乐插入到下一首歌 (限单曲使用)",
+                })
+                .setRequired(false),
         ),
         // .addBooleanOption(option =>
         //     option.setName("shuffle")
@@ -70,6 +83,8 @@ module.exports = {
         const { embed_error_color } = require("../../utils/config.js");
 
         const keywordOrUrl = interaction.options.getString("keyword_or_url") ?? "wellerman";
+        const next = interaction.options.getBoolean("next") ?? false;
+        // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
 
         const voiceChannel = interaction.member.voice.channel;
 
@@ -168,6 +183,7 @@ module.exports = {
                 return [[id], [{
                     track,
                     source,
+                    next,
                 }]];
             })),
         ));

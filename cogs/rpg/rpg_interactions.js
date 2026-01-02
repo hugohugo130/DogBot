@@ -1251,9 +1251,9 @@ module.exports = {
 
                 client.musicTrackSession.delete(trackSessionID);
 
-                const { track, source } = trackSession;
+                const { track, source, next } = trackSession;
 
-                queue.addTrack(track);
+                queue.addTrack(track, next ? 0 : null);
 
                 const progressBlack = 14;
 
