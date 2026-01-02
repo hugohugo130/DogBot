@@ -80,44 +80,57 @@ class DogClient extends Client {
         if (shard) {
             const guilds = await shard.fetchClientValues("guilds.cache");
 
-            return Array.from(guilds.values());
+            return Array.from(guilds.values())
+                .flat()
+            // .filter(Boolean);
         } else {
-            return this.guilds.cache;
+            return Array.from(this.guilds.cache.values()).flat();
         };
     };
 
     /**
      * 
-     * @param {string} guildID
+     * @param {Guild} guild
      * @param {boolean} fetch - 是否fetch guild的member而不是使用cache
      * @returns {Promise<GuildMember[]>}
      */
-    async getGuildMembers(guildID, fetch = true) {
-        const guild = this.guilds.cache.get(guildID);
-
-        if (!guild) return [];
-
+    async getGuildMembers(guild, fetch = true) {
         let members;
+
         if (fetch) {
-            members = await guild.members.fetch();
+            try {
+                if (fetch === "necessary") {
+                    members = guild.members.cache || await guild.members.fetch();
+                } else {
+                    members = await guild.members.fetch();
+                };
+            } catch (err) {
+                if (!err.message.includes("GuildMembersTimeout")) throw err;
+
+                members = guild.members.cache;
+            };
         } else {
             members = guild.members.cache;
         };
 
-        return Array.from(members.values());
+        return Array.from(members.values())
+            .flat()
+        // .filter(Boolean);
     };
 
     /**
      * 
-     * @param {boolean} fetch - 是否fetch guild的member而不是使用cache
+     * @param {boolean | string} fetch - 是否fetch guild的member而不是使用cache
      * @returns {Promise<GuildMember[]>}
      */
     async getAllGuildMembers(fetch = true) {
         const guilds = await this.getAllGuilds();
 
-        const members = await Promise.all(guilds.map(guild => this.getGuildMembers(guild.id, fetch)));
+        const members = await Promise.all(guilds.map(guild => this.getGuildMembers(guild, fetch)));
 
-        return Array.from(members.values());
+        return Array.from(members.values())
+            .flat()
+        // .filter(Boolean);
     };
 };
 

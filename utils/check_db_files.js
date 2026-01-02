@@ -120,6 +120,8 @@ async function make_db_compatible(users, guilds) {
  * @returns {Promise<void>}
  */
 async function checkDBFilesDefault(client) {
+    logger.debug("開始更新資料庫檔案 (用戶和伺服器的預設值)")
+
     const user_files = DEFAULT_VALUES.user;
     const guild_files = DEFAULT_VALUES.guild;
 
@@ -133,7 +135,7 @@ async function checkDBFilesDefault(client) {
             return a.id.localeCompare(b.id);
         });
 
-    const users = (await client.getAllGuildMembers(false))
+    const users = (await client.getAllGuildMembers(true))
         .map(member => member.user)
         .sort((a, b) => {
             if (a.id.includes(priorityUserIDs)) return -1;
@@ -185,6 +187,8 @@ async function checkDBFilesDefault(client) {
     };
 
     await make_db_compatible(users, guilds);
+
+    logger.info("資料庫檔案檢查完成");
 };
 
 module.exports = {
