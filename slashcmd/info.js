@@ -1,5 +1,64 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown } = require("discord.js");
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown, Locale } = require("discord.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");
+const DogClient = require("../utils/customs/client.js");
+
+/**
+ * 
+ * @param {Locale | string} locale
+ * @param {DogClient} client
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function getBotInfoEmbed(locale = null, client = global.client) {
+    const { get_lang_data } = require("../utils/language.js");
+
+    const fix = (num) => {
+        num = num / 1024 / 1024;
+        return Math.floor(num);
+    };
+
+    const emoji_timer = await get_emoji("timer", client);
+    const emoji_user = await get_emoji("user", client);
+    const emoji_server = await get_emoji("server", client);
+    const emoji_memory = await get_emoji("memory", client);
+
+    const lang_guild = get_lang_data(locale, "/info", "bot.guild");
+    const lang_members = get_lang_data(locale, "/info", "bot.members");
+    const lang_uptime = get_lang_data(locale, "/info", "bot.uptime");
+    const lang_memory = get_lang_data(locale, "/info", "bot.memory");
+    const lang_footer = get_lang_data(locale, "/info", "bot.footer");
+
+    const memUsage = process.memoryUsage();
+
+    const serverCount = client.guilds.cache.size;
+    const userCount = client.users.cache.size;
+    const readyAt = convertToSecondTimestamp(client.readyAt.getTime());
+
+    return new EmbedBuilder()
+        .setColor(embed_default_color)
+        .addFields(
+            {
+                name: `${emoji_server} ${lang_guild}`,
+                value: `\`${serverCount}\``,
+                inline: true,
+            },
+            {
+                name: `${emoji_user} ${lang_members}`,
+                value: `\`${userCount}\``,
+                inline: true,
+            },
+            {
+                name: `${emoji_timer} ${lang_uptime}`,
+                value: `<t:${readyAt}:R>`,
+                inline: true,
+            },
+            {
+                name: `${emoji_memory} ${lang_memory}`,
+                value: `\`${fix(memUsage.heapUsed)} MB\` / \`${fix(memUsage.heapTotal)} MB\` / \`${fix(memUsage.rss)} MB\``,
+            },
+        )
+        .setFooter({ text: lang_footer })
+        .setEmbedAuthor(`${client.user.tag} 🤖`);
+}
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -67,10 +126,11 @@ module.exports = {
      */
     async execute(interaction) {
         const { load_rpg_data } = require("../utils/file.js");
-        const { get_emoji } = require("../utils/rpg.js");
-        const { max_hunger } = require("../cogs/rpg/msg_handler.js");
+        const { get_emoji, jobs } = require("../utils/rpg.js");
         const { convertToSecondTimestamp } = require("../utils/timestamp.js");
+        const { max_hunger } = require("../cogs/rpg/msg_handler.js");
         const { embed_default_color } = require("../utils/config.js");
+        const { get_lang_data } = require("../utils/language.js");
 
         await interaction.deferReply();
 
@@ -85,38 +145,47 @@ module.exports = {
         const emoji_badge = await get_emoji("badge", client);
         const emoji_user = await get_emoji("user", client);
         const emoji_boost2 = await get_emoji("boost2", client);
-        const emoji_server = await get_emoji("server", client);
-        const emoji_memory = await get_emoji("memory", client);
 
-        const memUsage = process.memoryUsage();
-
-        const fix = (num) => {
-            num = num / 1024 / 1024;
-            return Math.floor(num);
-        };
+        const locale = interaction.locale;
 
         if (subcommand === "user") {
+            const lang_no_data = get_lang_data(locale, "/info", "user.no_data"); // 無資料
+            const lang_none = get_lang_data(locale, "/info", "user.none"); // 無
+            const lang_privacy = get_lang_data(locale, "/info", "user.privacy"); // 隱私設定關閉
+            const lang_single = get_lang_data(locale, "/info", "user.single"); // 單身
+            const lang_id = get_lang_data(locale, "/info", "user.id"); // ID
+            const lang_created_at = get_lang_data(locale, "/info", "user.created_at"); // 創建時間
+            const lang_money = get_lang_data(locale, "/info", "user.money"); // 金錢
+            const lang_hunger = get_lang_data(locale, "/info", "user.hunger"); // 飽食度
+            const lang_job = get_lang_data(locale, "/info", "user.job"); // 民生職業
+            const lang_fightjob = get_lang_data(locale, "/info", "user.adventure_job"); // 冒險職業
+            const lang_badge = get_lang_data(locale, "/info", "user.badge"); // 稱號
+            const lang_relationship = get_lang_data(locale, "/info", "user.relationship"); // 感情狀態
+
             const user = interaction.options.getUser("user") ?? interaction.user;
             const userTag = user.tag;
             const userId = user.id;
 
             const rpg_data = await load_rpg_data(userId);
+            const marry_data = rpg_data.marry || {};
+            const lang_marry_info = get_lang_data(locale, "/info", "user.marry_info", marry_data.with, convertToSecondTimestamp(marry_data.time));
+
             const show_money = rpg_data.privacy.includes("money");
-            let money = show_money ? rpg_data.money ?? "無資料" : "隱私設定關閉";
+            let money = show_money ? rpg_data.money ?? lang_no_data : lang_privacy;
             if (typeof money === "number") money = `\`${money}$\``
 
-            const hunger = rpg_data.hunger ?? "無資料";
-            const job = rpg_data.job || "無";
-            const fightjob = rpg_data.fightjob || "無";
-            const badge = rpg_data.badge || "無";
-            const marry_data = rpg_data.marry || {};
-            const marry_str = marry_data.status ? `
-和 <@${marry_data.with}>
-結婚紀念日 <t:${convertToSecondTimestamp(marry_data.time)}:R>
-` : "單身";
-            // const job_emoji = await get_emoji(job_emojis[job], client);
+            const hunger = rpg_data.hunger ?? lang_no_data;
+            const job = rpg_data.job || lang_none;
+            const fightjob = rpg_data.fightjob || lang_none;
+            const badge = rpg_data.badge || lang_none;
+
+            const marry_str = marry_data.status
+                ? lang_marry_info
+                : lang_single;
 
             const createdAt = convertToSecondTimestamp(user.createdAt.getTime());
+            const emojiOfTheJob = jobs[job]?.emoji ? `${jobs[job]?.emoji} ` : "";
+            const nameOfTheJob = jobs[job]?.name ? jobs[job]?.name : job;
 
             const user_data_embed = new EmbedBuilder()
                 .setColor(embed_default_color)
@@ -124,11 +193,11 @@ module.exports = {
                 .setTitle(escapeMarkdown(userTag))
                 .setFields(
                     {
-                        name: `${emoji_idCard} ID`,
+                        name: `${emoji_idCard} ${lang_id}`,
                         value: `\`${userId}\``,
                     },
                     {
-                        name: `${emoji_timer} 創建時間`,
+                        name: `${emoji_timer} ${lang_created_at}`,
                         value: `<t:${createdAt}:F> (<t:${createdAt}:R>)`,
                     },
                 );
@@ -137,32 +206,32 @@ module.exports = {
                 .setColor(embed_default_color)
                 .setFields(
                     {
-                        name: `${emoji_job} 民生職業`,
-                        value: job,
+                        name: `${emoji_job} ${lang_job}`,
+                        value: `${emojiOfTheJob}${nameOfTheJob}`,
                         inline: true,
                     },
                     {
-                        name: `${emoji_adventure} 冒險職業`,
+                        name: `${emoji_adventure} ${lang_fightjob}`,
                         value: fightjob,
                         inline: true,
                     },
                     {
-                        name: `${emoji_drumstick} 體力`,
+                        name: `${emoji_drumstick} ${lang_hunger}`,
                         value: `\`${hunger}\` / \`${max_hunger}\``,
                         inline: true,
                     },
                     {
-                        name: `💰 金錢`,
+                        name: `💰 ${lang_money}`,
                         value: money,
                         inline: true,
                     },
                     {
-                        name: `${emoji_badge} 稱號`,
+                        name: `${emoji_badge} ${lang_badge}`,
                         value: badge,
                         inline: true,
                     },
                     {
-                        name: `❤️ 感情狀態`,
+                        name: `❤️ ${lang_relationship}`,
                         value: marry_str,
                         inline: false,
                     },
@@ -172,6 +241,15 @@ module.exports = {
                 embeds: [user_data_embed, rpg_data_embed],
             });
         } else if (subcommand === "guild") {
+            const lang_id = get_lang_data(locale, "/info", "guild.id") // ID
+            const lang_members = get_lang_data(locale, "/info", "guild.members") // Members 成員
+            const lang_boosts = get_lang_data(locale, "/info", "guild.boosts") // Boosts 加成狀態
+            const lang_owner = get_lang_data(locale, "/info", "guild.owner") // Owner 擁有者
+            const lang_created_at = get_lang_data(locale, "/info", "guild.created_at") // Created At 創建時間
+            const lang_icon = get_lang_data(locale, "/info", "guild.icon") // Icon 圖標
+            const lang_banner = get_lang_data(locale, "/info", "guild.banner") // Banner 橫幅
+            const lang_splash = get_lang_data(locale, "/info", "guild.splash") // Splash 邀請背景
+
             const guild = interaction.guild;
             const guildId = guild.id;
             const guildName = guild.name;
@@ -181,7 +259,7 @@ module.exports = {
             const ownerId = guild.ownerId;
             const serverIconURL = guild.iconURL({ dynamic: true });
             const serverBanner = guild.bannerURL({ dynamic: true });
-            const serverInviteBG = guild.splashURL({ dynamic: true });
+            const serverSplash = guild.splashURL({ dynamic: true });
             const createdAt = convertToSecondTimestamp(interaction.guild.createdAt.getTime());
 
             const embed = new EmbedBuilder()
@@ -190,27 +268,27 @@ module.exports = {
                 .setThumbnail(serverIconURL)
                 .setFields(
                     {
-                        name: `${emoji_idCard} ID`,
+                        name: `${emoji_idCard} ${lang_id}`,
                         value: `\`${guildId}\``,
                         inline: true,
                     },
                     {
-                        name: `${emoji_user} 成員`,
+                        name: `${emoji_user} ${lang_members}`,
                         value: `\`${guildMembers}\``,
                         inline: true,
                     },
                     {
-                        name: `${emoji_boost2} 加成狀態`,
+                        name: `${emoji_boost2} ${lang_boosts}`,
                         value: `${boosts} 個加成 / ${boostLevel} 級`,
                         inline: true,
                     },
                     {
-                        name: `${emoji_timer} 創建時間`,
+                        name: `${emoji_timer} ${lang_created_at}`,
                         value: `<t:${createdAt}:F> (<t:${createdAt}:R>)`,
                         inline: true,
                     },
                     {
-                        name: `👑 擁有者`,
+                        name: `👑 ${lang_owner}`,
                         value: `<@${ownerId}>`,
                         inline: true,
                     },
@@ -220,7 +298,7 @@ module.exports = {
 
             if (serverIconURL) {
                 BtnLinks.push(new ButtonBuilder()
-                    .setLabel("圖標")
+                    .setLabel(lang_icon)
                     .setStyle(ButtonStyle.Link)
                     .setURL(serverIconURL)
                 );
@@ -228,17 +306,17 @@ module.exports = {
 
             if (serverBanner) {
                 BtnLinks.push(new ButtonBuilder()
-                    .setLabel("橫幅")
+                    .setLabel(lang_banner)
                     .setStyle(ButtonStyle.Link)
                     .setURL(serverBanner)
                 );
             };
 
-            if (serverInviteBG) {
+            if (serverSplash) {
                 BtnLinks.push(new ButtonBuilder()
-                    .setLabel("邀請背景")
+                    .setLabel(lang_splash)
                     .setStyle(ButtonStyle.Link)
-                    .setURL(serverInviteBG)
+                    .setURL(serverSplash)
                 );
             };
 
@@ -249,37 +327,19 @@ module.exports = {
 
             await interaction.editReply({ embeds: [embed], components: row ? [row] : [] });
         } else if (subcommand === "bot") {
-            const serverCount = interaction.client.guilds.cache.size;
-            const userCount = interaction.client.users.cache.size;
-            const readyAt = convertToSecondTimestamp(interaction.client.readyAt.getTime());
+            const embed = await getBotInfoEmbed(locale, client);
+            const lang_refresh = get_lang_data(locale, "/info", "bot.refresh");
 
-            let embed = new EmbedBuilder()
-                .setColor(embed_default_color)
-                .addFields(
-                    {
-                        name: `${emoji_server} 伺服器`,
-                        value: `\`${serverCount}\``,
-                        inline: true,
-                    },
-                    {
-                        name: `${emoji_user} 成員`,
-                        value: `\`${userCount}\``,
-                        inline: true,
-                    },
-                    {
-                        name: `${emoji_timer} 開機時間`,
-                        value: `<t:${readyAt}:R>`,
-                        inline: true,
-                    },
-                    {
-                        name: `${emoji_memory} 記憶體狀況 (Used / Total / RSS)`,
-                        value: `\`${fix(memUsage.heapUsed)} MB\` / \`${fix(memUsage.heapTotal)} MB\` / \`${fix(memUsage.rss)} MB\``,
-                    },
-                )
-                .setEmbedFooter({ text: "我們使用 discord.js 製作這個機器人", force: true })
-                .setEmbedAuthor(`${client.user.tag}🤖`);
+            const refreshButton = new ButtonBuilder()
+                .setCustomId(`refresh|any|/info bot`)
+                .setLabel(lang_refresh)
+                .setStyle(ButtonStyle.Primary);
 
-            await interaction.editReply({ embeds: [embed] });
+            const row = new ActionRowBuilder()
+                .addComponents(refreshButton);
+
+            await interaction.editReply({ embeds: [embed], components: [row] });
         };
     },
+    getBotInfoEmbed,
 };

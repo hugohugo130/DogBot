@@ -478,6 +478,7 @@ module.exports = {
             const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, ls_function, bake, smeltable_recipe, name, jobs, smelter_slots, oven_slots } = require("../../utils/rpg.js");
             const { rpg_handler, MockMessage } = require("./msg_handler.js");
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
+            const { getBotInfoEmbed } = require("../../slashcmd/info.js")
             const { getQueue, saveQueue } = require("../../utils/music/music.js");
             const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 
@@ -1285,7 +1286,16 @@ ${emoji_playGrad} 00:00${emoji_progressDot}${emoji_progressBlack.repeat(progress
 
                 return await interaction.editReply({ content: "", embeds: [embed], components: [] });
             } else if (interactionCategory === "refresh") {
-                // const [_, feature] = otherCustomIDs;
+                const [_, feature] = otherCustomIDs;
+
+                switch (feature) {
+                    case "/info bot": {
+                        const embed = await getBotInfoEmbed(locale, client);
+
+                        await interaction.update({ embeds: [embed] });
+                        break;
+                    };
+                };
             };
         } catch (err) {
             const { get_loophole_embed } = require("../../utils/rpg.js");
