@@ -120,7 +120,7 @@ async function make_db_compatible(users, guilds) {
  * @returns {Promise<void>}
  */
 async function checkDBFilesDefault(client) {
-    logger.debug("開始更新資料庫檔案 (用戶和伺服器的預設值)")
+    logger.info("開始更新資料庫檔案 (用戶和伺服器的預設值)")
 
     const user_files = DEFAULT_VALUES.user;
     const guild_files = DEFAULT_VALUES.guild;
