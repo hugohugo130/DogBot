@@ -18,11 +18,12 @@ module.exports = {
      * 
      * @param {ChatInputCommandInteraction} interaction 
      * @param {DogClient} client
-     */
+    */
     async execute(interaction, client) {
         const { embed_error_color, embed_default_color } = require("../../utils/config.js");
         const { get_emoji } = require("../../utils/rpg.js");
         const { getQueue } = require("../../utils/music/music.js");
+        const { get_me } = require("../../utils/discord.js");
 
         const voiceChannel = interaction.member.voice.channel;
 
@@ -40,7 +41,7 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const clientMember = await interaction.guild.members.fetchMe();
+        const clientMember = await get_me(interaction.guild);
 
         if (clientMember.voice.channelId) {
             if (clientMember.voice.channelId !== voiceChannel.id) {

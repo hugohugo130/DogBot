@@ -19,7 +19,7 @@ module.exports = {
      */
     async execute(client, oldState, newState) {
         const { get_logger } = require("../utils/logger.js");
-        const { get_channel } = require("../utils/discord.js");
+        const { get_channel, get_me } = require("../utils/discord.js");
 
         const logger = get_logger();
 
@@ -44,15 +44,15 @@ module.exports = {
             if (!oldChannel?.id && !newChannel?.id) return;
             if (oldChannel?.id === newChannel?.id) return;
 
-            const botMember = await guild.members.fetchMe();
+            const botMember = await get_me(guild);
 
             // 檢查機器人是否有權限管理頻道
             if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return;
-            if (!mainchannel.permissionsFor(guild.members.me).has(PermissionFlagsBits.ManageChannels)) return;
+            if (!mainchannel.permissionsFor((await get_me(guild))).has(PermissionFlagsBits.ManageChannels)) return;
 
             // 檢查機器人是否有權限移動成員
             if (!botMember.permissions.has(PermissionFlagsBits.MoveMembers)) return;
-            if (!mainchannel.permissionsFor(guild.members.me).has(PermissionFlagsBits.MoveMembers)) return;
+            if (!mainchannel.permissionsFor((await get_me(guild))).has(PermissionFlagsBits.MoveMembers)) return;
 
             // 成員加入語音頻道
             if (newChannel && newChannel.id === mainchannelID) {
