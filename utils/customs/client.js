@@ -91,18 +91,19 @@ class DogClient extends Client {
     /**
      * 
      * @param {Guild} guild
-     * @param {boolean} fetch - 是否fetch guild的member而不是使用cache
+     * @param {boolean} [fetch] - 是否fetch guild的member而不是使用cache
+     * @param {number} [fetch_timeout=360] - fetch members的timeout
      * @returns {Promise<GuildMember[]>}
      */
-    async getGuildMembers(guild, fetch = true) {
+    async getGuildMembers(guild, fetch = true, fetch_timeout = 360) {
         let members;
 
         if (fetch) {
             try {
                 if (fetch === "necessary") {
-                    members = guild.members.cache || await guild.members.fetch();
+                    members = guild.members.cache || await guild.members.fetch({ time: fetch_timeout * 1000 });
                 } else {
-                    members = await guild.members.fetch();
+                    members = await guild.members.fetch({ time: fetch_timeout * 1000 });
                 };
             } catch (err) {
                 if (!err.message.includes("GuildMembersTimeout")) throw err;
@@ -121,12 +122,13 @@ class DogClient extends Client {
     /**
      * 
      * @param {boolean | string} fetch - 是否fetch guild的member而不是使用cache
+     * @param {number} [fetch_timeout=360] - fetch members的timeout
      * @returns {Promise<GuildMember[]>}
      */
-    async getAllGuildMembers(fetch = true) {
+    async getAllGuildMembers(fetch = true, fetch_timeout = 360) {
         const guilds = await this.getAllGuilds();
 
-        const members = await Promise.all(guilds.map(guild => this.getGuildMembers(guild, fetch)));
+        const members = await Promise.all(guilds.map(guild => this.getGuildMembers(guild, fetch, fetch_timeout)));
 
         return Array.from(members.values())
             .flat()
