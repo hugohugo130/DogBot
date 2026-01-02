@@ -483,7 +483,6 @@ module.exports = {
             const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
-            if (interactionCategory === "vote_") return;
 
             const message = interaction.message;
             const user = interaction.user;
@@ -1047,10 +1046,6 @@ module.exports = {
                     .setEmbedFooter();
 
                 await interaction.editReply({ embeds: [embed], components: [] });
-            } else if (interactionCategory === "farm") {
-                const [embed, row] = await get_farm_info_embed(user, client);
-
-                await interaction.update({ embeds: [embed], components: [row] });
             } else if (interactionCategory === "marry_accept") {
                 await interaction.deferUpdate();
 
@@ -1293,6 +1288,12 @@ ${emoji_playGrad} 00:00${emoji_progressDot}${emoji_progressBlack.repeat(progress
                         const embed = await getBotInfoEmbed(locale, client);
 
                         await interaction.update({ embeds: [embed] });
+                        break;
+                    };
+                    case "/farm info": {
+                        const [embed, row] = await get_farm_info_embed(user, client);
+
+                        await interaction.update({ embeds: [embed], components: [row] });
                         break;
                     };
                 };

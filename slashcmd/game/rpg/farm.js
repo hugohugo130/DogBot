@@ -50,7 +50,7 @@ async function get_farm_info_embed(user, client = global._client) {
     };
 
     const updateButton = new ButtonBuilder()
-        .setCustomId(`farm|${user.id}`)
+        .setCustomId(`refresh|${user.id}|/farm info`)
         .setEmoji(emoji_update)
         .setLabel("更新")
         .setStyle(ButtonStyle.Primary);
