@@ -1078,38 +1078,46 @@ function is_cooldown_finished(command_name, rpg_data) {
 
 async function get_failed_embed(client = global._client, failed_reason, rpg_data) {
     let color = embed_error_color;
+
     let title = "失敗";
-    let description = `${failed_reason}`;
+    let description = failed_reason;
 
     if (failed_reason === "boom") {
         const emoji_bomb = await get_emoji("bomb", client);
+
         title = `${emoji_bomb} | 蹦!`;
         description = `你以為挖到了鑽石，但其實是一顆從二戰就埋藏在那的炸彈！`;
     } else if (failed_reason === "mouse") {
         const emoji_wood = await get_emoji("wood", client);
+
         color = embed_fell_color;
         title = `${emoji_wood} | 山老鼠別跑`;
         description = `你來到了森林發現有山老鼠把木材都偷走了！`;
     } else if (failed_reason === "collapse") {
         const emoji_bomb = await get_emoji("bomb", client);
+
         title = `${emoji_bomb} | 快逃!!`;
         description = `你努力地在暗黑的礦洞中尋找鑽石，但是別的同伴亂挖導致礦洞坍塌了！`;
     } else if (failed_reason === "storm") {
         const emoji_fisher = await get_emoji("fisher", client);
+
         title = `${emoji_fisher} | 搖到快吐了`;
         description = `氣象明明說今天天氣很好怎麼會有暴風雨！`;
     } else if (failed_reason === "shark") {
         const emoji_fisher = await get_emoji("fisher", client);
+
         title = `${emoji_fisher} | a`;
         description = `欸不是鯊魚 快跑`;
     } else if (failed_reason === "acid_rain") {
 
     } else if (failed_reason === "escape") {
         const emoji_cow = await get_emoji("cow", client);
+
         title = `${emoji_cow} | 給我回來!`;
         description = `你放牧了一頭牛，結果一轉身他就不見了？！`;
     } else if (failed_reason === "epidemic") {
         const emoji_cow = await get_emoji("cow", client);
+
         title = `${emoji_cow} | 瘟疫在搞欸`;
         description = `很不幸的最近禽類都染上瘟疫，導致動物都死光了`;
     };
@@ -1121,7 +1129,7 @@ async function get_failed_embed(client = global._client, failed_reason, rpg_data
         .setEmbedFooter({ text: "", rpg_data });
 
     return embed;
-}
+};
 
 /**
  * 增加錢
