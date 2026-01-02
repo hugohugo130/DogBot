@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Options, Collection, VoiceChannel, Guild } = require("discord.js");
+const { Client, GatewayIntentBits, Options, Collection, VoiceChannel, Guild, GuildMember } = require("discord.js");
 const { loadslashcmd } = require("../loadslashcmd.js");
 const { loadDvoiceData } = require("../file.js");
 const { authorName } = require("../config.js");
@@ -73,35 +73,51 @@ class DogClient extends Client {
 
     /**
      * 
-     * @returns {Promise<Collection<string, Guild>}
+     * @returns {Promise<Guild[]>}
      */
     async getAllGuilds() {
         const shard = this.shard;
         if (shard) {
             const guilds = await shard.fetchClientValues("guilds.cache");
 
-            // filter(Boolean) 有什麼用？
-            // 因為 fetchClientValues 會回傳一個 Array，裡面的元素可能是 null 或 undefined，所以要過濾掉。
-            return guilds.flat(1).filter(Boolean);
+            return Array.from(guilds.values());
         } else {
             return this.guilds.cache;
         };
     };
 
-    async getGuildMembers(guildID) {
+    /**
+     * 
+     * @param {string} guildID
+     * @param {boolean} fetch - 是否fetch guild的member而不是使用cache
+     * @returns {Promise<GuildMember[]>}
+     */
+    async getGuildMembers(guildID, fetch = true) {
         const guild = this.guilds.cache.get(guildID);
 
-        const members = await guild.members.fetch();
+        if (!guild) return [];
 
-        // members 是一個 Collection，flat(1) 會將 Collection 轉換成 Array，filter(Boolean) 會過濾掉 null 和 undefined。
-        return members.flat(1).filter(Boolean);
+        let members;
+        if (fetch) {
+            members = await guild.members.fetch();
+        } else {
+            members = guild.members.cache;
+        };
+
+        return Array.from(members.values());
     };
 
-    async getAllGuildMembers() {
+    /**
+     * 
+     * @param {boolean} fetch - 是否fetch guild的member而不是使用cache
+     * @returns {Promise<GuildMember[]>}
+     */
+    async getAllGuildMembers(fetch = true) {
         const guilds = await this.getAllGuilds();
-        const members = await Promise.all(guilds.map(guild => guild.members.fetch()));
 
-        return members.flat(1).filter(Boolean);
+        const members = await Promise.all(guilds.map(guild => this.getGuildMembers(guild.id, fetch)));
+
+        return Array.from(members.values());
     };
 };
 
