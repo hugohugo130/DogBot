@@ -125,10 +125,7 @@ async function checkDBFilesDefault(client) {
 
     if (!client_ready(client)) wait_until_ready(client);
 
-    const guildCollection = await client.guilds.fetch();
-    const guildArray = [...guildCollection.values()];
-
-    const guilds = (await Promise.all(guildArray.map(guild => guild.fetch())))
+    const guilds = (await client.getAllGuilds())
         .sort((a, b) => {
             if (a.id.includes(priorityGuildIDs)) return -1;
             if (b.id.includes(priorityGuildIDs)) return 1;
@@ -136,17 +133,7 @@ async function checkDBFilesDefault(client) {
             return a.id.localeCompare(b.id);
         });
 
-    let users;
-    try {
-        users = await Promise.all(guilds.map(guild => guild.members.fetch()));
-    } catch (err) {
-        // use cache if rate limited [GuildMembersTimeout]
-        if (!err.message.includes("GuildMembersTimeout")) throw err;
-        users = guilds.map(guild => guild.members.cache);
-    };
-
-    users = users
-        .flatMap(members => [...members.values()])
+    const users = (await client.getAllGuildMembers(false))
         .map(member => member.user)
         .sort((a, b) => {
             if (a.id.includes(priorityUserIDs)) return -1;
