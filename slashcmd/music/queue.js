@@ -90,11 +90,12 @@ module.exports = {
                             const duration = formatMinutesSeconds(track.duration);
 
                             return `\`${index + 1}.\` [${track.title}](<${track.url}>) - ${duration}`;
-                        }) : "沒有音樂在佇列裡";
+                        })
+                        : "沒有音樂在佇列裡";
 
                     embed.setDescription(`
 ${emoji_playGrad} 正在播放
-${currentTrack.title} - ${currentTrack.author} - ${formatMinutesSeconds(currentTrack.duration)}
+[${currentTrack.title}](<${currentTrack.url}>) - ${formatMinutesSeconds(currentTrack.duration)}
 ${emoji_skip} 播放佇列
 ${queueString}`);
 
