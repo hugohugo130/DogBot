@@ -3,7 +3,7 @@ const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
 const { embed_default_color, embed_error_color, embed_job_color, embed_marry_color } = require("../../utils/config.js");
 const { randint, choice } = require("../../utils/random.js");
-const { get_loophole_embed, get_emoji, ls_function, is_cooldown_finished, chunkArray } = require("../../utils/rpg.js");
+const { get_loophole_embed, get_emoji, ls_function, is_cooldown_finished, chunkArray, get_emojis } = require("../../utils/rpg.js");
 const util = require("node:util");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -631,10 +631,7 @@ const rpg_commands = {
                 const user = (await mentions_users(message)).first() || message.author;
                 const userid = user.id;
 
-                const emoji_cross = await get_emoji("crosS", client);
-                const emoji_store = await get_emoji("store", client);
-                const emoji_ore = await get_emoji("ore", client);
-                const emoji_bread = await get_emoji("bread", client);
+                const [emoji_cross, emoji_store, emoji_ore, emoji_bread] = await get_emojis(["crosS", "store", "ore", "bread"], client)
                 const shop_data = load_shop_data(userid);
 
                 if (!shop_data.status && user.id != message.author.id) {
@@ -1134,31 +1131,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return await message.reply({ embeds: [embed], components: [row] });
     }, false],
     privacy: ["隱私權", "修改隱私權", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        // const emoji_shield = await get_emoji("shield", client);
-
-        // const embed = new EmbedBuilder()
-        //     .setColor(embed_default_color)
-        //     .setTitle(`${emoji_shield} | 隱私權設定`)
-        //     .setDescription(`你確定要設定隱私權嗎？`)
-        //     .setEmbedFooter();
-
-        // const row = new ActionRowBuilder()
-        //     .addComponents(
-        //         new ButtonBuilder()
-        //             .setCustomId(`rpg_privacy_menu|${message.author.id}|true`)
-        //             .setLabel("確認")
-        //             .setStyle(ButtonStyle.Success),
-        //         new ButtonBuilder()
-        //             .setCustomId(`rpg_privacy_menu|${message.author.id}|false`)
-        //             .setLabel("取消")
-        //             .setStyle(ButtonStyle.Danger)
-        //     );
-        // if (mode === 1) return { embeds: [embed], components: [row] };
-        // return await message.reply({ embeds: [embed], components: [row] });
-        const emojiNames = ["bag", "pet", "shield"];
-        const [emoji_backpack, emoji_pet, emoji_shield] = await Promise.all(
-            emojiNames.map(name => get_emoji(name, client))
-        );
+        const [emoji_backpack, emoji_pet, emoji_shield] = await get_emojis(["bag", "pet", "shield"], client)
 
         rpg_data.privacy.sort((a, b) => {
             const order = { "money": 0, "backpack": 1, "partner": 2 };
@@ -1420,10 +1393,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 return await message.reply({ embeds: [embed] });
             };
 
-            const emoji_farmer = await get_emoji("farmer", client);
-            const emoji_cow = await get_emoji("cow", client);
-            const emoji_food = await get_emoji("food", client);
-            const emoji_store = await get_emoji("store", client);
+            const [emoji_farmer, emoji_cow, emoji_food, emoji_store] = await get_emojis(["farmer", "cow", "food", "store"], client);
 
             const categories = [
                 { items: food_crops_items, name: `${emoji_farmer} 農作物` },

@@ -10,16 +10,14 @@ const DogClient = require("../utils/customs/client.js");
  */
 async function getBotInfoEmbed(locale = null, client = global.client) {
     const { get_lang_data } = require("../utils/language.js");
+    const { get_emojis } = require("../utils/rpg.js");
 
     const fix = (num) => {
         num = num / 1024 / 1024;
         return Math.floor(num);
     };
 
-    const emoji_timer = await get_emoji("timer", client);
-    const emoji_user = await get_emoji("user", client);
-    const emoji_server = await get_emoji("server", client);
-    const emoji_memory = await get_emoji("memory", client);
+    const [emoji_timer, emoji_user, emoji_server, emoji_memory] = await get_emojis(["timer", "user", "server", "memory"], client);
 
     const lang_guild = get_lang_data(locale, "/info", "bot.guild");
     const lang_members = get_lang_data(locale, "/info", "bot.members");
@@ -126,7 +124,7 @@ module.exports = {
      */
     async execute(interaction) {
         const { load_rpg_data } = require("../utils/file.js");
-        const { get_emoji, jobs } = require("../utils/rpg.js");
+        const { get_emojis, jobs } = require("../utils/rpg.js");
         const { convertToSecondTimestamp } = require("../utils/timestamp.js");
         const { max_hunger } = require("../cogs/rpg/msg_handler.js");
         const { embed_default_color } = require("../utils/config.js");
@@ -137,14 +135,16 @@ module.exports = {
         const client = interaction.client;
         const subcommand = interaction.options.getSubcommand();
 
-        const emoji_idCard = await get_emoji("idCard", client);
-        const emoji_timer = await get_emoji("timer", client);
-        const emoji_job = await get_emoji("job", client);
-        const emoji_adventure = await get_emoji("adventure", client);
-        const emoji_drumstick = await get_emoji("drumstick", client);
-        const emoji_badge = await get_emoji("badge", client);
-        const emoji_user = await get_emoji("user", client);
-        const emoji_boost2 = await get_emoji("boost2", client);
+        const [emoji_idCard, emoji_timer, emoji_job, emoji_adventure, emoji_drumstick, emoji_badge, emoji_user, emoji_boost2] = await get_emojis([
+            "idCard",
+            "timer",
+            "job",
+            "adventure",
+            "drumstick",
+            "badge",
+            "user",
+            "boost2"
+        ], client);
 
         const locale = interaction.locale;
 

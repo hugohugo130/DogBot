@@ -989,13 +989,13 @@ async function wrong_job_embed(rpg_data, command, userId, client = global._clien
 };
 
 /**
- * 
- * @param {string} name 
- * @param {DogClient} client 
+ *
+ * @param {string} name
+ * @param {DogClient} [client]
  * @returns {Promise<Emoji>}
  */
 async function get_emoji_object(name, client = global._client) {
-    wait_until_ready(client);
+    client = wait_until_ready(client);
 
     let emojis = client.application.emojis.cache;
     let emoji = emojis.find(e => e.name === name);
@@ -1009,14 +1009,29 @@ async function get_emoji_object(name, client = global._client) {
 };
 
 /**
- * 
- * @param {string} name 
- * @param {DogClient} [client=global._client] 
+ *
+ * @param {string} names
+ * @param {DogClient} [client]
+ * @returns {Promise<Emoji[]>}
+ */
+async function get_emoji_objects(names, client = global._client) {
+    client = wait_until_ready(client);
+
+    const emojis = await Promise.all(
+        names.map(name => get_emoji_object(name, client)),
+    );
+
+    return emojis;
+};
+
+/**
+ *
+ * @param {string} name
+ * @param {DogClient} [client]
  * @returns {Promise<string>}
  */
 async function get_emoji(name, client = global._client) {
-    // await client.application.fetch();
-    wait_until_ready(client);
+    client = wait_until_ready(client);
 
     const emojiObject = await get_emoji_object(name, client);
 
@@ -1025,6 +1040,22 @@ async function get_emoji(name, client = global._client) {
     const emoji = `<${emojiObject.animated ? "a" : ""}:${emojiObject.name}:${emojiObject.id}>`;
     return emoji;
 };
+
+/**
+ *
+ * @param {string[]} names
+ * @param {DogClient} [client]
+ * @returns {Promise<string[]>}
+ */
+async function get_emojis(names, client = global.client) {
+    client = wait_until_ready(client);
+
+    const emojis = await Promise.all(
+        names.map(name => get_emoji(name, client)),
+    );
+
+    return emojis;
+}
 
 async function get_cooldown_embed(remaining_time, client = global._client, action, count) {
     const { rpg_actions } = require("../cogs/rpg/msg_handler.js");
@@ -1442,10 +1473,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
         return await message.reply({ embeds: [embed], components: [row] });
     };
 
-    const emojiNames = ["bag", "ore", "farmer", "cow", "swords", "potion"];
-    const [emoji_bag, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await Promise.all(
-        emojiNames.map(name => get_emoji(name, client))
-    );
+    const [emoji_bag, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await get_emojis(["bag", "ore", "farmer", "cow", "swords", "potion"], client)
 
     // 分類物品
     const ores = {};
@@ -1706,8 +1734,21 @@ module.exports = {
     notEnoughItemEmbed,
     job_delay_embed,
     choose_job_row,
+    get_emoji,
+    get_emojis,
     get_emoji_object,
+    get_emoji_objects,
     wrong_job_embed,
+    BetterEval,
+    chunkArray,
+    get_cooldown_embed,
+    get_cooldown_time,
+    is_cooldown_finished,
+    get_failed_embed,
+    add_money,
+    remove_money,
+    get_loophole_embed,
+    ls_function,
     firstPrefix,
     InPrefix,
     startsWith_prefixes,
@@ -1718,17 +1759,4 @@ module.exports = {
     oven_slots,
     farm_slots,
     smelter_slots,
-
-    // rpg functions
-    BetterEval,
-    chunkArray,
-    get_emoji,
-    get_cooldown_embed,
-    get_cooldown_time,
-    is_cooldown_finished,
-    get_failed_embed,
-    add_money,
-    remove_money,
-    get_loophole_embed,
-    ls_function,
 };

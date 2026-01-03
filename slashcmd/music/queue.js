@@ -55,7 +55,7 @@ module.exports = {
      * @param {DogClient} client 
     */
     execute: async (interaction, client) => {
-        const { get_emoji } = require("../../utils/rpg.js");
+        const { get_emojis } = require("../../utils/rpg.js");
         const { getQueue } = require("../../utils/music/music.js");
         const { formatMinutesSeconds } = require("../../utils/timestamp.js");
         const { embed_default_color, embed_error_color } = require("../../utils/config.js");
@@ -63,9 +63,8 @@ module.exports = {
         await interaction.deferReply();
 
         const queue = getQueue(interaction.guildId);
-        const emoji_cross = await get_emoji("crosS", client);
-        const emoji_playGrad = await get_emoji("playGrad", client);
-        const emoji_skip = await get_emoji("skip", client);
+
+        const [emoji_cross, emoji_playGrad, emoji_skip] = await get_emojis(["crosS", "playGrad", "skip"], client);
 
         // 檢查有沒有歌在佇列裡面
         if (!queue.isPlaying() && !queue?.tracks?.length) {

@@ -58,27 +58,27 @@ module.exports = {
                 })
                 .setRequired(false),
         ),
-        // .addBooleanOption(option =>
-        //     option.setName("shuffle")
-        //         .setNameLocalizations({
-        //             "zh-TW": "隨機播放",
-        //             "zh-CN": "随机播放",
-        //         })
-        //         .setDescription("Shuffle the playlist")
-        //         .setDescriptionLocalizations({
-        //             "zh-TW": "隨機播放",
-        //             "zh-CN": "随机播放",
-        //         })
-        //         .setRequired(false),
-        // )
+    // .addBooleanOption(option =>
+    //     option.setName("shuffle")
+    //         .setNameLocalizations({
+    //             "zh-TW": "隨機播放",
+    //             "zh-CN": "随机播放",
+    //         })
+    //         .setDescription("Shuffle the playlist")
+    //         .setDescriptionLocalizations({
+    //             "zh-TW": "隨機播放",
+    //             "zh-CN": "随机播放",
+    //         })
+    //         .setRequired(false),
+    // )
     /**
      * 
      * @param {ChatInputCommandInteraction} interaction 
      * @param {DogClient} client 
      */
     async execute(interaction, client) {
-        const { get_emoji } = require("../../utils/rpg.js");
-        const { getQueue, saveQueue, search_until, getTrack } = require("../../utils/music/music.js");
+        const { get_emojis } = require("../../utils/rpg.js");
+        const { getQueue, saveQueue, search_until } = require("../../utils/music/music.js");
         const { formatMinutesSeconds } = require("../../utils/timestamp.js");
         const { embed_error_color } = require("../../utils/config.js");
 
@@ -99,8 +99,8 @@ module.exports = {
         };
 
         const guildId = interaction.guildId;
-        const emoji_cross = await get_emoji("crosS", client);
-        const emoji_search = await get_emoji("search", client);
+
+        const [emoji_cross, emoji_search] = await get_emojis(["crosS", "search"], client);
 
         // 檢查權限
         if (!voiceChannel.joinable) {

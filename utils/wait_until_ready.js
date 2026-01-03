@@ -28,7 +28,6 @@ function wait_for_client(waitReady = true, timeout = 10) {
 
 function wait_until_ready(client = global._client, timeout = 10) {
     if (!client instanceof Client) {
-        logger.warn(`收到的client並不是Client Object, called from \n${getCallerModuleName(null)}`);
         client = wait_for_client();
     };
 

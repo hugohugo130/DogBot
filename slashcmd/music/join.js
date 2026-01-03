@@ -22,15 +22,14 @@ module.exports = {
      */
     async execute(interaction, client) {
         const { embed_error_color } = require("../../utils/config.js");
-        const { get_emoji } = require("../../utils/rpg.js");
+        const { get_emojis } = require("../../utils/rpg.js");
         const { getQueue, saveQueue } = require("../../utils/music/music.js");
 
         const voiceChannel = interaction.member.voice.channel;
         const guildId = interaction.guild.id;
         const queue = getQueue(guildId);
 
-        const emoji_cross = await get_emoji("crosS", client);
-        const emoji_voice = await get_emoji("voice", client);
+        const [emoji_cross, emoji_voice] = await get_emojis(["crosS", "voice"], client);
 
         if (!voiceChannel) {
             const error_embed = new EmbedBuilder()

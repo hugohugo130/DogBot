@@ -16,15 +16,14 @@ const logger = get_logger();
 async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
     const { load_rpg_data, load_smelt_data } = require("../../../utils/file.js");
-    const { get_name_of_id, get_emoji, get_loophole_embed, get_id_of_name, notEnoughItemEmbed, name, smelter_slots, smeltable_recipe } = require("../../../utils/rpg.js");
+    const { get_name_of_id, get_emojis, get_loophole_embed, get_id_of_name, notEnoughItemEmbed, name, smelter_slots, smeltable_recipe } = require("../../../utils/rpg.js");
 
     const userId = interaction.user.id;
 
     const rpg_data = await load_rpg_data();
     const smelt_data = await load_smelt_data()[userId];
 
-    const emoji_cross = await get_emoji("crosS", interaction.client);
-    const emoji_furnace = await get_emoji("furnace", interaction.client);
+    const [emoji_cross, emoji_furnace] = await get_emojis(["crosS", "furnace"], interaction.client);
 
     if (smelt_data && smelt_data.length >= smelter_slots) {
         const embed = new EmbedBuilder()
@@ -235,7 +234,7 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
         const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
         const { load_rpg_data, load_smelt_data, save_smelt_data, save_rpg_data } = require("../../../utils/file.js");
-        const { get_emoji, wrong_job_embed, notEnoughItemEmbed, name, smelter_slots } = require("../../../utils/rpg.js");
+        const { get_emojis, wrong_job_embed, notEnoughItemEmbed, name, smelter_slots } = require("../../../utils/rpg.js");
 
         let rpg_data = load_rpg_data(userId);
         const smelt_data_all = load_smelt_data();
@@ -244,8 +243,7 @@ module.exports = {
         const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/smelt", userId, interaction.client);
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
 
-        const emoji_cross = await get_emoji("crosS", interaction.client);
-        const emoji_furnace = await get_emoji("furnace", interaction.client);
+        const [emoji_cross, emoji_furnace] = await get_emojis(["crosS", "furnace"], interaction.client);
 
         if (subcommand === "smelt") {
             const smelt_remain_slots = smelter_slots - (smelt_data?.length || 0);

@@ -11,14 +11,12 @@ const DogClient = require("../../../utils/customs/client.js");
  */
 async function get_farm_info_embed(user, client = global._client) {
     const { load_farm_data } = require("../../../utils/file.js");
-    const { get_emoji } = require("../../../utils/rpg.js");
+    const { get_emojis } = require("../../../utils/rpg.js");
     const { get_name_of_id } = require("../../../utils/rpg.js");
     const { convertToSecondTimestamp, DateNowSecond } = require("../../../utils/timestamp.js");
     const { embed_default_color } = require("../../../utils/config.js");
 
-    const emoji_farmer = await get_emoji("farmer", client);
-    const emoji_hoe = await get_emoji("hoe", client);
-    const emoji_update = await get_emoji("update", client);
+    const [emoji_farmer, emoji_hoe, emoji_update] = await get_emojis(["farmer", "hoe", "update"], client);
     const farm_data = load_farm_data(user.id);
 
     let waterAt = farm_data.waterAt;
@@ -207,7 +205,7 @@ module.exports = {
         const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
         const { farm_slots, get_name_of_id, userHaveEnoughItems, notEnoughItemEmbed, wrong_job_embed } = require("../../../utils/rpg.js");
         const { randint } = require("../../../utils/random.js");
-        const { get_emoji, is_cooldown_finished } = require("../../../utils/rpg.js");
+        const { get_emojis, is_cooldown_finished } = require("../../../utils/rpg.js");
         const { DateNow, DateNowSecond } = require("../../../utils/timestamp.js");
         const { embed_default_color, embed_error_color, rpg_lvlUp_per } = require("../../../utils/config.js");
 
@@ -222,9 +220,7 @@ module.exports = {
         const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/farm", userId, interaction.client);
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
 
-        const emoji_farmer = await get_emoji("farmer", client);
-        const emoji_cross = await get_emoji("crosS", client);
-        const emoji_check = await get_emoji("check", client);
+        const [emoji_farmer, emoji_cross, emoji_check] = await get_emojis(["farmer", "crosS", "check"], client);
 
         if (subcommand === "plant") {
             const amount = interaction.options.getInteger("amount") ?? 1;

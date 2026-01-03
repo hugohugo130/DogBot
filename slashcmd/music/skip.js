@@ -15,21 +15,21 @@ module.exports = {
             "zh-CN": "跳过正在播放的音乐"
         }),
     /**
-     * 
-     * @param {ChatInputCommandInteraction} interaction 
+     *
+     * @param {ChatInputCommandInteraction} interaction
      * @param {DogClient} client
     */
     async execute(interaction, client) {
         const { embed_error_color, embed_default_color } = require("../../utils/config.js");
-        const { get_emoji } = require("../../utils/rpg.js");
+        const { get_emojis } = require("../../utils/rpg.js");
         const { getQueue } = require("../../utils/music/music.js");
         const { get_me } = require("../../utils/discord.js");
 
         const voiceChannel = interaction.member.voice.channel;
 
-        if (!voiceChannel) {
-            const emoji_cross = await get_emoji("crosS", client);
+        const [emoji_cross, emoji_skip] = await get_emojis(["cross", "skip"], client);
 
+        if (!voiceChannel) {
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你需要先進到一個語音頻道`)
@@ -45,8 +45,6 @@ module.exports = {
 
         if (clientMember.voice.channelId) {
             if (clientMember.voice.channelId !== voiceChannel.id) {
-                const emoji_cross = await get_emoji("crosS", client);
-
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
@@ -60,8 +58,6 @@ module.exports = {
         const queue = getQueue(interaction.guildId, false);
 
         if (!queue || !queue.isPlaying()) {
-            const emoji_cross = await get_emoji("crosS", client);
-
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
@@ -69,8 +65,6 @@ module.exports = {
 
             return interaction.editReply({ embeds: [embed] });
         };
-
-        const emoji_skip = await get_emoji("skip", client);
 
         const [skippedTrack, _] = queue.nextTrack();
 
