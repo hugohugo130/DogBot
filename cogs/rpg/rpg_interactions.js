@@ -1,11 +1,12 @@
 const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, CommandInteraction, ButtonStyle, ButtonBuilder, ButtonInteraction, StringSelectMenuInteraction } = require("discord.js");
-const { embed_default_color, embed_error_color, embed_job_color } = require("../../utils/config.js");
-const { get_logger } = require("../../utils/logger.js");
-const util = require("node:util");
-const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
-const DogClient = require("../../utils/customs/client.js");
 const { Soundcloud } = require("soundcloud.ts");
 const { getVoiceConnection } = require("@discordjs/voice");
+const util = require("node:util");
+
+const { get_logger } = require("../../utils/logger.js");
+const { embed_default_color, embed_error_color, embed_job_color, STATUS_PAGE, DOCS } = require("../../utils/config.js");
+const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
+const DogClient = require("../../utils/customs/client.js");
 
 const logger = get_logger();
 
@@ -1267,11 +1268,12 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setAuthor({ name: track.author })
                     .setURL(track.url)
+                    .setThumbnail(track.thumbnail)
                     .setTitle(`**${track.title}**`)
                     .setDescription(`
 ${emoji_playGrad} 00:00${emoji_progressDot}${emoji_progressBlack.repeat(progressBlack)}${emoji_progressEnd}${formattedDuration}
 
-                    [使用教學](<無>) ∙ [機器人狀態](<https://hugostatus.904037.xyz>)
+[使用教學](<${DOCS}>) ∙ [機器人狀態](<${STATUS_PAGE}>)
 `)
                     .setEmbedFooter();
 

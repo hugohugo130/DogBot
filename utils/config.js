@@ -129,7 +129,7 @@ const cannot_sell = ["raw_hugo", "hugo"];
 const musicSearchEngine = ["soundcloud"];
 
 // link
-const DOCS = "";
+const DOCS = "無";
 const STATUS_PAGE = "https://hugostatus.904037.xyz";
 
 // misc
