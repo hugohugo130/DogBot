@@ -2039,7 +2039,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
     if (!cmd_data) {
         const commands = Object.keys(rpg_commands);
-        const cross_emoji = await get_emoji("crosS", client);
+        const emoji_cross = await get_emoji("crosS", client);
 
         command = command.replace(/[^a-zA-Z0-9]/g, "");
 
@@ -2048,14 +2048,10 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
 
         const embed = new EmbedBuilder()
             .setColor(embed_error_color)
-            .setTitle(`${cross_emoji} | 是不是打錯指令了？我找到了你可能想要的指令`)
+            .setTitle(`${emoji_cross} | 是不是打錯指令了？我找到了你可能想要的指令`)
             .setEmbedFooter();
 
-        if (similarCommands.length === 0) {
-            embed.setTitle(`${cross_emoji} | 我找不到你想要選哪個指令餒...`);
-            if (mode === 1) return { embeds: [embed] };
-            return await message.reply({ embeds: [embed] });
-        };
+        if (similarCommands.length === 0) return;
 
         const buttons = similarCommands.map(cmd => {
             return new ButtonBuilder()
