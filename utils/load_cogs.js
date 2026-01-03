@@ -19,6 +19,7 @@ function load_cog(client, cog, itemPath) {
             await cog.execute(client, ...args);
         } catch (err) {
             const errorStack = util.inspect(err, { depth: null });
+            if (errorStack.includes("Unknown Interaction")) return;
 
             logger.error(`執行 ${itemPath} 時發生錯誤: ${errorStack}`);
         };

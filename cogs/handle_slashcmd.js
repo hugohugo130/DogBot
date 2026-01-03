@@ -79,6 +79,7 @@ module.exports = {
             await command.execute(interaction, client);
         } catch (error) {
             const { get_loophole_embed } = require("../utils/rpg.js");
+            if (error.message.includes("Unknown Interaction")) return;
 
             const errorStack = util.inspect(error, { depth: null });
             logger.error(`執行斜線指令 ${fullCommand} 時出錯：${errorStack}`);
