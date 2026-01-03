@@ -630,7 +630,7 @@ const rpg_commands = {
                 const user = (await mentions_users(message)).first() || message.author;
                 const userid = user.id;
 
-                const [emoji_cross, emoji_store, emoji_ore, emoji_bread] = await get_emojis(["crosS", "store", "ore", "bread"], client)
+                const [emoji_cross, emoji_store, emoji_ore, emoji_bread] = await get_emojis(["crosS", "store", "ore", "bread"], client);
                 const shop_data = load_shop_data(userid);
 
                 if (!shop_data.status && user.id != message.author.id) {
@@ -1130,7 +1130,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return await message.reply({ embeds: [embed], components: [row] });
     }, false],
     privacy: ["隱私權", "修改隱私權", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const [emoji_backpack, emoji_pet, emoji_shield] = await get_emojis(["bag", "pet", "shield"], client)
+        const [emoji_backpack, emoji_pet, emoji_shield] = await get_emojis(["bag", "pet", "shield"], client);
 
         rpg_data.privacy.sort((a, b) => {
             const order = { "money": 0, "backpack": 1, "partner": 2 };

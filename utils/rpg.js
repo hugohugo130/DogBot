@@ -1473,7 +1473,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
         return await message.reply({ embeds: [embed], components: [row] });
     };
 
-    const [emoji_bag, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await get_emojis(["bag", "ore", "farmer", "cow", "swords", "potion"], client)
+    const [emoji_bag, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await get_emojis(["bag", "ore", "farmer", "cow", "swords", "potion"], client);
 
     // 分類物品
     const ores = {};
