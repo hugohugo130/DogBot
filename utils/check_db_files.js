@@ -120,7 +120,8 @@ async function make_db_compatible(users, guilds) {
  * @returns {Promise<void>}
  */
 async function checkDBFilesDefault(client) {
-    logger.info("開始更新資料庫檔案 (用戶和伺服器的預設值)")
+    logger.info("開始更新資料庫檔案 (用戶和伺服器的預設值)");
+    const start_time = Date.now();
 
     const user_files = DEFAULT_VALUES.user;
     const guild_files = DEFAULT_VALUES.guild;
@@ -188,7 +189,7 @@ async function checkDBFilesDefault(client) {
 
     await make_db_compatible(users, guilds);
 
-    logger.info("資料庫檔案檢查完成");
+    logger.info(`資料庫檔案檢查完成, 耗時 ${(Date.now() - start_time).toFixed(2)}ms`);
 };
 
 module.exports = {
