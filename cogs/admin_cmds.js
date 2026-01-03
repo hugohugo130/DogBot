@@ -229,7 +229,7 @@ module.exports = {
             const errorStack = util.inspect(err, { depth: null });
 
             logger.error(`admin cmds 錯誤: ${errorStack}`);
-            await message.reply({ embeds: await get_loophole_embed(errorStack, client) });
+            await message.reply({ embeds: await get_loophole_embed(errorStack, null, client) });
         };
     },
 }

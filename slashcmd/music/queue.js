@@ -71,7 +71,7 @@ module.exports = {
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 佇列內沒有歌曲`)
-                .setEmbedFooter();
+                .setEmbedFooter(interaction);
 
             return await interaction.editReply({ embeds: [error_embed] });
         };
@@ -114,7 +114,7 @@ ${queueString}`);
                     const error_embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 沒有這首歌`)
-                        .setEmbedFooter();
+                        .setEmbedFooter(interaction);
 
                     return await interaction.editReply({ embeds: [error_embed] });
                 };

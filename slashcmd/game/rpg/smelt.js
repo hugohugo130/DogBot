@@ -29,7 +29,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
         const embed = new EmbedBuilder()
             .setColor(embed_error_color)
             .setTitle(`${emoji_cross} | 你的煉金爐已經滿了`)
-            .setEmbedFooter();
+            .setEmbedFooter(interaction);
 
         return await interaction.followUp({ embeds: [embed] });
     };
@@ -40,7 +40,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     const smelt_recipe = smeltable_recipe.find(item => item.input.item === item_id);
     if (!smelt_recipe) {
         logger.warn(`找不到物品id ${item_id} 的熔鍊配方`);
-        const embeds = await get_loophole_embed("找不到熔鍊配方", interaction.client);
+        const embeds = await get_loophole_embed("找不到熔鍊配方", interaction, interaction.client);
 
         return await interaction.editReply({ embeds });
     };
@@ -80,7 +80,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     };
 
     if (item_missing.length > 0) {
-        const embed = await notEnoughItemEmbed(item_missing);
+        const embed = await notEnoughItemEmbed(item_missing, interaction, interaction.client);
 
         return await interaction.editReply({ embeds: [embed] });
     };
@@ -92,7 +92,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
             `將要熔鍊 \`${input_amount}\` 組 \`${get_name_of_id(item_id)}\`
 花費 \`${coal_used}\` 個煤炭
 預估時間：\`${Math.floor(duration / 60)}\` 分鐘`)
-        .setEmbedFooter();
+        .setEmbedFooter(interaction);
 
     // 生成一個簡短的識別碼
     const session_id = `${userId}_${Date.now()}`;
@@ -240,7 +240,7 @@ module.exports = {
         const smelt_data_all = load_smelt_data();
         const smelt_data = smelt_data_all[userId];
 
-        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/smelt", userId, interaction.client);
+        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/smelt", userId, interaction, interaction.client);
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
 
         const [emoji_cross, emoji_furnace] = await get_emojis(["crosS", "furnace"], interaction.client);
@@ -252,7 +252,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的煉金爐已經滿了`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.followUp({ embeds: [embed] });
             };
@@ -268,7 +268,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 蛤？ 🤔 你什麼也不選`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.followUp({ embeds: [embed] });
             };
@@ -277,7 +277,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 蛤？ 🤔 你選了數量但沒選食物`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.followUp({ embeds: [embed] });
             };
@@ -286,7 +286,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 什麼拉🤣 你選了食物又選了自動選擇食物 那我要選什麼阿`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.followUp({ embeds: [embed] });
             };
@@ -295,7 +295,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 什麼拉🤣 你選了全部食物又選了自動選擇食物 那我要選什麼阿`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.followUp({ embeds: [embed] });
             };
@@ -304,7 +304,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你選了自動選擇數量但沒選食物 蛤？`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.followUp({ embeds: [embed] });
             };
@@ -351,7 +351,7 @@ module.exports = {
                 .setColor(embed_default_color)
                 .setTitle(`${emoji_furnace} | 你的煉金爐使用狀況`)
                 .setDescription(`使用率 \`[${used_slots} / ${smelter_slots}]\``)
-                .setEmbedFooter();
+                .setEmbedFooter(interaction);
 
             if (!smelt_data || smelt_data.length === 0) {
                 embed.setDescription(`使用率 \`[${used_slots} / ${smelter_slots}]\`\n\n你的煉金爐目前是空的`);
@@ -382,7 +382,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的煉金爐是空的`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
             };
@@ -392,7 +392,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 錯誤的物品編號`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
             };
@@ -404,7 +404,7 @@ module.exports = {
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 熔鍊還沒完成`)
                     .setFooter({ text: `等待至 <t:${item.end_time}:R>` })
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
             };
@@ -420,7 +420,7 @@ module.exports = {
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
                 .setTitle(`${emoji_furnace} | 成功從煉金爐取出了 ${name[item.output_item_id] || item.output_item_id}x${item.output_amount}`)
-                .setEmbedFooter();
+                .setEmbedFooter(interaction);
 
             return await interaction.editReply({ embeds: [embed] });
         };

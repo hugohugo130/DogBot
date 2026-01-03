@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, escapeMarkdown } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, escapeMarkdown, BaseInteraction } = require("discord.js");
 const util = require("util");
 
 const { wait_until_ready } = require("./wait_until_ready.js");
@@ -882,11 +882,13 @@ function userHaveEnoughItems(userid, item, item_amount) {
 };
 
 /**
- * 
- * @param {Array<{item: string, amount: number}> | Array<string> | string} item_datas 
+ *
+ * @param {Array<{item: string, amount: number}> | Array<string> | string} item_datas
+ * @param {Interaction} [interaction]
+ * @param {DogClient} [client]
  * @returns {Promise<EmbedBuilder>}
  */
-async function notEnoughItemEmbed(item_datas, client = global._client) {
+async function notEnoughItemEmbed(item_datas, interaction = null, client = global._client) {
     const { get_logger } = require("./logger.js");
 
     if (item_datas?.length <= 0) throw new Error("item_datas is empty");
@@ -919,7 +921,7 @@ async function notEnoughItemEmbed(item_datas, client = global._client) {
         .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
         .setColor(embed_error_color)
         .setDescription(`你缺少了 ${items_str}`)
-        .setEmbedFooter();
+        .setEmbedFooter(interaction);
 
     return embed;
 };
@@ -948,13 +950,14 @@ function chunkArray(array, chunkSize) {
 
 /**
  * 
- * @param {Object} rpg_data 
+ * @param {Object} rpg_data
  * @param {string} command
  * @param {string} userId
- * @param {DogClient} client
+ * @param {BaseInteraction} [interaction]
+ * @param {DogClient} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
-async function wrong_job_embed(rpg_data, command, userId, client = global._client) {
+async function wrong_job_embed(rpg_data, command, userId, interaction = null, client = global._client) {
     const workJobShouldBe = workCmdJobs[command];
 
     if (workJobShouldBe?.length > 0) {
@@ -965,7 +968,7 @@ async function wrong_job_embed(rpg_data, command, userId, client = global._clien
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你的職業不是${shouldBeJobName}`)
-                .setEmbedFooter();
+                .setEmbedFooter(interaction);
 
             let row = null;
 
@@ -1057,7 +1060,16 @@ async function get_emojis(names, client = global.client) {
     return emojis;
 }
 
-async function get_cooldown_embed(remaining_time, client = global._client, action, count) {
+/**
+ * 
+ * @param {number} remaining_time
+ * @param {string} action
+ * @param {number | string} count
+ * @param {BaseInteraction} [interaction]
+ * @param {DogClient} [client]
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function get_cooldown_embed(remaining_time, action, count, interaction = null, client = global._client) {
     const { rpg_actions } = require("../cogs/rpg/msg_handler.js");
 
     const emoji = await get_emoji("crosS", client);
@@ -1073,7 +1085,7 @@ async function get_cooldown_embed(remaining_time, client = global._client, actio
         .setColor(embed_error_color)
         .setTitle(`${emoji} | 你過勞了！`)
         .setDescription(`你今天${verb}了 \`${count}\` 次${noun}，等待到 ${time} 可以繼續${action.join("")}`)
-        .setEmbedFooter();
+        .setEmbedFooter(interaction);
 
     return embed;
 };
@@ -1107,7 +1119,15 @@ function is_cooldown_finished(command_name, rpg_data) {
     };
 };
 
-async function get_failed_embed(client = global._client, failed_reason, rpg_data) {
+/**
+ * 
+ * @param {string} failed_reason
+ * @param {object} rpg_data
+ * @param {BaseInteraction} [interaction]
+ * @param {DogClient} [client]
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function get_failed_embed(failed_reason, rpg_data, interaction = null, client = global._client) {
     let color = embed_error_color;
 
     let title = "失敗";
@@ -1157,7 +1177,7 @@ async function get_failed_embed(client = global._client, failed_reason, rpg_data
         .setColor(color)
         .setTitle(title)
         .setDescription(description)
-        .setEmbedFooter({ text: "", rpg_data });
+        .setEmbedFooter(interaction, { text: "", rpg_data });
 
     return embed;
 };
@@ -1296,11 +1316,12 @@ function error_analyze(errorStack) {
 
 /**
  * 
- * @param {string} text 
- * @param {DogClient} [client=global._client] 
+ * @param {string} text
+ * @param {BaseInteraction} [interaction=null]
+ * @param {DogClient} [client=global._client]
  * @returns {Promise<EmbedBuilder[]>}
  */
-async function get_loophole_embed(text, client = global._client) {
+async function get_loophole_embed(text, interaction = null, client = global._client) {
     const emoji_cross = await get_emoji("crosS", client);
 
     if (typeof text instanceof Error) {
@@ -1327,12 +1348,12 @@ async function get_loophole_embed(text, client = global._client) {
         .setColor(embed_error_color)
         .setTitle(`${emoji_cross} | 你戳到了一個漏洞！`)
         .setDescription(text)
-        .setEmbedFooter();
+        .setEmbedFooter(interaction);
 
     const error_analyze_embed = new EmbedBuilder()
         .setColor(embed_error_color)
         .setTitle("錯誤分析")
-        .setEmbedFooter();
+        .setEmbedFooter(interaction);
 
     const error_analyzes = error_analyze(text);
     for (const analyze of error_analyzes) {
@@ -1347,11 +1368,12 @@ async function get_loophole_embed(text, client = global._client) {
 
 /**
  * 
- * @param {string} userId 
- * @param {DogClient} client 
+ * @param {string} userId
+ * @param {BaseInteraction} [interaction]
+ * @param {DogClient} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
-async function job_delay_embed(userId, client = global._client) {
+async function job_delay_embed(userId, interaction = null, client = global._client) {
     const { load_rpg_data } = require("./file.js");
     const { convertToSecondTimestamp, DateNowSecond } = require("./timestamp.js");
     const { setJobDelay } = require("./config.js");
@@ -1368,7 +1390,7 @@ async function job_delay_embed(userId, client = global._client) {
             .setColor(embed_error_color)
             .setTitle(`${emoji_cross} | 轉職後一個禮拜不能更動職業!`)
             .setDescription(`還需要等待到 <t:${waitUntil}:F>`)
-            .setEmbedFooter();
+            .setEmbedFooter(interaction);
 
         return embed;
     } else {
@@ -1422,10 +1444,11 @@ async function choose_job_row(userid) {
 
 /**
  * 
- * @param {number} amount 
+ * @param {number} amount
+ * @param {BaseInteraction} [interaction]
  * @returns {Promise<EmbedBuilder | null>}
  */
-async function amount_limit_embed(amount) {
+async function amount_limit_embed(amount, interaction = null) {
     const { item_amount_limit } = require("./config.js");
 
     if (amount <= item_amount_limit) {
@@ -1437,13 +1460,13 @@ async function amount_limit_embed(amount) {
     const embed = new EmbedBuilder()
         .setColor(embed_error_color)
         .setTitle(`${emoji_cross} | 數量超過上限!`)
-        .setDescription(`請輸入小於等於 ${amount} 的數字`)
-        .setEmbedFooter();
+        .setDescription(`請輸入小於等於 ${item_amount_limit} 的數字`)
+        .setEmbedFooter(interaction);
 
     return embed;
 };
 
-async function ls_function({ client, message, rpg_data, mode, PASS }) {
+async function ls_function({ client, message, rpg_data, mode, PASS, interaction = null }) {
     const { privacy_data } = require("../cogs/rpg/msg_handler.js");
     const { loadData } = require("./file.js");
 
@@ -1458,7 +1481,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
             .setTitle(`${emoji_bag} | 查看包包`)
             .setColor(embed_default_color)
             .setDescription(`為保護包包內容隱私權，戳這顆按鈕來看你的包包，隱私權設定可以透過 \`${prefix}privacy\` 指令更改`)
-            .setEmbedFooter();
+            .setEmbedFooter(interaction);
 
         const confirm_button = new ButtonBuilder()
             .setCustomId(`ls|${message.author.id}`)
@@ -1512,7 +1535,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
         .setTitle(`${emoji_bag} | 你的背包`)
-        .setEmbedFooter();
+        .setEmbedFooter(interaction);
 
     // 使用循環添加各類物品欄位
     const categories = [

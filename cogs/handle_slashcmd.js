@@ -83,7 +83,7 @@ module.exports = {
             const errorStack = util.inspect(error, { depth: null });
             logger.error(`執行斜線指令 ${fullCommand} 時出錯：${errorStack}`);
 
-            const embeds = await get_loophole_embed(errorStack, client);
+            const embeds = await get_loophole_embed(errorStack, interaction, client);
             try {
                 await interaction.followUp({ content: "", embeds, components: [], flags: MessageFlags.Ephemeral });
             } catch (_) { };

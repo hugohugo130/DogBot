@@ -43,7 +43,7 @@ module.exports = {
         } else if (interaction.commandName === "bake") {
             const rpg_data = await load_rpg_data(userid);
 
-            const [wrong_job, _] = await wrong_job_embed(rpg_data, "/bake", userid);
+            const [wrong_job, _] = await wrong_job_embed(rpg_data, "/bake", userid, interaction, client);
             if (wrong_job) return await interaction.respond([
                 { name: wrong_job.data.title ?? "", value: "nothing" }
             ]);
@@ -65,7 +65,7 @@ module.exports = {
         } else if (interaction.commandName === "smelt") {
             const rpg_data = await load_rpg_data(userid);
 
-            const [wrong_job, _] = await wrong_job_embed(rpg_data, "/smelt", userid);
+            const [wrong_job, _] = await wrong_job_embed(rpg_data, "/smelt", userid, interaction, client);
             if (wrong_job) return await interaction.respond([
                 { name: wrong_job.data.title ?? "", value: "nothing" }
             ]);

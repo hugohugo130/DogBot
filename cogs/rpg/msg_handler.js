@@ -232,7 +232,7 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
         if (!name[item]) {
-            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`, client);
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`, null, client);
             return await message.reply({ embeds });
         };
 
@@ -277,7 +277,7 @@ const rpg_commands = {
         const log_name = name[item];
 
         if (!name[item]) {
-            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`, client);
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`, null, client);
             return await message.reply({ embeds });
         };
 
@@ -310,7 +310,7 @@ const rpg_commands = {
 
         const { item: random_animal, amount } = random_item;
         if (!animal_products[random_animal]) {
-            const embeds = await get_loophole_embed(`找不到${random_animal}的動物產品: ${animal_products[random_animal]}`, client);
+            const embeds = await get_loophole_embed(`找不到${random_animal}的動物產品: ${animal_products[random_animal]}`, null, client);
             return await message.reply({ embeds });
         };
 
@@ -362,7 +362,7 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
         if (!name[item]) {
-            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`, client);
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`, null, client);
             return await message.reply({ embeds });
         };
 
@@ -391,7 +391,7 @@ const rpg_commands = {
 
         const { item, amount } = random_item;
         if (!name[item]) {
-            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`, client);
+            const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`, null, client);
             return await message.reply({ embeds });
         };
 
@@ -753,7 +753,7 @@ const rpg_commands = {
         };
     }, true],
     items: ["查看背包", "查看背包", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        return await ls_function({ client, message, rpg_data, data, args, mode, random_item })
+        return await ls_function({ client, message, rpg_data, data, args, mode, random_item, interaction: null })
     }, false],
     buy: ["購買", "購買其他人上架的物品", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { load_shop_data } = require("../../utils/file.js");
@@ -801,7 +801,7 @@ const rpg_commands = {
             return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
         } else if (args.length === 0) {
             return await message.reply({
-                embeds: [await get_help_command("rpg", "buy", client)],
+                embeds: [await get_help_command("rpg", "buy", message.guild.id, null, client)],
             });
         };
 
@@ -1063,7 +1063,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
         const specific_cmd = args[0];
         if (specific_cmd && specific_cmd !== "help") {
-            const embed = await get_help_command("rpg", specific_cmd, message.guild.id, client);
+            const embed = await get_help_command("rpg", specific_cmd, message.guild.id, null, client);
 
             if (!embed) {
                 const emoji_cross = await get_emoji("crosS", client);
@@ -1254,7 +1254,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             const add = food_data[food_id]
             if (!add) {
-                const embeds = await get_loophole_embed(`food_data[${food_id}] is ${add}`, client);
+                const embeds = await get_loophole_embed(`food_data[${food_id}] is ${add}`, null, client);
 
                 logger.warn(`食物${food_name} (${food_id})在food_data中沒有這個食物的數據`);
 
@@ -1415,7 +1415,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 .addComponents(howToEatButton, buyFoodButton);
 
             if (errors.length > 0) {
-                const embeds = await get_loophole_embed(errors.join("\n"), client);
+                const embeds = await get_loophole_embed(errors.join("\n"), null, client);
 
                 if (mode === 1) return { embeds };
                 await message.reply({ embeds });
@@ -1500,7 +1500,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         const price = sell_data[item_id];
         if (!price) {
-            const embeds = await get_loophole_embed(`詳細資訊: sell_data[${item_id}]為${price}`, client);
+            const embeds = await get_loophole_embed(`詳細資訊: sell_data[${item_id}]為${price}`, null, client);
 
             if (mode === 1) return { embeds };
             return await message.reply({ embeds });
@@ -1970,7 +1970,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     const userid = message.author.id;
     let rpg_data = load_rpg_data(userid);
 
-    const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, command, userid, client);
+    const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, command, userid, null, client);
     if (wrongJobEmbed) {
         if (mode === 1) return { embeds: [wrongJobEmbed], components: row ? [row] : [] };
 
@@ -2119,8 +2119,8 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         // 冷卻
         if (!is_finished) {
             // if (!is_finished && message.channel.id !== "1432642462840524853") {
-            if (mode === 1) return { embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] };
-            return await message.reply({ embeds: [await get_cooldown_embed(remaining_time, client, action, rpg_data.count[command])] });
+            if (mode === 1) return { embeds: [await get_cooldown_embed(remaining_time, action, rpg_data.count[command], null, client)] };
+            return await message.reply({ embeds: [await get_cooldown_embed(remaining_time, action, rpg_data.count[command], null, client)] });
         };
 
         rpg_data.hunger -= 1;
@@ -2140,8 +2140,8 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     if (failed && rpg_work.includes(command)) {
         // rpg_data.hunger += 1;
         // save_rpg_data(userid, rpg_data);
-        if (mode === 1) return { embeds: [await get_failed_embed(client, item, rpg_data)] };
-        return await message.reply({ embeds: [await get_failed_embed(client, item, rpg_data)] });
+        if (mode === 1) return { embeds: [await get_failed_embed(item, rpg_data, null, client)] };
+        return await message.reply({ embeds: [await get_failed_embed(item, rpg_data, null, client)] });
     };
 
     let need_arg = false;
@@ -2154,7 +2154,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
     };
 
     if (need_arg && !args[0]) {
-        const embed = await get_help_command("rpg", command, client);
+        const embed = await get_help_command("rpg", command, guildID, null, client);
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -2270,7 +2270,7 @@ module.exports = {
                 logger.error(`處理rpg遊戲訊息時發生錯誤: ${errorStack}`);
             };
 
-            const loophole_embeds = await get_loophole_embed(errorStack, client);
+            const loophole_embeds = await get_loophole_embed(errorStack, null, client);
             await message.reply({ embeds: loophole_embeds });
         } finally {
             delete client.lock.rpg_handler[userId];

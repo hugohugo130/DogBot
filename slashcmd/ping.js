@@ -23,7 +23,7 @@ module.exports = {
     async execute(interaction, client) {
         const start = Date.now();
 
-        const msg = await interaction.deferReply({ withResponse: true });
+        await interaction.deferReply({ withResponse: true });
 
         const end = Date.now();
         const globalPing = end - start;
@@ -34,7 +34,7 @@ module.exports = {
                 { name: '🔗 API延遲', value: `${client.ws.ping}ms` },
                 { name: '🌐 Global 全域延遲', value: `${globalPing}ms` }
             )
-            .setEmbedFooter();
+            .setEmbedFooter(interaction);
 
         return interaction.editReply({ content: `Pong! ${client.ws.ping}ms`, embeds: [embed] });
     },

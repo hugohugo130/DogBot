@@ -23,7 +23,7 @@ module.exports = {
         //     .setColor(0x00BBFF)
         //     .setTitle(`${emoji} | 設定語言`)
         //     .setDescription(`請選擇要設定的語言`)
-        //     .setEmbedFooter();
+        //     .setEmbedFooter(interaction);
         
         // const row = new ActionRowBuilder()
 

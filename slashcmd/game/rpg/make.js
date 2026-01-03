@@ -102,7 +102,7 @@ module.exports = {
                 .setTitle("你沒有足夠的材料")
                 .setColor(embed_error_color)
                 .setDescription(`你缺少了 ${items.join("、")}`)
-                .setEmbedFooter();
+                .setEmbedFooter(interaction);
 
             return await interaction.editReply({ embeds: [embed] });
         };
@@ -123,7 +123,7 @@ module.exports = {
             .setColor(embed_default_color)
             .setTitle(`${emoji} | 製作物品`)
             .setDescription(`你製作出了 \`${output_amount}\` 個 ${get_name_of_id(item_id)}`)
-            .setEmbedFooter();
+            .setEmbedFooter(interaction);
 
         await interaction.editReply({ embeds: [embed] });
     },

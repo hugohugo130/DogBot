@@ -1,15 +1,16 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, User } = require("discord.js");
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, User, BaseInteraction } = require("discord.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 const { get_id_of_name, farm_slots } = require("../../../utils/rpg.js");
 const DogClient = require("../../../utils/customs/client.js");
 
 /**
- * 
- * @param {User} user 
- * @param {DogClient} client 
+ *
+ * @param {User} user
+ * @param {BaseInteraction} interaction
+ * @param {DogClient} client
  * @returns {Promise<EmbedBuilder>}
  */
-async function get_farm_info_embed(user, client = global._client) {
+async function get_farm_info_embed(user, interaction = null, client = global._client) {
     const { load_farm_data } = require("../../../utils/file.js");
     const { get_emojis } = require("../../../utils/rpg.js");
     const { get_name_of_id } = require("../../../utils/rpg.js");
@@ -28,7 +29,7 @@ async function get_farm_info_embed(user, client = global._client) {
         .setColor(embed_default_color)
         .setTitle(`${emoji_farmer} | ${user.username} 的農田`)
         .setDescription(`農田等級：${farm_data.lvl} | 上次澆水：${waterAt > 0 ? `<t:${waterAt}:R>` : "無"}`)
-        .setEmbedFooter();
+        .setEmbedFooter(interaction);
 
     for (const data of (farm_data.farms || [])) {
         const index = farm_data.farms.indexOf(data);
@@ -217,7 +218,7 @@ module.exports = {
         const rpg_data = load_rpg_data(userId);
         const farm_data = load_farm_data(userId);
 
-        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/farm", userId, interaction.client);
+        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/farm", userId, interaction, interaction.client);
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
 
         const [emoji_farmer, emoji_cross, emoji_check] = await get_emojis(["farmer", "crosS", "check"], client);
@@ -240,7 +241,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 最多只能同時使用四把鋤頭`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
             };
@@ -249,13 +250,13 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的體力不足了`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
             };
 
             if (!userHaveEnoughItems(userId, hoe, amount)) {
-                const embed = await notEnoughItemEmbed([{ name: hoe, amount }]);
+                const embed = await notEnoughItemEmbed([{ name: hoe, amount }], interaction, client);
 
                 return await interaction.editReply({ embeds: [embed] });
             };
@@ -288,7 +289,7 @@ module.exports = {
 
             return await interaction.editReply({ embeds: [success_embed] });
         } else if (subcommand === "info") {
-            const [embed, row] = await get_farm_info_embed(user, client);
+            const [embed, row] = await get_farm_info_embed(user, interaction, client);
 
             return await interaction.editReply({ embeds: [embed], components: [row] });
         } else if (subcommand === "get") {
@@ -297,7 +298,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的農田沒有正在種植的田地`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
             };
@@ -321,7 +322,7 @@ module.exports = {
                 .setColor(embed_default_color)
                 .setTitle(`${emoji_farmer} | 成功採收了 ${farmlands} 格田地`)
                 .setDescription(`你獲得了 ${items_str}`)
-                .setEmbedFooter();
+                .setEmbedFooter(interaction);
 
             return await interaction.editReply({ embeds: [embed] });
         } else if (subcommand === "water") {
@@ -334,7 +335,7 @@ module.exports = {
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你已經澆過水了`)
                     .setDescription(`請在 <t:${endsAts}:R> 再繼續澆水`)
-                    .setEmbedFooter();
+                    .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
             };
@@ -357,7 +358,7 @@ module.exports = {
                 .setColor(embed_default_color)
                 .setTitle(`${emoji_farmer} | 成功幫你的農田澆水`)
                 .setDescription(`你獲得了 \`${get_exp}\` 點經驗值`)
-                .setEmbedFooter();
+                .setEmbedFooter(interaction);
 
             return await interaction.editReply({ embeds: [embed] });
         };

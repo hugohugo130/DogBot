@@ -36,7 +36,7 @@ module.exports = {
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你需要先進到一個語音頻道`)
                 .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
-                .setEmbedFooter();
+                .setEmbedFooter(interaction);
 
             return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
         };
@@ -45,7 +45,7 @@ module.exports = {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
-                .setEmbedFooter();
+                .setEmbedFooter(interaction);
 
             return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
@@ -57,7 +57,7 @@ module.exports = {
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
                 .setDescription(`你必須待在 <#${queue.connection?.joinConfig.channelId || queue.voiceChannel.id}> 裡面`)
-                .setEmbedFooter();
+                .setEmbedFooter(interaction);
 
             return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
