@@ -27,7 +27,7 @@ module.exports = {
 
         const voiceChannel = interaction.member.voice.channel;
 
-        const [emoji_cross, emoji_skip] = await get_emojis(["cross", "skip"], client);
+        const [emoji_cross, emoji_skip] = await get_emojis(["crosS", "skip"], client);
 
         if (!voiceChannel) {
             const error_embed = new EmbedBuilder()
