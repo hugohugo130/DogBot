@@ -1421,17 +1421,17 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
 
         const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
 
-        const bag_emoji = await get_emoji("bag", client);
+        const emoji_bag = await get_emoji("bag", client);
 
         let embed = new EmbedBuilder()
-            .setTitle(`${bag_emoji} | 查看包包`)
+            .setTitle(`${emoji_bag} | 查看包包`)
             .setColor(embed_default_color)
             .setDescription(`為保護包包內容隱私權，戳這顆按鈕來看你的包包，隱私權設定可以透過 \`${prefix}privacy\` 指令更改`)
             .setEmbedFooter();
 
         const confirm_button = new ButtonBuilder()
             .setCustomId(`ls|${message.author.id}`)
-            .setEmoji(bag_emoji)
+            .setEmoji(emoji_bag)
             .setLabel("查看包包")
             .setStyle(ButtonStyle.Success);
 
@@ -1443,7 +1443,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
     };
 
     const emojiNames = ["bag", "ore", "farmer", "cow", "swords", "potion"];
-    const [bag_emoji, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await Promise.all(
+    const [emoji_bag, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await Promise.all(
         emojiNames.map(name => get_emoji(name, client))
     );
 
@@ -1483,7 +1483,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
     // 創建嵌入訊息
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
-        .setTitle(`${bag_emoji} | 你的背包`)
+        .setTitle(`${emoji_bag} | 你的背包`)
         .setEmbedFooter();
 
     // 使用循環添加各類物品欄位
@@ -1500,7 +1500,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS }) {
 
     // 如果背包是空的
     if (Object.keys(rpg_data.inventory || {}).length === 0) {
-        embed.setTitle(`${bag_emoji} | 你的背包裡沒有東西`);
+        embed.setTitle(`${emoji_bag} | 你的背包裡沒有東西`);
     } else {
         for (const category of categories) {
             if (Object.keys(category.items).length > 0) {

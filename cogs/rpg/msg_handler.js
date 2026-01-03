@@ -633,8 +633,8 @@ const rpg_commands = {
 
                 const emoji_cross = await get_emoji("crosS", client);
                 const emoji_store = await get_emoji("store", client);
-                const ore_emoji = await get_emoji("ore", client);
-                const bread_emoji = await get_emoji("bread", client);
+                const emoji_ore = await get_emoji("ore", client);
+                const emoji_bread = await get_emoji("bread", client);
                 const shop_data = load_shop_data(userid);
 
                 if (!shop_data.status && user.id != message.author.id) {
@@ -663,7 +663,7 @@ const rpg_commands = {
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([item, data]) => `${name[item]} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
                     .join("\n");
-                if (minerals) embed.addFields({ name: `${ore_emoji} 礦物`, value: minerals, inline: false });
+                if (minerals) embed.addFields({ name: `${emoji_ore} 礦物`, value: minerals, inline: false });
 
                 // 食物
                 const food = Object.entries(shop_data.items)
@@ -671,7 +671,7 @@ const rpg_commands = {
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([item, data]) => `${name[item]} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
                     .join("\n");
-                if (food) embed.addFields({ name: `${bread_emoji} 食物`, value: food, inline: false });
+                if (food) embed.addFields({ name: `${emoji_bread} 食物`, value: food, inline: false });
 
                 // 其他
                 const others = Object.entries(shop_data.items)
@@ -1252,7 +1252,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const userid = user.id;
 
         const emoji_cross = await get_emoji("crosS", client);
-        const drumstick_emoji = await get_emoji("drumstick", client);
+        const emoji_drumstick = await get_emoji("drumstick", client);
 
         if (args.length > 0) {
             const extra_embeds = [];
@@ -1375,7 +1375,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
-                .setTitle(`${drumstick_emoji} | 成功進食`)
+                .setTitle(`${emoji_drumstick} | 成功進食`)
                 .setDescription(`你吃下了 \`${amount}\` 個 \`${food_name}\`，你的體力值增加到了 \`${rpg_data.hunger}\``)
                 .setEmbedFooter();
 
@@ -1386,7 +1386,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         } else {
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
-                .setTitle(`${drumstick_emoji} | 可以吃的東西`)
+                .setTitle(`${emoji_drumstick} | 可以吃的東西`)
                 .setDescription(`體力值: ${rpg_data.hunger} / ${max_hunger} 點`)
                 .setEmbedFooter();
 
@@ -1420,14 +1420,14 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 return await message.reply({ embeds: [embed] });
             };
 
-            const farmer_emoji = await get_emoji("farmer", client);
-            const cow_emoji = await get_emoji("cow", client);
-            const food_emoji = await get_emoji("food", client);
-            const store_emoji = await get_emoji("store", client);
+            const emoji_farmer = await get_emoji("farmer", client);
+            const emoji_cow = await get_emoji("cow", client);
+            const emoji_food = await get_emoji("food", client);
+            const emoji_store = await get_emoji("store", client);
 
             const categories = [
-                { items: food_crops_items, name: `${farmer_emoji} 農作物` },
-                { items: food_meat_items, name: `${cow_emoji} 肉類` },
+                { items: food_crops_items, name: `${emoji_farmer} 農作物` },
+                { items: food_meat_items, name: `${emoji_cow} 肉類` },
             ];
 
             let errors = [];
@@ -1438,7 +1438,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                     const category_items = category.items;
                     if (Object.keys(category_items).length > 0) {
                         const itemsTexts = Object.entries(category_items)
-                            .map(([item, amount]) => `${get_name_of_id(item)} \`${amount.toLocaleString()}\` 個 (回復 \`${food_data[item]}\` ${drumstick_emoji})`);
+                            .map(([item, amount]) => `${get_name_of_id(item)} \`${amount.toLocaleString()}\` 個 (回復 \`${food_data[item]}\` ${emoji_drumstick})`);
 
                         const longestItemNameLength = Math.max(...itemsTexts.map(item => item.length));
                         const itemsPerChunk = Math.floor(embed_field_value_limit / longestItemNameLength);
@@ -1460,13 +1460,13 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             const howToEatButton = new ButtonBuilder()
                 .setCustomId(`help|any|rpg|eat`)
                 .setLabel("如何吃食物")
-                .setEmoji(food_emoji)
+                .setEmoji(emoji_food)
                 .setStyle(ButtonStyle.Primary);
 
             const buyFoodButton = new ButtonBuilder()
                 .setCustomId(`help|any|rpg|buy`)
                 .setLabel("購買食物")
-                .setEmoji(store_emoji)
+                .setEmoji(emoji_store)
                 .setStyle(ButtonStyle.Primary);
 
             const row = new ActionRowBuilder()
