@@ -2073,7 +2073,6 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
             rows.push(row);
         };
 
-        embed.setDescription(`你是不是指：\n${similarCommands.map(cmd => `- ${allowPrefix}${cmd}`).join("\n")}`);
         if (rows.length > 5) rows.length = 5;
 
         if (mode === 1) return { embeds: [embed], components: rows };
