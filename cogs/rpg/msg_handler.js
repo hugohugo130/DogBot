@@ -202,7 +202,6 @@ const redirect_data = {
     money: "m",
     mo: "m",
     store: "shop",
-    // l: "lazy",
     love: "marry",
     unmarry: "divorce",
 };
@@ -1188,33 +1187,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         if (mode === 1) return { embeds: [embed], components: [row] };
         return await message.reply({ embeds: [embed], components: [row] });
-    }, false],
-    lazy: ["懶惰", "懶惰地遊玩這個遊戲", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        return
-        if (message.channel.id !== "1432642462840524853") return await message.reply("只能在 <#1432642462840524853> 中使用");
-        // if (new Date().getMinutes() % 2 === 0) {
-        if (true) {
-            const embeds = []
-            const cmds = ["mine", "hew", "herd", "brew", "fish"];
-            for (const cmd of cmds) {
-                const res = await redirect({ client, message, command: cmd, mode: 1 });
-                embeds.push(...res.embeds);
-            };
-
-            if (mode === 1) return { embeds };
-            return await message.reply({ embeds });
-        } else {
-            const emoji_cross = await get_emoji("crosS", client);
-
-            const embed = new EmbedBuilder()
-                .setTitle(`${emoji_cross} | 太懶了辣！`)
-                .setColor(embed_default_color)
-                .setThumbnail("https://cdn.discordapp.com/emojis/1368436829371764867.webp?size=96")
-                .setDescription("你太懶了，所以我不給你用!lazy了 owo");
-
-            if (mode === 1) return { embeds: [embed] };
-            return await message.reply({ embeds: [embed] });
-        };
     }, false],
     eat: ["吃東西", "吃東西回復飽食度", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const { save_rpg_data } = require("../../utils/file.js");
