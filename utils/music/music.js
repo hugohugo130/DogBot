@@ -4,7 +4,7 @@ const axios = require("axios");
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const { pipeline } = require("node:stream/promises");
 const { Collection, TextChannel, VoiceChannel, Subscription, Guild } = require("discord.js");
-const { createAudioResource, createAudioPlayer, AudioPlayerStatus, VoiceConnection, AudioPlayer, joinVoiceChannel, getVoiceConnection, StreamType } = require("@discordjs/voice");
+const { createAudioResource, createAudioPlayer, AudioPlayerStatus, VoiceConnection, AudioPlayer, joinVoiceChannel, getVoiceConnection, StreamType, AudioResource } = require("@discordjs/voice");
 const { Soundcloud } = require("soundcloud.ts");
 
 const { get_logger } = require("../logger.js");
@@ -181,7 +181,7 @@ class MusicQueue {
         /** @type {Guild} */
         this.guild = client.guilds.cache.get(guildID);
 
-        /** @type {Array<import('soundcloud.ts').SoundcloudTrack | any>} */
+        /** @type {Array<import('soundcloud.ts').SoundcloudTrack>} */
         this.tracks = [];
 
         /** @type {AudioPlayer} */
@@ -190,8 +190,11 @@ class MusicQueue {
         /** @type {boolean} */
         this.playing = false;
 
-        /** @type {import('soundcloud.ts').SoundcloudTrack | any} */
+        /** @type {import('soundcloud.ts').SoundcloudTrack | null} */
         this.currentTrack = null;
+
+        /** @type {AudioResource | null} */
+        this.currentResource = null;
 
         /** @type {boolean} */
         this.loop = false;
@@ -374,9 +377,12 @@ class MusicQueue {
         );
 
         this.player.play(resource);
+        this.player.unpause();
 
         this.playing = true;
+        this.paused = false;
         this.currentTrack = track;
+        this.currentResource = resource;
 
         this.tracks = this.tracks.filter(track => track.id !== this.currentTrack?.id);
         return track;
@@ -388,6 +394,7 @@ class MusicQueue {
         this.player.stop(force);
 
         this.playing = false;
+        this.currentResource = null;
         this.currentTrack = null;
     };
 
@@ -443,6 +450,10 @@ class MusicQueue {
             this.player.unpause();
             this.paused = false;
         };
+    };
+
+    swapTracks(firstTrackIndex, secondTrackIndex) {
+        [this.tracks[firstTrackIndex], this.tracks[secondTrackIndex]] = [this.tracks[secondTrackIndex], this.tracks[firstTrackIndex]];
     };
 
     destroy() {
@@ -833,6 +844,7 @@ module.exports = {
     getQueues,
     saveQueue,
     getTrack,
+    fixStructure,
     search_until,
     convertToOgg,
     clear_duplicate_temp,
