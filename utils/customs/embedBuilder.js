@@ -1,5 +1,6 @@
-const { EmbedBuilder: djsEmbedBuilder, BaseInteraction } = require("discord.js");
+const { EmbedBuilder: djsEmbedBuilder, BaseInteraction, Locale } = require("discord.js");
 const { load_rpg_data } = require("../file.js");
+const { get_lang_data } = require("../language.js");
 const DogClient = require("./client.js");
 
 class EmbedBuilder extends djsEmbedBuilder {
@@ -25,10 +26,11 @@ class EmbedBuilder extends djsEmbedBuilder {
             client = _client;
         };
 
-        if (!interaction) interaction = "zh-TW";
+        if (!interaction) interaction = Locale.ChineseTW;
 
         if (text.includes("飽食度剩餘")) {
             const { get_logger, getCallerModuleName } = require("../logger.js");
+
             const logger = get_logger({ nodc: true });
             logger.warn(`[DEPRECATED] give rpg_data or user id instead add to the text\ncalled from ${getCallerModuleName(null)}`);
         };
@@ -48,7 +50,7 @@ class EmbedBuilder extends djsEmbedBuilder {
         else locale = "zh-TW"; // default
 
         if (!force && data) text += `飽食度剩餘 ${data.hunger}`;
-        if (!force) text += "\n狗狗機器犬 ∙ 由哈狗製作";
+        if (!force) text += `\n${get_lang_data(locale, "embed", "footer")}`;
         text = text.trim();
 
         this.setFooter({
