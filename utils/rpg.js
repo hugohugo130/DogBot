@@ -1535,7 +1535,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS, interaction 
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
         .setTitle(`${emoji_bag} | 你的背包`)
-        .setEmbedFooter(interaction);
+        .setTimestamp();
 
     // 使用循環添加各類物品欄位
     const categories = [
@@ -1562,7 +1562,6 @@ async function ls_function({ client, message, rpg_data, mode, PASS, interaction 
             };
         };
     };
-
 
     if (mode === 1) return { embeds: [embed] };
     return await message.reply({ embeds: [embed] });
