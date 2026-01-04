@@ -27,7 +27,7 @@ module.exports = {
 我又在 <t:${Math.floor(client.readyTimestamp / 1000)}:R> 的時候復活了！
 哈狗使用discord.js做出這個機器人，但如果變熱門的話記憶體應該會炸掉吧
 `)
-                .setFooter({ name: `在 ${(await client.getAllGuilds()).length} 個伺服器裡為大家服務 :D` })
+                .setFooter({ text: `在 ${(await client.getAllGuilds()).length} 個伺服器裡為大家服務 :D` })
                 .setEmbedAuthor();
 
             await message.channel.send({ embeds: [InfoEmbed] });
