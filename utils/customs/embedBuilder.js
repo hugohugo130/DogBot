@@ -62,10 +62,10 @@ class EmbedBuilder extends djsEmbedBuilder {
     };
 
     /**
-     * 
-     * @param {string} author 
+     *
+     * @param {string} author - defaults to "", and convert to client.name
      * @param {DogClient} client
-     * @returns {EmbedBuilder} 
+     * @returns {EmbedBuilder}
      */
     setEmbedAuthor(author = "", client = global._client) {
         if (!author) author = client.name;
