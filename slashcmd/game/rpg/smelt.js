@@ -358,7 +358,7 @@ module.exports = {
             if (!smelt_data || smelt_data.length === 0) {
                 embed.setDescription(`使用率 \`[${used_slots} / ${smelter_slots}]\`\n\n你的煉金爐目前是空的`);
             } else {
-                for (let i = 0; i < smelt_data.length; i++) {
+                for (let i = 0; i < (smelt_data.length > 25 ? 25 : smelt_data.length); i++) {
                     const item = smelt_data[i];
                     const input_name = name[item.item_id] || item.item_id;
                     const output_name = name[item.output_item_id] || item.output_item_id;
