@@ -17,8 +17,6 @@ function generateSHA256(input) {
     return md5Hash.digest('hex');
 };
 
-const logger = get_logger();
-
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("play")
@@ -26,10 +24,10 @@ module.exports = {
             "zh-TW": "播放",
             "zh-CN": "播放",
         })
-        .setDescription("Play music using keywords or third-party links")
+        .setDescription("Play music in the voice channel")
         .setDescriptionLocalizations({
-            "zh-TW": "使用關鍵字搜尋音樂、支持第三方連結播放",
-            "zh-CN": "使用关键字搜索音乐、支持第三方链接播放",
+            "zh-TW": "在語音頻道內播放音樂",
+            "zh-CN": "在语音频道内播放音乐",
         })
         .addStringOption(option =>
             option.setName("query")
