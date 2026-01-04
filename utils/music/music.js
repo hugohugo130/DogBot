@@ -276,7 +276,10 @@ class MusicQueue {
                     };
                 };
 
-                if (newState.status === AudioPlayerStatus.Playing) { // 發送正在播放 Embed
+                if (
+                    [AudioPlayerStatus.Buffering, AudioPlayerStatus.Idle].includes(oldState.status) &&
+                    newState.status === AudioPlayerStatus.Playing
+                ) {
                     // 正在播放
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
