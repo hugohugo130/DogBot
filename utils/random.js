@@ -29,8 +29,16 @@ function generateSessionId(length = 32) {
     return crypto.randomBytes(length).toString('hex');
 };
 
+function generateSHA256(input) {
+    const SHA256Hash = crypto.createHash('sha256');
+
+    SHA256Hash.update(input);
+    return SHA256Hash.digest('hex');
+};
+
 module.exports = {
     randint,
     choice,
     generateSessionId,
+    generateSHA256,
 };

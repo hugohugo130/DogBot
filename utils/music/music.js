@@ -5,6 +5,7 @@ const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
 const { pipeline } = require("node:stream/promises");
 const { Collection, TextChannel, VoiceChannel, Subscription, Guild } = require("discord.js");
 const { createAudioResource, createAudioPlayer, AudioPlayerStatus, VoiceConnection, AudioPlayer, joinVoiceChannel, getVoiceConnection, StreamType, AudioResource } = require("@discordjs/voice");
+const { getAudioDurationInSeconds } = require('get-audio-duration');
 const { Soundcloud } = require("soundcloud.ts");
 
 const { get_logger } = require("../logger.js");
@@ -12,6 +13,7 @@ const { existsSync, createReadStream, get_temp_folder, join_temp_folder, basenam
 const { formatMinutesSeconds } = require("../timestamp.js");
 const { get_emoji } = require("../rpg.js");
 const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
+const { generateSHA256 } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
 
@@ -632,6 +634,21 @@ function fixStructure(object) {
     return object;
 };
 
+function getAudioFileData(url, outputPath) {
+    const filename = path.basename(outputPath, path.extname(outputPath));
+    const audioID = generateSHA256(outputPath);
+
+    return {
+        id: audioID,
+        title: filename.slice(0, 500),
+        url,
+        duration: getAudioDurationInSeconds(outputPath) * 1000,
+        thumbnail: null,
+        author: "來自音檔",
+        source: "audio",
+    };
+};
+
 async function downloadFile(url, outputPath) {
     const { createWriteStream } = require("../file.js");
     const response = await fetch(url);
@@ -643,7 +660,7 @@ async function downloadFile(url, outputPath) {
     await pipeline(response.body, createWriteStream(outputPath));
     convertToOgg(outputPath);
 
-    return outputPath;
+    return [outputPath, getAudioFileData(url, outputPath)];
 };
 
 /**
@@ -703,9 +720,10 @@ async function getTrack({ track, id, url, source }) {
  * 
  * @param {string} query
  * @param {number} amount
+ * @param {boolean} downloadFile
  * @returns {Promise<{id: string | number, title: string, url: string, duration: number, thumbnail: string, author: string, source: string}[]>}
  */
-async function search_until(query, amount = 25) {
+async function search_until(query, amount = 25, downloadFile = false) {
     let results = [];
 
     for (const engine of musicSearchEngine) {
@@ -725,6 +743,10 @@ async function search_until(query, amount = 25) {
         let output;
 
         try {
+            if (downloadFile && IsValidURL(query)) {
+
+            }
+
             if (file.get_track_info
                 && typeof file.get_track_info === "function"
                 && file.validateURL
@@ -858,6 +880,18 @@ function clear_duplicate_temp() {
     };
 };
 
+function IsValidURL(str) {
+    const pattern = new RegExp(
+        '^(https?:\\/\\/)?' + // protocol
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
+        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
+        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
+        '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+
+    return !!pattern.test(str);
+};
+
 module.exports = {
     getQueue,
     getQueues,
@@ -867,6 +901,7 @@ module.exports = {
     search_until,
     convertToOgg,
     clear_duplicate_temp,
+    IsValidURL,
     MusicQueue,
     loopStatus,
 };

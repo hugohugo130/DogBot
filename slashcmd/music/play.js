@@ -32,7 +32,7 @@ module.exports = {
             "zh-CN": "使用关键字搜索音乐、支持第三方链接播放",
         })
         .addStringOption(option =>
-            option.setName("keyword_or_url")
+            option.setName("query")
                 .setNameLocalizations({
                     "zh-TW": "關鍵字或連結",
                     "zh-CN": "关键字或链接",
@@ -57,6 +57,19 @@ module.exports = {
                     "zh-CN": "将播放的音乐插入到下一首歌 (限单曲使用)",
                 })
                 .setRequired(false),
+        )
+        .addBooleanOption(option =>
+            option.setName("all_things_can_play")
+                .setNameLocalizations({
+                    "zh-TW": "萬物皆可播",
+                    "zh-CN": "万物皆可播",
+                })
+                .setDescription("Download the audio from the url and play it as much as possible")
+                .setDescriptionLocalizations({
+                    "zh-TW": "從連結下載音訊並盡可能播放",
+                    "zh-CN": "从链接下载音频并尽可能播放",
+                })
+                .setRequired(false),
         ),
     // .addBooleanOption(option =>
     //     option.setName("shuffle")
@@ -78,12 +91,13 @@ module.exports = {
      */
     async execute(interaction, client) {
         const { get_emojis } = require("../../utils/rpg.js");
-        const { getQueue, saveQueue, search_until } = require("../../utils/music/music.js");
+        const { getQueue, saveQueue, search_until, IsValidURL } = require("../../utils/music/music.js");
         const { formatMinutesSeconds } = require("../../utils/timestamp.js");
         const { embed_error_color } = require("../../utils/config.js");
 
-        const keywordOrUrl = interaction.options.getString("keyword_or_url") ?? "wellerman";
+        const query = interaction.options.getString("query") ?? "wellerman";
         const next = interaction.options.getBoolean("next") ?? false;
+        const all_things_can_play = interaction.options.getBoolean("all_things_can_play") ?? false;
         // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
 
         const voiceChannel = interaction.member.voice.channel;
@@ -153,7 +167,7 @@ module.exports = {
 
         saveQueue(guildId, queue);
 
-        const tracks = await search_until(keywordOrUrl);
+        const tracks = await search_until(query, 25, (all_things_can_play && IsValidURL(query)));
 
         if (tracks.length === 0) {
             return interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
