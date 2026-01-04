@@ -16,7 +16,7 @@ const logger = get_logger();
 async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
     const { load_rpg_data, load_smelt_data } = require("../../../utils/file.js");
-    const { get_name_of_id, get_emojis, get_loophole_embed, get_id_of_name, notEnoughItemEmbed, name, smelter_slots, smeltable_recipe } = require("../../../utils/rpg.js");
+    const { get_name_of_id, get_emojis, get_loophole_embed, get_id_of_name, userHaveEnoughItems, notEnoughItemEmbed, name, smelter_slots, smeltable_recipe } = require("../../../utils/rpg.js");
 
     const userId = interaction.user.id;
 
@@ -64,6 +64,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
             amount: coal_used,
         },
     ];
+
     let item_missing = [];
 
     for (const need_item of item_need) {
@@ -71,9 +72,10 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
         const need_amount = need_item.amount;
         const have_amount = (rpg_data.inventory[current_item_id] || 0);
 
-        if (have_amount < need_amount) {
+        // if (have_amount < need_amount) {
+        if (!userHaveEnoughItems(interaction.user.id, current_item_id, need_amount)) {
             item_missing.push({
-                item: name[current_item_id] || need_item,
+                item: get_name_of_id(current_item_id),
                 amount: need_amount - have_amount,
             });
         };
