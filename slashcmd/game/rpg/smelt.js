@@ -46,10 +46,10 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     };
 
     if (allMats) {
-        amount = Math.floor((rpg_data.inventory[item_id] || amount) / smelt_recipe.input[0].amount);
+        amount = Math.floor((rpg_data.inventory[item_id] || amount) / smelt_recipe.input.amount);
     };
 
-    const input_amount = smelt_recipe.input[0].amount * amount;
+    const input_amount = smelt_recipe.input.amount * amount;
     const output_amount = smelt_recipe.amount * amount;
     const duration = 5 * 60 * amount;
     const coal_used = Math.ceil(amount / 2);
