@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, ChatInputCommandInteraction } = require("discord.js");
 const EmbedBuilder = require("../../../../utils/customs/embedBuilder.js");
 
 function split_msg(content, split = 2000) {
@@ -53,6 +53,11 @@ module.exports = {
                 .setRequired(true),
         )
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
+    /**
+     * 
+     * @param {ChatInputCommandInteraction} interaction 
+     * @returns {Promise<any>}
+     */
     async execute(interaction) {
         const { load_rpg_data, writeJson, join_temp_folder } = require("../../../../utils/file.js");
         const { embed_default_color, admins } = require("../../../../utils/config.js");
@@ -85,14 +90,15 @@ module.exports = {
         */
 
         const filename = `rpg_data@${user.id}@${Math.floor(rpg_data)}`
-        await writeJson(join_temp_folder(filename));
+        const filePath = join_temp_folder(filename);
+        await writeJson(filePath, rpg_data);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${user.username}的RPG數據`)
             .setTimestamp();
 
-        await interaction.editReply({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed], files: [filePath] });
 
         // const msgs = [
         //     Object.entries(rpg_data?.inventory)
