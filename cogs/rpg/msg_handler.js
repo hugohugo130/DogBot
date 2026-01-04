@@ -1133,16 +1133,22 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         const [emoji_backpack, emoji_pet, emoji_shield] = await get_emojis(["bag", "pet", "shield"], client);
 
         rpg_data.privacy.sort((a, b) => {
-            const order = { "money": 0, "backpack": 1, "partner": 2 };
+            const order = {
+                [PrivacySettings.Money]: 0,
+                [PrivacySettings.Inventory]: 1,
+                [PrivacySettings.Partner]: 2
+            };
             return order[a] - order[b];
         });
 
         let text;
         if (rpg_data.privacy.length > 0) {
-            text = rpg_data.privacy.join("、");
-            text = text.replace("money", "金錢").replace("backpack", "背包").replace("partner", "夥伴");
+            text = rpg_data.privacy
+                .join("、")
+                .replace(PrivacySettings.Money, "金錢")
+                .replace(PrivacySettings.Inventory, "背包")
+                .replace(PrivacySettings.Partner, "夥伴");
         } else text = "無";
-
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
@@ -1162,24 +1168,24 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 {
                     label: "金錢",
                     description: "擁有的金錢數量、交易記錄",
-                    value: "money",
+                    value: PrivacySettings.Money,
                     emoji: "💰",
-                    default: rpg_data.privacy.includes("money"),
+                    default: rpg_data.privacy.includes(PrivacySettings.Money),
                 },
                 {
                     label: "背包",
                     description: "背包內的物品",
-                    value: "backpack",
+                    value: PrivacySettings.Inventory,
                     emoji: emoji_backpack,
-                    default: rpg_data.privacy.includes("backpack"),
+                    default: rpg_data.privacy.includes(PrivacySettings.Inventory),
                 },
                 {
                     label: "夥伴",
                     description: "夥伴的清單",
-                    value: "partner",
+                    value: PrivacySettings.Partner,
                     emoji: emoji_pet,
-                    default: rpg_data.privacy.includes("partner"),
-                }
+                    default: rpg_data.privacy.includes(PrivacySettings.Partner),
+                },
             ]);
 
         const row = new ActionRowBuilder()
@@ -1922,10 +1928,6 @@ for (const [from, target] of Object.entries(redirect_data)) {
     rpg_commands[from] = rpg_commands[target];
 };
 
-const privacy_data = {
-    ls: "backpack"
-}
-
 function find_redirect_targets_from_id(id) {
     return Object.entries(redirect_data).filter(([key, value]) => value === id).map(([key, value]) => key);
 };
@@ -2283,7 +2285,6 @@ module.exports = {
     rpg_commands,
     redirect_data,
     redirect_data_reverse,
-    privacy_data,
     rpg_actions,
     redirect,
     get_number_of_items,

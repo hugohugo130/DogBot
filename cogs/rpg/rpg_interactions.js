@@ -484,7 +484,7 @@ module.exports = {
     execute: async function (client, interaction) {
         try {
             const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data, load_bake_data, save_bake_data, load_smelt_data, save_smelt_data, find_default_value } = require("../../utils/file.js");
-            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, get_emojis, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, ls_function, bake, smeltable_recipe, name, jobs, smelter_slots, oven_slots } = require("../../utils/rpg.js");
+            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, get_emojis, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, ls_function, bake, smeltable_recipe, name, jobs, smelter_slots, oven_slots, PrivacySettings } = require("../../utils/rpg.js");
             const { rpg_handler, MockMessage } = require("./msg_handler.js");
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
             const { getBotInfoEmbed } = require("../../slashcmd/info.js")
@@ -632,15 +632,23 @@ module.exports = {
                 const privacy = interaction.values;
                 rpg_data.privacy = privacy;
                 rpg_data.privacy.sort((a, b) => {
-                    const order = { "money": 0, "backpack": 1, "partner": 2 };
+                    const order = {
+                        [PrivacySettings.Money]: 0,
+                        [PrivacySettings.Inventory]: 1,
+                        [PrivacySettings.Partner]: 2
+                    };
                     return order[a] - order[b];
                 });
+
                 save_rpg_data(userId, rpg_data);
 
                 let text = "無";
                 if (rpg_data.privacy.length > 0) {
-                    text = rpg_data.privacy.join("、");
-                    text = text.replace("money", "金錢").replace("backpack", "背包").replace("partner", "夥伴");
+                    text = rpg_data.privacy
+                        .join("、")
+                        .replace(PrivacySettings.Money, "金錢")
+                        .replace(PrivacySettings.Inventory, "背包")
+                        .replace(PrivacySettings.Partner, "夥伴");
                 };
 
                 const embed = new EmbedBuilder()
@@ -661,23 +669,23 @@ module.exports = {
                         {
                             label: "金錢",
                             description: "擁有的金錢數量、交易記錄",
-                            value: "money",
+                            value: PrivacySettings.Money,
                             emoji: "💰",
-                            default: rpg_data.privacy.includes("money"),
+                            default: rpg_data.privacy.includes(PrivacySettings.Money),
                         },
                         {
                             label: "背包",
                             description: "背包內的物品",
-                            value: "backpack",
+                            value: PrivacySettings.Inventory,
                             emoji: emoji_backpack,
-                            default: rpg_data.privacy.includes("backpack"),
+                            default: rpg_data.privacy.includes(PrivacySettings.Inventory),
                         },
                         {
                             label: "夥伴",
                             description: "夥伴的清單",
-                            value: "partner",
+                            value: PrivacySettings.Partner,
                             emoji: emoji_pet,
-                            default: rpg_data.privacy.includes("partner"),
+                            default: rpg_data.privacy.includes(PrivacySettings.Partner),
                         }
                     ]);
 

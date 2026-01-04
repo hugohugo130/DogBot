@@ -1467,10 +1467,9 @@ async function amount_limit_embed(amount, interaction = null) {
 };
 
 async function ls_function({ client, message, rpg_data, mode, PASS, interaction = null }) {
-    const { privacy_data } = require("../cogs/rpg/msg_handler.js");
     const { loadData } = require("./file.js");
 
-    if (!rpg_data.privacy.includes(privacy_data["ls"]) && !PASS) {
+    if (!rpg_data.privacy.includes(PrivacySettings.Inventory) && !PASS) {
         const guildData = loadData(message.guild.id);
 
         const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
@@ -1719,6 +1718,12 @@ const jobs = {
     },
 };
 
+const PrivacySettings = Object.freeze({
+    Inventory: "backpack",
+    Money: "money",
+    Partner: "partner",
+});
+
 const workCmdJobs = Object.fromEntries(Object.entries(jobs).filter(([_, value]) => value.command).map(([key, value]) => [value.command, [key, value]]));
 
 const oven_slots = 3;
@@ -1748,6 +1753,7 @@ module.exports = {
     tags,
     bake,
     sell_data,
+    PrivacySettings,
     check_item_data,
     get_name_of_id,
     get_id_of_name,
