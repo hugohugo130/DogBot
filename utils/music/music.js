@@ -22,6 +22,13 @@ const logger = get_logger();
 
 const queues = new Collection();
 
+const loopStatus = Object.freeze({
+    DISABLED: 0,
+    TRACK: 1,
+    ALL: 2,
+    AUTO: 3,
+})
+
 // SoundCloudTrack Object Example
 /*
 {
@@ -197,10 +204,7 @@ class MusicQueue {
         this.currentResource = null;
 
         /** @type {boolean} */
-        this.loop = false;
-
-        /** @type {boolean} */
-        this.loopQueue = false;
+        this.loopStatus = loopStatus.DISABLED;
 
         /** @type {boolean} */
         this.paused = false;
@@ -270,7 +274,7 @@ class MusicQueue {
                     };
                 };
 
-                if (newState.status === AudioPlayerStatus.Playing) {
+                if (newState.status === AudioPlayerStatus.Playing) { // 發送正在播放 Embed
                     // 正在播放
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
@@ -290,13 +294,17 @@ class MusicQueue {
                     this.playing = false;
                     this.currentTrack = null;
 
-                    if (this.loop) {
-                        // 如果是單曲循環
-                        this.play(this.currentTrack.id, this.currentTrack.url, this.currentTrack.source);
-                    } else if (this.loopQueue) {
-                        // 如果是循環播放清單
-                        this.tracks.push(this.tracks.shift());
-                        this.play(this.tracks[0].id, this.tracks[0].url, this.tracks[0].source);
+                    if (this.loopStatus !== loopStatus.DISABLED) { // 已啟用循環
+                        if (this.loopStatus === loopStatus.TRACK) {
+                            // 如果是單曲循環
+
+                            this.play(this.currentTrack.id, this.currentTrack.url, this.currentTrack.source);
+                        } else if (this.loopStatus === loopStatus.ALL) {
+                            // 如果是循環播放所有歌曲
+
+                            this.tracks.push(this.tracks.shift());
+                            this.play(this.tracks[0].id, this.tracks[0].url, this.tracks[0].source);
+                        };
                     } else {
                         // 如果是正常播放
                         this.nextTrack();
@@ -401,7 +409,7 @@ class MusicQueue {
     /**
      * 
      * @param {boolean} force - 是否強制停止播放器
-     * @returns {[import("soundcloud.ts").SoundcloudTrack, import("soundcloud.ts").SoundcloudTrack]} - [old_track, new_track]
+     * @returns {[import("soundcloud.ts").SoundcloudTrack, import("soundcloud.ts").SoundcloudTrack]} [old_track, new_track]
      */
     nextTrack(force = false) {
         const old_track = this.currentTrack;
@@ -454,6 +462,16 @@ class MusicQueue {
 
     swapTracks(firstTrackIndex, secondTrackIndex) {
         [this.tracks[firstTrackIndex], this.tracks[secondTrackIndex]] = [this.tracks[secondTrackIndex], this.tracks[firstTrackIndex]];
+    };
+
+    shuffle() {
+        for (let i = this.tracks.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+
+            [this.tracks[i], this.tracks[j]] = [this.tracks[j], this.tracks[i]];
+        };
+
+        return this.tracks;
     };
 
     destroy() {
@@ -523,6 +541,7 @@ function isSoundCloudTracks(object) {
     return (
         Array.isArray(object) &&
         object.length &&
+        object[0] &&
         typeof object[0] === "object" &&
         'comment_count' in object[0] &&
         'full_duration' in object[0] &&
@@ -848,4 +867,6 @@ module.exports = {
     search_until,
     convertToOgg,
     clear_duplicate_temp,
+    MusicQueue,
+    loopStatus,
 };

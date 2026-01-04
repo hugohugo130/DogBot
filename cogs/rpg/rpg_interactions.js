@@ -484,12 +484,12 @@ module.exports = {
     execute: async function (client, interaction) {
         try {
             const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data, load_bake_data, save_bake_data, load_smelt_data, save_smelt_data, find_default_value } = require("../../utils/file.js");
-            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, ls_function, bake, smeltable_recipe, name, jobs, smelter_slots, oven_slots } = require("../../utils/rpg.js");
+            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, get_emojis, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, ls_function, bake, smeltable_recipe, name, jobs, smelter_slots, oven_slots } = require("../../utils/rpg.js");
             const { rpg_handler, MockMessage } = require("./msg_handler.js");
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
             const { getBotInfoEmbed } = require("../../slashcmd/info.js")
+            const { getNowPlayingEmbed } = require("../../slashcmd/music/nowplaying.js");
             const { getQueue, saveQueue } = require("../../utils/music/music.js");
-            const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
@@ -1271,32 +1271,13 @@ module.exports = {
 
                 queue.addTrack(track, next ? 0 : null);
 
-                const progressBlack = 14;
-
-                const emoji_playGrad = await get_emoji("playGrad", client);
-                const emoji_progressDot = await get_emoji("progressDot", client);
-                const emoji_progressBlack = await get_emoji("progressBlack", client);
-                const emoji_progressEnd = await get_emoji("progressEnd", client);
-
-                const formattedDuration = formatMinutesSeconds(track.duration);
-
-                const embed = new EmbedBuilder()
-                    .setAuthor({ name: track.author })
-                    .setURL(track.url)
-                    .setThumbnail(track.thumbnail)
-                    .setTitle(`**${track.title}**`)
-                    .setDescription(`
-${emoji_playGrad} 00:00${emoji_progressDot}${emoji_progressBlack.repeat(progressBlack)}${emoji_progressEnd}${formattedDuration}
-
-[使用教學](<${DOCS}>) ∙ [機器人狀態](<${STATUS_PAGE}>)
-`)
-                    .setEmbedFooter(interaction);
+                const [embed, rows] = await getNowPlayingEmbed(queue, interaction, client, true);
 
                 if (!queue.isPlaying()) {
                     await queue.play(track.id, track.url, source);
                 };
 
-                return await interaction.editReply({ content: "", embeds: [embed], components: [] });
+                return await interaction.editReply({ content: "", embeds: [embed], components: rows });
             } else if (interactionCategory === "refresh") {
                 const [_, feature] = otherCustomIDs;
 
@@ -1312,6 +1293,87 @@ ${emoji_playGrad} 00:00${emoji_progressDot}${emoji_progressBlack.repeat(progress
 
                         await interaction.update({ embeds: [embed], components: [row] });
                         break;
+                    };
+                    case "music": {
+                        const emoji_music = await get_emoji("music", client);
+                        const queue = getQueue(interaction.guildId, true);
+
+                        const [embed, rows] = await getNowPlayingEmbed(queue, interaction, client);
+
+                        await interaction.update({ content: `${emoji_music} | 正在播放`, embeds: [embed], components: rows });
+                        break;
+                    }
+                };
+            } else if (interactionCategory === "music") {
+                const [_, feature] = otherCustomIDs;
+
+                const guildId = interaction.guildId;
+                const queue = getQueue(guildId, true);
+
+                const [emoji_cross,
+                    emoji_play,
+                    emoji_pause,
+                    emoji_skip,
+                    emoji_shuffle,
+                    emoji_wumpusWave,
+                ] = await get_emojis(["cross",
+                    "play",
+                    "pause",
+                    "skip",
+                    "shuffle",
+                    "wumpusWave",
+                ], client);
+
+                if (!queue.isPlaying()) { // 沒有音樂正在播放
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.update({ embeds: [embed], ephemeral: true });
+                };
+
+                switch (feature) {
+                    case "pause": {
+                        if (queue.isPaused()) {
+                            // 繼續播放
+
+                            queue.unpause();
+                            return await interaction.update({ content: `${emoji_play} | \`${user.username}\` 繼續播放音樂`, embeds: [] });
+                        } else {
+                            // 暫停播放
+
+                            queue.pause();
+                            return await interaction.update({ content: `${emoji_pause} | \`${user.username}\` 暫停了音樂`, embeds: [] });
+                        };
+                    };
+
+                    case "skip": {
+                        const currentTrack = queue.currentTrack;
+
+                        queue.nextTrack();
+
+                        return await interaction.update({ content: `${emoji_skip} | \`${user.username}\` 跳過了 \`${currentTrack.title}\``, embeds: [] });
+                    };
+
+                    case "shuffle": {
+                        queue.shuffle();
+
+                        return await interaction.update({ content: `${emoji_shuffle} | \`${user.username}\` 隨機排序了音樂佇列` });
+                    };
+
+                    case "loop": {
+
+                    };
+
+                    case "trending": {
+
+                    };
+
+                    case "disconnect": {
+                        queue.destroy();
+
+                        return await interaction.update({ content: `${emoji_wumpusWave} | \`${user.username}\` 讓我離開語音頻道` });
                     };
                 };
             };
