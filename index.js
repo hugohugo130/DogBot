@@ -31,6 +31,7 @@ process.on("unhandledRejection", (reason, promise) => {
     };
 
     if (errorStack.includes("Missing Access")) return;
+    if (errorStack.includes("Unknown interaction")) return;
 
     logger.error(`未捕獲的 Promise Rejection:\n${errorStack}`);
 });
@@ -38,6 +39,9 @@ process.on("unhandledRejection", (reason, promise) => {
 // 未捕獲的異常處理
 process.on("uncaughtException", (error) => {
     const errorStack = util.inspect(error, { depth: null });
+
+    if (errorStack.includes("Missing Access")) return;
+    if (errorStack.includes("Unknown interaction")) return;
 
     logger.error(`未捕獲的異常:\n${errorStack}`);
 });
