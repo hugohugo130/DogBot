@@ -23,6 +23,9 @@ module.exports = {
                 .setColor(embed_default_color)
                 .setDescription(`
 **狗狗機器犬**
+
+————————————
+
 作者: happyhugoe
 我又在 <t:${Math.floor(client.readyTimestamp / 1000)}:R> 的時候復活了！
 哈狗使用discord.js做出這個機器人，但如果變熱門的話記憶體應該會炸掉吧
