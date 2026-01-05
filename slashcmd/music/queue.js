@@ -70,7 +70,7 @@ module.exports = {
         if (!queue.isPlaying() && !queue?.tracks?.length) {
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 佇列內沒有歌曲`)
+                .setTitle(`${emoji_cross} | 清單是空的`)
                 .setEmbedFooter(interaction);
 
             return await interaction.editReply({ embeds: [error_embed] });
