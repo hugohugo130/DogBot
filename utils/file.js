@@ -9,7 +9,7 @@ const axios = require("axios");
 
 const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder, probabilities } = require("./config.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
-const { sleep } = require("./sleep.js");
+const { sleep, asleep } = require("./sleep.js");
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
@@ -276,7 +276,7 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
             } else if (err.code === "ECONNRESET" || err.message?.includes("socket hang up")) {
                 if (attempt < maxRetries) {
                     log.warn(`連接遠端伺服器時中斷，正在重試 (${attempt}/${maxRetries})...`);
-                    sleep(1000);
+                    await asleep(1000);
                     continue;
                 } else {
                     log.error(`獲取遠端檔案內容時遇到錯誤: ${err.message}`);

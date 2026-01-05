@@ -489,7 +489,7 @@ module.exports = {
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
             const { getBotInfoEmbed } = require("../../slashcmd/info.js")
             const { getNowPlayingEmbed } = require("../../slashcmd/music/nowplaying.js");
-            const { getQueue, saveQueue } = require("../../utils/music/music.js");
+            const { getQueue, saveQueue, loopStatus } = require("../../utils/music/music.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
@@ -1313,7 +1313,7 @@ module.exports = {
                     }
                 };
             } else if (interactionCategory === "music") {
-                const [_, feature] = otherCustomIDs;
+                const [_, feature, options = null] = otherCustomIDs;
 
                 const guildId = interaction.guildId;
                 const queue = getQueue(guildId, true);
@@ -1370,11 +1370,54 @@ module.exports = {
                     };
 
                     case "loop": {
+                        const currentLoopStatus = queue.loopStatus;
+                        const emoji_loop = await get_emoji("loop", client);
 
+                        const translate = {
+                            [loopStatus.DISABLED]: "關閉",
+                            [loopStatus.TRACK]: "單曲",
+                            [loopStatus.ALL]: "全部",
+                            [loopStatus.AUTO]: "自動推薦",
+                        };
+
+                        const nextLoopStatus = (currentLoopStatus + 1) > (loopStatus.length - 1)
+                            ? 0
+                            : (currentLoopStatus + 1);
+
+                        await Promise.all([
+                            queue.setLoopStatus(nextLoopStatus),
+                            interaction.update({ content: `${emoji_loop} | \`${user.username}\` 把重複的狀態更改為 \`${translate[nextLoopStatus]}\` `, embeds: [] }),
+                        ]);
+
+                        break;
                     };
 
                     case "trending": {
+                        switch (options) {
+                            case "on": {
+                                const emoji_trending = await get_emoji("trending", client);
 
+                                await Promise.all([
+                                    queue.setLoopStatus(loopStatus.AUTO),
+                                    interaction.update({ content: `${emoji_trending} | \`${user.username}\` 啟用了自動推薦功能，將會在歌曲結束後推薦下一首音樂` }),
+                                ]);
+
+                                break;
+                            };
+
+                            case "off": {
+                                const emoji_trending = await get_emoji("trending", client);
+
+                                await Promise.all([
+                                    queue.setLoopStatus(loopStatus.DISABLED),
+                                    interaction.update({ content: `${emoji_trending} | \`${user.username}\` 關閉了自動推薦功能` }),
+                                ]);
+
+                                break;
+                            };
+                        };
+
+                        break;
                     };
 
                     case "disconnect": {
@@ -1384,6 +1427,8 @@ module.exports = {
                             queue.destroy(),
                             interaction.update({ content: `${emoji_wumpusWave} | \`${user.username}\` 讓我離開語音頻道`, embeds: [] }),
                         ]);
+
+                        break;
                     };
                 };
             };

@@ -127,6 +127,8 @@ async function getNowPlayingRows(queue, client = global._client) {
         };
     };
 
+    const IsTrendingOn = queue.loopStatus === loopStatus.AUTO;
+
     const row1 = new ActionRowBuilder() // all [ButtonStyle.Secondary]
         .addComponents(
             new ButtonBuilder()
@@ -154,10 +156,10 @@ async function getNowPlayingRows(queue, client = global._client) {
     const row2 = new ActionRowBuilder()
         .addComponents(
             new ButtonBuilder()
-                .setCustomId("music|any|trending")
+                .setCustomId(`music|any|trending|${IsTrendingOn ? "off" : "on"}`) // option: off/on
                 .setEmoji(emoji_trending)
                 .setLabel("自動推薦")
-                .setStyle(ButtonStyle.Success),
+                .setStyle(IsTrendingOn ? ButtonStyle.Success : ButtonStyle.Secondary), // Success按下去後關閉，Secondary按下去後啟用
 
             new ButtonBuilder()
                 .setCustomId("refresh|any|music")
@@ -255,7 +257,7 @@ module.exports = {
         const guildId = interaction.guild.id;
         const queue = getQueue(guildId, false);
 
-        const emoji_cross = await get_emoji("cross", client);
+        const emoji_cross = await get_emoji("crosS", client);
 
         if (!voiceChannel) {
             const error_embed = new EmbedBuilder()

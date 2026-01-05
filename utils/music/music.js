@@ -337,7 +337,7 @@ class MusicQueue {
     };
 
     /**
-     * 
+     *
      * @returns {boolean}
      */
     isPlaying() {
@@ -345,7 +345,7 @@ class MusicQueue {
     };
 
     /**
-     * 
+     *
      * @returns {boolean}
      */
     isPaused() {
@@ -353,7 +353,7 @@ class MusicQueue {
     };
 
     /**
-     * 
+     *
      * @param {string} id
      * @param {string} url
      * @param {string} source
@@ -412,7 +412,7 @@ class MusicQueue {
     };
 
     /**
-     * 
+     *
      * @param {boolean} force - 是否強制停止播放器
      * @returns {[import("soundcloud.ts").SoundcloudTrack, import("soundcloud.ts").SoundcloudTrack]} [old_track, new_track]
      */
@@ -477,6 +477,14 @@ class MusicQueue {
         };
 
         return this.tracks;
+    };
+
+    /**
+     *
+     * @param {loopStatus} status
+     */
+    setLoopStatus(status) {
+        this.loopStatus = status;
     };
 
     destroy() {
