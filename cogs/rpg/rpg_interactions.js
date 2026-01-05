@@ -1333,18 +1333,18 @@ module.exports = {
                             const emoji_play = await get_emoji("play", client);
 
                             // 繼續播放
-                            await Promise.all(
+                            await Promise.all([
                                 queue.unpause(),
                                 interaction.update({ content: `${emoji_play} | \`${user.username}\` 繼續播放音樂`, embeds: [] }),
-                            );
+                            ]);
                         } else {
                             const emoji_pause = await get_emoji("pause", client);
 
                             // 暫停播放
-                            await Promise.all(
+                            await Promise.all([
                                 queue.pause(),
                                 interaction.update({ content: `${emoji_pause} | \`${user.username}\` 暫停了音樂`, embeds: [] }),
-                            );
+                            ]);
                         };
                     };
 
@@ -1354,19 +1354,19 @@ module.exports = {
 
                         const emoji_skip = await get_emoji("skip", client);
 
-                        await Promise.all(
+                        await Promise.all([
                             queue.nextTrack(),
                             interaction.update({ content: `${emoji_skip} | \`${user.username}\` 跳過了 \`${currentTrack.title}\``, embeds: [] }),
-                        );
+                        ]);
                     };
 
                     case "shuffle": {
                         const emoji_shuffle = await get_emoji("shuffle", client);
 
-                        await Promise.all(
+                        await Promise.all([
                             queue.shuffle(),
                             interaction.update({ content: `${emoji_shuffle} | \`${user.username}\` 隨機排序了音樂佇列` }),
-                        );
+                        ]);
                     };
 
                     case "loop": {
@@ -1380,10 +1380,10 @@ module.exports = {
                     case "disconnect": {
                         const emoji_wumpusWave = await get_emoji("wumpusWave", client);
 
-                        await Promise.all(
+                        await Promise.all([
                             queue.destroy(),
                             interaction.update({ content: `${emoji_wumpusWave} | \`${user.username}\` 讓我離開語音頻道` }),
-                        );
+                        ]);
                     };
                 };
             };
