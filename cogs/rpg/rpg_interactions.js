@@ -596,8 +596,8 @@ module.exports = {
                 // const { get_emoji } = require("../../utils/rpg.js");
 
                 // await interaction.deferUpdate();
-                // const emoji_tick = get_emoji("Tick", client);
-                // const emoji_cross = get_emoji("crosS", client);
+                // const emoji_tick = await get_emoji("Tick", client);
+                // const emoji_cross = await get_emoji("crosS", client);
                 // const embed = new EmbedBuilder()
                 //     .setColor(embed_default_color)
                 //     .setTitle(`${emoji_tick} | 語言設定成功`)
@@ -895,7 +895,7 @@ module.exports = {
                 let bake_data = load_bake_data();
 
                 if (bake_data[userId] && bake_data[userId].length >= oven_slots) {
-                    const emoji_cross = get_emoji("crosS", client);
+                    const emoji_cross = await get_emoji("crosS", client);
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -1365,7 +1365,7 @@ module.exports = {
 
                         await Promise.all([
                             queue.shuffle(),
-                            interaction.update({ content: `${emoji_shuffle} | \`${user.username}\` 隨機排序了音樂佇列` }),
+                            interaction.update({ content: `${emoji_shuffle} | \`${user.username}\` 隨機排序了音樂佇列`, embeds: [] }),
                         ]);
                     };
 
@@ -1382,7 +1382,7 @@ module.exports = {
 
                         await Promise.all([
                             queue.destroy(),
-                            interaction.update({ content: `${emoji_wumpusWave} | \`${user.username}\` 讓我離開語音頻道` }),
+                            interaction.update({ content: `${emoji_wumpusWave} | \`${user.username}\` 讓我離開語音頻道`, embeds: [] }),
                         ]);
                     };
                 };

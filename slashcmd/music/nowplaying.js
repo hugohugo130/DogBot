@@ -255,7 +255,7 @@ module.exports = {
         const guildId = interaction.guild.id;
         const queue = getQueue(guildId, false);
 
-        const emoji_cross = get_emoji("cross", client);
+        const emoji_cross = await get_emoji("cross", client);
 
         if (!voiceChannel) {
             const error_embed = new EmbedBuilder()
