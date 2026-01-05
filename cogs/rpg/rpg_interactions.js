@@ -1318,20 +1318,6 @@ module.exports = {
                 const guildId = interaction.guildId;
                 const queue = getQueue(guildId, true);
 
-                const [emoji_cross,
-                    emoji_play,
-                    emoji_pause,
-                    emoji_skip,
-                    emoji_shuffle,
-                    emoji_wumpusWave,
-                ] = await get_emojis(["cross",
-                    "play",
-                    "pause",
-                    "skip",
-                    "shuffle",
-                    "wumpusWave",
-                ], client);
-
                 if (!queue.isPlaying()) { // 沒有音樂正在播放
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -1344,30 +1330,43 @@ module.exports = {
                 switch (feature) {
                     case "pause": {
                         if (queue.isPaused()) {
+                            const emoji_play = await get_emoji("play", client);
+
                             // 繼續播放
-
-                            queue.unpause();
-                            return await interaction.update({ content: `${emoji_play} | \`${user.username}\` 繼續播放音樂`, embeds: [] });
+                            await Promise.all(
+                                queue.unpause(),
+                                interaction.update({ content: `${emoji_play} | \`${user.username}\` 繼續播放音樂`, embeds: [] }),
+                            );
                         } else {
-                            // 暫停播放
+                            const emoji_pause = await get_emoji("pause", client);
 
-                            queue.pause();
-                            return await interaction.update({ content: `${emoji_pause} | \`${user.username}\` 暫停了音樂`, embeds: [] });
+                            // 暫停播放
+                            await Promise.all(
+                                queue.pause(),
+                                interaction.update({ content: `${emoji_pause} | \`${user.username}\` 暫停了音樂`, embeds: [] }),
+                            );
                         };
                     };
 
                     case "skip": {
+                        if (!queue.currentTrack) return;
                         const currentTrack = queue.currentTrack;
 
-                        queue.nextTrack();
+                        const emoji_skip = await get_emoji("skip", client);
 
-                        return await interaction.update({ content: `${emoji_skip} | \`${user.username}\` 跳過了 \`${currentTrack.title}\``, embeds: [] });
+                        await Promise.all(
+                            queue.nextTrack(),
+                            interaction.update({ content: `${emoji_skip} | \`${user.username}\` 跳過了 \`${currentTrack.title}\``, embeds: [] }),
+                        );
                     };
 
                     case "shuffle": {
-                        queue.shuffle();
+                        const emoji_shuffle = await get_emoji("shuffle", client);
 
-                        return await interaction.update({ content: `${emoji_shuffle} | \`${user.username}\` 隨機排序了音樂佇列` });
+                        await Promise.all(
+                            queue.shuffle(),
+                            interaction.update({ content: `${emoji_shuffle} | \`${user.username}\` 隨機排序了音樂佇列` }),
+                        );
                     };
 
                     case "loop": {
@@ -1379,9 +1378,12 @@ module.exports = {
                     };
 
                     case "disconnect": {
-                        queue.destroy();
+                        const emoji_wumpusWave = await get_emoji("wumpusWave", client);
 
-                        return await interaction.update({ content: `${emoji_wumpusWave} | \`${user.username}\` 讓我離開語音頻道` });
+                        await Promise.all(
+                            queue.destroy(),
+                            interaction.update({ content: `${emoji_wumpusWave} | \`${user.username}\` 讓我離開語音頻道` }),
+                        );
                     };
                 };
             };
