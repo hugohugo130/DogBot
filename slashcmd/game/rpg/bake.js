@@ -458,7 +458,7 @@ module.exports = {
             if (!bake_data || bake_data.length === 0) {
                 embed.setDescription(`使用率 \`[${used_slots} / ${oven_slots}]\`\n\n你的烤箱目前是空的`);
             } else {
-                for (let i = 0; i < (bake_data.length > 25 ? 25 : bake_data.length); i++) {
+                for (let i = 0; i < Math.min(25, bake_data.length); i++) {
                     const item = bake_data[i];
                     const input_name = name[item.item_id] || item.item_id;
                     const output_name = name[item.output_item_id] || item.output_item_id;
