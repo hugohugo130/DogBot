@@ -16,6 +16,7 @@ const { musicSearchEngine, embed_error_color, embed_default_color } = require(".
 const { generateSHA256 } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
+const { default: filenamify } = require("filenamify");
 
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
@@ -731,10 +732,10 @@ async function getTrack({ track, id, url, source }) {
  * 
  * @param {string} query
  * @param {number} amount
- * @param {boolean} downloadFile
+ * @param {boolean} IsdownloadFile
  * @returns {Promise<{id: string | number, title: string, url: string, duration: number, thumbnail: string, author: string, source: string}[]>}
  */
-async function search_until(query, amount = 25, downloadFile = false) {
+async function search_until(query, amount = 25, IsdownloadFile = false) {
     let results = [];
 
     for (const engine of musicSearchEngine) {
@@ -751,12 +752,12 @@ async function search_until(query, amount = 25, downloadFile = false) {
         };
 
         let tracks = [];
-        let output;
+        let output = [];
 
         try {
-            if (downloadFile && IsValidURL(query)) {
-
-            }
+            if (IsdownloadFile && IsValidURL(query)) {
+                output.push(await downloadFile(query, join_temp_folder(filenamify(query).slice(0, 75) + ".mp3")));
+            };
 
             if (file.get_track_info
                 && typeof file.get_track_info === "function"
@@ -765,7 +766,7 @@ async function search_until(query, amount = 25, downloadFile = false) {
                 && file.validateURL(query)
             ) {
                 try {
-                    output = [await file.get_track_info(query)];
+                    output.push(await file.get_track_info(query));
                 } catch (_) {
                     output = await file.search_tracks(query);
                 };
