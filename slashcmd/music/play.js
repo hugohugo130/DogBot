@@ -136,15 +136,7 @@ module.exports = {
         let voiceConnection = getVoiceConnection(guildId);
 
         // 連接到語音頻道
-        if (!voiceConnection) {
-            voiceConnection = joinVoiceChannel({
-                channelId: voiceChannel.id,
-                guildId: guildId,
-                selfDeaf: true,
-                selfMute: false,
-                adapterCreator: interaction.guild.voiceAdapterCreator,
-            });
-        } else if (voiceConnection.joinConfig.channelId !== voiceChannel.id) {
+        if (voiceConnection?.joinConfig?.channelId && voiceConnection.joinConfig.channelId !== voiceChannel.id) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
@@ -160,7 +152,6 @@ module.exports = {
 
         queue.textChannel = interaction.channel;
         queue.voiceChannel = voiceChannel;
-        queue.connection = voiceConnection;
         queue.subscribe();
 
         saveQueue(guildId, queue);
