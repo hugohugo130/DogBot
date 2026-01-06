@@ -31,19 +31,20 @@ function convertToSecond(number) {
  * @returns {string}
  */
 function formatMinutesSeconds(seconds, convertToSec = true) {
-    if (convertToSec) {
-        seconds = convertToSecond(seconds);
-    };
+    if (convertToSec) seconds = convertToSecond(seconds);
 
     const hours = Math.floor(seconds / 60 / 60);
-    const mins = Math.floor(seconds / 60);
+    const mins = Math.floor(seconds / 60) % 60;
     const secs = seconds % 60;
 
-    const formattedHours = String(hours).padStart(2, "0")
+    const formattedHours = hours ?
+        `${String(hours).padStart(2, "0")}:`
+        : "";
+
     const formattedMins = String(mins).padStart(2, "0");
     const formattedSecs = String(secs).padStart(2, "0");
 
-    return `${formattedHours}:${formattedMins}:${formattedSecs}`;
+    return `${formattedHours}${formattedMins}:${formattedSecs}`;
 };
 
 function DateNow() {
