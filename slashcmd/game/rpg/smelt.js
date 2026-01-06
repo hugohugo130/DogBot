@@ -312,10 +312,10 @@ module.exports = {
             };
 
             if (allAmount && !auto_amount) {
-                amounts = [rpg_data.inventory[first_food] || 1];
+                amounts = [rpg_data.inventory[item_id] || 1];
             } else if (auto_amount) {
                 if (auto_amount === "amount") {
-                    amounts = divide(rpg_data.inventory[first_food], smelt_remain_slots);
+                    amounts = divide(rpg_data.inventory[item_id], smelt_remain_slots);
                 } else { // auto_amount === "foods"
                     const entries = Object.entries(rpg_data.inventory)
                         .filter(([key]) => key in bake) // 過濾掉不可熔鍊的物品
