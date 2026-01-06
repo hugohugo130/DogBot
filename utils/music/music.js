@@ -206,7 +206,7 @@ class MusicQueue {
         /** @type {AudioResource | null} */
         this.currentResource = null;
 
-        /** @type {boolean} */
+        /** @type {number} */
         this.loopStatus = loopStatus.DISABLED;
 
         /** @type {boolean} */
@@ -298,7 +298,6 @@ class MusicQueue {
                 ) {
                     // 閒置 (播完了)
                     this.playing = false;
-                    this.currentTrack = null;
 
                     if (this.loopStatus !== loopStatus.DISABLED) { // 已啟用循環
                         if (this.loopStatus === loopStatus.TRACK) {
@@ -428,7 +427,7 @@ class MusicQueue {
             new_track = this.play(this.tracks[0].id, this.tracks[0].url, this.tracks[0].source);
         };
 
-        return [old_track, new_track]
+        return [old_track, new_track];
     };
 
     subscribe() {
