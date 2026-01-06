@@ -11,9 +11,9 @@ async function execFFmpegCommand(cmdData) {
     const { cmd, input, output } = cmdData;
     if (!cmd || !input || !output) return;
 
-    logger.debug(`執行 FFmpeg 指令: ${cmd}`);
-
+    logger.info(`[執行中..] FFmpeg 指令: ${cmd}`);
     await execPromise(cmd);
+    logger.info(`[執行完畢] FFmpeg 指令: ${cmd}`);
 };
 
 module.exports = {
