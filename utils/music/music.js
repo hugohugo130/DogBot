@@ -318,6 +318,7 @@ class MusicQueue {
                 };
             } catch (err) {
                 if (err.stack.includes("Missing Access")) return;
+                if (err.stack.includes("Missing Permissions")) return;
 
                 throw err;
             };
