@@ -1,6 +1,6 @@
 const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, CommandInteraction, ButtonStyle, ButtonBuilder, ButtonInteraction, StringSelectMenuInteraction, BaseInteraction } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
-const { getVoiceConnection } = require("@discordjs/voice");
+const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
 const util = require("node:util");
 
 const { get_logger } = require("../../utils/logger.js");
@@ -1280,6 +1280,20 @@ module.exports = {
 
                     // 連接到語音頻道
                     if (!getVoiceConnection(interaction.guildId)) {
+                        const voiceChannel = interaction.member.voice.channel;
+
+                        const emoji_cross = await get_emoji("crosS", client);
+
+                        if (!voiceChannel) {
+                            const error_embed = new EmbedBuilder()
+                                .setColor(embed_error_color)
+                                .setTitle(`${emoji_cross} | 你需要先進到一個語音頻道`)
+                                .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
+                                .setEmbedFooter(interaction);
+
+                            return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+                        };
+
                         const voiceConnection = joinVoiceChannel({
                             channelId: voiceChannel.id,
                             guildId: guildId,
@@ -1289,6 +1303,9 @@ module.exports = {
                         });
 
                         queue.connection = voiceConnection;
+                        queue.voiceChannel = voiceChannel;
+                        queue.textChannel = interaction.channel;
+
                         saveQueue(interaction.guildId, queue);
                     };
 
