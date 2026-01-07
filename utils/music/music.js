@@ -8,7 +8,7 @@ const { getAudioDurationInSeconds } = require('get-audio-duration');
 const { default: _filenamify } = require("filenamify");
 const { fileTypeFromStream, fileTypeFromFile } = require("file-type");
 const { pipeline } = require("node:stream/promises");
-const { Readable } = require("node:stream");
+const { Readable, PassThrough } = require("node:stream");
 const { Collection, TextChannel, VoiceChannel, Subscription, Guild } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
 
@@ -434,7 +434,9 @@ class MusicQueue {
         let track;
 
         if (stream) {
-            const fileType = (await fileTypeFromStream(stream))?.mime;
+            const clonedStream = stream.pipe(new PassThrough());
+
+            const fileType = (await fileTypeFromStream(clonedStream))?.mime;
             if (!fileType?.startsWith("audio/")) {
                 throw new Error("Stream is not an audio stream");
             };
