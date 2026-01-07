@@ -1,22 +1,25 @@
 const path = require("path");
 const util = require("node:util");
 const axios = require("axios");
+const httpAdapter = require('axios/unsafe/adapters/http.js');
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
-const { pipeline } = require("node:stream/promises");
-const { Collection, TextChannel, VoiceChannel, Subscription, Guild } = require("discord.js");
-const { createAudioResource, createAudioPlayer, AudioPlayerStatus, VoiceConnection, AudioPlayer, joinVoiceChannel, getVoiceConnection, StreamType, AudioResource } = require("@discordjs/voice");
+const { createAudioResource, createAudioPlayer, joinVoiceChannel, getVoiceConnection, AudioPlayerStatus, VoiceConnection, AudioPlayer, StreamType, AudioResource } = require("@discordjs/voice");
 const { getAudioDurationInSeconds } = require('get-audio-duration');
+const { default: _filenamify } = require("filenamify");
+const { fileTypeFromStream, fileTypeFromFile } = require("file-type");
+const { pipeline } = require("node:stream/promises");
+const { Readable } = require("node:stream");
+const { Collection, TextChannel, VoiceChannel, Subscription, Guild } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
 
+const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
 const { get_logger } = require("../logger.js");
-const { existsSync, createReadStream, get_temp_folder, join_temp_folder, basename, readdirSync, unlinkSync } = require("../file.js");
+const { existsSync, createReadStream, get_temp_folder, join_temp_folder, basename, readdirSync, unlinkSync, join, dirname } = require("../file.js");
 const { formatMinutesSeconds } = require("../timestamp.js");
 const { get_emoji } = require("../rpg.js");
-const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
-const { generateSHA256 } = require("../random.js");
+const { generateMD5 } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
-const { default: filenamify } = require("filenamify");
 
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
@@ -175,6 +178,44 @@ const loopStatus = Object.freeze({
 }
 */
 
+/**
+ * key: [MediaType](https://en.wikipedia.org/wiki/Media_type)
+ * value: [StreamType](https://discord.js.org/docs/packages/voice/0.19.0/StreamType:Enum)
+ * @typedef {Object.<string, string>} fileStreamType
+ */
+const fileStreamType = {
+    "audio/ogg": StreamType.OggOpus,
+    "audio/opus": StreamType.Opus,
+};
+
+class MusicTrack {
+    constructor({ id, title, url = null, duration = 0, thumbnail = null, author = "unknown", source = "", stream = null }) {
+        /** @type {string | number} */
+        this.id = id;
+
+        /** @type {string} */
+        this.title = title;
+
+        /** @type {string | null} */
+        this.url = url;
+
+        /** @type {number} */
+        this.duration = duration;
+
+        /** @type {string | null} */
+        this.thumbnail = thumbnail;
+
+        /** @type {string} */
+        this.author = author;
+
+        /** @type {string} */
+        this.source = source?.toLowerCase?.().trim?.() || "soundcloud";
+
+        /** @type {Readable | null} */
+        this.stream = stream;
+    };
+};
+
 class MusicQueue {
     /**
      *
@@ -200,7 +241,7 @@ class MusicQueue {
         /** @type {boolean} */
         this.playing = false;
 
-        /** @type {import('soundcloud.ts').SoundcloudTrack | null} */
+        /** @type {MusicTrack | null} */
         this.currentTrack = null;
 
         /** @type {AudioResource | null} */
@@ -251,6 +292,8 @@ class MusicQueue {
                         const voiceConnection = joinVoiceChannel({
                             channelId: this.voiceChannel.id,
                             guildId: this.guildID,
+                            selfDeaf: true,
+                            selfMute: false,
                             adapterCreator: this.voiceChannel.guild.voiceAdapterCreator
                         });
 
@@ -303,12 +346,22 @@ class MusicQueue {
                         if (this.loopStatus === loopStatus.TRACK) {
                             // 如果是單曲循環
 
-                            this.play(this.currentTrack.id, this.currentTrack.url, this.currentTrack.source);
+                            this.play({
+                                id: this.currentTrack.id,
+                                url: this.currentTrack.url,
+                                source: this.currentTrack.source,
+                                stream: this.currentTrack.stream,
+                            });
                         } else if (this.loopStatus === loopStatus.ALL) {
                             // 如果是循環播放所有歌曲
 
                             this.tracks.push(this.tracks.shift());
-                            this.play(this.tracks[0].id, this.tracks[0].url, this.tracks[0].source);
+                            this.play({
+                                id: this.tracks[0].id,
+                                url: this.tracks[0].url,
+                                source: this.tracks[0].source,
+                                stream: this.tracks[0].stream,
+                            });
                         };
                     } else {
                         // 如果是正常播放
@@ -355,11 +408,9 @@ class MusicQueue {
 
     /**
      *
-     * @param {string} id
-     * @param {string} url
-     * @param {string} source
+     * @param {{id: string, url: string, title?: string, source: string, stream?: ReadableStream | Readable}} param0
      */
-    async play(id, url, source) {
+    async play({ id, url, title = null, source, stream = null }) {
         if (this.playing) {
             this.stopPlaying(true);
         };
@@ -372,23 +423,51 @@ class MusicQueue {
                 this.connection = joinVoiceChannel({
                     channelId: this.voiceChannel.id,
                     guildId: this.guildID,
+                    selfDeaf: true,
+                    selfMute: false,
                     adapterCreator: this.guild.voiceAdapterCreator,
                 });
             };
         };
 
-        const audioPath = await getTrack({ id, url, source });
-        let track = await global._sc.tracks.get(id);
-        track = fixStructure([track])[0];
+        let resource;
+        let track;
 
-        let inputType = path.extname(audioPath) === ".ogg"
-            ? StreamType.OggOpus
-            : StreamType.Arbitrary;
+        if (stream) {
+            const fileType = (await fileTypeFromStream(stream))?.mime;
+            if (!fileType?.startsWith("audio/")) {
+                throw new Error("Stream is not an audio stream");
+            };
 
-        const resource = createAudioResource(
-            createReadStream(audioPath),
-            { inputType },
-        );
+            resource = createAudioResource(stream, {
+                inputType: fileStreamType[fileType] || StreamType.Arbitrary,
+            });
+
+            track = new MusicTrack({
+                id,
+                stream,
+                title: title ?? "unknown",
+                url: null,
+                author: "audio",
+                source: "stream",
+            });
+        } else {
+            const audioPath = await getTrack({ id, url, source });
+            let track = await global._sc.tracks.get(id);
+            track = fixStructure([track])[0];
+
+            const fileType = (await fileTypeFromFile(audioPath))?.mime;
+            if (!fileType?.startsWith("audio/")) {
+                throw new Error("File is not an audio file");
+            };
+
+            resource = createAudioResource(
+                createReadStream(audioPath),
+                {
+                    inputType: fileStreamType[fileType] || StreamType.Arbitrary,
+                },
+            );
+        };
 
         this.player.play(resource);
         this.player.unpause();
@@ -424,7 +503,12 @@ class MusicQueue {
         this.stopPlaying(force);
 
         if (this.tracks.length > 0) {
-            new_track = this.play(this.tracks[0].id, this.tracks[0].url, this.tracks[0].source);
+            new_track = this.play({
+                id: this.tracks[0].id,
+                url: this.tracks[0].url,
+                source: this.tracks[0].source,
+                stream: this.tracks[0].stream,
+            });
         };
 
         return [old_track, new_track];
@@ -496,7 +580,23 @@ class MusicQueue {
     };
 };
 
+/**
+ *
+ * @param {string} string
+ * @param {{fileMode:boolean}} param1
+ * @returns {string}
+ */
+function filenamify(string, { fileMode = false } = {}) {
+    if (fileMode) {
+        const fileName = basename(string);
+        const correctedFileName = _filenamify(fileName);
+        const correctedFilePath = join(dirname(string), correctedFileName);
 
+        return correctedFilePath;
+    } else {
+        return _filenamify(string);
+    };
+};
 
 /**
  *
@@ -540,124 +640,106 @@ function saveQueue(guildID, queue) {
     return queue;
 };
 
-function isAxiosResponse(response) {
+/**
+ * 
+ * @param {any} object
+ * @returns {boolean}
+ */
+function isSoundCloudTrack(object) {
     return (
-        typeof response === 'object' &&
-        response !== null &&
-        'data' in response &&
-        'status' in response &&
-        'headers' in response &&
-        'config' in response
-    );
-};
-
-function isSoundCloudTracks(object) {
-    return (
-        Array.isArray(object) &&
-        object.length &&
-        object[0] &&
-        typeof object[0] === "object" &&
-        'comment_count' in object[0] &&
-        'full_duration' in object[0] &&
-        'downloadable' in object[0] &&
-        'created_at' in object[0] &&
-        'description' in object[0] &&
-        'media' in object[0] &&
-        'title' in object[0] &&
-        'publisher_metadata' in object[0] &&
-        'duration' in object[0] &&
-        'has_downloads_left' in object[0] &&
-        'artwork_url' in object[0] &&
-        'public' in object[0] &&
-        'streamable' in object[0] &&
-        'tag_list' in object[0] &&
-        'genre' in object[0] &&
-        'id' in object[0] &&
-        'reposts_count' in object[0] &&
-        'state' in object[0] &&
-        'label_name' in object[0] &&
-        'last_modified' in object[0] &&
-        'commentable' in object[0] &&
-        'policy' in object[0] &&
-        'visuals' in object[0] &&
-        'kind' in object[0] &&
-        'purchase_url' in object[0] &&
-        'sharing' in object[0] &&
-        'uri' in object[0] &&
-        'secret_token' in object[0] &&
-        'download_count' in object[0] &&
-        'likes_count' in object[0] &&
-        'urn' in object[0] &&
-        'license' in object[0] &&
-        'purchase_title' in object[0] &&
-        'display_date' in object[0] &&
-        'embeddable_by' in object[0] &&
-        'release_date' in object[0] &&
-        'user_id' in object[0] &&
-        'monetization_model' in object[0] &&
-        'waveform_url' in object[0] &&
-        'permalink' in object[0] &&
-        'permalink_url' in object[0] &&
-        'user' in object[0] &&
-        'playback_count' in object[0]
+        object &&
+        typeof object === "object" &&
+        'comment_count' in object &&
+        'full_duration' in object &&
+        'downloadable' in object &&
+        'created_at' in object &&
+        'description' in object &&
+        'media' in object &&
+        'title' in object &&
+        'publisher_metadata' in object &&
+        'duration' in object &&
+        'has_downloads_left' in object &&
+        'artwork_url' in object &&
+        'public' in object &&
+        'streamable' in object &&
+        'tag_list' in object &&
+        'genre' in object &&
+        'id' in object &&
+        'reposts_count' in object &&
+        'state' in object &&
+        'label_name' in object &&
+        'last_modified' in object &&
+        'commentable' in object &&
+        'policy' in object &&
+        'visuals' in object &&
+        'kind' in object &&
+        'purchase_url' in object &&
+        'sharing' in object &&
+        'uri' in object &&
+        'secret_token' in object &&
+        'download_count' in object &&
+        'likes_count' in object &&
+        'urn' in object &&
+        'license' in object &&
+        'purchase_title' in object &&
+        'display_date' in object &&
+        'embeddable_by' in object &&
+        'release_date' in object &&
+        'user_id' in object &&
+        'monetization_model' in object &&
+        'waveform_url' in object &&
+        'permalink' in object &&
+        'permalink_url' in object &&
+        'user' in object &&
+        'playback_count' in object
     );
 };
 
 /**
- * 
- * @param {Array<any> | axios.AxiosResponse} object
- * @returns {Array<{id: string | number, title: string, url: string, duration: number, thumbnail: string, author: string, source: string}>}
+ *
+ * @param {Array<import("soundcloud.ts").SoundcloudTrack | {id: string, title: string, url: string, duration?: number, thumbnail?: string, author?: string | null, source?: string}>} objects
+ * @returns {Array<MusicTrack>}
  */
-function fixStructure(object) {
-    // if (object instanceof axios.AxiosResponse) {
-    if (isAxiosResponse(object)) { // jamendo
-        // https://developer.jamendo.com/v3.0/tracks
+function fixStructure(objects) {
+    let fixedObjects = []
 
-        object = object.data.results
-            .filter(track => track.audiodownload_allowed) // 只有track.audiodownload_allowed才能下載
-            .map(track => {
-                return {
-                    id: track.id,
-                    title: track.name,
-                    url: track.audiodownload,
-                    duration: track.duration,
-                    thumbnail: track.image,
-                    author: track.artist_name,
-                    source: "jamendo",
-                };
-            });
-    } else if (isSoundCloudTracks(object)) {
-        // https://www.npmjs.com/package/soundcloud.ts
-        // https://moestash.github.io/soundcloud.ts/
+    for (const object of objects) {
+        let { id, title, url, duration = 0, thumbnail = null, author = "Unknown", source = "unknown", stream = null } = object;
 
-        object = object.map((track) => {
-            return {
-                id: track.id,
-                title: track.title,
-                url: track.uri,
-                duration: track.duration,
-                thumbnail: track.artwork_url,
-                author: track.publisher_metadata?.artist || track.user?.full_name || track.user?.username || "Unknown",
-                source: "soundcloud",
-            };
-        });
+        if (isSoundCloudTrack(object)) {
+            // https://www.npmjs.com/package/soundcloud.ts
+            // https://moestash.github.io/soundcloud.ts/
+
+            id = object.id;
+            title = object.title;
+            url = object.uri;
+            duration = object.duration;
+            thumbnail = object.artwork_url;
+            author = object.publisher_metadata?.artist || object.user?.full_name || object.user?.username || "Unknown";
+            source = "soundcloud";
+        };
+
+        fixedObjects.push(
+            new MusicTrack({ id, title, url, duration, thumbnail, author, source, stream }),
+        );
     };
 
-    return object;
+    return fixedObjects;
 };
 
-function getAudioFileData(url, outputPath) {
+function getAudioFileData(url, outputPath, stream = null) {
     const filename = path.basename(outputPath, path.extname(outputPath));
-    const audioID = generateSHA256(outputPath);
+    const audioID = generateMD5(outputPath);
 
     return {
         id: audioID,
-        title: filename.slice(0, 500),
+        title: filename.slice(0, 95),
         url,
-        duration: getAudioDurationInSeconds(outputPath) * 1000,
+        duration: getAudioDurationInSeconds(outputPath) * 1000 || 0,
         thumbnail: null,
         author: "來自音檔",
         source: "audio",
+        stream,
     };
 };
 
@@ -672,13 +754,37 @@ async function downloadFile(url, outputPath) {
     await pipeline(response.body, createWriteStream(outputPath));
     convertToOgg(outputPath);
 
-    return [outputPath, getAudioFileData(url, outputPath)];
+    return [outputPath, getAudioFileData(url, outputPath, await getAudioStream(url))];
 };
 
 /**
- * 
+ *
+ * @param {string} url - 音檔網址
+ * @returns {Promise<ReadableStream>}
+ */
+async function getAudioStream(url) {
+    const response = await fetch(url, {
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36'
+        },
+    });
+
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    };
+
+    const clonedData = response.clone();
+
+    const fileType = await fileTypeFromStream(clonedData.body);
+    if (!fileType.mime.startsWith("audio/")) throw new Error("Not an audio file");
+
+    return response.body;
+};
+
+/**
+ *
  * @param {Array<{track: any, id: string, url: string, source: string}>} tracks
- * @returns {Promise<{[key: string]: string}[]>}
+ * @returns {Promise<{[key: string]: }[]>}
  */
 async function downloadTracks(tracks) {
     const files = await Promise.all(tracks.map(async (track) => {
@@ -697,11 +803,15 @@ async function downloadTracks(tracks) {
  */
 async function getTrack({ track, id, url, source }) {
     const { existsSync, unlinkSync, join_temp_folder } = require("../file.js");
-    const engine = require(`./${source ?? "soundcloud"}.js`);
+
+    let engine;
+    try {
+        engine = require(`./${source ?? "soundcloud"}.js`);
+    } catch (_) { };
 
     let actualSavePath;
-    const savePath = join_temp_folder(`${source}_${id}.mp3`);
-    const oggPath = join_temp_folder(`${source}_${id}.ogg`);
+    const savePath = filenamify(join_temp_folder(`${source}_${id}.mp3`), { fileMode: true });
+    const oggPath = filenamify(join_temp_folder(`${source}_${id}.ogg`), { fileMode: true });
 
     if (existsSync(oggPath)) {
         if (existsSync(savePath)) {
@@ -719,10 +829,10 @@ async function getTrack({ track, id, url, source }) {
         url = track.url;
     } else if (!url && !track) throw new Error(`無效的參數`);
 
-    if (engine.download_track && typeof engine.download_track === "function") {
+    if (engine?.download_track && typeof engine.download_track === "function") {
         actualSavePath = await engine.download_track(url, savePath);
     } else {
-        actualSavePath = await downloadFile(url, savePath);
+        [actualSavePath, _] = await downloadFile(url, savePath);
     };
 
     return actualSavePath;
@@ -733,7 +843,7 @@ async function getTrack({ track, id, url, source }) {
  * @param {string} query
  * @param {number} amount
  * @param {boolean} IsdownloadFile
- * @returns {Promise<{id: string | number, title: string, url: string, duration: number, thumbnail: string, author: string, source: string}[]>}
+ * @returns {Promise<MusicTrack[]>}
  */
 async function search_until(query, amount = 25, IsdownloadFile = false) {
     let results = [];
@@ -755,10 +865,6 @@ async function search_until(query, amount = 25, IsdownloadFile = false) {
         let output = [];
 
         try {
-            if (IsdownloadFile && IsValidURL(query)) {
-                output.push(await downloadFile(query, join_temp_folder(filenamify(query).slice(0, 75) + ".mp3")));
-            };
-
             if (file.get_track_info
                 && typeof file.get_track_info === "function"
                 && file.validateURL
@@ -772,6 +878,12 @@ async function search_until(query, amount = 25, IsdownloadFile = false) {
                 };
             } else {
                 output = await file.search_tracks(query);
+            };
+
+            if (IsdownloadFile && IsValidURL(query) && Array.isArray(output)) {
+                const [outputPath, audioData] = await downloadFile(query, join_temp_folder(filenamify(query, { fileMode: true }).slice(0, 75) + ".mp3"));
+
+                output.push(audioData);
             };
         } catch (err) {
             const errorStack = util.inspect(err, { depth: null });
@@ -914,6 +1026,7 @@ module.exports = {
     convertToOgg,
     clear_duplicate_temp,
     IsValidURL,
+    getAudioStream,
     MusicQueue,
     loopStatus,
 };

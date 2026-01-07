@@ -489,7 +489,7 @@ module.exports = {
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
             const { getBotInfoEmbed } = require("../../slashcmd/info.js")
             const { getNowPlayingEmbed } = require("../../slashcmd/music/nowplaying.js");
-            const { getQueue, saveQueue, loopStatus } = require("../../utils/music/music.js");
+            const { getQueue, saveQueue, getAudioStream, loopStatus } = require("../../utils/music/music.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
@@ -1325,14 +1325,19 @@ module.exports = {
 
                     client.musicTrackSession.delete(trackSessionID);
 
-                    const { track, source, next } = trackSession;
+                    const { track, source, next, stream = null } = trackSession;
 
                     queue.addTrack(track, next ? 0 : null);
 
                     const [embed, rows] = await getNowPlayingEmbed(queue, interaction, client, true);
 
                     if (!queue.isPlaying()) {
-                        await queue.play(track.id, track.url, source);
+                        await queue.play({
+                            id: track.id,
+                            url: track.url,
+                            source,
+                            stream,
+                        });
                     };
 
                     return await interaction.editReply({ content: "", embeds: [embed], components: rows });

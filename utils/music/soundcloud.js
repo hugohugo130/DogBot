@@ -89,4 +89,5 @@ module.exports = {
     search_tracks,
     download_track,
     validateURL,
+    get_track_info,
 };

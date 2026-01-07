@@ -36,9 +36,17 @@ function generateSHA256(input) {
     return SHA256Hash.digest('hex');
 };
 
+function generateMD5(input) {
+    const MD5Hash = crypto.createHash('md5');
+
+    MD5Hash.update(input);
+    return MD5Hash.digest('hex');
+};
+
 module.exports = {
     randint,
     choice,
     generateSessionId,
     generateSHA256,
+    generateMD5,
 };

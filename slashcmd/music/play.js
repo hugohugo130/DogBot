@@ -1,9 +1,8 @@
 const { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
-const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
+const { getVoiceConnection } = require("@discordjs/voice");
 const { Soundcloud } = require("soundcloud.ts");
 const crypto = require("crypto");
 
-const { get_logger } = require("../../utils/logger.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -84,8 +83,8 @@ module.exports = {
     // )
     /**
      * 
-     * @param {ChatInputCommandInteraction} interaction 
-     * @param {DogClient} client 
+     * @param {ChatInputCommandInteraction} interaction
+     * @param {DogClient} client
      */
     async execute(interaction, client) {
         const { get_emojis } = require("../../utils/rpg.js");
@@ -182,11 +181,13 @@ module.exports = {
             tracks.map(async (track) => {
                 const id = track.id;
                 const source = track.source;
+                const stream = track.stream ?? false;
 
                 return [[id], [{
                     track,
                     source,
                     next,
+                    stream,
                 }]];
             })),
         ));
