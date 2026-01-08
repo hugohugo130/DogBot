@@ -187,7 +187,6 @@ async function getNowPlayingRows(queue, client = global._client) {
  */
 async function getNowPlayingEmbed(queue, interaction = null, client = global._client, start = false) {
     const { embed_default_color, DOCS, STATUS_PAGE } = require("../../utils/config.js");
-    const { fixStructure } = require("../../utils/music/music.js");
     const { get_emoji } = require("../../utils/rpg.js");
     const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 
@@ -204,13 +203,12 @@ async function getNowPlayingEmbed(queue, interaction = null, client = global._cl
     */
 
     const currentTrack = queue.currentTrack ?? queue.tracks[0];
-    const trackData = fixStructure([currentTrack])[0];
 
     const playingAt = start ? 0 : Math.floor(queue.currentResource.playbackDuration / 1000);
     const formattedPlayingAt = formatMinutesSeconds(playingAt, false);
 
-    const progressBar = await createProgressBar(0, playingAt, Math.floor(trackData.duration / 1000));
-    const formattedDuration = formatMinutesSeconds(trackData.duration);
+    const progressBar = await createProgressBar(0, playingAt, Math.floor(currentTrack.duration / 1000));
+    const formattedDuration = formatMinutesSeconds(currentTrack.duration);
 
     const description = `
 ${emoji_playGrad} ${formattedPlayingAt}${progressBar}${formattedDuration}
@@ -219,10 +217,10 @@ ${emoji_playGrad} ${formattedPlayingAt}${progressBar}${formattedDuration}
 
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
-        .setThumbnail(trackData.thumbnail)
-        .setAuthor({ name: trackData.author })
-        .setURL(trackData.url)
-        .setTitle(trackData.title)
+        .setThumbnail(currentTrack.thumbnail)
+        .setAuthor({ name: currentTrack.author })
+        .setURL(currentTrack.url)
+        .setTitle(currentTrack.title)
         .setDescription(description)
         .setEmbedFooter(interaction);
 

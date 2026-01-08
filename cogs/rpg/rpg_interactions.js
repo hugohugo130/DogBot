@@ -489,7 +489,7 @@ module.exports = {
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
             const { getBotInfoEmbed } = require("../../slashcmd/info.js")
             const { getNowPlayingEmbed } = require("../../slashcmd/music/nowplaying.js");
-            const { getQueue, saveQueue, getAudioStream, loopStatus } = require("../../utils/music/music.js");
+            const { getQueue, saveQueue, loopStatus } = require("../../utils/music/music.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
@@ -1306,8 +1306,12 @@ module.exports = {
                         queue.voiceChannel = voiceChannel;
                         queue.textChannel = interaction.channel;
 
-                        saveQueue(interaction.guildId, queue);
                     };
+
+                    if (!queue.textChannel && interaction.channel) queue.textChannel = interaction.channel;
+                    queue.subscribe();
+
+                    saveQueue(interaction.guildId, queue);
 
                     const [trackSessionID, trackID] = interaction.values[0].split("|");
                     const trackSession = client.musicTrackSession.get(trackSessionID)?.[trackID]?.[0];
@@ -1325,19 +1329,14 @@ module.exports = {
 
                     client.musicTrackSession.delete(trackSessionID);
 
-                    const { track, source, next, stream = null } = trackSession;
+                    const { track, source, next, useStream = false } = trackSession;
 
                     queue.addTrack(track, next ? 0 : null);
 
                     const [embed, rows] = await getNowPlayingEmbed(queue, interaction, client, true);
 
                     if (!queue.isPlaying()) {
-                        await queue.play({
-                            id: track.id,
-                            url: track.url,
-                            source,
-                            stream,
-                        });
+                        await queue.play(track);
                     };
 
                     return await interaction.editReply({ content: "", embeds: [embed], components: rows });

@@ -56,7 +56,7 @@ module.exports = {
                 .setRequired(false),
         )
         .addBooleanOption(option =>
-            option.setName("all_things_can_play")
+            option.setName("play_audio_url")
                 .setNameLocalizations({
                     "zh-TW": "萬物皆可播",
                     "zh-CN": "万物皆可播",
@@ -88,13 +88,13 @@ module.exports = {
      */
     async execute(interaction, client) {
         const { get_emojis } = require("../../utils/rpg.js");
-        const { getQueue, saveQueue, search_until, IsValidURL } = require("../../utils/music/music.js");
+        const { search_until, IsValidURL } = require("../../utils/music/music.js");
         const { formatMinutesSeconds } = require("../../utils/timestamp.js");
         const { embed_error_color } = require("../../utils/config.js");
 
         const query = interaction.options.getString("query") ?? "wellerman";
         const next = interaction.options.getBoolean("next") ?? false;
-        const all_things_can_play = interaction.options.getBoolean("all_things_can_play") ?? false;
+        const play_audio_url = interaction.options.getBoolean("play_audio_url") ?? false;
         // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
 
         const voiceChannel = interaction.member.voice.channel;
@@ -145,17 +145,9 @@ module.exports = {
             return interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
-        const queue = getQueue(guildId);
-
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
-        queue.textChannel = interaction.channel;
-        queue.voiceChannel = voiceChannel;
-        queue.subscribe();
-
-        saveQueue(guildId, queue);
-
-        const tracks = await search_until(query, 25, (all_things_can_play && IsValidURL(query)));
+        const tracks = await search_until(query, 25, (play_audio_url && IsValidURL(query)));
 
         if (tracks.length === 0) {
             return interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
@@ -181,13 +173,13 @@ module.exports = {
             tracks.map(async (track) => {
                 const id = track.id;
                 const source = track.source;
-                const stream = track.stream ?? false;
+                const useStream = track.useStream ?? false;
 
                 return [[id], [{
                     track,
                     source,
                     next,
-                    stream,
+                    useStream,
                 }]];
             })),
         ));

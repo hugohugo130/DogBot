@@ -66,7 +66,7 @@ module.exports = {
             return interaction.editReply({ embeds: [embed] });
         };
 
-        const [skippedTrack, _] = queue.nextTrack();
+        const [skippedTrack, _] = await queue.nextTrack();
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
