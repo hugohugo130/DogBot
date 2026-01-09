@@ -11,7 +11,7 @@ const { existsSync, compareLocalRemote, join_db_folder } = require("./file.js");
 const { get_areadline } = require("./readline.js");
 const { Collection } = require("discord.js");
 
-const { IP: serverIP, PORT } = getServerIPSync();
+const { IP: serverIP, PORT } = global._client?.serverIP ?? getServerIPSync();
 const SERVER_URL = `http://${serverIP}:${PORT}`;
 
 const logger = get_logger();
