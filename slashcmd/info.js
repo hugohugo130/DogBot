@@ -9,8 +9,11 @@ const DogClient = require("../utils/customs/client.js");
  * @returns {Promise<EmbedBuilder>}
  */
 async function getBotInfoEmbed(locale = null, client = global.client) {
+    const { convertToSecondTimestamp } = require("../utils/timestamp.js");
     const { get_lang_data } = require("../utils/language.js");
     const { get_emojis } = require("../utils/rpg.js");
+    const { embed_default_color } = require("../utils/config.js");
+
 
     const fix = (num) => {
         num = num / 1024 / 1024;
@@ -19,7 +22,7 @@ async function getBotInfoEmbed(locale = null, client = global.client) {
 
     const [emoji_timer, emoji_user, emoji_server, emoji_memory] = await get_emojis(["timer", "user", "server", "memory"], client);
 
-    const lang_guild = get_lang_data(locale, "/info", "bot.guild");
+    const lang_guild = get_lang_data(locale, "/info", "bot.guilds");
     const lang_members = get_lang_data(locale, "/info", "bot.members");
     const lang_uptime = get_lang_data(locale, "/info", "bot.uptime");
     const lang_memory = get_lang_data(locale, "/info", "bot.memory");
@@ -126,9 +129,9 @@ module.exports = {
         const { load_rpg_data } = require("../utils/file.js");
         const { get_emojis, jobs } = require("../utils/rpg.js");
         const { convertToSecondTimestamp } = require("../utils/timestamp.js");
+        const { get_lang_data } = require("../utils/language.js");
         const { max_hunger } = require("../cogs/rpg/msg_handler.js");
         const { embed_default_color } = require("../utils/config.js");
-        const { get_lang_data } = require("../utils/language.js");
 
         await interaction.deferReply();
 
