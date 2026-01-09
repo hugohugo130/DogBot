@@ -59,7 +59,7 @@ function processDirectory(client, dirPath) {
                 const cog = require(itemPath);
                 const res = load_cog(client, cog, itemPath);
                 if (!res) continue;
-                else logger.info(`cog ${item} 已加載`);
+                else logger.info(`✅ Loaded ${item}`);
 
                 loadedFiles++;
             } catch (err) {

@@ -123,11 +123,11 @@ client.once(Events.ClientReady, async () => {
     client.serverIP = getServerIPSync(client);
 
     const cogs = load_cogs(client);
-    logger.info(`已加載 ${cogs} 個程式碼`);
+    logger.info(`✅ Loaded ${cogs} cogs`);
 
-    if (await should_register_cmd()) await registcmd(false, true);
+    if (await should_register_cmd()) await registcmd(true, true);
 
-    logger.info(`已加載 ${client.commands.size} 個斜線指令`);
+    logger.info(`✅ Loaded ${client.commands.size} slash commands`);
 
     await client.login(process.env.TOKEN);
 
