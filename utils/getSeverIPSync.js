@@ -1,30 +1,31 @@
-const { writeJsonSync } = require("./file.js");
-const { DEFAULT_IP, DEFAULT_PORT, serverIPFile } = require("./config.js");
-const { get_logger } = require("./logger.js");
 const fs = require("fs");
 const { execSync } = require("child_process");
 
+const { writeJsonSync } = require("./file.js");
+const { get_logger } = require("./logger.js");
+const { DEFAULT_IP, DEFAULT_PORT, serverIPFile } = require("./config.js");
+
 const logger = get_logger();
 
-const PORT = 3003;
+// const PORT = 3003;
+const PORT = DEFAULT_PORT;
 
 function check_IP_valid(IP, PORT) {
     const platform = process.platform;
-    let passed = false;
 
     if (platform === "win32") { // windows NT
         res = execSync(`powershell -Command "try { (Invoke-WebRequest -Uri 'http://${IP}:${PORT}/verify' -UseBasicParsing -TimeoutSec 1).StatusCode } catch { '' }"`).toString().trim();
 
-        if (res === "200") passed = true;
+        return res === "200";
     } else if (platform === "linux") { // linux / ubuntu
         res = execSync(`curl -s -o /dev/null -w "%{http_code}" http://${IP}:${PORT}/verify --connect-timeout 1 || echo ""`).toString().trim();
 
-        if (res === "200") passed = true;
+        return res === "200";
     } else {
         // 不支援的操作系統 D:
     };
 
-    return passed;
+    return false;
 };
 
 function getServerIPSync() {
