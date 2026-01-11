@@ -272,6 +272,9 @@ class MusicQueue {
         /** @type {PlayerSubscription || null} */
         this.subscription = null;
 
+        /** @type {boolean} */
+        this.destroying = false;
+
         this.player.on("error", async (error) => {
             const errorStack = util.inspect(error, { depth: null });
             logger.error(`[${this.guildID}] 播放音樂時發生錯誤: ${errorStack}`);
@@ -285,13 +288,15 @@ class MusicQueue {
                     .setDescription(`請嘗試將機器人手動中斷連線，或是等待幾秒後再試一次`)
                     .setEmbedFooter();
 
-                this.textChannel.send({ embeds: [embed] });
+                await this.textChannel.send({ embeds: [embed] });
             };
         });
 
         this.player.on("stateChange", async (oldState, newState) => {
             // const { getVoiceConnection } = require("@discordjs/voice");
             // logger.debug(`[${this.guildID}] 音樂播放器狀態改變: ${oldState.status} -> ${newState.status}: ${Boolean(getVoiceConnection(this.guildID))}`);
+
+            if (this.destroying) return;
 
             try {
                 if (!getVoiceConnection(this.guildID)) {
@@ -607,6 +612,8 @@ class MusicQueue {
      * @returns {void}
      */
     destroy() {
+        this.destroying = true;
+
         this.unsubscribe();
         this.player.stop(true);
         this.connection.destroy();
@@ -810,7 +817,7 @@ async function getAudioStream(url) {
     });
 
     if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(String(response.status));
     };
 
     const clonedData = response.clone();
@@ -884,7 +891,7 @@ async function getTrack({ track, id, url, source }) {
  * @param {string} query
  * @param {number} amount
  * @param {boolean} IsdownloadFile
- * @returns {Promise<MusicTrack[]>}
+ * @returns {Promise<Array<MusicTrack | {id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean}>>}
  */
 async function search_until(query, amount = 25, IsdownloadFile = false) {
     let results = [];
@@ -1065,6 +1072,7 @@ module.exports = {
     fixStructure,
     search_until,
     convertToOgg,
+    getAudioStream,
     clear_duplicate_temp,
     IsValidURL,
     MusicQueue,
