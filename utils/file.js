@@ -184,15 +184,15 @@ async function writeJson(path, data, replacer = "") {
 async function readSchedule() {
     const { scheduleEverysec, scheduleEverymin, scheduleEvery5min } = require("./config.js");
 
-    const everysec = await exists(scheduleEverysec) ? await readdir(scheduleEverysec, { recursive: true })
+    const everysec = await exists(scheduleEverysec) ? (await readdir(scheduleEverysec, { recursive: true }))
         .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEverysec}/${file}`) : [];
 
-    const everymin = await exists(scheduleEverymin) ? await readdir(scheduleEverymin, { recursive: true })
+    const everymin = await exists(scheduleEverymin) ?(await readdir(scheduleEverymin, { recursive: true }))
         .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEverymin}/${file}`) : [];
 
-    const every5min = await exists(scheduleEvery5min) ? await readdir(scheduleEvery5min, { recursive: true })
+    const every5min = await exists(scheduleEvery5min) ? (await readdir(scheduleEvery5min, { recursive: true }))
         .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEvery5min}/${file}`) : [];
 
@@ -576,6 +576,31 @@ async function load_rpg_data(userid) {
 };
 
 /**
+ *
+ * @param {string} userid
+ * @returns {object}
+ */
+function load_rpg_dataSync(userid) {
+    const { rpg_database_file } = require("./config.js");
+
+    const rpg_emptyeg = find_default_value("rpg_database.json", {});
+
+    if (existsSync(rpg_database_file)) {
+        const data = readJsonSync(rpg_database_file);
+
+        if (!data[userid]) {
+            save_rpg_dataSync(userid, rpg_emptyeg);
+            return rpg_emptyeg;
+        };
+
+        return order_data(data[userid], rpg_emptyeg);
+    } else {
+        save_rpg_dataSync(userid, rpg_emptyeg);
+        return rpg_emptyeg;
+    };
+};
+
+/**
  * 
  * @param {string} userid
  * @param {object} rpg_data
@@ -609,6 +634,42 @@ async function save_rpg_data(userid, rpg_data) {
     data[userid] = order_data(data[userid], rpg_emptyeg);
 
     await writeJson(rpg_database_file, data);
+};
+
+/**
+ * 
+ * @param {string} userid
+ * @param {object} rpg_data
+ * @returns {void}
+ */
+function save_rpg_dataSync(userid, rpg_data) {
+    const { rpg_database_file } = require("./config.js");
+
+    const rpg_emptyeg = find_default_value("rpg_database.json", {});
+
+    let data = {};
+    if (existsSync(rpg_database_file)) {
+        data = readJsonSync(rpg_database_file);
+    };
+
+    if (!data[userid]) {
+        data[userid] = rpg_emptyeg;
+    };
+
+    data[userid] = { ...data[userid], ...rpg_data };
+
+    // 檢查並清理 inventory 中數量為 0 或 null 的物品
+    if (data[userid].inventory) {
+        Object.keys(data[userid].inventory).forEach(item => {
+            if (data[userid].inventory[item] === 0 || data[userid].inventory[item] === null) {
+                delete data[userid].inventory[item];
+            };
+        });
+    };
+
+    data[userid] = order_data(data[userid], rpg_emptyeg);
+
+    writeJsonSync(rpg_database_file, data);
 };
 
 async function load_shop_data(userid) {
@@ -872,7 +933,9 @@ module.exports = {
     rmPrefix,
     getPrefixes,
     load_rpg_data,
+    load_rpg_dataSync,
     save_rpg_data,
+    save_rpg_dataSync,
     load_shop_data,
     save_shop_data,
     load_farm_data,

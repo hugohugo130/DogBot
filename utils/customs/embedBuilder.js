@@ -1,5 +1,5 @@
 const { EmbedBuilder: djsEmbedBuilder, BaseInteraction, Locale } = require("discord.js");
-const { load_rpg_data } = require("../file.js");
+const { load_rpg_dataSync } = require("../file.js");
 const { get_lang_data } = require("../language.js");
 const DogClient = require("./client.js");
 
@@ -12,6 +12,7 @@ class EmbedBuilder extends djsEmbedBuilder {
      * 
      * @param {import("discord.js").Interaction | string} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
      * @param {{text?: string, rpg_data?: object | string | null, force?: boolean, client?: DogClient}} [param1]
+     * @remark 不建議給予user id給rpg_data函數，因為讀取檔案會阻塞主執行緒
      * @remark rpg_data 為 rpg_data 或 user id (顯示剩餘飽食度)
      * @remark force: text參數是否不會增加飽食度或機器犬文字
      * @returns {EmbedBuilder}
@@ -38,7 +39,7 @@ class EmbedBuilder extends djsEmbedBuilder {
         let data;
         if (rpg_data) {
             if (rpg_data instanceof String) { // userid
-                data = await load_rpg_data(rpg_data);
+                data = load_rpg_dataSync(rpg_data);
             } else if (rpg_data instanceof Object) { // rpg_data
                 data = rpg_data;
             };
