@@ -38,7 +38,7 @@ class EmbedBuilder extends djsEmbedBuilder {
         let data;
         if (rpg_data) {
             if (rpg_data instanceof String) { // userid
-                data = load_rpg_data(rpg_data);
+                data = await load_rpg_data(rpg_data);
             } else if (rpg_data instanceof Object) { // rpg_data
                 data = rpg_data;
             };

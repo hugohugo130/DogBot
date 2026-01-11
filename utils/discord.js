@@ -37,7 +37,7 @@ async function get_user_of_guild(guildID, client = global._client) {
 async function get_user(userID, client = global._client) {
     try {
         return client.users.cache.get(userID) || await client.users.fetch(userID);
-    } catch (_) {
+    } catch {
         return null;
     };
 };
@@ -95,7 +95,7 @@ async function get_channel(guild, channelId, fetch_first = false) {
         if (!channel) channel = await guild.channels.fetch(channelId);
 
         return channel
-    } catch (_) {
+    } catch {
         return false;
     };
 };

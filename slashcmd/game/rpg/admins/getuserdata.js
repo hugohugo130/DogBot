@@ -1,31 +1,31 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction } = require("discord.js");
 const EmbedBuilder = require("../../../../utils/customs/embedBuilder.js");
 
-function split_msg(content, split = 2000) {
-    let messages = [];
-    for (let i = 0; i < content.length; i += split) {
-        messages.push(content.slice(i, i + split));
-    };
+// function split_msg(content, split = 2000) {
+//     let messages = [];
+//     for (let i = 0; i < content.length; i += split) {
+//         messages.push(content.slice(i, i + split));
+//     };
 
-    return messages;
-};
+//     return messages;
+// };
 
-function show_transactions(userid) {
-    const { load_rpg_data } = require("../../../../utils/file.js");
-    const { transactions = [] } = load_rpg_data(userid);
+// async function show_transactions(userid) {
+//     const { load_rpg_data } = require("../../../../utils/file.js");
+//     const { transactions = [] } = await load_rpg_data(userid);
 
-    /* transactions 列表中的每個字典應該包含:
-    timestamp: 時間戳記 (Unix timestamp) 單位: 秒
-    detail: 交易詳情 (字串)
-    amount: 金額 (數字)
-    type: 交易類型 (字串，例如: "出售物品所得"、"購買物品付款" 等)
-    */
-    return transactions
-        .slice(-10)
-        .map(({ timestamp, originalUser, targetUser, amount, type }) =>
-            `- <t:${timestamp}:R> ${originalUser} \`>\` ${targetUser} \`${amount.toLocaleString()}$\` (${type})`
-        ).join("\n");
-};
+//     /* transactions 列表中的每個字典應該包含:
+//     timestamp: 時間戳記 (Unix timestamp) 單位: 秒
+//     detail: 交易詳情 (字串)
+//     amount: 金額 (數字)
+//     type: 交易類型 (字串，例如: "出售物品所得"、"購買物品付款" 等)
+//     */
+//     return transactions
+//         .slice(-10)
+//         .map(({ timestamp, originalUser, targetUser, amount, type }) =>
+//             `- <t:${timestamp}:R> ${originalUser} \`>\` ${targetUser} \`${amount.toLocaleString()}$\` (${type})`
+//         ).join("\n");
+// };
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -69,7 +69,7 @@ module.exports = {
         };
 
         const user = interaction.options.getUser("user");
-        const rpg_data = load_rpg_data(user.id);
+        const rpg_data = await load_rpg_data(user.id);
 
         /*
             "money": 1000,
@@ -113,7 +113,7 @@ module.exports = {
         //         .map(([key, value]) => `${key}: ${value}`)
         //         .join("\n"),
 
-        //     show_transactions(user.id),
+        //     await show_transactions(user.id),
         // ];
 
         // for (const msg of msgs) {

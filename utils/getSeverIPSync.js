@@ -1,7 +1,7 @@
 const fs = require("fs");
 const { execSync } = require("child_process");
 
-const { writeJsonSync } = require("./file.js");
+const { writeJsonSync, readFileSync } = require("./file.js");
 const { get_logger } = require("./logger.js");
 const { DEFAULT_IP, DEFAULT_PORT, serverIPFile } = require("./config.js");
 
@@ -32,7 +32,9 @@ function getServerIPSync() {
     let serverIP = null;
     if (fs.existsSync(serverIPFile)) {
         try {
-            serverIP = JSON.parse(fs.readFileSync(serverIPFile, "utf8"));
+            serverIP = JSON.parse(readFileSync(serverIPFile, {
+                encoding: "utf-8",
+            }));
         } catch (e) {
             serverIP = null;
         };
@@ -48,7 +50,7 @@ function getServerIPSync() {
                 IP = "127.0.0.1";
                 logger.info("偵測到本地伺服器，已切換 IP 為 127.0.0.1");
             };
-        } catch (_) {
+        } catch {
             IP = DEFAULT_IP;
         };
 

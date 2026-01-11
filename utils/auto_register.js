@@ -1,7 +1,7 @@
 const path = require("path");
 const crypto = require("crypto");
 
-const { existsSync, read, readdir, write } = require("./file.js");
+const { existsSync, readFile, readdir, writeFile } = require("./file.js");
 
 const DEBUG = false;
 
@@ -17,7 +17,7 @@ function get_hash_of_datas(file_datas) {
     let combined_data = file_datas.join("");
     for (const data of file_datas) {
         length += data.length;
-    }
+    };
 
     // 計算 SHA256 哈希值
     const hash = crypto.createHash("sha256").update(combined_data).digest("hex");
@@ -34,7 +34,7 @@ async function read_all_files_in_dir(dir) {
 
     for (const file of files) {
         const file_path = path.join(dir, file);
-        const file_data = await read(file_path);
+        const file_data = await readFile(file_path);
         file_datas.push(file_data);
     };
 
@@ -51,7 +51,7 @@ async function should_register_cmd() {
     if (!enable_auto_register_cmd) return false;
 
     if (existsSync(auto_register_cmd_file)) {
-        let [length, hash] = (await read(auto_register_cmd_file)).split("|");
+        let [length, hash] = (await readFile(auto_register_cmd_file)).split("|");
         length = parseInt(length);
 
         const file_datas_new = await read_all_files_in_dir("slashcmd");
@@ -76,7 +76,7 @@ async function update_cmd_hash() {
     
     const file_datas = await read_all_files_in_dir("slashcmd");
     const [length, hash] = get_hash_of_datas(file_datas);
-    await write(auto_register_cmd_file, `${length}|${hash}`);
+    await writeFile(auto_register_cmd_file, `${length}|${hash}`);
     
     if (DEBUG) console.debug(`已更新 hash 文件: ${length}|${hash}`);
 };

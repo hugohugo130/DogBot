@@ -138,7 +138,16 @@ module.exports = {
         const client = interaction.client;
         const subcommand = interaction.options.getSubcommand();
 
-        const [emoji_idCard, emoji_timer, emoji_job, emoji_adventure, emoji_drumstick, emoji_badge, emoji_user, emoji_boost2] = await get_emojis([
+        const [emoji_idCard,
+            emoji_timer,
+            emoji_job,
+            emoji_adventure,
+            emoji_drumstick,
+            emoji_badge,
+            emoji_user,
+            emoji_boost2,
+            emoji_robot,
+        ] = await get_emojis([
             "idCard",
             "timer",
             "job",
@@ -146,7 +155,8 @@ module.exports = {
             "drumstick",
             "badge",
             "user",
-            "boost2"
+            "boost2",
+            "robot",
         ], client);
 
         const locale = interaction.locale;
@@ -335,6 +345,7 @@ module.exports = {
 
             const refreshButton = new ButtonBuilder()
                 .setCustomId(`refresh|any|/info bot`)
+                .setEmoji(emoji_robot)
                 .setLabel(lang_refresh)
                 .setStyle(ButtonStyle.Primary);
 

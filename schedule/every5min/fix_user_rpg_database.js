@@ -17,7 +17,7 @@ module.exports = {
             for (const user of users) {
                 if (user.bot) continue;
 
-                const rpg_data = load_rpg_data(user.id);
+                const rpg_data = await load_rpg_data(user.id);
 
                 if (!rpg_data) continue;
 
@@ -32,7 +32,7 @@ module.exports = {
                             backpack[item] = parseInt(amount);
 
                             modified = true;
-                        } catch (_) {
+                        } catch {
                             // 過濾掉非數字的字符
                             const filteredAmount = amount.replace(/[^0-9]/g, "");
                             backpack[item] = parseInt(filteredAmount) || 0;
@@ -51,7 +51,7 @@ module.exports = {
                 if (modified) {
                     rpg_data.backpack = backpack;
 
-                    save_rpg_data(user.id, rpg_data);
+                    await save_rpg_data(user.id, rpg_data);
                     logger.info(`已修復用戶 ${user.id} 的背包資料`);
                 };
             };

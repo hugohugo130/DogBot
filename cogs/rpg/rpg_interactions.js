@@ -1,18 +1,23 @@
-const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, CommandInteraction, ButtonStyle, ButtonBuilder, ButtonInteraction, StringSelectMenuInteraction, BaseInteraction } = require("discord.js");
+const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, ButtonStyle, ButtonBuilder, ButtonInteraction, StringSelectMenuInteraction, BaseInteraction } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
 const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
 const util = require("node:util");
 
 const { get_logger } = require("../../utils/logger.js");
-const { embed_default_color, embed_error_color, embed_job_color, STATUS_PAGE, DOCS } = require("../../utils/config.js");
+const { embed_default_color, embed_error_color, embed_job_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
 const logger = get_logger();
 
-function show_transactions(userid) {
+/**
+ *
+ * @param {string} userid
+ * @returns {Promise<string>}
+ */
+async function show_transactions(userid) {
     const { load_rpg_data } = require("../../utils/file.js");
-    const { transactions = [] } = load_rpg_data(userid);
+    const { transactions = [] } = await load_rpg_data(userid);
 
     /* transactions 列表中的每個字典應該包含:
     timestamp: 時間戳記 (Unix timestamp) 單位: 秒
@@ -27,10 +32,16 @@ function show_transactions(userid) {
         ).join("\n");
 };
 
-function get_transaction_embed(interaction) {
+/**
+ *
+ * @param {BaseInteraction} interaction
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function get_transaction_embed(interaction) {
     const userid = interaction.user.id;
     const username = interaction.user.username;
-    const transactions = show_transactions(userid);
+
+    const transactions = await show_transactions(userid);
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
         .setAuthor({
@@ -39,11 +50,12 @@ function get_transaction_embed(interaction) {
         })
         .setDescription(transactions || "- 沒有交易紀錄")
         .setTimestamp();
+
     return embed;
 };
 
 /**
- * 
+ *
  * @param {BaseInteraction} [interaction]
  * @param {DogClient} [client]
  * @returns {Promise<EmbedBuilder>}
@@ -420,7 +432,7 @@ async function get_help_command(category, command_name, guildID, interaction = n
     const command_data = help.group[category][command_name];
     if (!command_data) return null;
 
-    const prefix = firstPrefix(guildID);
+    const prefix = await firstPrefix(guildID);
 
     /*
     Field name: 使用方法
@@ -496,7 +508,7 @@ module.exports = {
             const message = interaction.message;
             const user = interaction.user;
 
-            const prefix = firstPrefix(interaction.guild.id);
+            const prefix = await firstPrefix(interaction.guild.id);
 
             if (message.author.id !== client.user.id) return;
 
@@ -526,7 +538,7 @@ module.exports = {
             switch (interactionCategory) {
                 case "rpg_transaction": {
                     await interaction.deferUpdate();
-                    const embed = get_transaction_embed(interaction);
+                    const embed = await get_transaction_embed(interaction);
 
                     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
                     break;
@@ -556,8 +568,8 @@ module.exports = {
                     const emoji_cross = await get_emoji("crosS", client);
                     const emoji_top = await get_emoji("top", client);
                     const [_, userId, targetUserId, amount] = interaction.customId.split("|");
-                    const rpg_data = load_rpg_data(userId);
-                    const target_user_rpg_data = load_rpg_data(targetUserId);
+                    const rpg_data = await load_rpg_data(userId);
+                    const target_user_rpg_data = await load_rpg_data(targetUserId);
 
                     if (rpg_data.money < amount) {
                         const embed = new EmbedBuilder()
@@ -586,8 +598,8 @@ module.exports = {
                         type: `付款給`,
                     });
 
-                    save_rpg_data(userId, rpg_data);
-                    save_rpg_data(targetUserId, target_user_rpg_data);
+                    await save_rpg_data(userId, rpg_data);
+                    await save_rpg_data(targetUserId, target_user_rpg_data);
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
@@ -612,10 +624,10 @@ module.exports = {
                     //     .setEmbedFooter(interation);
 
                     // const language = customIdParts[2];
-                    // const rpg_data = load_rpg_data(interaction.user.id);
+                    // const rpg_data = await load_rpg_data(interaction.user.id);
                     // if (rpg_data.language != language) {
                     //     rpg_data.language = language;
-                    //     save_rpg_data(interaction.user.id, rpg_data);
+                    //     await save_rpg_data(interaction.user.id, rpg_data);
                     // } else {
                     //     embed.setColor(embed_error_color);
                     //     embed.setTitle(`${emoji_cross} | 語言一樣`);
@@ -630,7 +642,7 @@ module.exports = {
 
                     const [_, userId] = interaction.customId.split("|");
 
-                    const rpg_data = load_rpg_data(userId);
+                    const rpg_data = await load_rpg_data(userId);
 
                     const [emoji_shield, emoji_backpack, emoji_pet] = await Promise.all(
                         ["shield", "bag", "pet"].map(async (name) => {
@@ -649,7 +661,7 @@ module.exports = {
                         return order[a] - order[b];
                     });
 
-                    save_rpg_data(userId, rpg_data);
+                    await save_rpg_data(userId, rpg_data);
 
                     let text = "無";
                     if (rpg_data.privacy.length > 0) {
@@ -726,7 +738,7 @@ module.exports = {
                     const res = await ls_function({
                         client: client,
                         message,
-                        rpg_data: load_rpg_data(userId),
+                        rpg_data: await load_rpg_data(userId),
                         mode: 1,
                         PASS: true,
                         interaction: interaction
@@ -745,7 +757,7 @@ module.exports = {
                     amount = parseInt(amount);
                     total_price = Math.round(parseFloat(total_price));
 
-                    const rpg_data = load_rpg_data(userId);
+                    const rpg_data = await load_rpg_data(userId);
 
                     rpg_data.inventory[item_id] -= amount;
                     rpg_data.money = add_money({
@@ -756,7 +768,7 @@ module.exports = {
                         type: "出售物品所得",
                     })
 
-                    save_rpg_data(userId, rpg_data);
+                    await save_rpg_data(userId, rpg_data);
 
                     const emoji_trade = await get_emoji("trade", client);
                     const embed = new EmbedBuilder()
@@ -822,9 +834,9 @@ module.exports = {
                     const emoji_cross = await get_emoji("crosS", client);
                     const emoji_store = await get_emoji("store", client);
 
-                    const buyerRPGData = load_rpg_data(buyerUserId);
-                    const targetUserRPGData = load_rpg_data(targetUserId);
-                    const targetUserShopData = load_shop_data(targetUserId);
+                    const buyerRPGData = await load_rpg_data(buyerUserId);
+                    const targetUserRPGData = await load_rpg_data(targetUserId);
+                    const targetUserShopData = await load_shop_data(targetUserId);
 
                     const item_data = targetUserShopData.items[item];
 
@@ -871,9 +883,9 @@ module.exports = {
                     if (!targetUserShopData.items[item].amount) targetUserShopData.items[item].amount = 0;
                     targetUserShopData.items[item].amount -= amount;
 
-                    save_rpg_data(buyerUserId, buyerRPGData);
-                    save_rpg_data(targetUserId, targetUserRPGData);
-                    save_shop_data(targetUserId, targetUserShopData);
+                    await save_rpg_data(buyerUserId, buyerRPGData);
+                    await save_rpg_data(targetUserId, targetUserRPGData);
+                    await save_shop_data(targetUserId, targetUserShopData);
 
                     if (isConfirm) await interaction.followUp({
                         content: `${emoji_store} | 你同意了 <@${buyerUserId}> 以 \`${total_price}$\` 購買 ${item_name} \`x${amount}\` 的交易`,
@@ -915,8 +927,8 @@ module.exports = {
                     const parsedCoalAmount = parseInt(coal_amount);
                     const parsedDuration = parseInt(duration);
 
-                    let rpg_data = load_rpg_data(userId)
-                    let bake_data = load_bake_data();
+                    let rpg_data = await load_rpg_data(userId)
+                    let bake_data = await load_bake_data();
 
                     if (bake_data[userId] && bake_data[userId].length >= oven_slots) {
                         const emoji_cross = await get_emoji("crosS", client);
@@ -967,7 +979,7 @@ module.exports = {
                         rpg_data.inventory[need_item.item] -= need_item.amount;
                     };
 
-                    save_rpg_data(userId, rpg_data)
+                    await save_rpg_data(userId, rpg_data)
 
                     if (!bake_data[userId]) {
                         bake_data[userId] = [];
@@ -985,7 +997,7 @@ module.exports = {
                         output_item_id,
                     });
 
-                    save_bake_data(bake_data);
+                    await save_bake_data(bake_data);
 
                     // 清理 session 資料
                     client.oven_sessions.delete(session_id);
@@ -1024,7 +1036,7 @@ module.exports = {
                         return await interaction.editReply({ embeds: [embed], components: [] });
                     };
 
-                    let rpg_data = load_rpg_data(userId)
+                    let rpg_data = await load_rpg_data(userId)
 
                     // ==================檢查物品==================
                     let item_missing = [];
@@ -1034,7 +1046,7 @@ module.exports = {
                         const need_amount = need_item.amount;
                         const have_amount = (rpg_data.inventory[current_item_id] || 0);
 
-                        if (!userHaveEnoughItems(userId, current_item_id, need_amount)) {
+                        if (!(await userHaveEnoughItems(userId, current_item_id, need_amount))) {
                             item_missing.push({
                                 item: get_name_of_id(current_item_id),
                                 amount: need_amount - have_amount,
@@ -1053,12 +1065,12 @@ module.exports = {
                         rpg_data.inventory[need_item.item] -= need_item.amount;
                     };
 
-                    save_rpg_data(userId, rpg_data)
+                    await save_rpg_data(userId, rpg_data)
 
                     const output_item_id = smeltable_recipe.find(a => a.input.item === item_id).output;
                     const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
 
-                    let smelt_data = load_smelt_data();
+                    let smelt_data = await load_smelt_data();
 
                     if (!smelt_data[userId]) {
                         smelt_data[userId] = [];
@@ -1083,7 +1095,7 @@ module.exports = {
                         output_amount: parseInt(output_amount),
                     });
 
-                    save_smelt_data(smelt_data);
+                    await save_smelt_data(smelt_data);
 
                     // 清理 session 資料
                     delete global.smelter_sessions[session_id];
@@ -1106,8 +1118,8 @@ module.exports = {
 
                     const [_, targetUserId, userId] = interaction.customId.split("|");
 
-                    const rpg_data = load_rpg_data(userId);
-                    const t_rpg_data = load_rpg_data(targetUserId);
+                    const rpg_data = await load_rpg_data(userId);
+                    const t_rpg_data = await load_rpg_data(targetUserId);
                     const marry_data = rpg_data.marry ?? {};
                     const marry_with = marry_data.with ?? null;
                     const married = marry_data.married ?? false;
@@ -1136,8 +1148,8 @@ module.exports = {
                         time: Date.now(),
                     };
 
-                    save_rpg_data(userId, rpg_data);
-                    save_rpg_data(targetUserId, t_rpg_data);
+                    await save_rpg_data(userId, rpg_data);
+                    await save_rpg_data(targetUserId, t_rpg_data);
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
@@ -1157,8 +1169,8 @@ module.exports = {
 
                     const emoji_cross = await get_emoji("crosS", client);
 
-                    const rpg_data = load_rpg_data(userId);
-                    const with_User_rpg_data = load_rpg_data(with_UserId);
+                    const rpg_data = await load_rpg_data(userId);
+                    const with_User_rpg_data = await load_rpg_data(with_UserId);
 
                     const marry_data = rpg_data.marry ?? {};
                     const married = marry_data.married ?? false;
@@ -1181,8 +1193,8 @@ module.exports = {
                     rpg_data.marry = marry_default_value;
                     with_User_rpg_data.marry = marry_default_value;
 
-                    save_rpg_data(userId, rpg_data);
-                    save_rpg_data(with_UserId, with_User_rpg_data);
+                    await save_rpg_data(userId, rpg_data);
+                    await save_rpg_data(with_UserId, with_User_rpg_data);
 
                     if (mode === 1) return { embeds: [embed] };
                     return await interaction.editReply({ embeds: [embed] });
@@ -1247,7 +1259,7 @@ module.exports = {
                         return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                     };
 
-                    const rpg_data = load_rpg_data(user.id);
+                    const rpg_data = await load_rpg_data(user.id);
 
                     rpg_data.job = job;
                     if (job === "farmer") {
@@ -1259,7 +1271,7 @@ module.exports = {
                     if (!rpg_data.lastRunTimestamp) rpg_data.lastRunTimestamp = {};
                     rpg_data.lastRunTimestamp.job = Date.now();
 
-                    save_rpg_data(user.id, rpg_data);
+                    await save_rpg_data(user.id, rpg_data);
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_job_color)

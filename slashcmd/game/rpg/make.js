@@ -48,7 +48,7 @@ module.exports = {
         await interaction.deferReply();
 
         const userid = interaction.user.id;
-        let rpg_data = load_rpg_data(userid);
+        let rpg_data = await load_rpg_data(userid);
 
         let item = interaction.options.getString("物品");
         const amount = interaction.options.getInteger("數量") ?? 1;
@@ -116,7 +116,7 @@ module.exports = {
 
         if (!rpg_data.inventory[item_id]) rpg_data.inventory[item_id] = 0;
         rpg_data.inventory[item_id] += output_amount;
-        save_rpg_data(userid, rpg_data);
+        await save_rpg_data(userid, rpg_data);
 
         const emoji = await get_emoji("toolbox", interaction.client);
         const embed = new EmbedBuilder()

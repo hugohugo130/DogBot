@@ -73,7 +73,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
         const have_amount = (rpg_data.inventory[current_item_id] || 0);
 
         // if (have_amount < need_amount) {
-        if (!userHaveEnoughItems(interaction.user.id, current_item_id, need_amount)) {
+        if (!(await userHaveEnoughItems(interaction.user.id, current_item_id, need_amount))) {
             item_missing.push({
                 item: get_name_of_id(current_item_id),
                 amount: need_amount - have_amount,
@@ -238,8 +238,8 @@ module.exports = {
         const { load_rpg_data, load_smelt_data, save_smelt_data, save_rpg_data } = require("../../../utils/file.js");
         const { get_emojis, wrong_job_embed, notEnoughItemEmbed, name, smelter_slots } = require("../../../utils/rpg.js");
 
-        let rpg_data = load_rpg_data(userId);
-        const smelt_data_all = load_smelt_data();
+        let rpg_data = await load_rpg_data(userId);
+        const smelt_data_all = await load_smelt_data();
         const smelt_data = smelt_data_all[userId];
 
         const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/smelt", userId, interaction, interaction.client);
@@ -416,8 +416,8 @@ module.exports = {
             // 從煉金爐移除該物品
             smelt_data.splice(index, 1);
             // 儲存資料
-            save_smelt_data(smelt_data_all);
-            save_rpg_data(userId, rpg_data);
+            await save_smelt_data(smelt_data_all);
+            await save_rpg_data(userId, rpg_data);
 
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)

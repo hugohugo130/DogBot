@@ -99,9 +99,9 @@ async function scheduleFunc(client, file, per) {
 };
 
 async function run_schedule(client) {
-    const { readScheduleSync } = require("./file.js");
+    const { readSchedule } = require("./file.js");
 
-    const [everysec, everymin, every5min] = readScheduleSync();
+    const [everysec, everymin, every5min] = readSchedule();
 
     for (const file of everysec) {
         await setup_schedule(1, scheduleFunc, file, client, file, "秒");

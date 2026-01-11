@@ -27,12 +27,14 @@ module.exports = {
     name: Events.ClientReady,
     once: true,
     /**
-     * 
-     * @param {DogClient} client 
+     *
+     * @param {DogClient} client - Discord Client
      */
     execute: async function (client) {
         global._client = client;
         client.name = BotName || client.user.tag;
+
+        await client.on_ready();
 
         const schedules = await run_schedule(client);
         logger.info(`已加載 ${schedules} 個排程`);

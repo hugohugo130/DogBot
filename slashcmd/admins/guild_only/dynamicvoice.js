@@ -37,7 +37,7 @@ module.exports = {
         const channel = interaction.options.getChannel("vchannel") ?? false;
         const guildID = interaction.guildId;
 
-        setDynamicVoice(guildID, channel);
+        await setDynamicVoice(guildID, channel);
 
         await interaction.editReply({ content: `已成功設定動態語音頻道${channel ? `為 ${channel}` : "：關閉"}` });
     },

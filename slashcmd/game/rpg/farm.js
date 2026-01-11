@@ -18,7 +18,7 @@ async function get_farm_info_embed(user, interaction = null, client = global._cl
     const { embed_default_color } = require("../../../utils/config.js");
 
     const [emoji_farmer, emoji_hoe, emoji_update] = await get_emojis(["farmer", "hoe", "update"], client);
-    const farm_data = load_farm_data(user.id);
+    const farm_data = await load_farm_data(user.id);
 
     let waterAt = farm_data.waterAt;
 
@@ -215,8 +215,8 @@ module.exports = {
         const userId = user.id;
         const subcommand = interaction.options.getSubcommand();
 
-        const rpg_data = load_rpg_data(userId);
-        const farm_data = load_farm_data(userId);
+        const rpg_data = await load_rpg_data(userId);
+        const farm_data = await load_farm_data(userId);
 
         const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/farm", userId, interaction, interaction.client);
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
@@ -255,7 +255,7 @@ module.exports = {
                 return await interaction.editReply({ embeds: [embed] });
             };
 
-            if (!userHaveEnoughItems(userId, hoe, amount)) {
+            if (!(await userHaveEnoughItems(userId, hoe, amount))) {
                 const embed = await notEnoughItemEmbed([{ name: hoe, amount }], interaction, client);
 
                 return await interaction.editReply({ embeds: [embed] });
@@ -278,8 +278,8 @@ module.exports = {
             };
 
             rpg_data.hunger -= need_hunger;
-            save_rpg_data(userId, rpg_data);
-            save_farm_data(userId, farm_data);
+            await save_rpg_data(userId, rpg_data);
+            await save_farm_data(userId, farm_data);
 
             const success_embed = new EmbedBuilder()
                 .setColor(embed_default_color)
@@ -315,8 +315,8 @@ module.exports = {
             };
 
             farm_data.farms = farm_data.farms.filter(farm => !completed_farms.includes(farm));
-            save_rpg_data(userId, rpg_data);
-            save_farm_data(userId, farm_data);
+            await save_rpg_data(userId, rpg_data);
+            await save_farm_data(userId, farm_data);
 
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
@@ -351,8 +351,8 @@ module.exports = {
             rpg_data.lastRunTimestamp[cooldown_key] = DateNow();
             farm_data.waterAt = DateNowSecond();
 
-            save_rpg_data(userId, rpg_data);
-            save_farm_data(userId, farm_data);
+            await save_rpg_data(userId, rpg_data);
+            await save_farm_data(userId, farm_data);
 
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)

@@ -52,7 +52,7 @@ async function make_db_compatible(users, guilds) {
     for (const user of users) {
         continue;
         if (user instanceof User) {
-            // const rpg_data = load_rpg_data(user.id);
+            // const rpg_data = await load_rpg_data(user.id);
 
             /*
             2025 12 02:
@@ -87,7 +87,7 @@ async function make_db_compatible(users, guilds) {
 
             // =================================================================
 
-            // save_rpg_data(user.id, rpg_data);
+            // await save_rpg_data(user.id, rpg_data);
         };
     };
 
@@ -101,14 +101,14 @@ async function make_db_compatible(users, guilds) {
             */
 
             /*
-            const guild_data = loadData(guild.id);
+            const guild_data = await loadData(guild.id);
 
             const prefix = guild_data.prefix;
             if (typeof prefix === "string") {
                 guild_data.prefix = [guild_data.prefix];
             };
 
-            saveData(guild.id, guild_data);
+            await saveData(guild.id, guild_data);
             */
         };
     };

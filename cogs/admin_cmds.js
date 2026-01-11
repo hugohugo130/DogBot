@@ -9,6 +9,7 @@ const logger = get_logger();
 function add_item(rpg_data, item, amount) {
     const { get_id_of_name, get_name_of_id } = require("../utils/rpg.js");
     item = get_id_of_name(item);
+
     if (get_name_of_id(item, null) === null) {
         throw new Error("item not found");
     };
@@ -17,7 +18,7 @@ function add_item(rpg_data, item, amount) {
 
     rpg_data.inventory[item] += amount;
 
-    return rpg_data
+    return rpg_data;
 };
 
 async function handleMoneyCommand(message, args) {
@@ -30,10 +31,10 @@ async function handleMoneyCommand(message, args) {
     if (!user) return message.reply("請標記一個用戶！");
     if (!amount) return message.reply("amount must be a number");
 
-    const rpg_data = load_rpg_data(user.id);
+    const rpg_data = await load_rpg_data(user.id);
 
     rpg_data.money += amount;
-    save_rpg_data(user.id, rpg_data);
+    await save_rpg_data(user.id, rpg_data);
 
     return message.reply(`done adding ${user.toString()}'s money. +${amount}`);
 };
@@ -50,10 +51,10 @@ async function handleInvCommand(message, args) {
     if (isNaN(amount)) return message.reply("amount must be a number");
     if (!user) return message.reply("請標記一個用戶！");
 
-    const rpg_data = load_rpg_data(user.id);
+    const rpg_data = await load_rpg_data(user.id);
     if (!rpg_data.inventory) rpg_data.inventory = {};
     rpg_data.inventory[item] = amount;
-    save_rpg_data(user.id, rpg_data);
+    await save_rpg_data(user.id, rpg_data);
 
     return message.reply(`done setting ${user.toString()}'s ${item} to ${amount}`);
 };
@@ -76,7 +77,7 @@ async function handleGive2Command(message, args) {
     let [_, object] = args;
     try {
         object = JSON.parse(object)
-    } catch (_) {
+    } catch {
         return message.reply("object must be a valid json string");
     };
 
@@ -86,13 +87,13 @@ async function handleGive2Command(message, args) {
         return message.reply("請標記一個用戶！");
     };
 
-    let rpg_data = load_rpg_data(user.id);
+    let rpg_data = await load_rpg_data(user.id);
     let log = "";
     for (let [item, amount] of Object.entries(object)) {
         item = get_id_of_name(item);
 
         try {
-            add_item(rpg_data, item, parseInt(amount))
+            add_item(rpg_data, item, parseInt(amount));
             log += `added ${get_name_of_id(item)}\\*${amount} to user ${user.toString()}'s inventory\n`;
         } catch (err) {
             await message.reply(`error adding item ${item} to user ${user.toString()}'s inventory: ${err.message}`);
@@ -100,7 +101,7 @@ async function handleGive2Command(message, args) {
         };
     };
 
-    save_rpg_data(user.id, rpg_data);
+    await save_rpg_data(user.id, rpg_data);
 
     return message.reply(`done adding user ${user.toString()} 's inventory:\n${log}`);
 };
@@ -154,16 +155,16 @@ module.exports = {
                     break;
 
                 case "resjob":
-                    const rpg_data = load_rpg_data(message.author.id);
+                    const rpg_data = await load_rpg_data(message.author.id);
                     rpg_data.job = null;
                     if (rpg_data.lastRunTimestamp?.job) {
                         if (!rpg_data.lastRunTimestamp) rpg_data.lastRunTimestamp = {};
                         rpg_data.lastRunTimestamp.job = 0;
                     };
 
-                    save_rpg_data(message.author.id, rpg_data);
+                    await save_rpg_data(message.author.id, rpg_data);
 
-                    await message.reply("DONE！");
+                    await message.reply("e, ok.");
                     break;
             };
 
@@ -181,10 +182,10 @@ module.exports = {
 
                 if (!user) {
                     return message.reply("請標記一個用戶！");
-                }
+                };
 
                 const rpg_data = add_item(load_rpg_data(user.id), item, parseInt(amount));
-                save_rpg_data(user.id, rpg_data);
+                await save_rpg_data(user.id, rpg_data);
 
                 return message.reply(`done adding user ${user.toString()} 's inventory: ${item}*${amount}`);
             };

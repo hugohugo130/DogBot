@@ -1,4 +1,5 @@
-const { Client, GatewayIntentBits, Options, Collection, VoiceChannel, Guild, GuildMember } = require("discord.js");
+const { Client, GatewayIntentBits, Options, Collection, Guild, GuildMember } = require("discord.js");
+
 const { loadslashcmd } = require("../loadslashcmd.js");
 const { loadDvoiceData } = require("../file.js");
 const { authorName } = require("../config.js");
@@ -47,7 +48,7 @@ class DogClient extends Client {
         this.author = authorName || "哈狗";
 
         /** @type {Collection<string, object} */
-        this.dvoice = new Collection(Object.entries(loadDvoiceData()));
+        this.dvoice = new Collection();
 
         /** @type {Collection<string, any>} */
         this.commands = loadslashcmd(true);
@@ -71,8 +72,12 @@ class DogClient extends Client {
         this.setMaxListeners(Infinity);
     };
 
+    async on_ready() {
+        this.dvoice = new Collection(Object.entries(await loadDvoiceData()));
+    };
+
     /**
-     * 
+     * Get all guilds from all shards.
      * @returns {Promise<Guild[]>}
      */
     async getAllGuilds() {
@@ -89,7 +94,7 @@ class DogClient extends Client {
     };
 
     /**
-     * 
+     * Get all members from a guild.
      * @param {Guild} guild
      * @param {boolean} [fetch] - 是否fetch guild的member而不是使用cache
      * @param {number} [fetch_timeout=360] - fetch members的timeout
@@ -120,7 +125,7 @@ class DogClient extends Client {
     };
 
     /**
-     * 
+     * Get all members from all guilds.
      * @param {boolean | string} fetch - 是否fetch guild的member而不是使用cache
      * @param {number} [fetch_timeout=360] - fetch members的timeout
      * @returns {Promise<GuildMember[]>}

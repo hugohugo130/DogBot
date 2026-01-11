@@ -26,12 +26,26 @@ const readdir = fsp.readdir;
 const logger = get_logger();
 
 /**
+*
+ * @param {import("node:fs").PathLike} path
+ * @returns {Promise<boolean>}
+ */
+async function exists(path) {
+    try {
+        await fsp.access(path);
+        return true;
+    } catch {
+        return false;
+    };
+};
+
+/**
  * 
- * @param {fs.PathOrFileDescriptor} file_path 
- * @param {{encoding?: null | undefined, flag?: string | undefined, return?: any | undefined} | null} options 
+ * @param {fs.PathOrFileDescriptor} file_path
+ * @param {{encoding?: null | undefined, flag?: string | undefined, return?: any | undefined} | null} [options]
  * @returns {NonSharedBuffer}
  */
-function readFileSync(file_path, options = null) {
+function readFileSync(file_path, options = { encoding: "utf-8" }) {
     const filename = path.basename(file_path);
 
     if (!existsSync(file_path) && DATABASE_FILES.includes(filename)) {
@@ -52,6 +66,35 @@ function readFileSync(file_path, options = null) {
     };
 
     return fs.readFileSync(file_path, options);
+};
+
+/**
+ * 
+ * @param {fs.PathOrFileDescriptor} file_path
+ * @param {{encoding?: null | undefined, flag?: import("node:fs").OpenMode | undefined, return?: any | undefined} | null} [options]
+ * @returns {Promise<NonSharedBuffer>}
+ */
+async function readFile(file_path, options = { encoding: "utf-8" }) {
+    const filename = path.basename(file_path);
+
+    if (!(await exists(file_path)) && DATABASE_FILES.includes(filename)) {
+        if (typeof options === "object" && options?.return) return stringify(options.return);
+
+        const default_value = DEFAULT_VALUES.single[filename]
+        const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
+            return acc || category[filename];
+        }, undefined);
+
+        if (!default_value) {
+            if (!other_category_default_value) logger.warn(`警告：資料庫檔案 ${filename} 缺失預設值，請及時補充。`);
+            return stringify({});
+        } else {
+            await writeJson(file_path, default_value);
+            return stringify(default_value);
+        };
+    };
+
+    return await fsp.readFile(file_path, options);
 };
 
 /**
@@ -101,55 +144,55 @@ function writeSync(path, data, p = false) {
     fs.writeFileSync(path, data);
 };
 
-async function read(path, encoding = "utf-8") {
-    return await fsp.readFile(path, {
-        encoding,
-    });
-};
-
-async function write(path, data, p = false) {
-    if (path.endsWith(".json") && !p) return await writeJson(path, data);
-
-    const dir = dirname(path);
-    if (!existsSync(dir)) {
-        mkdir(dir, { recursive: true });
-    };
-
-    await fsp.writeFile(path, data);
-};
-
 function readJsonSync(path) {
     return safeJSONParse(readFileSync(path));
 };
 
 function writeJsonSync(path, data, replacer = "") {
-    data = stringify(data, replacer)
+    data = stringify(data, replacer);
+
     writeSync(path, data, true);
     return data;
 };
 
+async function writeFile(path, data, p = false) {
+    if (path.endsWith(".json") && !p) return await writeJson(path, data);
+
+    const dir = dirname(path);
+    if (!(await exists(dir))) {
+        await mkdir(dir, { recursive: true });
+    };
+
+    await fsp.writeFile(path, data);
+};
+
 async function readJson(path) {
-    return safeJSONParse(await read(path));
+    return safeJSONParse(await readFile(path));
 };
 
 async function writeJson(path, data, replacer = "") {
-    data = stringify(data, replacer)
-    await write(path, data, true);
+    data = stringify(data, replacer);
+
+    await writeFile(path, data, true);
     return data;
 };
 
-function readScheduleSync() {
+/**
+ * Read schedule files from the schedule directory.
+ * @returns {Promise<string[][]>}
+ */
+async function readSchedule() {
     const { scheduleEverysec, scheduleEverymin, scheduleEvery5min } = require("./config.js");
 
-    const everysec = existsSync(scheduleEverysec) ? readdirSync(scheduleEverysec, { recursive: true })
+    const everysec = await exists(scheduleEverysec) ? await readdir(scheduleEverysec, { recursive: true })
         .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEverysec}/${file}`) : [];
 
-    const everymin = existsSync(scheduleEverymin) ? readdirSync(scheduleEverymin, { recursive: true })
+    const everymin = await exists(scheduleEverymin) ? await readdir(scheduleEverymin, { recursive: true })
         .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEverymin}/${file}`) : [];
 
-    const every5min = existsSync(scheduleEvery5min) ? readdirSync(scheduleEvery5min, { recursive: true })
+    const every5min = await exists(scheduleEvery5min) ? await readdir(scheduleEvery5min, { recursive: true })
         .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEvery5min}/${file}`) : [];
 
@@ -161,8 +204,8 @@ function readScheduleSync() {
 };
 
 /**
- * 
- * @param {fs.WriteStream} writer 
+ *
+ * @param {fs.WriteStream} writer
  * @returns {Promise<void>}
  */
 async function waitForWriterFinish(writer) {
@@ -182,33 +225,12 @@ function join_folder(folder, filename) {
 
 /**
  * @warning filename will be converted to basename
- * @param {string} filename 
+ * @param {string} filename
  * @returns {string}
  */
 function join_db_folder(filename) {
     const basename = path.basename(filename);
     return join_folder(database_folder, basename);
-};
-
-/**
- * 
- * @returns {Promise<{everysec: string[], everymin: string[]}>}
- */
-async function readSchedule() {
-    const { scheduleEverysec, scheduleEverymin } = require("./config.js");
-    const everysec = await readdir(scheduleEverysec, { recursive: true })
-        .filter(file => file.endsWith(".js"))
-        .map(file => `../schedule/everysec/${file}`);
-
-
-    const everymin = await readdir(scheduleEverymin, { recursive: true })
-        .filter(file => file.endsWith(".js"))
-        .map(file => `../schedule/everysec/${file}`);
-
-    return {
-        everysec,
-        everymin,
-    };
 };
 
 /**
@@ -234,11 +256,12 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
         // 讀取本地檔案
         try {
-            if (existsSync(local_filepath)) {
-                localContent = readFileSync(local_filepath, {
-                    encoding: "utf8",
+            if (await exists(local_filepath)) {
+                localContent = await readFile(local_filepath, {
+                    encoding: "utf-8",
                     return: null,
                 });
+
                 // 嘗試解析並格式化 JSON 以便比較
                 try {
                     localContent = stringify(safeJSONParse(localContent));
@@ -298,9 +321,9 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
 };
 
 /**
- * 
- * @param {string} filename 
- * @param {any} default_return 
+ *
+ * @param {string} filename
+ * @param {any} default_return
  * @returns {object | any}
  */
 function find_default_value(filename, default_return = undefined) {
@@ -356,7 +379,14 @@ function order_data(data, follow) {
 ╚═════╝ ╚═╝  ╚═╝   ╚═╝   ╚═╝  ╚═╝╚═════╝ ╚═╝  ╚═╝╚══════╝╚══════╝
 */
 
-function loadData(guildID = null, mode = 0) {
+/**
+ * 讀取伺服器資料庫
+ * @param {string} guildID - 伺服器ID
+ * @param {number} mode - 0: 取得伺服器資料, 1: 取得所有資料
+ * @returns {Promise<object>}
+ * @throws {TypeError} - 如果mode不是0或1
+ */
+async function loadData(guildID = null, mode = 0) {
     /*
     mode: 0 取得伺服器資料, 1 取得所有資料
     */
@@ -367,32 +397,37 @@ function loadData(guildID = null, mode = 0) {
     const { database_file } = require("./config.js");
     const database_emptyeg = find_default_value("database.json", {});
 
-    if (!fs.existsSync(database_file)) return {};
+    if (!(await exists(database_file))) return {};
 
-    const rawData = readFileSync(database_file);
-    let data = safeJSONParse(rawData);
+    const data = await readJson(database_file);
 
     if (mode == 0 && guildID) {
         if (!data[guildID]) {
             data[guildID] = database_emptyeg;
-            saveData(guildID, data[guildID]);
+            await saveData(guildID, data[guildID]);
         };
 
         return data[guildID];
-    } else {
-        return data;
     };
+
+    return data;
 };
 
-function saveData(guildID, guildData) {
+/**
+ * 儲存伺服器資料庫
+ * @param {string} guildID - 伺服器ID
+ * @param {object} guildData - 伺服器資料
+ * @returns {Promise<void>}
+ * @throws {Error}
+ */
+async function saveData(guildID, guildData) {
     const { database_file } = require("./config.js");
     const database_emptyeg = find_default_value("database.json", {});
 
     let data = {};
 
-    if (fs.existsSync(database_file)) {
-        const rawData = readFileSync(database_file);
-        data = safeJSONParse(rawData);
+    if (await exists(database_file)) {
+        data = await readJson(database_file);
     };
 
     if (!data[guildID]) {
@@ -408,13 +443,13 @@ function saveData(guildID, guildData) {
 
     while (retries > 0) {
         try {
-            writeJsonSync(database_file, data);
+            await writeJson(database_file, data);
             break;
         } catch (error) {
             lastError = error;
             retries--;
             if (retries > 0) {
-                sleep(1000);
+                await asleep(1000);
             };
         };
     };
@@ -434,29 +469,30 @@ function saveData(guildID, guildData) {
 */
 
 /**
- * 
- * @param {string} guildID 
- * @param {boolean} enable 
+ *
+ * @param {string} guildID
+ * @param {boolean} enable
+ * @returns {Promise<void>}
  */
-function setRPG(guildID, enable) {
+async function setRPG(guildID, enable) {
     if (![true, false].includes(enable)) throw new Error(`Invalid mode: ${enable}`)
 
-    const data = loadData(guildID);
+    const data = await loadData(guildID);
     data["rpg"] = enable;
 
-    saveData(guildID, data);
+    await saveData(guildID, data);
 };
 
 /**
- * 
- * @param {string} guildID 
- * @param {string} prefix 
- * @returns {string | null}
+ *
+ * @param {string} guildID
+ * @param {string} prefix
+ * @returns {Promise<string | null>}
  */
-function addPrefix(guildID, prefix) {
+async function addPrefix(guildID, prefix) {
     if (!typeof prefix === "string") throw new Error(`Invalid prefix: ${enable}`)
 
-    const data = loadData(guildID);
+    const data = await loadData(guildID);
 
     // 舊兼容
     if (!Array.isArray(data["prefix"])) {
@@ -467,21 +503,21 @@ function addPrefix(guildID, prefix) {
 
     data["prefix"].push(prefix);
 
-    saveData(guildID, data);
+    await saveData(guildID, data);
 
     return prefix;
 };
 
 /**
- * 
- * @param {string} guildID 
- * @param {string} prefix 
- * @returns {string | null}
+ *
+ * @param {string} guildID
+ * @param {string} prefix
+ * @returns {Promise<string | null>}
  */
-function rmPrefix(guildID, prefix) {
+async function rmPrefix(guildID, prefix) {
     if (!typeof prefix === "string") throw new Error(`Invalid prefix: ${enable}`)
 
-    const data = loadData(guildID);
+    const data = await loadData(guildID);
 
     // 舊兼容
     if (!Array.isArray(data["prefix"])) {
@@ -492,64 +528,74 @@ function rmPrefix(guildID, prefix) {
 
     data["prefix"] = data["prefix"].filter(p => p !== prefix);
 
-    saveData(guildID, data);
+    await saveData(guildID, data);
 
     return prefix;
 };
 
 /**
- * 
- * @param {string} guildID 
- * @returns {string[]}
+ *
+ * @param {string} guildID
+ * @returns {Promise<string[]>}
  */
-function getPrefixes(guildID) {
-    const data = loadData(guildID);
+async function getPrefixes(guildID) {
+    const data = await loadData(guildID);
 
     // 舊兼容
     if (!Array.isArray(data["prefix"])) {
         data["prefix"] = [data["prefix"]];
-        saveData(guildID, data);
+        await saveData(guildID, data);
     };
 
     return data["prefix"];
 };
 
-function load_rpg_data(userid) {
+/**
+ *
+ * @param {string} userid
+ * @returns {Promise<object>}
+ */
+async function load_rpg_data(userid) {
     const { rpg_database_file } = require("./config.js");
 
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
-    if (fs.existsSync(rpg_database_file)) {
-        const rawData = readFileSync(rpg_database_file);
-        const data = safeJSONParse(rawData);
+    if (await exists(rpg_database_file)) {
+        const data = await readJson(rpg_database_file);
 
         if (!data[userid]) {
-            save_rpg_data(userid, rpg_emptyeg);
+            await save_rpg_data(userid, rpg_emptyeg);
             return rpg_emptyeg;
         };
+
         return order_data(data[userid], rpg_emptyeg);
     } else {
-        save_rpg_data(userid, rpg_emptyeg);
+        await save_rpg_data(userid, rpg_emptyeg);
         return rpg_emptyeg;
     };
 };
 
-function save_rpg_data(userid, rpgdata) {
+/**
+ * 
+ * @param {string} userid
+ * @param {object} rpg_data
+ * @returns {Promise<void>}
+ */
+async function save_rpg_data(userid, rpg_data) {
     const { rpg_database_file } = require("./config.js");
 
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     let data = {};
-    if (fs.existsSync(rpg_database_file)) {
-        const rawData = readFileSync(rpg_database_file);
-        data = safeJSONParse(rawData);
+    if (await exists(rpg_database_file)) {
+        data = await readJson(rpg_database_file);
     };
 
     if (!data[userid]) {
         data[userid] = rpg_emptyeg;
     };
 
-    data[userid] = { ...data[userid], ...rpgdata };
+    data[userid] = { ...data[userid], ...rpg_data };
 
     // 檢查並清理 inventory 中數量為 0 或 null 的物品
     if (data[userid].inventory) {
@@ -562,37 +608,35 @@ function save_rpg_data(userid, rpgdata) {
 
     data[userid] = order_data(data[userid], rpg_emptyeg);
 
-    writeJsonSync(rpg_database_file, data);
+    await writeJson(rpg_database_file, data);
 };
 
-function load_shop_data(userid) {
+async function load_shop_data(userid) {
     const { rpg_shop_file } = require("./config.js");
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
 
-    if (fs.existsSync(rpg_shop_file)) {
-        const rawData = readFileSync(rpg_shop_file);
-        const data = safeJSONParse(rawData);
+    if (await exists(rpg_shop_file)) {
+        const data = await readJson(rpg_shop_file);
 
         if (!data[userid]) {
-            save_shop_data(userid, shop_emptyeg);
+            await save_shop_data(userid, shop_emptyeg);
             return shop_emptyeg;
         };
 
         return order_data(data[userid], shop_emptyeg);
     } else {
-        save_shop_data(userid, shop_emptyeg);
+        await save_shop_data(userid, shop_emptyeg);
         return shop_emptyeg;
     };
 };
 
-function save_shop_data(userid, shop_data) {
+async function save_shop_data(userid, shop_data) {
     const { rpg_shop_file } = require("./config.js");
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
 
     let data = {};
-    if (fs.existsSync(rpg_shop_file)) {
-        const rawData = readFileSync(rpg_shop_file);
-        data = safeJSONParse(rawData);
+    if (await exists(rpg_shop_file)) {
+        data = await readJson(rpg_shop_file);
     };
 
     if (!data[userid]) {
@@ -612,24 +656,22 @@ function save_shop_data(userid, shop_data) {
 
     data[userid] = order_data(data[userid], shop_emptyeg);
 
-    writeJsonSync(rpg_shop_file, data);
+    await writeJson(rpg_shop_file, data);
 };
 
 /**
- * 
- * @param {string} userid 
- * @returns {{lvl: number, exp: number, waterAt: number, farms: Array<Object}}
+ *
+ * @param {string} userid
+ * @returns {Promies<{lvl: number, exp: number, waterAt: number, farms: Object[]}>}
  */
-function load_farm_data(userid) {
+async function load_farm_data(userid) {
     const { rpg_farm_file } = require("./config.js");
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
 
-    const rawData = readFileSync(rpg_farm_file);
-
-    const data = safeJSONParse(rawData);
+    const data = await readJson(rpg_farm_file);
 
     if (!data[userid]) {
-        save_shop_data(userid, farm_emptyeg);
+        await save_shop_data(userid, farm_emptyeg);
         return farm_emptyeg;
     };
 
@@ -637,18 +679,17 @@ function load_farm_data(userid) {
 };
 
 /**
- * 
- * @param {string} userid 
- * @param {Array} farm_data 
+ *
+ * @param {string} userid
+ * @param {Array} farm_data
  */
-function save_farm_data(userid, farm_data) {
+async function save_farm_data(userid, farm_data) {
     const { rpg_farm_file } = require("./config.js");
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
 
     let data = {};
-    if (fs.existsSync(rpg_farm_file)) {
-        const rawData = readFileSync(rpg_farm_file);
-        data = safeJSONParse(rawData);
+    if (await exists(rpg_farm_file)) {
+        data = await readJson(rpg_farm_file);
     };
 
     if (!data[userid]) {
@@ -666,31 +707,31 @@ function save_farm_data(userid, farm_data) {
         };
     };
 
-    writeJsonSync(rpg_farm_file, data);
+    await writeJson(rpg_farm_file, data);
 };
 
-function load_bake_data() {
+async function load_bake_data() {
     const { bake_data_file } = require("./config.js");
 
-    return readJsonSync(bake_data_file);
+    return await readJson(bake_data_file);
 };
 
-function save_bake_data(data) {
+async function save_bake_data(data) {
     const { bake_data_file } = require("./config.js");
 
-    writeJsonSync(bake_data_file, data);
+    await writeJson(bake_data_file, data);
 };
 
-function load_smelt_data() {
+async function load_smelt_data() {
     const { smelt_data_file } = require("./config.js");
 
-    return readJsonSync(smelt_data_file);
+    return await readJson(smelt_data_file);
 };
 
-function save_smelt_data(data) {
+async function save_smelt_data(data) {
     const { smelt_data_file } = require("./config.js");
 
-    writeJsonSync(smelt_data_file, data);
+    await writeJson(smelt_data_file, data);
 };
 
 /*
@@ -702,16 +743,25 @@ function save_smelt_data(data) {
 ╚═════╝   ╚═══╝   ╚═════╝ ╚═╝ ╚═════╝╚══════╝
 */
 
-function loadDvoiceData() {
+/**
+ * Load dynamic voice data
+ * @returns {Promise<object>}
+ */
+async function loadDvoiceData() {
     const { dvoice_data_file } = require("./config.js");
 
-    return readJsonSync(dvoice_data_file);
+    return await readJson(dvoice_data_file);
 };
 
-function saveDvoiceData(data) {
+/**
+ * Save dynamic voice data
+ * @param {object} data - The data to save
+ * @returns {Promise<void>}
+ */
+async function saveDvoiceData(data) {
     const { dvoice_data_file } = require("./config.js");
 
-    writeJsonSync(dvoice_data_file, data);
+    await writeJson(dvoice_data_file, data);
 };
 
 /*
@@ -724,25 +774,26 @@ function saveDvoiceData(data) {
 */
 
 /**
- * 
- * @param {string} guildID 
- * @param {VoiceChannel} channel 
+ * Set dynamic voice channel
+ * @param {string} guildID - The ID of the guild
+ * @param {VoiceChannel} channel - The voice channel to set as dynamic voice channel
+ * @returns {Promise<void>}
  */
-function setDynamicVoice(guildID, channel) {
-    const data = loadData(guildID);
+async function setDynamicVoice(guildID, channel) {
+    const data = await loadData(guildID);
     data["dynamicVoice"] = channel.id;
 
-    saveData(guildID, data);
+    await saveData(guildID, data);
 };
 
 
 /**
  * 
  * @param {string} guildID 
- * @returns {string}
+ * @returns {Promise<string | undefined>}
  */
-function getDynamicVoice(guildID) {
-    const data = loadData(guildID);
+async function getDynamicVoice(guildID) {
+    const data = await loadData(guildID);
     return data["dynamicVoice"];
 };
 
@@ -756,8 +807,9 @@ function getDynamicVoice(guildID) {
 */
 
 /**
- * @warning filename will be converted to basename
- * @param {string} filename 
+ * joins the temp folder with the filename
+ * filename will be converted to basename
+ * @param {string} filename - The filename to join with the temp folder
  * @returns {string}
  */
 function join_temp_folder(filename) {
@@ -783,20 +835,18 @@ module.exports = {
     createReadStream,
     readFileSync,
     writeSync,
-    read,
-    write,
     readJsonSync,
     writeJsonSync,
-    readJson,
-    writeJson,
     existsSync,
     readdirSync,
-    readdir,
     unlinkSync,
     mkdirSync,
+    readFile,
+    writeFile,
+    readJson,
+    writeJson,
+    readdir,
     mkdir,
-    createWriteStream,
-    readScheduleSync,
     readSchedule,
     join,
     full_path,
@@ -835,10 +885,10 @@ module.exports = {
     // dvoice
     loadDvoiceData,
     saveDvoiceData,
-
-    // features
     setDynamicVoice,
     getDynamicVoice,
+
+    // features
     stringify,
 
     // temp

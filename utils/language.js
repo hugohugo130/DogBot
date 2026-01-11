@@ -96,19 +96,45 @@ Since <t:{1}:R>`,
 const logger = get_logger();
 
 /**
+ * 檢查所有語言是否都有相同的 key
+ */
+function check_language_keys() {
+    // 收集所有語言的所有category和key
+    const all_keys = new Set();
+    for (const lang in language) {
+        for (const category in language[lang]) {
+            for (const key in language[lang][category]) {
+                all_keys.add(`${category}.${key}`);
+            };
+        };
+    };
+
+    // 檢查每個語言是否都有相應category中的key
+    for (const lang in language) {
+        for (const category in language[lang]) {
+            for (const key of all_keys) {
+                if (!language[lang][category][key]) {
+                    logger.warn(`Language ${lang} is missing key ${category}.${key}`);
+                };
+            };
+        };
+    };
+};
+
+// 想問一個問題，像上面check language keys是一個sync function
+// 那麼我直接加上async讓他變成async function，但沒有用到任何await的話，他是不是也會在await func() 的時候不阻塞主執行緒？
+// 回答我: 
+
+/**
  * 
  * @param {string} lang
  * @param {Locale | string} [default_lang]
  * @returns {object}
  */
 function get_lang(lang, default_lang = Locale.ChineseTW) {
-    if (lang in language) {
-        return language[lang];
-    } else {
-        logger.warn(`找不到語言 ${lang}，使用預設語言 ${default_lang}, called from\n${getCallerModuleName(null)}`);
-
-        return language[default_lang];
-    };
+    return (lang in language)
+        ? language[lang]
+        : language[default_lang];
 };
 
 /**
@@ -122,13 +148,9 @@ function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
     const lang_data = get_lang(lang, default_lang);
     const lang_category = lang_data[category];
 
-    if (!lang_category) {
-        logger.warn(`找不到語言 ${lang} 的類別 ${category}，使用預設語言 ${default_lang} 的數據。called from\n${getCallerModuleName(null)}`);
-
-        return language[default_lang][category];
-    } else {
-        return lang_category;
-    };
+    return lang_category
+        ? lang_category
+        : language[default_lang][category];
 };
 
 /**
@@ -147,11 +169,7 @@ function get_lang_data(lang, category, key, ...replace) {
     const lang_category = get_lang_category(lang, category, default_lang);
     let lang_value = lang_category[key];
 
-    if (!lang_value) {
-        logger.warn(`找不到語言 ${lang}; 類別 ${category}; 鍵 ${key} 的值，使用預設語言 ${default_lang} 的數據。called from\n${getCallerModuleName(null)}`);
-
-        lang_value = language[default_lang][category][key];
-    };
+    if (!lang_value) lang_value = language[default_lang][category][key];
 
     if (replace.length > 0) {
         for (let i = 0; i < replace.length; i++) {
@@ -163,5 +181,6 @@ function get_lang_data(lang, category, key, ...replace) {
 };
 
 module.exports = {
+    check_language_keys,
     get_lang_data,
 };

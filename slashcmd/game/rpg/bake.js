@@ -55,8 +55,8 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const emoji_cross = await get_emoji("crosS", interaction.client);
     const emoji_drumstick = await get_emoji("drumstick", interaction.client);
 
-    let rpg_data = load_rpg_data(userId);
-    const bake_data = load_bake_data()[userId];
+    let rpg_data = await load_rpg_data(userId);
+    const bake_data = await load_bake_data()[userId];
 
     const oven_remain_slots = oven_slots - (bake_data?.length || 0);
 
@@ -337,9 +337,9 @@ module.exports = {
         const { get_emoji } = require("../../../utils/rpg.js");
         const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 
-        const bake_data_all = load_bake_data();
+        const bake_data_all = await load_bake_data();
         const bake_data = bake_data_all[userId];
-        const rpg_data = load_rpg_data(userId);
+        const rpg_data = await load_rpg_data(userId);
 
         const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/bake", userId, interaction, interaction.client);
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
@@ -525,8 +525,8 @@ module.exports = {
                 bake_data.splice(index, 1);
 
                 // 儲存資料
-                save_bake_data(bake_data_all);
-                save_rpg_data(userId, rpg_data);
+                await save_bake_data(bake_data_all);
+                await save_rpg_data(userId, rpg_data);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)

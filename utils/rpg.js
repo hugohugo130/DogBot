@@ -849,17 +849,16 @@ function get_id_of_name(id, default_value = id) {
     return name_reverse[id] || default_value;
 };
 
-function get_number_of_items(name, userid) {
+async function get_number_of_items(name, userid) {
     const { load_rpg_data } = require("./file.js");
 
-    const rpg_data = load_rpg_data(userid);
+    const rpg_data = await load_rpg_data(userid);
     const items = rpg_data.inventory;
 
     // 如果輸入的是中文名稱，找到對應的英文key
-    let item_key = name;
-    if (Object.values(name_list).includes(name)) {
-        item_key = Object.keys(name_list).find(key => name_list[key] === name);
-    };
+    let item_key = get_id_of_name(name);
+
+    if (!item_key) return 0;
 
     if (!items[item_key]) return 0;
     return items[item_key];
@@ -870,12 +869,12 @@ function get_number_of_items(name, userid) {
  * @param {string} userid 
  * @param {string} item 
  * @param {number} item_amount 
- * @returns {boolean} 如果玩家有足夠的物品，回傳true
+ * @returns {Promise<boolean>} 如果玩家有足夠的物品，回傳true
  */
-function userHaveEnoughItems(userid, item, item_amount) {
+async function userHaveEnoughItems(userid, item, item_amount) {
     const { load_rpg_data } = require("./file.js");
 
-    const rpg_data = load_rpg_data(userid);
+    const rpg_data = await load_rpg_data(userid);
     const items = rpg_data.inventory;
 
     return items?.[item] && items[item] >= item_amount;
@@ -1470,7 +1469,7 @@ async function ls_function({ client, message, rpg_data, mode, PASS, interaction 
     const { loadData } = require("./file.js");
 
     if (!rpg_data.privacy.includes(PrivacySettings.Inventory) && !PASS) {
-        const guildData = loadData(message.guild.id);
+        const guildData = await loadData(message.guild.id);
 
         const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
 
@@ -1566,11 +1565,11 @@ async function ls_function({ client, message, rpg_data, mode, PASS, interaction 
     return await message.reply({ embeds: [embed] });
 };
 
-function firstPrefix(guildID) {
+async function firstPrefix(guildID) {
     const { loadData } = require("./file.js");
     const { reserved_prefixes } = require("./config.js");
 
-    const guildData = loadData(guildID);
+    const guildData = await loadData(guildID);
 
     const prefix = guildData.prefix?.[0] ?? reserved_prefixes[0];
 
@@ -1581,13 +1580,13 @@ function firstPrefix(guildID) {
  * 
  * @param {string} guildID 
  * @param {string} prefix 
- * @returns {Array<string>}
+ * @returns {Promise<Array<string>>}
  */
-function InPrefix(guildID, prefix) {
+async function InPrefix(guildID, prefix) {
     const { loadData } = require("./file.js");
     const { reserved_prefixes } = require("./config.js");
 
-    const guildData = loadData(guildID);
+    const guildData = await loadData(guildID);
 
     const prefixes = (guildData.prefix ?? [])
         .concat(reserved_prefixes);
@@ -1605,13 +1604,13 @@ function InPrefix(guildID, prefix) {
  * 
  * @param {string} guildID 
  * @param {string} prefix 
- * @returns {boolean | string}
+ * @returns {Promise<boolean | string>}
  */
-function startsWith_prefixes(guildID, prefix) {
+async function startsWith_prefixes(guildID, prefix) {
     const { loadData } = require("./file.js");
     const { reserved_prefixes } = require("./config.js");
 
-    const guildData = loadData(guildID);
+    const guildData = await loadData(guildID);
 
     const prefixes = (guildData.prefix ?? [])
         .concat(reserved_prefixes);

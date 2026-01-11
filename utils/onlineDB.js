@@ -7,7 +7,7 @@ const util = require("node:util");
 const { getServerIPSync } = require("./getSeverIPSync.js");
 const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
 const { get_logger } = require("./logger.js");
-const { existsSync, compareLocalRemote, join_db_folder } = require("./file.js");
+const { existsSync, compareLocalRemote, join_db_folder, readFile } = require("./file.js");
 const { get_areadline } = require("./readline.js");
 const { Collection } = require("discord.js");
 
@@ -288,7 +288,7 @@ async function uploadChangedDatabaseFiles() {
         if (fs.existsSync(file)) {
             let localContent;
             try {
-                localContent = fs.readFileSync(file, "utf8");
+                localContent = await readFile(file);
                 localContent = JSON.stringify(JSON.parse(localContent)); // 格式化本地內容
             } catch (err) {
                 logger.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);

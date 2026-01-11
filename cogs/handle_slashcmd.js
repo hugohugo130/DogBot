@@ -88,7 +88,7 @@ module.exports = {
             const embeds = await get_loophole_embed(errorStack, interaction, client);
             try {
                 await interaction.followUp({ content: "", embeds, components: [], flags: MessageFlags.Ephemeral });
-            } catch (_) { };
+            } catch { };
         };
     },
 };

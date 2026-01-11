@@ -540,7 +540,7 @@ class MusicQueue {
                 this.subscription.unsubscribe();
                 return true;
             };
-        } catch (_) {
+        } catch {
             return false;
         };
 
@@ -617,7 +617,7 @@ class MusicQueue {
 /**
  *
  * @param {string} string
- * @param {{fileMode:boolean}} param1
+ * @param {{ fileMode: boolean }} param1
  * @returns {string}
  */
 function filenamify(string, { fileMode = false } = {}) {
@@ -848,7 +848,7 @@ async function getTrack({ track, id, url, source }) {
     let engine;
     try {
         engine = require(`./${source ?? "soundcloud"}.js`);
-    } catch (_) { };
+    } catch { };
 
     let actualSavePath;
     const savePath = filenamify(join_temp_folder(`${source}_${id}.mp3`), { fileMode: true });
@@ -914,7 +914,7 @@ async function search_until(query, amount = 25, IsdownloadFile = false) {
             ) {
                 try {
                     output.push(await file.get_track_info(query));
-                } catch (_) {
+                } catch {
                     output = await file.search_tracks(query);
                 };
             } else {
@@ -1040,7 +1040,7 @@ function clear_duplicate_temp() {
         if (existsSync(oggFilePath)) {
             try {
                 unlinkSync(mp3FilePath);
-            } catch (_) { };
+            } catch { };
         };
     };
 };
