@@ -88,7 +88,7 @@ module.exports = {
      */
     async execute(interaction, client) {
         const { get_emojis } = require("../../utils/rpg.js");
-        const { search_until, IsValidURL } = require("../../utils/music/music.js");
+        const { search_until, IsValidURL, getAudioStream } = require("../../utils/music/music.js");
         const { formatMinutesSeconds } = require("../../utils/timestamp.js");
         const { embed_error_color } = require("../../utils/config.js");
 
@@ -147,7 +147,26 @@ module.exports = {
 
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
-        const tracks = await search_until(query, 25, (play_audio_url && IsValidURL(query)));
+        const will_play_audio_url = play_audio_url && IsValidURL(query);
+
+        let audioStatusCode = null;
+        try {
+            await getAudioStream(query);
+        } catch (error) {
+            const statusCode = error.message;
+            audioStatusCode = statusCode;
+        };
+
+        if (will_play_audio_url && audioStatusCode) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setDescription(`${emoji_cross} | url無效: HTTP Error ${audioStatusCode}`)
+                .setEmbedFooter(interaction);
+
+            return interaction.editReply({ content: "", embeds: [embed] });
+        };
+
+        const tracks = await search_until(query, 25, will_play_audio_url);
 
         if (tracks.length === 0) {
             return interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
