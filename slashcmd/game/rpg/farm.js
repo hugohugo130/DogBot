@@ -256,7 +256,10 @@ module.exports = {
             };
 
             if (!(await userHaveEnoughItems(userId, hoe, amount))) {
-                const embed = await notEnoughItemEmbed([{ name: hoe, amount }], interaction, client);
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你沒有足夠的鋤頭`)
+                    .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
             };
@@ -277,15 +280,18 @@ module.exports = {
                 farm_data.farms.push(farm);
             };
 
-            rpg_data.hunger -= need_hunger;
-            await save_rpg_data(userId, rpg_data);
+            if (need_hunger) {
+                rpg_data.hunger -= need_hunger;
+                await save_rpg_data(userId, rpg_data);
+            };
+
             await save_farm_data(userId, farm_data);
 
             const success_embed = new EmbedBuilder()
                 .setColor(embed_default_color)
                 .setTitle(`${emoji_check} | 成功使用了 ${amount} 個鐵鋤`)
                 .setDescription(`消耗 ${need_hunger} 點體力`)
-                .setEmbedFooter({ text: "", rpg_data });
+                .setEmbedFooter(interaction, { text: "", rpg_data });
 
             return await interaction.editReply({ embeds: [success_embed] });
         } else if (subcommand === "info") {
@@ -293,6 +299,16 @@ module.exports = {
 
             return await interaction.editReply({ embeds: [embed], components: [row] });
         } else if (subcommand === "get") {
+            // if (farm_data.farms.length === 0) {
+            if (!farm_data.waterAt) { // 行吧，YEE的機制也是這樣的。
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你還沒有農田`)
+                    .setEmbedFooter(interaction);
+
+                return await interaction.editReply({ embeds: [embed] });
+            };
+
             const completed_farms = farm_data.farms.filter(farm => DateNowSecond() >= farm.endsAt);
             if (completed_farms.length === 0) {
                 const embed = new EmbedBuilder()
@@ -335,6 +351,16 @@ module.exports = {
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你已經澆過水了`)
                     .setDescription(`請在 <t:${endsAts}:R> 再繼續澆水`)
+                    .setEmbedFooter(interaction);
+
+                return await interaction.editReply({ embeds: [embed] });
+            };
+
+            // if (farm_data.farms.length === 0) {
+            if (!farm_data.waterAt) { // 行吧，YEE的機制是這樣的，那我也這樣寫
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你的農田還沒有任何作物`)
                     .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
