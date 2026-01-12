@@ -1247,7 +1247,7 @@ function error_analyze(errorStack) {
         analyzes.push(data);
     };
 
-    const match_read_prop = errorStack.match(/^TypeError: Cannot read properties of (\w+) \(reading ['"](\w+)['"]\)$/);
+    const match_read_prop = errorStack.match(/^TypeError: Cannot read properties of (\w+) \(reading ['"](\w+)['"]\)$/m);
     if (match_read_prop) {
         const object = match_read_prop[1];
         const property = match_read_prop[2];
@@ -1261,7 +1261,7 @@ function error_analyze(errorStack) {
     };
 
     // Expected: expected.length <= 100
-    const error_length_match = errorStack.match(/Expected: expected.length <= (\d+)/);
+    const error_length_match = errorStack.match(/Expected: expected.length <= (\d+)/m);
     if (
         error_length_match
         && errorStack.includes("ExpectedConstraintError > s.string().lengthLessThanOrEqual()")
@@ -1280,7 +1280,7 @@ function error_analyze(errorStack) {
     // at async Object.execute (path/to/file.usuallyJs:Line:Column)
     // async may be missing
     for (const errorStackLine of errorStack.split("\n")) {
-        const match_execute = errorStackLine.match(/^at\s+(?:async\s+)?[\w$.]+\s+\(((?:[a-zA-Z]:)?[^:]+?):(\d+):(\d+)\)$/);
+        const match_execute = errorStackLine.trim().match(/^at\s+(?:async\s+)?[\w$.]+\s+\(((?:[a-zA-Z]:)?[^:]+?):(\d+):(\d+)\)$/);
         if (match_execute) {
             const file = match_execute[1].replace("/app/", ""); // 檔案路徑，並且移除 docker 路徑 /app/
             const line = match_execute[2]; // 行
