@@ -954,7 +954,7 @@ function chunkArray(array, chunkSize) {
  * @param {string} userId
  * @param {BaseInteraction} [interaction]
  * @param {DogClient} [client]
- * @returns {Promise<EmbedBuilder | null>}
+ * @returns {Promise<[EmbedBuilder | null, ActionRowBuilder<ButtonBuilder> | null]>}
  */
 async function wrong_job_embed(rpg_data, command, userId, interaction = null, client = global._client) {
     const workJobShouldBe = workCmdJobs[command];
