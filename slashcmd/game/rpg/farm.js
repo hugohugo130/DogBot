@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, User, BaseInteraction } = require("discord.js");
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, User, BaseInteraction, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 const { get_id_of_name, farm_slots } = require("../../../utils/rpg.js");
 const DogClient = require("../../../utils/customs/client.js");
@@ -200,9 +200,13 @@ module.exports = {
                 "en-US": "Water the farmland",
             })
         ),
-    async execute(interaction) {
-        await interaction.deferReply();
 
+    /**
+     *
+     * @param {ChatInputCommandInteraction} interaction
+     * @returns {Promise<any>}
+     */
+    async execute(interaction) {
         const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
         const { farm_slots, get_name_of_id, userHaveEnoughItems, notEnoughItemEmbed, wrong_job_embed } = require("../../../utils/rpg.js");
         const { randint } = require("../../../utils/random.js");
@@ -215,178 +219,205 @@ module.exports = {
         const userId = user.id;
         const subcommand = interaction.options.getSubcommand();
 
-        const rpg_data = await load_rpg_data(userId);
-        const farm_data = await load_farm_data(userId);
+        const cooldown_key = `farm_water`;
 
-        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/farm", userId, interaction, interaction.client);
+        const [rpg_data, farm_data, [wrongJobEmbed, row]] = await Promise.all([
+            load_rpg_data(userId),
+            load_farm_data(userId),
+            wrong_job_embed(rpg_data, "/farm", userId, interaction, interaction.client),
+        ]);
+
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
 
-        const [emoji_farmer, emoji_cross, emoji_check] = await get_emojis(["farmer", "crosS", "check"], client);
+        const [
+            emoji_farmer,
+            emoji_cross,
+            emoji_check,
+        ] = await get_emojis([
+            "farmer",
+            "crosS",
+            "check",
+        ], client);
 
-        if (subcommand === "plant") {
-            const amount = interaction.options.getInteger("amount") ?? 1;
-            const hoe = interaction.options.getString("hoe");
+        switch (subcommand) {
+            case "plant": {
+                const amount = interaction.options.getInteger("amount") ?? 1;
+                const hoe = interaction.options.getString("hoe");
 
-            const iron_hoe = hoe === get_id_of_name("鐵鋤", "iron_hoe");
-            const need_hunger = iron_hoe ? 5 * amount : 0;
-            const insert_amount = amount;
-            const hoe_amount = iron_hoe ? 10 : 4;
+                const iron_hoe = hoe === get_id_of_name("鐵鋤", "iron_hoe");
+                const need_hunger = iron_hoe ? 5 * amount : 0;
+                const insert_amount = amount;
+                const hoe_amount = iron_hoe ? 10 : 4;
 
-            const duration_deduction = farm_data.lvl * 10;
-            const duration = 20 * 60 - duration_deduction;
-            const least_duration = 2 * 60
-            const endsAt = DateNowSecond() + Math.max(least_duration, duration);
+                const duration_deduction = farm_data.lvl * 10;
+                const duration = 20 * 60 - duration_deduction;
+                const least_duration = 2 * 60
+                const endsAt = DateNowSecond() + Math.max(least_duration, duration);
 
-            if ((farm_data.farms.length + insert_amount) > farm_slots) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 最多只能同時使用四把鋤頭`)
-                    .setEmbedFooter(interaction);
+                if ((farm_data.farms.length + insert_amount) > farm_slots) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 最多只能同時使用四把鋤頭`)
+                        .setEmbedFooter(interaction);
 
-                return await interaction.editReply({ embeds: [embed] });
-            };
-
-            if (rpg_data.hunger < need_hunger) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你的體力不足了`)
-                    .setEmbedFooter(interaction);
-
-                return await interaction.editReply({ embeds: [embed] });
-            };
-
-            if (!(await userHaveEnoughItems(userId, hoe, amount))) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你沒有足夠的鋤頭`)
-                    .setEmbedFooter(interaction);
-
-                return await interaction.editReply({ embeds: [embed] });
-            };
-
-            if (!farm_data.farms) {
-                farm_data.farms = [];
-            };
-
-            // loop {insert_amount} times
-            for (let i = 0; i < insert_amount; i++) {
-                const farm = {
-                    amount: hoe_amount,
-                    hoe,
-                    start: DateNowSecond(),
-                    endsAt,
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
-                farm_data.farms.push(farm);
+                if (rpg_data.hunger < need_hunger) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你的體力不足了`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                };
+
+                if (!(await userHaveEnoughItems(userId, hoe, amount))) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你沒有足夠的鋤頭`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                };
+
+                await interaction.deferReply();
+
+                if (!farm_data.farms) {
+                    farm_data.farms = [];
+                };
+
+                // loop {insert_amount} times
+                for (let i = 0; i < insert_amount; i++) {
+                    const farm = {
+                        amount: hoe_amount,
+                        hoe,
+                        start: DateNowSecond(),
+                        endsAt,
+                    };
+
+                    farm_data.farms.push(farm);
+                };
+
+                if (need_hunger) {
+                    rpg_data.hunger -= need_hunger;
+                    await save_rpg_data(userId, rpg_data);
+                };
+
+                await save_farm_data(userId, farm_data);
+
+                const success_embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_check} | 成功使用了 ${amount} 個鐵鋤`)
+                    .setDescription(`消耗 ${need_hunger} 點體力`)
+                    .setEmbedFooter(interaction, { text: "", rpg_data });
+
+                return await interaction.editReply({ embeds: [success_embed] });
             };
 
-            if (need_hunger) {
-                rpg_data.hunger -= need_hunger;
+            case "info": {
+                await interaction.deferReply();
+                const [embed, row] = await get_farm_info_embed(user, interaction, client);
+
+                return await interaction.editReply({ embeds: [embed], components: [row] });
+            };
+
+            case "get": {
+                // if (farm_data.farms.length === 0) {
+                if (!farm_data.waterAt) { // 行吧，YEE的機制也是這樣的。
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你還沒有農田`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                };
+
+                const completed_farms = farm_data.farms.filter(farm => DateNowSecond() >= farm.endsAt);
+                if (completed_farms.length === 0) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你的農田沒有正在種植的田地`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                };
+
+                await interaction.deferReply();
+
+                const farmlands = completed_farms.map(farm => {
+                    return farm.amount;
+                }).reduce((pre, cur) => pre + cur, 0);
+
+                const items = get_harvest_items(farmlands);
+                const items_str = Object.entries(items).map(([item, amount]) => `${amount} 個${get_name_of_id(item)}`).join("、");
+                for (const [item, amount] of Object.entries(items)) {
+                    if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
+                    rpg_data.inventory[item] += amount;
+                };
+
+                farm_data.farms = farm_data.farms.filter(farm => !completed_farms.includes(farm));
+
                 await save_rpg_data(userId, rpg_data);
-            };
+                await save_farm_data(userId, farm_data);
 
-            await save_farm_data(userId, farm_data);
-
-            const success_embed = new EmbedBuilder()
-                .setColor(embed_default_color)
-                .setTitle(`${emoji_check} | 成功使用了 ${amount} 個鐵鋤`)
-                .setDescription(`消耗 ${need_hunger} 點體力`)
-                .setEmbedFooter(interaction, { text: "", rpg_data });
-
-            return await interaction.editReply({ embeds: [success_embed] });
-        } else if (subcommand === "info") {
-            const [embed, row] = await get_farm_info_embed(user, interaction, client);
-
-            return await interaction.editReply({ embeds: [embed], components: [row] });
-        } else if (subcommand === "get") {
-            // if (farm_data.farms.length === 0) {
-            if (!farm_data.waterAt) { // 行吧，YEE的機制也是這樣的。
                 const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你還沒有農田`)
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_farmer} | 成功採收了 ${farmlands} 格田地`)
+                    .setDescription(`你獲得了 ${items_str}`)
                     .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
             };
 
-            const completed_farms = farm_data.farms.filter(farm => DateNowSecond() >= farm.endsAt);
-            if (completed_farms.length === 0) {
+            case "water": {
+                const { is_finished, endsAts } = is_cooldown_finished(cooldown_key, rpg_data);
+
+                if (!is_finished) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你已經澆過水了`)
+                        .setDescription(`請在 <t:${endsAts}:R> 再繼續澆水`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                };
+
+                // if (farm_data.farms.length === 0) {
+                if (!farm_data.waterAt) { // 行吧，YEE的機制是這樣的，那我也這樣寫
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你的農田還沒有任何作物`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                };
+
+                await interaction.deferReply();
+
+                const get_exp = randint(50, 74);
+                farm_data.exp += get_exp;
+                if (farm_data.exp >= rpg_lvlUp_per) {
+                    const lvlUp = Math.floor(farm_data.exp / rpg_lvlUp_per);
+                    farm_data.lvl += lvlUp;
+                    farm_data.exp -= rpg_lvlUp_per * lvlUp;
+                };
+
+                rpg_data.lastRunTimestamp[cooldown_key] = DateNow();
+                farm_data.waterAt = DateNowSecond();
+
+                await save_rpg_data(userId, rpg_data);
+                await save_farm_data(userId, farm_data);
+
                 const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你的農田沒有正在種植的田地`)
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_farmer} | 成功幫你的農田澆水`)
+                    .setDescription(`你獲得了 \`${get_exp}\` 點經驗值`)
                     .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
+                break;
             };
-
-            const farmlands = completed_farms.map(farm => {
-                return farm.amount;
-            }).reduce((pre, cur) => pre + cur, 0);
-
-            const items = get_harvest_items(farmlands);
-            const items_str = Object.entries(items).map(([item, amount]) => `${amount} 個${get_name_of_id(item)}`).join("、");
-            for (const [item, amount] of Object.entries(items)) {
-                if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
-                rpg_data.inventory[item] += amount;
-            };
-
-            farm_data.farms = farm_data.farms.filter(farm => !completed_farms.includes(farm));
-            await save_rpg_data(userId, rpg_data);
-            await save_farm_data(userId, farm_data);
-
-            const embed = new EmbedBuilder()
-                .setColor(embed_default_color)
-                .setTitle(`${emoji_farmer} | 成功採收了 ${farmlands} 格田地`)
-                .setDescription(`你獲得了 ${items_str}`)
-                .setEmbedFooter(interaction);
-
-            return await interaction.editReply({ embeds: [embed] });
-        } else if (subcommand === "water") {
-            const cooldown_key = `farm_water`;
-
-            const { is_finished, endsAts } = is_cooldown_finished(cooldown_key, rpg_data);
-
-            if (!is_finished) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你已經澆過水了`)
-                    .setDescription(`請在 <t:${endsAts}:R> 再繼續澆水`)
-                    .setEmbedFooter(interaction);
-
-                return await interaction.editReply({ embeds: [embed] });
-            };
-
-            // if (farm_data.farms.length === 0) {
-            if (!farm_data.waterAt) { // 行吧，YEE的機制是這樣的，那我也這樣寫
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你的農田還沒有任何作物`)
-                    .setEmbedFooter(interaction);
-
-                return await interaction.editReply({ embeds: [embed] });
-            };
-
-            const get_exp = randint(50, 74);
-            farm_data.exp += get_exp;
-            if (farm_data.exp >= rpg_lvlUp_per) {
-                const lvlUp = Math.floor(farm_data.exp / rpg_lvlUp_per);
-                farm_data.lvl += lvlUp;
-                farm_data.exp -= rpg_lvlUp_per * lvlUp;
-            };
-
-            rpg_data.lastRunTimestamp[cooldown_key] = DateNow();
-            farm_data.waterAt = DateNowSecond();
-
-            await save_rpg_data(userId, rpg_data);
-            await save_farm_data(userId, farm_data);
-
-            const embed = new EmbedBuilder()
-                .setColor(embed_default_color)
-                .setTitle(`${emoji_farmer} | 成功幫你的農田澆水`)
-                .setDescription(`你獲得了 \`${get_exp}\` 點經驗值`)
-                .setEmbedFooter(interaction);
-
-            return await interaction.editReply({ embeds: [embed] });
         };
     },
     get_farm_info_embed,
