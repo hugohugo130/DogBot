@@ -122,7 +122,7 @@ client.once(Events.ClientReady, async () => {
 
     client.serverIP = getServerIPSync(client);
 
-    const cogs = load_cogs(client);
+    const cogs = await load_cogs(client);
     logger.info(`✅ Loaded ${cogs} cogs`);
 
     if (await should_register_cmd()) await registcmd(true, true);

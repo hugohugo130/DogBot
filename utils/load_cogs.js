@@ -8,12 +8,13 @@ const load_skiplist = [];
 const logger = get_logger();
 
 /**
- * 
- * @param {DogClient} client 
- * @param {any} cog 
- * @param {string} itemPath 
+ *
+ * @param {DogClient} client
+ * @param {any} cog
+ * @param {string} itemPath
+ * @returns {Promise<number>}
  */
-function load_cog(client, cog, itemPath) {
+async function load_cog(client, cog, itemPath) {
     async function run_execute(...args) {
         try {
             await cog.execute(client, ...args);
@@ -28,12 +29,11 @@ function load_cog(client, cog, itemPath) {
     if (cog.name && cog.execute) {
         const event_name = cog.name;
         const once = cog.once ?? false;
+
         if (once) client.once(event_name, run_execute);
         else client.on(event_name, run_execute);
     } else if (cog.execute) {
-        setTimeout(async () => {
-            await run_execute(client);
-        });
+        await run_execute(client);
     } else {
         logger.warn(`找不到 cog ${itemPath} 的 name 和 execute 屬性`);
         return 0;
@@ -42,7 +42,14 @@ function load_cog(client, cog, itemPath) {
     return 1;
 };
 
-function processDirectory(client, dirPath) {
+/**
+ *
+ * @param {DogClient} client
+ * @param {string} dirPath
+ * @param {boolean} [quiet]
+ * @returns {Promise<number>}
+ */
+async function processDirectory(client, dirPath, quiet = false) {
     const items = fs.readdirSync(dirPath).filter(item => !load_skiplist.includes(item));
     let loadedFiles = 0;
     const logger = get_logger({ client });
@@ -52,14 +59,15 @@ function processDirectory(client, dirPath) {
         const stat = fs.statSync(itemPath);
 
         if (stat.isDirectory()) {
-            loadedFiles += processDirectory(client, itemPath);
+            loadedFiles += await processDirectory(client, itemPath);
         } else if (item.endsWith(".js")) {
             try {
                 delete require.cache[require.resolve(itemPath)];
                 const cog = require(itemPath);
-                const res = load_cog(client, cog, itemPath);
+
+                const res = await load_cog(client, cog, itemPath);
                 if (!res) continue;
-                else logger.info(`✅ Loaded ${item}`);
+                else if (!quiet) logger.info(`✅ Loaded ${item}`);
 
                 loadedFiles++;
             } catch (err) {
@@ -74,11 +82,17 @@ function processDirectory(client, dirPath) {
     return loadedFiles;
 };
 
-function load_cogs(client) {
+/**
+ *
+ * @param {DogClient} client
+ * @param {boolean} [quiet]
+ * @returns {Promise<number | undefined>}
+ */
+async function load_cogs(client, quiet = false) {
     try {
         const { cogsFolder } = require("./config.js");
 
-        const totalFiles = processDirectory(client, cogsFolder);
+        const totalFiles = await processDirectory(client, cogsFolder, quiet);
         return totalFiles;
     } catch (error) {
         const errorStack = util.inspect(error, { depth: null });
