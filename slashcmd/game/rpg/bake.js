@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Collection } = require("discord.js");
-const { bake, oven_slots } = require("../../../utils/rpg.js");
+const { bake, oven_slots, food_data } = require("../../../utils/rpg.js");
 const { generateSessionId } = require("../../../utils/random.js");
+
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
 function divide(amount, by) {
@@ -30,7 +31,7 @@ function divide(amount, by) {
     // 將餘數分配到最後幾個元素（每個加 1）
     for (let i = result.length - 1; i >= result.length - remainder; i--) {
         result[i]++;
-    }
+    };
 
     return result;
 };
@@ -74,7 +75,10 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     // if (allFoods && !auto_amount) amount = rpg_data.inventory[first_food] || 0;
     if (allFoods) amount = rpg_data.inventory[item_id] || 0;
 
-    const duration = 60 * amount;
+    const target_food = bake[item_id];
+    const target_food_hunger = food_data[target_food];
+
+    const duration = 60 * target_food_hunger;
 
     const coal_amount = Math.ceil(amount / 2);
 
