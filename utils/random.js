@@ -26,7 +26,7 @@ function choice(array) {
  * @returns {string}
  */
 function generateSessionId(length = 32) {
-    return crypto.randomBytes(length).toString('hex');
+    return crypto.randomBytes(Math.floor(length / 2)).toString('hex');
 };
 
 function generateSHA256(input) {
