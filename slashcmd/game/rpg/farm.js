@@ -208,7 +208,7 @@ module.exports = {
      */
     async execute(interaction) {
         const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
-        const { farm_slots, get_name_of_id, userHaveEnoughItems, notEnoughItemEmbed, wrong_job_embed } = require("../../../utils/rpg.js");
+        const { farm_slots, get_name_of_id, userHaveEnoughItems, wrong_job_embed } = require("../../../utils/rpg.js");
         const { randint } = require("../../../utils/random.js");
         const { get_emojis, is_cooldown_finished } = require("../../../utils/rpg.js");
         const { DateNow, DateNowSecond } = require("../../../utils/timestamp.js");
@@ -221,11 +221,12 @@ module.exports = {
 
         const cooldown_key = `farm_water`;
 
-        const [rpg_data, farm_data, [wrongJobEmbed, row]] = await Promise.all([
+        const [rpg_data, farm_data] = await Promise.all([
             load_rpg_data(userId),
             load_farm_data(userId),
-            wrong_job_embed(rpg_data, "/farm", userId, interaction, interaction.client),
         ]);
+
+        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/farm", userId, interaction, interaction.client);
 
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
 
