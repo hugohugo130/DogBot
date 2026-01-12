@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags, BaseInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
-const { MusicQueue } = require("../../utils/music/music.js");
+const { MusicQueue, MusicTrack } = require("../../utils/music/music.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -9,35 +9,44 @@ const DogClient = require("../../utils/customs/client.js");
  * @param {number} start - 開始時間（秒）
  * @param {number} played - 已播放時間（秒）
  * @param {number} end - 結束時間（秒）
+ * @param {number} DEBUG - 是否啟用 DEBUG
  * @param {DogClient} client - Discord 客戶端
  * @returns {Promise<string>} Discord 進度條字串
  */
-async function createProgressBar(start, played, end, client = global.client) {
+async function createProgressBar(start, played, end, debug = false, client = global.client) {
     const { get_emojis } = require("../../utils/rpg.js");
 
-    const [
-        emoji_progressDot,
-        emoji_progressStart,
-        emoji_progressFill,
-        emoji_progressFillEnd,
-        emoji_progressBlack,
-        emoji_progressEnd
-    ] = await get_emojis([
-        "progressDot",
-        "progressStart",
-        "progressFill",
-        "progressFillEnd",
-        "progressBlack",
-        "progressEnd"
-    ], client);
+    let emoji_progressStart;
+    let emoji_progressDot;
+    let emoji_progressFill;
+    let emoji_progressFillEnd;
+    let emoji_progressBlack;
+    let emoji_progressEnd;
 
-    // for debug
-    // const emoji_progressStart = "[";
-    // const emoji_progressDot = ";";
-    // const emoji_progressFill = ".";
-    // const emoji_progressFillEnd = "*";
-    // const emoji_progressBlack = "-";
-    // const emoji_progressEnd = "]";
+    if (debug) {
+        emoji_progressStart = "[";
+        emoji_progressDot = ";";
+        emoji_progressFill = ".";
+        emoji_progressFillEnd = "*";
+        emoji_progressBlack = "-";
+        emoji_progressEnd = "]";
+    } else {
+        [
+            emoji_progressDot,
+            emoji_progressStart,
+            emoji_progressFill,
+            emoji_progressFillEnd,
+            emoji_progressBlack,
+            emoji_progressEnd
+        ] = await get_emojis([
+            "progressDot",
+            "progressStart",
+            "progressFill",
+            "progressFillEnd",
+            "progressBlack",
+            "progressEnd"
+        ], client);
+    };
 
     // 進度條總長度（不包括開始和結束圖標）
     const outputLength = 15;
@@ -53,7 +62,7 @@ async function createProgressBar(start, played, end, client = global.client) {
     let progressBar = '';
 
     // 開始圖標
-    progressBar += emoji_progressStart;
+    if (filledCount) progressBar += emoji_progressStart;
 
     // 已播放部分
     for (let i = 0; i < filledCount; i++) {
@@ -63,7 +72,7 @@ async function createProgressBar(start, played, end, client = global.client) {
     if (filledCount < 1) {
         // 填充數量為 0 的時候填充一個點
         progressBar += emoji_progressDot;
-    } else {
+    } else if (filledCount === 0) {
         progressBar += emoji_progressFillEnd;
     };
 
@@ -121,8 +130,19 @@ async function getNowPlayingRows(queue, client = global._client) {
             loopMode = "全部";
             break;
         };
-        case loopStatus.AUTOPLAY: {
+        case loopStatus.AUTO: {
             loopMode = "自動推薦";
+            break;
+        };
+        default: {
+            const util = require("util");
+            const { get_logger } = require("../../utils/logger.js");
+
+            const logger = get_logger();
+            logger.warn(`[${queue.guildID}] 的loopstatus是 ${queue.loopStatus}，而不是0,1,2,3\n${util.inspect(queue, { depth: null })}`);
+            queue.setLoopStatus(loopStatus.DISABLED);
+
+            loopMode = "關閉";
             break;
         };
     };
@@ -180,12 +200,13 @@ async function getNowPlayingRows(queue, client = global._client) {
 /**
  * 
  * @param {MusicQueue} queue - 音樂佇列
+ * @param {MusicTrack} currentTrack - 當前播放的音樂曲目
  * @param {BaseInteraction} interaction - 互動
  * @param {DogClient} client - Discord 客戶端
  * @param {boolean} start - 是否剛開始播放
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder[]]>}
  */
-async function getNowPlayingEmbed(queue, interaction = null, client = global._client, start = false) {
+async function getNowPlayingEmbed(queue, currentTrack = null, interaction = null, client = global._client, start = false) {
     const { embed_default_color, DOCS, STATUS_PAGE } = require("../../utils/config.js");
     const { get_emoji } = require("../../utils/rpg.js");
     const { formatMinutesSeconds } = require("../../utils/timestamp.js");
@@ -202,12 +223,13 @@ async function getNowPlayingEmbed(queue, interaction = null, client = global._cl
     並且currentResource是null，因為還沒執行queue.play()
     */
 
-    const currentTrack = queue.currentTrack ?? queue.tracks[0];
+    if (!currentTrack) currentTrack = queue.currentTrack ?? queue.tracks[0];
 
     const playingAt = start ? 0 : Math.floor(queue.currentResource.playbackDuration / 1000);
     const formattedPlayingAt = formatMinutesSeconds(playingAt, false);
 
-    const progressBar = await createProgressBar(0, playingAt, Math.floor(currentTrack.duration / 1000));
+    const progressBar = await createProgressBar(0, playingAt, Math.floor(currentTrack.duration / 1000), false, client);
+
     const formattedDuration = formatMinutesSeconds(currentTrack.duration);
 
     const description = `
@@ -224,7 +246,7 @@ ${emoji_playGrad} ${formattedPlayingAt}${progressBar}${formattedDuration}
         .setDescription(description)
         .setEmbedFooter(interaction);
 
-    const rows = await getNowPlayingRows(client);
+    const rows = await getNowPlayingRows(queue, client);
 
     return [embed, rows];
 };
@@ -278,7 +300,7 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const [embed, rows] = await getNowPlayingEmbed(queue, interaction, client);
+        const [embed, rows] = await getNowPlayingEmbed(queue, null, interaction, client);
 
         await interaction.editReply({ embeds: [embed], components: rows });
     },

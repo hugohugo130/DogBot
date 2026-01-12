@@ -5,6 +5,7 @@ const crypto = require("crypto");
 
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
+const { generateSessionId } = require("../../utils/random.js");
 
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
@@ -88,7 +89,7 @@ module.exports = {
      */
     async execute(interaction, client) {
         const { get_emojis } = require("../../utils/rpg.js");
-        const { search_until, IsValidURL, getAudioStream } = require("../../utils/music/music.js");
+        const { search_until, IsValidURL, getAudioStream, getQueue } = require("../../utils/music/music.js");
         const { formatMinutesSeconds } = require("../../utils/timestamp.js");
         const { embed_error_color } = require("../../utils/config.js");
 
@@ -172,7 +173,21 @@ module.exports = {
             return interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
         };
 
-        const trackSessionID = generateSHA256(interaction.user.id + Date.now().toString());
+        if (tracks.length === 1) {
+            const track = tracks[0];
+
+            const queue = getQueue(guildId);
+            if (queue) {
+                queue.addTrack(track);
+            } else {
+                await createQueue(guildId, voiceChannel, track);
+            };
+        };
+
+        const maxTrackIdLength = Math.max(...tracks.map(track => String(track.id).length));
+        const optionValueLengthLimit = 100;
+        const reserved_length = 10;
+        const trackSessionID = generateSessionId(optionValueLengthLimit - 1 - maxTrackIdLength - reserved_length);
 
         const selectMenu = new ActionRowBuilder()
             .addComponents(
@@ -191,14 +206,10 @@ module.exports = {
         client.musicTrackSession.set(trackSessionID, Object.fromEntries(await Promise.all(
             tracks.map(async (track) => {
                 const id = track.id;
-                const source = track.source;
-                const useStream = track.useStream ?? false;
 
                 return [[id], [{
                     track,
-                    source,
                     next,
-                    useStream,
                 }]];
             })),
         ));

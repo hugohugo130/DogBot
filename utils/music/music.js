@@ -34,6 +34,8 @@ const loopStatus = Object.freeze({
     AUTO: 3,
 })
 
+const DEBUG = true;
+
 // SoundCloudTrack Object Example
 /*
 {
@@ -293,8 +295,7 @@ class MusicQueue {
         });
 
         this.player.on("stateChange", async (oldState, newState) => {
-            // const { getVoiceConnection } = require("@discordjs/voice");
-            // logger.debug(`[${this.guildID}] 音樂播放器狀態改變: ${oldState.status} -> ${newState.status}: ${Boolean(getVoiceConnection(this.guildID))}`);
+            if (DEBUG) logger.debug(`[${this.guildID}] 音樂播放器狀態改變: ${oldState.status} -> ${newState.status}: ${Boolean(getVoiceConnection(this.guildID))}`);
 
             if (this.destroying) return;
 
@@ -353,25 +354,29 @@ class MusicQueue {
                 ) {
                     // 閒置 (播完了)
                     this.playing = false;
+                    logger.debug(this.loopStatus)
 
-                    if (this.loopStatus !== loopStatus.DISABLED) { // 已啟用循環
-                        switch (loopStatus) {
-                            case loopStatus.TRACK: {
-                                // 如果是單曲循環
-                                await this.play(this.currentTrack);
-                                break;
-                            };
-                            case loopStatus.ALL: {
-                                // 如果是循環播放所有歌曲
-                                this.tracks.push(this.tracks.shift());
-                                await this.play(this.tracks[0]);
+                    switch (this.loopStatus) {
+                        case loopStatus.TRACK: {
+                            // 如果是單曲循環
+                            await this.play(this.currentTrack);
 
-                                break;
-                            };
+                            break;
                         };
-                    } else {
-                        // 如果是正常播放
-                        await this.nextTrack();
+
+                        case loopStatus.ALL: {
+                            // 如果是循環播放所有歌曲
+                            this.tracks.push(this.tracks.shift());
+                            await this.play(this.tracks[0]);
+
+                            break;
+                        };
+
+                        case loopStatus.DISABLED: {
+                            await this.nextTrack();
+
+                            break;
+                        };
                     };
                 };
             } catch (err) {
@@ -753,7 +758,7 @@ async function fixStructure(objects) {
 
             id = String(object.id);
             title = object.title;
-            url = object.uri;
+            url = object.permalink_url;
             duration = object.duration;
             thumbnail = object.artwork_url;
             author = object.publisher_metadata?.artist || object.user?.full_name || object.user?.username || "Unknown";
@@ -1076,5 +1081,6 @@ module.exports = {
     clear_duplicate_temp,
     IsValidURL,
     MusicQueue,
+    MusicTrack,
     loopStatus,
 };

@@ -1290,8 +1290,10 @@ module.exports = {
 
                     const queue = getQueue(interaction.guildId);
 
+                    const vconnection = getVoiceConnection(interaction.guildId);
+
                     // 連接到語音頻道
-                    if (!getVoiceConnection(interaction.guildId)) {
+                    if (!vconnection) {
                         const voiceChannel = interaction.member.voice.channel;
 
                         const emoji_cross = await get_emoji("crosS", client);
@@ -1317,7 +1319,11 @@ module.exports = {
                         queue.connection = voiceConnection;
                         queue.voiceChannel = voiceChannel;
                         queue.textChannel = interaction.channel;
-
+                    } else if (!queue.connection) { // 強制把機器犬拉進來可能會這樣
+                        queue.connection = vconnection;
+                        if (vconnection.joinConfig.channelId) {
+                            queue.voiceChannel = await interaction.guild.channels.fetch(vconnection.joinConfig.channelId);
+                        };
                     };
 
                     if (!queue.textChannel && interaction.channel) queue.textChannel = interaction.channel;
@@ -1341,11 +1347,11 @@ module.exports = {
 
                     client.musicTrackSession.delete(trackSessionID);
 
-                    const { track, source, next, useStream = false } = trackSession;
+                    const { track, next } = trackSession;
 
                     queue.addTrack(track, next ? 0 : null);
 
-                    const [embed, rows] = await getNowPlayingEmbed(queue, interaction, client, true);
+                    const [embed, rows] = await getNowPlayingEmbed(queue, track, interaction, client, true);
 
                     if (!queue.isPlaying()) {
                         await queue.play(track);
@@ -1373,7 +1379,7 @@ module.exports = {
                             const emoji_music = await get_emoji("music", client);
                             const queue = getQueue(interaction.guildId, true);
 
-                            const [embed, rows] = await getNowPlayingEmbed(queue, interaction, client);
+                            const [embed, rows] = await getNowPlayingEmbed(queue, null, interaction, client);
 
                             await interaction.update({ content: `${emoji_music} | 正在播放`, embeds: [embed], components: rows });
                             break;
@@ -1450,9 +1456,7 @@ module.exports = {
                                 [loopStatus.AUTO]: "自動推薦",
                             };
 
-                            const nextLoopStatus = (currentLoopStatus + 1) > (loopStatus.length - 1)
-                                ? 0
-                                : (currentLoopStatus + 1);
+                            const nextLoopStatus = (currentLoopStatus + 1) > (Object.keys(loopStatus).length - 1) ? 0 : (currentLoopStatus + 1);
 
                             await Promise.all([
                                 queue.setLoopStatus(nextLoopStatus),
