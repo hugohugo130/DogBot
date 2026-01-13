@@ -6,7 +6,7 @@ const { default: _filenamify } = require("filenamify");
 const { fileTypeFromStream, fileTypeFromFile } = require("file-type");
 const { pipeline } = require("node:stream/promises");
 const { Readable } = require("node:stream");
-const { Collection, TextChannel, VoiceChannel, Guild } = require("discord.js");
+const { Collection, TextChannel, VoiceChannel, Guild, BaseInteraction } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
 
 const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
@@ -34,7 +34,7 @@ const loopStatus = Object.freeze({
     AUTO: 3,
 })
 
-const DEBUG = true;
+const DEBUG = false;
 
 // SoundCloudTrack Object Example
 /*
@@ -337,10 +337,12 @@ class MusicQueue {
                     [AudioPlayerStatus.Buffering, AudioPlayerStatus.Idle].includes(oldState.status) &&
                     newState.status === AudioPlayerStatus.Playing
                 ) {
+                    const emoji_music = await get_emoji("music", client);
+
                     // 正在播放
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
-                        .setTitle("🎵 | 正在播放")
+                        .setTitle(`${emoji_music} | 正在播放`)
                         .setDescription(`[**${this.currentTrack.title}**](<${this.currentTrack.url}>)`)
                         .setThumbnail(this.currentTrack.thumbnail)
                         .setFooter({ text: `時長: ${formatMinutesSeconds(this.currentTrack.duration)}` })
@@ -354,10 +356,11 @@ class MusicQueue {
                 ) {
                     // 閒置 (播完了)
                     this.playing = false;
-                    logger.debug(this.loopStatus)
 
                     switch (this.loopStatus) {
                         case loopStatus.TRACK: {
+                            if (!this.currentTrack) return; // 如果skip就會這樣
+
                             // 如果是單曲循環
                             await this.play(this.currentTrack);
 
@@ -455,7 +458,6 @@ class MusicQueue {
 
             const buf = await buffer(stream);
             const duration = await mp3Duration(buf) * 1000;
-            logger.debug(duration)
 
             if (duration) track.duration = duration;
 
@@ -1069,6 +1071,21 @@ function IsValidURL(str) {
     return !!pattern.test(str);
 };
 
+/**
+ *
+ * @param {BaseInteraction} [interaction]
+ * @param {DogClient} [client]
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function noMusicIsPlayingEmbed(interaction=null,client = global._client) {
+    const emoji_cross = await get_emoji("crosS", client);
+
+    return new EmbedBuilder()
+        .setColor(embed_error_color)
+        .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
+        .setEmbedFooter(interaction);
+};
+
 module.exports = {
     getQueue,
     getQueues,
@@ -1080,6 +1097,7 @@ module.exports = {
     getAudioStream,
     clear_duplicate_temp,
     IsValidURL,
+    noMusicIsPlayingEmbed,
     MusicQueue,
     MusicTrack,
     loopStatus,

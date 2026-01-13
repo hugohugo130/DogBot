@@ -501,7 +501,7 @@ module.exports = {
             const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
             const { getBotInfoEmbed } = require("../../slashcmd/info.js")
             const { getNowPlayingEmbed } = require("../../slashcmd/music/nowplaying.js");
-            const { getQueue, saveQueue, loopStatus } = require("../../utils/music/music.js");
+            const { getQueue, saveQueue, loopStatus, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
@@ -517,6 +517,8 @@ module.exports = {
             const interactionCategory = customIdParts[0];
             const originalUserId = customIdParts[1];
             const otherCustomIDs = customIdParts.slice(1); // 移除 customId 的ID (類別)
+
+            const locale = interaction.locale;
 
             // 驗證使用者身份
             if (originalUserId !== "any" && user.id !== originalUserId) {
@@ -1369,21 +1371,31 @@ module.exports = {
                             await interaction.update({ embeds: [embed] });
                             break;
                         };
+
                         case "/farm info": {
                             const [embed, row] = await get_farm_info_embed(user, interaction, client);
 
                             await interaction.update({ embeds: [embed], components: [row] });
                             break;
                         };
+
                         case "music": {
-                            const emoji_music = await get_emoji("music", client);
                             const queue = getQueue(interaction.guildId, true);
 
-                            const [embed, rows] = await getNowPlayingEmbed(queue, null, interaction, client);
+                            if (!queue.isPlaying() || !queue.currentTrack || !queue.currentResource) {
+                                const embed = await noMusicIsPlayingEmbed(interaction, client);
+
+                                return interaction.update({ content: "", embeds: [embed], components: [] });
+                            };
+
+                            const [emoji_music, [embed, rows]] = await Promise.all([
+                                get_emoji("music", client),
+                                getNowPlayingEmbed(queue, null, interaction, client),
+                            ]);
 
                             await interaction.update({ content: `${emoji_music} | 正在播放`, embeds: [embed], components: rows });
                             break;
-                        }
+                        };
                     };
 
                     break;
