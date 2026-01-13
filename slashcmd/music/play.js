@@ -1,11 +1,16 @@
 const { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
-const { getVoiceConnection } = require("@discordjs/voice");
+const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
 const { Soundcloud } = require("soundcloud.ts");
 const crypto = require("crypto");
 
+const { getNowPlayingEmbed } = require("./nowplaying.js");
+const { generateSessionId } = require("../../utils/random.js");
+const { get_emojis, get_emoji } = require("../../utils/rpg.js");
+const { search_until, IsValidURL, getAudioStream, getQueue, saveQueue } = require("../../utils/music/music.js");
+const { formatMinutesSeconds } = require("../../utils/timestamp.js");
+const { embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
-const { generateSessionId } = require("../../utils/random.js");
 
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
@@ -29,7 +34,7 @@ module.exports = {
             "zh-TW": "在語音頻道內播放音樂",
             "zh-CN": "在语音频道内播放音乐",
         })
-        .addStringOption(option =>
+        .addStringOption(option => // query
             option.setName("query")
                 .setNameLocalizations({
                     "zh-TW": "關鍵字或連結",
@@ -43,7 +48,7 @@ module.exports = {
                 .setRequired(true)
             // .setAutocomplete(true),
         )
-        .addBooleanOption(option =>
+        .addBooleanOption(option => // next
             option.setName("next")
                 .setNameLocalizations({
                     "zh-TW": "next",
@@ -56,7 +61,7 @@ module.exports = {
                 })
                 .setRequired(false),
         )
-        .addBooleanOption(option =>
+        .addBooleanOption(option => // play_audio_url
             option.setName("play_audio_url")
                 .setNameLocalizations({
                     "zh-TW": "萬物皆可播",
@@ -83,16 +88,11 @@ module.exports = {
     //         .setRequired(false),
     // )
     /**
-     * 
+     *
      * @param {ChatInputCommandInteraction} interaction
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        const { get_emojis } = require("../../utils/rpg.js");
-        const { search_until, IsValidURL, getAudioStream, getQueue } = require("../../utils/music/music.js");
-        const { formatMinutesSeconds } = require("../../utils/timestamp.js");
-        const { embed_error_color } = require("../../utils/config.js");
-
         const query = interaction.options.getString("query") ?? "wellerman";
         const next = interaction.options.getBoolean("next") ?? false;
         const play_audio_url = interaction.options.getBoolean("play_audio_url") ?? false;
@@ -100,10 +100,12 @@ module.exports = {
 
         const voiceChannel = interaction.member.voice.channel;
 
-        if (!voiceChannel) {
+        if (!voiceChannel || !voiceChannel.joinable || !voiceChannel.speakable) {
+            const emoji_music = await get_emoji("music", client);
+
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 你需要先進到一個語音頻道`)
+                .setTitle(`${emoji_music} | 你需要先進到一個語音頻道`)
                 .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
                 .setEmbedFooter(interaction);
 
@@ -112,31 +114,10 @@ module.exports = {
 
         const guildId = interaction.guildId;
 
-        const [emoji_cross, emoji_search] = await get_emojis(["crosS", "search"], client);
-
-        // 檢查權限
-        if (!voiceChannel.joinable) {
-            const embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setDescription(`${emoji_cross} 我沒有權限加入這個語音頻道！`);
-
-            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-        };
-
-        if (!voiceChannel.speakable) {
-            const embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setDescription(`${emoji_cross} 我沒有權限在這個語音頻道說話！`);
-
-            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-        };
-
-        await interaction.deferReply();
-
-        let voiceConnection = getVoiceConnection(guildId);
+        const voiceConnection = getVoiceConnection(guildId);
 
         // 連接到語音頻道
-        if (voiceConnection?.joinConfig?.channelId && voiceConnection.joinConfig.channelId !== voiceChannel.id) {
+        if (voiceConnection?.joinConfig?.channelId !== voiceChannel.id) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
@@ -145,6 +126,16 @@ module.exports = {
 
             return interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
         };
+
+        await interaction.deferReply();
+
+        const [
+            emoji_cross,
+            emoji_search,
+        ] = await get_emojis([
+            "crosS",
+            "search",
+        ], client);
 
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
@@ -177,11 +168,34 @@ module.exports = {
             const track = tracks[0];
 
             const queue = getQueue(guildId);
-            if (queue) {
-                queue.addTrack(track);
-            } else {
-                await createQueue(guildId, voiceChannel, track);
+
+            if (!queue.voiceChannel) queue.voiceChannel = voiceChannel;
+            if (!queue.textChannel && interaction.channel) queue.textChannel = interaction.channel;
+            if (!queue.connection) {
+                const connection = getVoiceConnection(guildId) || joinVoiceChannel({
+                    channelId: voiceChannel.id,
+                    guildId: guildId,
+                    selfMute: false,
+                    selfDeaf: true,
+                    adapterCreator: interaction.guild.voiceAdapterCreator,
+                });
+
+                queue.connection = connection;
             };
+
+            saveQueue(guildId, queue);
+
+            queue.subscribe();
+
+            queue.addTrack(track);
+
+            const [embed, rows] = await getNowPlayingEmbed(queue, track, interaction, client, true);
+
+            if (!queue.isPlaying()) {
+                await queue.play(track);
+            };
+
+            return interaction.editReply({ content: "", embeds: [embed], components: rows });
         };
 
         const maxTrackIdLength = Math.max(...tracks.map(track => String(track.id).length));
