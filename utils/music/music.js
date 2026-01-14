@@ -368,6 +368,8 @@ class MusicQueue {
                         };
 
                         case loopStatus.ALL: {
+                            if (!this.tracks.length) return;
+
                             // 如果是循環播放所有歌曲
                             this.tracks.push(this.tracks.shift());
                             await this.play(this.tracks[0]);
