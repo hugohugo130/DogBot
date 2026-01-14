@@ -1,13 +1,17 @@
 const { Events } = require("discord.js");
 const { exec } = require("child_process");
-const { get_logger } = require("../utils/logger.js");
 const util = require("util");
+
+const { get_logger } = require("../utils/logger.js");
+const { get_id_of_name, get_name_of_id, get_loophole_embed } = require("../utils/rpg.js");
+const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
+const { mentions_users } = require("../utils/message.js");
+
 const execPromise = util.promisify(exec);
 
 const logger = get_logger();
 
 function add_item(rpg_data, item, amount) {
-    const { get_id_of_name, get_name_of_id } = require("../utils/rpg.js");
     item = get_id_of_name(item);
 
     if (get_name_of_id(item, null) === null) {
@@ -22,9 +26,6 @@ function add_item(rpg_data, item, amount) {
 };
 
 async function handleMoneyCommand(message, args) {
-    const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
-    const { mentions_users } = require("../utils/message.js");
-
     const user = (await mentions_users(message)).first();
     const amount = parseInt(args[1]);
 
@@ -40,9 +41,6 @@ async function handleMoneyCommand(message, args) {
 };
 
 async function handleInvCommand(message, args) {
-    const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
-    const { mentions_users } = require("../utils/message.js");
-
     const user = (await mentions_users(message)).first();
     const item = args[1];
     const amount = parseInt(args[2]);
@@ -60,10 +58,6 @@ async function handleInvCommand(message, args) {
 };
 
 async function handleGive2Command(message, args) {
-    const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
-    const { mentions_users } = require("../utils/message.js");
-    const { get_id_of_name, get_name_of_id } = require("../utils/rpg.js");
-
     if (args.length !== 2) {
         return message.reply("用法: !give @user OBJECT");
     };
@@ -110,9 +104,6 @@ module.exports = {
     name: Events.MessageCreate,
     execute: async function (client, message) {
         try {
-            const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
-            const { get_id_of_name } = require("../utils/rpg.js");
-
             if (message.author.id !== "898836485397180426") return;
             if (!message.content.startsWith("!")) return;
 
@@ -169,8 +160,6 @@ module.exports = {
             };
 
             async function handleGiveCommand(message, args) {
-                const { mentions_users } = require("../utils/message.js");
-
                 if (args.length < 3) {
                     return message.reply("用法: !give @user item amount");
                 };
@@ -225,8 +214,6 @@ module.exports = {
                 };
             };
         } catch (err) {
-            const { get_loophole_embed } = require("../utils/rpg.js");
-
             const errorStack = util.inspect(err, { depth: null });
 
             logger.error(`admin cmds 錯誤: ${errorStack}`);

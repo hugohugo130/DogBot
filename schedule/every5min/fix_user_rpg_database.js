@@ -1,6 +1,8 @@
+const util = require("util");
+
 const { get_logger } = require("../../utils/logger.js");
+const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
 const DogClient = require("../../utils/customs/client.js");
-const util = require("node:util");
 
 const logger = get_logger();
 
@@ -11,8 +13,6 @@ module.exports = {
      */
     execute: async function (client) {
         try {
-            const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-
             const users = client.users.cache.values();
             for (const user of users) {
                 if (user.bot) continue;

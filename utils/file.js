@@ -1,15 +1,32 @@
-const { Logger } = require("winston");
-const { VoiceChannel } = require("discord.js");
-const { finished } = require('stream/promises');
 const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
-const util = require("node:util");
+const util = require("util");
 const axios = require("axios");
+const { Logger } = require("winston");
+const { VoiceChannel } = require("discord.js");
+const { finished } = require('stream/promises');
 
-const { INDENT, DATABASE_FILES, DEFAULT_VALUES, database_folder, probabilities } = require("./config.js");
+const {
+    INDENT,
+    DATABASE_FILES,
+    DEFAULT_VALUES,
+    database_folder,
+    probabilities,
+    scheduleEvery5min,
+    scheduleEverymin,
+    scheduleEverysec,
+    database_file,
+    rpg_database_file,
+    rpg_shop_file,
+    rpg_farm_file,
+    bake_data_file,
+    smelt_data_file,
+    dvoice_data_file,
+    temp_folder,
+} = require("./config.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
-const { sleep, asleep } = require("./sleep.js");
+const { asleep } = require("./sleep.js");
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
@@ -182,13 +199,11 @@ async function writeJson(path, data, replacer = "") {
  * @returns {Promise<string[][]>}
  */
 async function readSchedule() {
-    const { scheduleEverysec, scheduleEverymin, scheduleEvery5min } = require("./config.js");
-
     const everysec = await exists(scheduleEverysec) ? (await readdir(scheduleEverysec, { recursive: true }))
         .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEverysec}/${file}`) : [];
 
-    const everymin = await exists(scheduleEverymin) ?(await readdir(scheduleEverymin, { recursive: true }))
+    const everymin = await exists(scheduleEverymin) ? (await readdir(scheduleEverymin, { recursive: true }))
         .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEverymin}/${file}`) : [];
 
@@ -394,7 +409,6 @@ async function loadData(guildID = null, mode = 0) {
         throw new TypeError("Invalid mode");
     };
 
-    const { database_file } = require("./config.js");
     const database_emptyeg = find_default_value("database.json", {});
 
     if (!(await exists(database_file))) return {};
@@ -421,7 +435,6 @@ async function loadData(guildID = null, mode = 0) {
  * @throws {Error}
  */
 async function saveData(guildID, guildData) {
-    const { database_file } = require("./config.js");
     const database_emptyeg = find_default_value("database.json", {});
 
     let data = {};
@@ -556,8 +569,6 @@ async function getPrefixes(guildID) {
  * @returns {Promise<object>}
  */
 async function load_rpg_data(userid) {
-    const { rpg_database_file } = require("./config.js");
-
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     if (await exists(rpg_database_file)) {
@@ -581,8 +592,6 @@ async function load_rpg_data(userid) {
  * @returns {object}
  */
 function load_rpg_dataSync(userid) {
-    const { rpg_database_file } = require("./config.js");
-
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     if (existsSync(rpg_database_file)) {
@@ -607,8 +616,6 @@ function load_rpg_dataSync(userid) {
  * @returns {Promise<void>}
  */
 async function save_rpg_data(userid, rpg_data) {
-    const { rpg_database_file } = require("./config.js");
-
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     let data = {};
@@ -643,8 +650,6 @@ async function save_rpg_data(userid, rpg_data) {
  * @returns {void}
  */
 function save_rpg_dataSync(userid, rpg_data) {
-    const { rpg_database_file } = require("./config.js");
-
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     let data = {};
@@ -673,7 +678,6 @@ function save_rpg_dataSync(userid, rpg_data) {
 };
 
 async function load_shop_data(userid) {
-    const { rpg_shop_file } = require("./config.js");
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
 
     if (await exists(rpg_shop_file)) {
@@ -692,7 +696,6 @@ async function load_shop_data(userid) {
 };
 
 async function save_shop_data(userid, shop_data) {
-    const { rpg_shop_file } = require("./config.js");
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
 
     let data = {};
@@ -726,7 +729,6 @@ async function save_shop_data(userid, shop_data) {
  * @returns {Promies<{lvl: number, exp: number, waterAt: number, farms: Object[]}>}
  */
 async function load_farm_data(userid) {
-    const { rpg_farm_file } = require("./config.js");
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
 
     const data = await readJson(rpg_farm_file);
@@ -745,7 +747,6 @@ async function load_farm_data(userid) {
  * @param {Array} farm_data
  */
 async function save_farm_data(userid, farm_data) {
-    const { rpg_farm_file } = require("./config.js");
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
 
     let data = {};
@@ -772,26 +773,19 @@ async function save_farm_data(userid, farm_data) {
 };
 
 async function load_bake_data() {
-    const { bake_data_file } = require("./config.js");
 
     return await readJson(bake_data_file);
 };
 
 async function save_bake_data(data) {
-    const { bake_data_file } = require("./config.js");
-
     await writeJson(bake_data_file, data);
 };
 
 async function load_smelt_data() {
-    const { smelt_data_file } = require("./config.js");
-
     return await readJson(smelt_data_file);
 };
 
 async function save_smelt_data(data) {
-    const { smelt_data_file } = require("./config.js");
-
     await writeJson(smelt_data_file, data);
 };
 
@@ -809,8 +803,6 @@ async function save_smelt_data(data) {
  * @returns {Promise<object>}
  */
 async function loadDvoiceData() {
-    const { dvoice_data_file } = require("./config.js");
-
     return await readJson(dvoice_data_file);
 };
 
@@ -820,8 +812,6 @@ async function loadDvoiceData() {
  * @returns {Promise<void>}
  */
 async function saveDvoiceData(data) {
-    const { dvoice_data_file } = require("./config.js");
-
     await writeJson(dvoice_data_file, data);
 };
 
@@ -881,8 +871,6 @@ function join_temp_folder(filename) {
 };
 
 function get_temp_folder() {
-    const { temp_folder } = require("./config.js");
-
     if (!existsSync(temp_folder)) {
         mkdirSync(temp_folder, { recursive: true });
     };

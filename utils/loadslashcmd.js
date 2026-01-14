@@ -1,6 +1,6 @@
-const { Collection } = require("discord.js");
 const fs = require("fs");
-const path = require("node:path");
+const path = require("path");
+const { Collection } = require("discord.js");
 
 const { readdirSync } = require("./file.js");
 const { get_logger } = require("./logger.js");
@@ -27,6 +27,7 @@ function processDirectory(bot, dirPath) {
             };
         } else if (item.endsWith(".js")) {
             delete require.cache[require.resolve(itemPath)];
+
             const command = require(itemPath);
             if ("data" in command && "execute" in command) {
                 if (bot) {

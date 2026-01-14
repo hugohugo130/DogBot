@@ -12,7 +12,7 @@ const { registcmd } = require("./register_commands.js");
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
 const { getQueues, clear_duplicate_temp } = require("./utils/music/music.js");
 const DogClient = require("./utils/customs/client.js");
-const util = require("node:util");
+const util = require("util");
 require("dotenv").config();
 
 const args = process.argv.slice(2);

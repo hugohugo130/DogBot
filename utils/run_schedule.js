@@ -1,9 +1,10 @@
-// const schedule = require("node-schedule");
 const path = require("path");
+const util = require("util");
+
 const { wait_until_ready } = require("./wait_until_ready.js");
 const { asleep } = require("./sleep.js");
 const { get_logger } = require("./logger.js");
-const util = require("node:util");
+const { readSchedule } = require("./file.js");
 
 const logger = get_logger({ nodc: true });
 let run_lock = {};
@@ -99,8 +100,6 @@ async function scheduleFunc(client, file, per) {
 };
 
 async function run_schedule(client) {
-    const { readSchedule } = require("./file.js");
-
     const [everysec, everymin, every5min] = await readSchedule();
 
     for (const file of everysec) {

@@ -1,6 +1,33 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction } = require("discord.js");
-const { divide } = require("./bake.js");
-const { get_logger } = require("../../../utils/logger.js");
+
+const {
+    divide,
+} = require("./bake.js");
+const {
+    get_logger,
+} = require("../../../utils/logger.js");
+const {
+    load_rpg_data,
+    load_smelt_data,
+    save_smelt_data,
+    save_rpg_data,
+} = require("../../../utils/file.js");
+const {
+    get_name_of_id,
+    get_emojis,
+    wrong_job_embed,
+    get_loophole_embed,
+    get_id_of_name,
+    userHaveEnoughItems,
+    notEnoughItemEmbed,
+    name,
+    smelter_slots,
+    smeltable_recipe,
+} = require("../../../utils/rpg.js");
+const {
+    embed_error_color,
+    embed_default_color,
+} = require("../../../utils/config.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
 const logger = get_logger();
@@ -14,10 +41,6 @@ const logger = get_logger();
  * @returns {Promise<any>}
  */
 async function smelt_smelt(interaction, item_id, amount, mode = 1) {
-    const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
-    const { load_rpg_data, load_smelt_data } = require("../../../utils/file.js");
-    const { get_name_of_id, get_emojis, get_loophole_embed, get_id_of_name, userHaveEnoughItems, notEnoughItemEmbed, name, smelter_slots, smeltable_recipe } = require("../../../utils/rpg.js");
-
     const userId = interaction.user.id;
 
     const rpg_data = await load_rpg_data(userId);
@@ -234,9 +257,6 @@ module.exports = {
 
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
-        const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
-        const { load_rpg_data, load_smelt_data, save_smelt_data, save_rpg_data } = require("../../../utils/file.js");
-        const { get_emojis, wrong_job_embed, notEnoughItemEmbed, name, smelter_slots } = require("../../../utils/rpg.js");
 
         let rpg_data = await load_rpg_data(userId);
         const smelt_data_all = await load_smelt_data();
@@ -278,7 +298,7 @@ module.exports = {
             if (!item_id && amounts[0] && !allAmount && !auto_amount) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 蛤？ 🤔 你選了數量但沒選食物`)
+                    .setTitle(`${emoji_cross} | 蛤？ 🤔 你選了數量然後?`)
                     .setEmbedFooter(interaction);
 
                 return await interaction.followUp({ embeds: [embed] });
@@ -287,7 +307,7 @@ module.exports = {
             if (item_id && auto_amount === "foods") {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 什麼拉🤣 你選了食物又選了自動選擇食物 那我要選什麼阿`)
+                    .setTitle(`${emoji_cross} | 什麼拉🤣 你選了礦物又選了自動選擇礦物 那我要選什麼阿`)
                     .setEmbedFooter(interaction);
 
                 return await interaction.followUp({ embeds: [embed] });
@@ -296,7 +316,7 @@ module.exports = {
             if (allAmount && auto_amount) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 什麼拉🤣 你選了全部食物又選了自動選擇食物 那我要選什麼阿`)
+                    .setTitle(`${emoji_cross} | 什麼拉🤣 你選了全部礦物又選了自動選擇礦物 那我要選什麼阿`)
                     .setEmbedFooter(interaction);
 
                 return await interaction.followUp({ embeds: [embed] });
@@ -305,7 +325,7 @@ module.exports = {
             if (!item_id && auto_amount === "amount") {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你選了自動選擇數量但沒選食物 蛤？`)
+                    .setTitle(`${emoji_cross} | 你選了自動選擇數量但沒選礦物 蛤？`)
                     .setEmbedFooter(interaction);
 
                 return await interaction.followUp({ embeds: [embed] });

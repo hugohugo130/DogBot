@@ -1,4 +1,5 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction } = require("discord.js");
+
 const { embed_default_color } = require("../utils/config.js");
 const DogClient = require("../utils/customs/client.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");

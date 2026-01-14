@@ -1,6 +1,5 @@
 const { EmbedBuilder: djsEmbedBuilder, BaseInteraction, Locale } = require("discord.js");
-const { load_rpg_dataSync } = require("../file.js");
-const { get_lang_data } = require("../language.js");
+
 const DogClient = require("./client.js");
 
 class EmbedBuilder extends djsEmbedBuilder {
@@ -18,6 +17,9 @@ class EmbedBuilder extends djsEmbedBuilder {
      * @returns {EmbedBuilder}
      */
     setEmbedFooter(interaction = null, { text = "", rpg_data = null, force = false, client = global._client } = {}) {
+        const { load_rpg_dataSync } = require("../file.js");
+        const { get_lang_data } = require("../language.js");
+
         if (interaction && typeof interaction === "object" && !(interaction instanceof BaseInteraction)) { // interaction應為config
             const { text: _text = "", rpg_data: _rpg_data = null, force: _force = false, client: _client = global._client } = interaction;
 

@@ -1,5 +1,4 @@
 const { Collection, Message, User } = require("discord.js");
-const djs = import("discord.js");
 
 function isDigit(char) {
     return /^[0-9]+$/.test(char);
@@ -8,7 +7,7 @@ function isDigit(char) {
 /**
  * 
  * @param {Message} message 
- * @returns {Promise<Collection<djs.Snowflake, User>>}
+ * @returns {Promise<Collection<import("discord.js").Snowflake, User>>}
  */
 async function mentions_users(message) {
     const { get_user } = require("./discord.js");

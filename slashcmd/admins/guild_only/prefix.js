@@ -1,5 +1,8 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, EmbedBuilder } = require("discord.js");
 
+const { addPrefix, rmPrefix, getPrefixes } = require("../../../utils/file.js");
+const { embed_default_color, reserved_prefixes } = require("../../../utils/config.js");
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("prefix")
@@ -78,8 +81,6 @@ module.exports = {
         )
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
     async execute(interaction) {
-        const { addPrefix, rmPrefix, getPrefixes } = require("../../../utils/file.js");
-        const { embed_default_color, reserved_prefixes } = require("../../../utils/config.js");
         await interaction.deferReply();
 
         const subcommand = interaction.options.getSubcommand();

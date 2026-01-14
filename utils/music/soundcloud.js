@@ -1,8 +1,10 @@
-const util = require("node:util");
+const util = require("util");
 const path = require("path");
 const { Soundcloud } = require("soundcloud.ts");
 
 const { get_logger } = require("../logger.js");
+const { join_temp_folder } = require("../file.js");
+const { convertToOgg } = require('./music.js');
 
 const sc = global._sc ?? new Soundcloud();
 global._sc = sc;
@@ -38,9 +40,6 @@ async function search_tracks(query) {
  * @returns {Promise<string | null>} 下載失敗時返回 null
  */
 async function download_track(track, savePath = null) {
-    const { join_temp_folder } = require("../file.js");
-    const { convertToOgg } = require('./music.js');
-
     try {
         if (!savePath) savePath = join_temp_folder(`${SOURCE}_${track.id}.mp3`);
 

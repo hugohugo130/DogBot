@@ -1,7 +1,9 @@
 const fs = require("fs");
 const path = require("path");
-const util = require("node:util");
+const util = require("util");
+
 const { get_logger } = require("./logger.js");
+const { cogsFolder } = require("./config.js");
 const DogClient = require("./customs/client.js");
 
 const load_skiplist = [];
@@ -90,8 +92,6 @@ async function processDirectory(client, dirPath, quiet = false) {
  */
 async function load_cogs(client, quiet = false) {
     try {
-        const { cogsFolder } = require("./config.js");
-
         const totalFiles = await processDirectory(client, cogsFolder, quiet);
         return totalFiles;
     } catch (error) {

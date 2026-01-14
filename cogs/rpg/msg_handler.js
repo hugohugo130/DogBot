@@ -1,10 +1,73 @@
 const { Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User } = require("discord.js");
+const util = require("util");
+
+const {
+    get_logger,
+    getCallerModuleName,
+} = require("../../utils/logger.js");
+const {
+    randint,
+    choice,
+} = require("../../utils/random.js");
+const {
+    convertToSecondTimestamp,
+} = require("../../utils/timestamp.js");
+const {
+    get_loophole_embed,
+    get_emoji,
+    ls_function,
+    is_cooldown_finished,
+    chunkArray,
+    get_emojis,
+    get_number_of_items,
+    firstPrefix,
+    InPrefix,
+    get_name_of_id,
+    get_id_of_name,
+    choose_job_row,
+    get_failed_embed,
+    get_cooldown_embed,
+    wrong_job_embed,
+    startsWith_prefixes,
+    foods,
+    name,
+    name_reverse,
+    fish,
+    ingots,
+    mine_gets,
+    food_data,
+    foods_crops,
+    foods_meat,
+    animal_products,
+    shop_lowest_price,
+    sell_data,
+    jobs,
+} = require("../../utils/rpg.js");
+const {
+    load_rpg_data,
+    save_rpg_data,
+    load_shop_data,
+    save_shop_data,
+    loadData,
+} = require("../../utils/file.js");
+const {
+    embed_default_color,
+    embed_warn_color,
+    embed_error_color,
+    embed_job_color,
+    embed_fell_color,
+    embed_marry_color,
+    cannot_sell,
+    probabilities,
+    failed,
+} = require("../../utils/config.js");
+const {
+    get_help_command,
+} = require("./rpg_interactions.js");
+const {
+    mentions_users,
+} = require("../../utils/message.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
-const { get_logger, getCallerModuleName } = require("../../utils/logger.js");
-const { embed_default_color, embed_error_color, embed_job_color, embed_marry_color } = require("../../utils/config.js");
-const { randint, choice } = require("../../utils/random.js");
-const { get_loophole_embed, get_emoji, ls_function, is_cooldown_finished, chunkArray, get_emojis, get_number_of_items } = require("../../utils/rpg.js");
-const util = require("node:util");
 const DogClient = require("../../utils/customs/client.js");
 
 const max_hunger = 20;
@@ -63,8 +126,6 @@ async function redirect({ client, message, command, mode = 0 }) {
     m = 1: 只回傳訊息參數
     */
 
-    const { mentions_users } = require("../../utils/message.js");
-    const { firstPrefix, InPrefix } = require("../../utils/rpg.js");
     if (![0, 1].includes(mode)) throw new TypeError("Invalid mode");
 
     const guild = message.guild;
@@ -122,8 +183,6 @@ function setEmbedAuthor(client = global._client, embed, author = "") {
  * @returns {Promise<EmbedBuilder>}
  */
 async function show_marry_info(client, rpg_data) {
-    const { convertToSecondTimestamp } = require("../../utils/timestamp.js");
-
     const marry_info = rpg_data?.marry ?? {};
     const married = marry_info.status ?? false;
     if (!married) throw new Error("not married but triggered show_marry_info");
@@ -205,8 +264,6 @@ const redirect_data_reverse = Object.entries(redirect_data).reduce((acc, [key, v
 
 const rpg_commands = {
     mine: ["挖礦", "挖礦", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { save_rpg_data } = require("../../utils/file.js");
-        const { name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const { item, amount } = random_item;
@@ -246,10 +303,6 @@ const rpg_commands = {
         return await message.reply({ embeds: [embed] });
     }, false],
     fell: ["伐木", "砍砍樹，偶爾可以挖到神木 owob", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { save_rpg_data } = require("../../utils/file.js");
-        const { name } = require("../../utils/rpg.js");
-        const { embed_fell_color } = require("../../utils/config.js");
-
         const userid = message.author.id;
 
         const { item, amount } = random_item;
@@ -283,8 +336,6 @@ const rpg_commands = {
         return await message.reply({ embeds: [embed] });
     }, false],
     herd: ["放牧", "放牧或屠宰動物", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { save_rpg_data } = require("../../utils/file.js");
-        const { animal_products, name, get_name_of_id } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const { item: random_animal, amount } = random_item;
@@ -335,8 +386,6 @@ const rpg_commands = {
         return await message.reply({ embeds: [embed] });
     }, false],
     brew: ["釀造", "釀造藥水", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { save_rpg_data } = require("../../utils/file.js");
-        const { name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const { item, amount } = random_item;
@@ -364,8 +413,6 @@ const rpg_commands = {
         return await message.reply({ embeds: [embed] });
     }, false],
     fish: ["抓魚", "魚魚: 漁夫!不要抓我~~~", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { save_rpg_data } = require("../../utils/file.js");
-        const { name } = require("../../utils/rpg.js");
         const userid = message.author.id;
 
         const { item, amount } = random_item;
@@ -412,9 +459,6 @@ const rpg_commands = {
         return await message.reply({ embeds: [embed] });
     }, false],
     shop: ["商店", "對你的商店進行任何操作", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { load_shop_data, save_shop_data, save_rpg_data } = require("../../utils/file.js");
-        const { mentions_users } = require("../../utils/message.js");
-        const { name, mine_gets, ingots, foods, shop_lowest_price, get_name_of_id, get_id_of_name } = require("../../utils/rpg.js");
         const subcommand = args[0];
 
         switch (subcommand) {
@@ -735,11 +779,6 @@ const rpg_commands = {
         return await ls_function({ client, message, rpg_data, data, args, mode, random_item, interaction: null })
     }, false],
     buy: ["購買", "購買其他人上架的物品", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { load_shop_data } = require("../../utils/file.js");
-        const { name, name_reverse, get_id_of_name, get_name_of_id } = require("../../utils/rpg.js");
-        const { get_help_command } = require("./rpg_interactions.js");
-        const { mentions_users } = require("../../utils/message.js");
-
         const userid = message.author.id;
         const emoji_cross = await get_emoji("crosS", client);
         const emoji_store = await get_emoji("store", client);
@@ -927,7 +966,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             for (const [command, time] of Object.entries(filtered_lastRunTimestamp)) {
                 if (!rpg_cooldown[command]) continue;
                 const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
-                const name = command === "work" ? "工作" : command;
+                const field_name = command === "work" ? "工作" : command;
                 let target_time = Math.floor(new Date() / 1000 + remaining_time / 1000);
                 target_time = `<t:${target_time}:R>`;
 
@@ -935,7 +974,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
                 value += `\n上次執行時間: <t:${Math.floor(time / 1000)}:D> <t:${Math.floor(time / 1000)}:T>`;
                 value += `\n今天執行了 \`${rpg_data.count[command].toLocaleString()}\` 次`;
 
-                embed.addFields({ name: name, value: value });
+                embed.addFields({ name: field_name, value: value });
             };
         };
 
@@ -957,11 +996,11 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             for (const [command, time] of Object.entries(filtered_lastRunTimestamp)) {
                 if (!rpg_cooldown[command]) continue;
                 const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
-                const name = command;
+                const field_name = command;
                 let target_time = Math.floor(new Date() / 1000 + remaining_time / 1000);
                 target_time = `<t:${target_time}:R>`;
                 let value = is_finished ? `冷卻完畢 (${target_time})` : target_time;
-                embed.addFields({ name: name, value: value });
+                embed.addFields({ name: field_name, value: value });
             };
         };
 
@@ -969,8 +1008,6 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         return await message.reply({ embeds: [embed] });
     }, false],
     pay: ["付款", "付款給其他用戶", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { mentions_users } = require("../../utils/message.js");
-
         const target_users = await mentions_users(message);
         const target_user = target_users.first();
 
@@ -1038,8 +1075,6 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         return await message.reply({ embeds: [embed], components: [row] });
     }, true],
     help: ["查看指令", "查看指令", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { get_help_command } = require("./rpg_interactions.js");
-
         const specific_cmd = args[0];
         if (specific_cmd && specific_cmd !== "help") {
             const embed = await get_help_command("rpg", specific_cmd, message.guild.id, null, client);
@@ -1174,10 +1209,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return await message.reply({ embeds: [embed], components: [row] });
     }, false],
     eat: ["吃東西", "吃東西回復飽食度", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { save_rpg_data } = require("../../utils/file.js");
-        const { get_name_of_id, foods, name, food_data, foods_crops, foods_meat, fish } = require("../../utils/rpg.js");
-        const { embed_warn_color } = require("../../utils/config.js");
-
         const user = message.author;
         const userid = user.id;
 
@@ -1411,9 +1442,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         };
     }, false],
     sell: ["出售", "出售物品給系統", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { sell_data, name, get_name_of_id, get_id_of_name } = require("../../utils/rpg.js");
-        const { cannot_sell } = require("../../utils/config.js");
-
         const item_name = get_name_of_id(args[0]);
         const item_id = get_id_of_name(args[0]);
 
@@ -1544,8 +1572,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
     //     return await message.reply({ embeds: [embed], components: rows, files: [attachment] });
     // }, false],
     top: ["金錢排行榜", "who!誰是世界首富!是不是你!", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { load_rpg_data } = require("../../utils/file.js");
-
         const users = client.users.cache.values();
 
         const userDataList = await Promise.all(
@@ -1588,8 +1614,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return await message.reply({ embeds: [embed] });
     }, false],
     last: ["「倒數」金錢排行榜", "讓我們看看誰最窮!嘿嘿", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { load_rpg_data } = require("../../utils/file.js");
-
         const users = client.users.cache.values();
 
         const userDataList = await Promise.all(
@@ -1632,7 +1656,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return await message.reply({ embeds: [embed] });
     }, false],
     name: ["顯示物品名稱", "透過物品ID顯示物品名稱", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { get_name_of_id } = require("../../utils/rpg.js");
         const item_id = args[0];
 
         if (!args[0]) {
@@ -1667,7 +1690,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return await message.reply({ embeds: [embed] });
     }, true],
     id: ["顯示物品ID", "透過物品名稱顯示物品ID", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { get_id_of_name } = require("../../utils/rpg.js");
         const item_name = args.join(" ");
 
         if (!args[0]) {
@@ -1701,9 +1723,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return await message.reply({ embeds: [embed] });
     }, true],
     marry: ["結婚", "與某人結婚", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { mentions_users } = require("../../utils/message.js");
-        const { load_rpg_data } = require("../../utils/file.js");
-
         const marry_info = rpg_data?.marry ?? {};
         const marry_with = marry_info.with ?? null;
         const married = marry_info.status ?? false;
@@ -1796,8 +1815,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         if (mode === 1) return { content: `${target_user.toString()}`, embeds: [embed], components: [row] };
         return await message.reply({ content: `${target_user.toString()}`, embeds: [embed], components: [row] });
     }, async (_, userid) => {
-        const { load_rpg_data } = require("../../utils/file.js");
-
         const rpg_data = await load_rpg_data(userid);
         const marry_info = rpg_data?.marry ?? {};
         const married = marry_info.status ?? false;
@@ -1846,8 +1863,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         if (mode === 1) return { embeds: [embed], components: [row] };
         return await message.reply({ embeds: [embed], components: [row] });
     }, async (_, userid) => {
-        const { load_rpg_data } = require("../../utils/file.js");
-
         const rpg_data = await load_rpg_data(userid);
 
         const marry_info = rpg_data.marry ?? {};
@@ -1856,9 +1871,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return !married;
     }],
     job: ["職業", "選擇職業", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const { choose_job_row } = require("../../utils/rpg.js");
-        const { jobs } = require("../../utils/rpg.js");
-
         const emoji_job = await get_emoji("job", client);
         const emoji_nekoWave = await get_emoji("nekoWave", client);
 
@@ -1921,10 +1933,6 @@ function find_redirect_targets_from_id(id) {
  * @returns {Promise<Message | MessagePayload | null>}
 */
 async function rpg_handler({ client, message, d, mode = 0 }) {
-    const { load_rpg_data, save_rpg_data, loadData } = require("../../utils/file.js");
-    const { get_help_command } = require("./rpg_interactions.js");
-    const { get_failed_embed, get_cooldown_embed, wrong_job_embed, startsWith_prefixes, foods, food_data } = require("../../utils/rpg.js");
-
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
 
     if (!d && message.author.bot) return;
@@ -2153,7 +2161,6 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
  * @returns {{failed: boolean, item: string, times: number}}
  */
 function get_random_result(category) {
-    const { probabilities, failed } = require("../../utils/config.js");
     const datas = probabilities[category];
     if (!datas) return {
         failed: true,
@@ -2193,10 +2200,6 @@ module.exports = {
      * @param {Message} message 
      */
     execute: async function (client, message) {
-        const { embed_error_color } = require("../../utils/config.js");
-        const { loadData } = require("../../utils/file.js");
-        const { InPrefix } = require("../../utils/rpg.js")
-
         const userId = message.author.id;
         const guildID = message.guild.id;
 

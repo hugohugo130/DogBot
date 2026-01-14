@@ -2,7 +2,10 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, E
 const util = require("util");
 
 const { wait_until_ready } = require("./wait_until_ready.js");
-const { embed_default_color, embed_error_color, embed_fell_color, reserved_prefixes } = require("./config.js");
+const { get_logger } = require("./logger.js");
+const { load_rpg_data, loadData, get_probability_of_id } = require("./file.js");
+const { convertToSecondTimestamp, DateNowSecond } = require("./timestamp.js");
+const { embed_default_color, embed_error_color, embed_fell_color, reserved_prefixes, setJobDelay, item_amount_limit } = require("./config.js");
 const EmbedBuilder = require("./customs/embedBuilder.js");
 const DogClient = require("./customs/client.js");
 
@@ -785,9 +788,6 @@ const name_reverse = Object.entries(name).reduce((acc, [key, value]) => {
 }, {});
 
 function check_item_data() {
-    const { get_probability_of_id } = require("./file.js");
-    const { get_logger } = require("./logger.js");
-
     const logger = get_logger();
 
     const all_items = [
@@ -850,8 +850,6 @@ function get_id_of_name(id, default_value = id) {
 };
 
 async function get_number_of_items(name, userid) {
-    const { load_rpg_data } = require("./file.js");
-
     const rpg_data = await load_rpg_data(userid);
     const items = rpg_data.inventory;
 
@@ -872,8 +870,6 @@ async function get_number_of_items(name, userid) {
  * @returns {Promise<boolean>} 如果玩家有足夠的物品，回傳true
  */
 async function userHaveEnoughItems(userid, item, item_amount) {
-    const { load_rpg_data } = require("./file.js");
-
     const rpg_data = await load_rpg_data(userid);
     const items = rpg_data.inventory;
 
@@ -888,8 +884,6 @@ async function userHaveEnoughItems(userid, item, item_amount) {
  * @returns {Promise<EmbedBuilder>}
  */
 async function notEnoughItemEmbed(item_datas, interaction = null, client = global._client) {
-    const { get_logger } = require("./logger.js");
-
     if (item_datas?.length <= 0) throw new Error("item_datas is empty");
     if (!Array.isArray(item_datas)) item_datas = [item_datas];
     const logger = get_logger();
@@ -1373,9 +1367,7 @@ async function get_loophole_embed(text, interaction = null, client = global._cli
  * @returns {Promise<EmbedBuilder | null>}
  */
 async function job_delay_embed(userId, interaction = null, client = global._client) {
-    const { load_rpg_data } = require("./file.js");
-    const { convertToSecondTimestamp, DateNowSecond } = require("./timestamp.js");
-    const { setJobDelay } = require("./config.js");
+
 
     const rpg_data = await load_rpg_data(userId);
     const lastRunTimestamp = rpg_data.lastRunTimestamp ?? {};
@@ -1403,8 +1395,6 @@ async function job_delay_embed(userId, interaction = null, client = global._clie
  * @returns {Promise<EmbedBuilder>}
  */
 async function choose_job_row(userid) {
-    const { jobs } = require("./rpg.js");
-
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(`job_choose|${userid}`)
         .setPlaceholder("選擇職業")
@@ -1448,8 +1438,6 @@ async function choose_job_row(userid) {
  * @returns {Promise<EmbedBuilder | null>}
  */
 async function amount_limit_embed(amount, interaction = null) {
-    const { item_amount_limit } = require("./config.js");
-
     if (amount <= item_amount_limit) {
         return null;
     };
@@ -1466,7 +1454,6 @@ async function amount_limit_embed(amount, interaction = null) {
 };
 
 async function ls_function({ client, message, rpg_data, mode, PASS, interaction = null }) {
-    const { loadData } = require("./file.js");
 
     if (!rpg_data.privacy.includes(PrivacySettings.Inventory) && !PASS) {
         const guildData = await loadData(message.guild.id);
@@ -1566,9 +1553,6 @@ async function ls_function({ client, message, rpg_data, mode, PASS, interaction 
 };
 
 async function firstPrefix(guildID) {
-    const { loadData } = require("./file.js");
-    const { reserved_prefixes } = require("./config.js");
-
     const guildData = await loadData(guildID);
 
     const prefix = guildData.prefix?.[0] ?? reserved_prefixes[0];
@@ -1583,9 +1567,6 @@ async function firstPrefix(guildID) {
  * @returns {Promise<Array<string>>}
  */
 async function InPrefix(guildID, prefix) {
-    const { loadData } = require("./file.js");
-    const { reserved_prefixes } = require("./config.js");
-
     const guildData = await loadData(guildID);
 
     const prefixes = (guildData.prefix ?? [])
@@ -1607,9 +1588,6 @@ async function InPrefix(guildID, prefix) {
  * @returns {Promise<boolean | string>}
  */
 async function startsWith_prefixes(guildID, prefix) {
-    const { loadData } = require("./file.js");
-    const { reserved_prefixes } = require("./config.js");
-
     const guildData = await loadData(guildID);
 
     const prefixes = (guildData.prefix ?? [])

@@ -1,7 +1,7 @@
 const { uploadAllDatabaseFiles } = require("./onlineDB.js");
 const { get_logger, shutdown } = require("./logger.js");
-const { BotName } = require("./config.js");
 const { saveDvoiceData } = require("./file.js");
+const { BotName } = require("./config.js");
 const DogClient = require("./customs/client.js");
 
 /**

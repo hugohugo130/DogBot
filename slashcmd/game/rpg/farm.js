@@ -1,7 +1,12 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, User, BaseInteraction, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
-const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
-const { get_id_of_name, farm_slots } = require("../../../utils/rpg.js");
+
+const { get_name_of_id, get_id_of_name, get_emojis, is_cooldown_finished, userHaveEnoughItems, wrong_job_embed, farm_slots } = require("../../../utils/rpg.js");
+const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
+const { convertToSecondTimestamp, DateNow, DateNowSecond } = require("../../../utils/timestamp.js");
+const { choice, randint } = require("../../../utils/random.js");
+const { embed_default_color, embed_error_color, rpg_lvlUp_per, probabilities } = require("../../../utils/config.js");
 const DogClient = require("../../../utils/customs/client.js");
+const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
 /**
  *
@@ -11,12 +16,6 @@ const DogClient = require("../../../utils/customs/client.js");
  * @returns {Promise<EmbedBuilder>}
  */
 async function get_farm_info_embed(user, interaction = null, client = global._client) {
-    const { load_farm_data } = require("../../../utils/file.js");
-    const { get_emojis } = require("../../../utils/rpg.js");
-    const { get_name_of_id } = require("../../../utils/rpg.js");
-    const { convertToSecondTimestamp, DateNowSecond } = require("../../../utils/timestamp.js");
-    const { embed_default_color } = require("../../../utils/config.js");
-
     const [emoji_farmer, emoji_hoe, emoji_update] = await get_emojis(["farmer", "hoe", "update"], client);
     const farm_data = await load_farm_data(user.id);
 
@@ -61,8 +60,6 @@ async function get_farm_info_embed(user, interaction = null, client = global._cl
 };
 
 function get_harvest_items(amount) {
-    const { probabilities } = require("../../../utils/config.js");
-    const { choice, randint } = require("../../../utils/random.js");
     const farm_probability = probabilities.farm;
 
     /*
@@ -207,13 +204,6 @@ module.exports = {
      * @returns {Promise<any>}
      */
     async execute(interaction) {
-        const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
-        const { farm_slots, get_name_of_id, userHaveEnoughItems, wrong_job_embed } = require("../../../utils/rpg.js");
-        const { randint } = require("../../../utils/random.js");
-        const { get_emojis, is_cooldown_finished } = require("../../../utils/rpg.js");
-        const { DateNow, DateNowSecond } = require("../../../utils/timestamp.js");
-        const { embed_default_color, embed_error_color, rpg_lvlUp_per } = require("../../../utils/config.js");
-
         const client = interaction.client;
         const user = interaction.user;
         const userId = user.id;

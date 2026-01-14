@@ -1,4 +1,9 @@
+const { wait_until_ready } = require("./wait_until_ready.js");
+const { get_user, get_channels, get_guild } = require("./discord.js");
+const { get_logger } = require("./logger.js");
 const DogClient = require("../utils/customs/client.js");
+
+const logger = get_logger();
 
 module.exports = {
     /**
@@ -11,11 +16,6 @@ module.exports = {
      * @returns {Promise<void>}
     */
     async del_msg(userID, guild_id, limit = 100, channel_id = null, client = null) {
-        const { wait_until_ready } = require("./wait_until_ready.js");
-        const { get_user, get_channels, get_guild } = require("./discord.js");
-        const { get_logger } = require("./logger.js");
-        const logger = get_logger();
-
         if (!client) client = wait_until_ready(client);
         const user = await get_user(userID, client);
 

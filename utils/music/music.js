@@ -1,24 +1,25 @@
 const path = require("path");
-const util = require("node:util");
+const util = require("util");
 const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
+const mp3Duration = require("mp3-duration");
 const { createAudioResource, createAudioPlayer, joinVoiceChannel, getVoiceConnection, AudioPlayerStatus, VoiceConnection, AudioPlayer, StreamType, AudioResource, PlayerSubscription } = require("@discordjs/voice");
 const { default: _filenamify } = require("filenamify");
 const { fileTypeFromStream, fileTypeFromFile } = require("file-type");
 const { pipeline } = require("node:stream/promises");
+const { buffer } = require("node:stream/consumers");
+const { execSync } = require('child_process');
 const { Readable } = require("node:stream");
 const { Collection, TextChannel, VoiceChannel, Guild, BaseInteraction } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
 
 const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
 const { get_logger } = require("../logger.js");
-const { existsSync, createReadStream, get_temp_folder, join_temp_folder, basename, readdirSync, unlinkSync, join, dirname } = require("../file.js");
+const { existsSync, createWriteStream, createReadStream, get_temp_folder, join_temp_folder, basename, readdirSync, unlinkSync, join, dirname } = require("../file.js");
 const { formatMinutesSeconds } = require("../timestamp.js");
 const { get_emoji } = require("../rpg.js");
 const { generateSessionId } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
-const { buffer } = require("node:stream/consumers");
-const mp3Duration = require("mp3-duration");
 
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
@@ -796,7 +797,6 @@ function getAudioFileData(url, stream = false) {
 };
 
 async function downloadFile(url, outputPath) {
-    const { createWriteStream } = require("../file.js");
     const response = await fetch(url);
 
     if (!response.ok || !response.body) {
@@ -855,8 +855,6 @@ async function downloadTracks(tracks) {
  * @returns {Promise<string>} 保存路徑
  */
 async function getTrack({ track, id, url, source }) {
-    const { existsSync, unlinkSync, join_temp_folder } = require("../file.js");
-
     let engine;
     try {
         engine = require(`./${source ?? "soundcloud"}.js`);
@@ -995,8 +993,6 @@ async function search_until(query, amount = 25, IsdownloadFile = false) {
 };
 
 function getFFmpegPath() {
-    const { execSync } = require('child_process');
-
     const command = process.platform === 'win32' ? 'cmd /C where ffmpeg' : 'which ffmpeg';
 
     const stdout = execSync(command).toString();

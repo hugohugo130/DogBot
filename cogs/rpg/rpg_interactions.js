@@ -1,10 +1,60 @@
 const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, ButtonStyle, ButtonBuilder, ButtonInteraction, StringSelectMenuInteraction, BaseInteraction } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
 const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
-const util = require("node:util");
+const util = require("util");
 
-const { get_logger } = require("../../utils/logger.js");
-const { embed_default_color, embed_error_color, embed_job_color } = require("../../utils/config.js");
+const {
+    get_logger,
+} = require("../../utils/logger.js");
+const {
+    load_shop_data,
+    save_shop_data,
+    load_rpg_data,
+    save_rpg_data,
+    load_bake_data,
+    save_bake_data,
+    load_smelt_data,
+    save_smelt_data,
+    find_default_value,
+} = require("../../utils/file.js");
+const {
+    job_delay_embed,
+    choose_job_row,
+    get_name_of_id,
+    get_emoji,
+    add_money,
+    remove_money,
+    userHaveEnoughItems,
+    notEnoughItemEmbed,
+    firstPrefix,
+    ls_function,
+    get_loophole_embed,
+    bake,
+    smeltable_recipe,
+    name,
+    jobs,
+    smelter_slots,
+    oven_slots,
+    PrivacySettings,
+} = require("../../utils/rpg.js");
+const {
+    get_farm_info_embed,
+} = require("../../slashcmd/game/rpg/farm.js");
+
+const {
+    getNowPlayingEmbed,
+} = require("../../slashcmd/music/nowplaying.js");
+const {
+    getQueue,
+    saveQueue,
+    noMusicIsPlayingEmbed,
+    loopStatus
+} = require("../../utils/music/music.js");
+const {
+    embed_default_color,
+    embed_error_color,
+    embed_job_color,
+} = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -16,7 +66,6 @@ const logger = get_logger();
  * @returns {Promise<string>}
  */
 async function show_transactions(userid) {
-    const { load_rpg_data } = require("../../utils/file.js");
     const { transactions = [] } = await load_rpg_data(userid);
 
     /* transactions 列表中的每個字典應該包含:
@@ -61,8 +110,6 @@ async function get_transaction_embed(interaction) {
  * @returns {Promise<EmbedBuilder>}
  */
 async function get_failed_embed(interaction = null, client = global._client) {
-    const { get_emoji } = require("../../utils/rpg.js");
-
     const emoji = await get_emoji("crosS", client);
 
     const embed = new EmbedBuilder()
@@ -427,7 +474,6 @@ function get_help_embed(category, user, interaction = null) {
  */
 async function get_help_command(category, command_name, guildID, interaction = null, client = global._client) {
     const { find_redirect_targets_from_id } = require("./msg_handler.js");
-    const { firstPrefix, get_emoji } = require("../../utils/rpg.js");
 
     const command_data = help.group[category][command_name];
     if (!command_data) return null;
@@ -495,14 +541,6 @@ module.exports = {
      */
     execute: async function (client, interaction) {
         try {
-            const { load_shop_data, save_shop_data, load_rpg_data, save_rpg_data, load_bake_data, save_bake_data, load_smelt_data, save_smelt_data, find_default_value } = require("../../utils/file.js");
-            const { job_delay_embed, choose_job_row, get_name_of_id, get_emoji, get_emojis, add_money, remove_money, userHaveEnoughItems, notEnoughItemEmbed, firstPrefix, ls_function, bake, smeltable_recipe, name, jobs, smelter_slots, oven_slots, PrivacySettings } = require("../../utils/rpg.js");
-            const { rpg_handler, MockMessage } = require("./msg_handler.js");
-            const { get_farm_info_embed } = require("../../slashcmd/game/rpg/farm.js");
-            const { getBotInfoEmbed } = require("../../slashcmd/info.js")
-            const { getNowPlayingEmbed } = require("../../slashcmd/music/nowplaying.js");
-            const { getQueue, saveQueue, loopStatus, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
-
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
             const message = interaction.message;
@@ -613,9 +651,6 @@ module.exports = {
                     break;
                 };
                 case "setLang": {
-                    // const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-                    // const { get_emoji } = require("../../utils/rpg.js");
-
                     // await interaction.deferUpdate();
                     // const emoji_tick = await get_emoji("Tick", client);
                     // const emoji_cross = await get_emoji("crosS", client);
@@ -721,6 +756,8 @@ module.exports = {
                 case "choose_command": {
                     await interaction.deferUpdate();
 
+                    const { rpg_handler, MockMessage } = require("./msg_handler.js");
+
                     const [_, __, command] = interaction.customId.split("|");
 
                     const message = new MockMessage(`${prefix}${command}`, interaction.channel, interaction.user, interaction.guild);
@@ -733,7 +770,9 @@ module.exports = {
                     break;
                 };
                 case "ls": {
-                    await interaction.deferReply({ flags: MessageFlags.Ephemeral })
+                    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+                    const { MockMessage } = require("./msg_handler.js");
+
 
                     const [_, userId] = interaction.customId.split("|");
                     const message = new MockMessage(`${prefix}ls`, interaction.message.channel, interaction.user, interaction.guild);
@@ -745,7 +784,6 @@ module.exports = {
                         PASS: true,
                         interaction: interaction
                     });
-
 
                     await interaction.followUp(res);
                     break;
@@ -1362,6 +1400,8 @@ module.exports = {
                     return await interaction.editReply({ content: "", embeds: [embed], components: rows });
                 };
                 case "refresh": {
+                    const { getBotInfoEmbed } = require("../../slashcmd/info.js");
+
                     const [_, feature] = otherCustomIDs;
 
                     switch (feature) {
@@ -1518,8 +1558,6 @@ module.exports = {
                 };
             };
         } catch (err) {
-            const { get_loophole_embed } = require("../../utils/rpg.js");
-
             const errorStack = util.inspect(err, { depth: null });
 
             logger.error(errorStack);

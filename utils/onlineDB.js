@@ -2,14 +2,16 @@ const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const FormData = require("form-data");
-const util = require("node:util");
+const util = require("util");
+const jsdiff = require("diff");
+const { Collection } = require("discord.js");
 
 const { getServerIPSync } = require("./getSeverIPSync.js");
-const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
 const { get_logger } = require("./logger.js");
 const { existsSync, compareLocalRemote, join_db_folder, readFile } = require("./file.js");
 const { get_areadline } = require("./readline.js");
-const { Collection } = require("discord.js");
+const { stringify } = require("./file.js");
+const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
 
 const { IP: serverIP, PORT } = global._client?.serverIP ?? getServerIPSync();
 const SERVER_URL = `http://${serverIP}:${PORT}`;
@@ -117,15 +119,11 @@ async function onlineDB_deleteFile(filename) {
 };
 
 function diff(localContent, remoteContent) {
-    const jsdiff = require("diff");
-
     const diffResult = jsdiff.diffLines(localContent, remoteContent);
     return diffResult;
 };
 
 async function onlineDB_checkFileContent(filename, maxRetries = 3) {
-    const { stringify } = require("./file.js");
-
     const [same, localContent, remoteContent] = await compareLocalRemote(filename, logger, maxRetries);
     const rl = get_areadline();
 

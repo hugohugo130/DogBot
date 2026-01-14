@@ -2,6 +2,7 @@ const util = require("util");
 const { Events, Message } = require("discord.js");
 
 const { get_logger } = require("../utils/logger.js");
+const { get_loophole_embed } = require("../utils/rpg.js");
 const { embed_default_color } = require("../utils/config.js");
 const DogClient = require("../utils/customs/client.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");
@@ -35,8 +36,6 @@ module.exports = {
 
             await message.channel.send({ embeds: [InfoEmbed] });
         } catch (err) {
-            const { get_loophole_embed } = require("../utils/rpg.js");
-
             const errorStack = util.inspect(err, { depth: null });
             if (errorStack.includes("Missing Access")) return;
 

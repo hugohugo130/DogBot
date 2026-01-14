@@ -1,9 +1,8 @@
 const { Events, AutocompleteInteraction } = require("discord.js");
-// const { searchVideos } = require("../utils/youtubeSearch.js");
-const { get_logger } = require("../utils/logger.js");
-const DogClient = require("../utils/customs/client.js");
 
-const logger = get_logger();
+const { wrong_job_embed, get_name_of_id, bake, smeltable_recipe } = require("../utils/rpg.js");
+const { load_rpg_data } = require("../utils/file.js");
+const DogClient = require("../utils/customs/client.js");
 
 module.exports = {
     name: Events.InteractionCreate,
@@ -14,8 +13,6 @@ module.exports = {
      * @returns 
      */
     execute: async function (client, interaction) {
-        const { load_rpg_data } = require("../utils/file.js");
-        const { wrong_job_embed, get_name_of_id, bake, smeltable_recipe } = require("../utils/rpg.js");
         if (!interaction.isAutocomplete()) return;
 
         const smeltable_items = smeltable_recipe.reduce((acc, item) => {

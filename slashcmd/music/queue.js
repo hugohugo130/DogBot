@@ -1,5 +1,10 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { ChatInputCommandInteraction, SlashCommandSubcommandBuilder, MessageFlags } = require("discord.js");
+const { ChatInputCommandInteraction, SlashCommandSubcommandBuilder } = require("discord.js");
+
+const { get_emojis } = require("../../utils/rpg.js");
+const { getQueue } = require("../../utils/music/music.js");
+const { formatMinutesSeconds } = require("../../utils/timestamp.js");
+const { embed_default_color, embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder");
 const DogClient = require("../../utils/customs/client");
 
@@ -55,11 +60,6 @@ module.exports = {
      * @param {DogClient} client 
     */
     execute: async (interaction, client) => {
-        const { get_emojis } = require("../../utils/rpg.js");
-        const { getQueue } = require("../../utils/music/music.js");
-        const { formatMinutesSeconds } = require("../../utils/timestamp.js");
-        const { embed_default_color, embed_error_color } = require("../../utils/config.js");
-
         await interaction.deferReply();
 
         const queue = getQueue(interaction.guildId);

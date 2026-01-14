@@ -1,5 +1,9 @@
 const { Events, ChannelType, VoiceState, PermissionFlagsBits } = require("discord.js");
-const util = require("node:util");
+const util = require("util");
+
+const { get_logger } = require("../utils/logger.js");
+const { get_channel, get_me } = require("../utils/discord.js");
+const { getDynamicVoice } = require("../utils/file.js");
 const DogClient = require("../utils/customs/client.js");
 
 const pattern = /^└⳺.*⳻ 的頻道$/;
@@ -18,14 +22,9 @@ module.exports = {
      * @returns {Promise<void>}
      */
     async execute(client, oldState, newState) {
-        const { get_logger } = require("../utils/logger.js");
-        const { get_channel, get_me } = require("../utils/discord.js");
-
         const logger = get_logger();
 
         try {
-            const { getDynamicVoice } = require("../utils/file.js");
-
             const guild = newState.guild || oldState.guild;
             if (!guild) return;
 

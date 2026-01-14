@@ -4,7 +4,7 @@ const { loadslashcmd } = require("./utils/loadslashcmd.js");
 const { Logger } = require("winston");
 const { get_logger } = require("./utils/logger.js");
 const { should_register_cmd, update_cmd_hash } = require("./utils/auto_register.js");
-const util = require("node:util");
+const util = require("util");
 
 const args = process.argv.slice(2);
 

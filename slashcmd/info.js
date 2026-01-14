@@ -1,4 +1,11 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown, Locale } = require("discord.js");
+
+const { convertToSecondTimestamp } = require("../utils/timestamp.js");
+const { load_rpg_data } = require("../utils/file.js");
+const { get_emojis, jobs } = require("../utils/rpg.js");
+const { get_lang_data } = require("../utils/language.js");
+const { max_hunger } = require("../cogs/rpg/msg_handler.js");
+const { embed_default_color } = require("../utils/config.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");
 const DogClient = require("../utils/customs/client.js");
 
@@ -9,12 +16,6 @@ const DogClient = require("../utils/customs/client.js");
  * @returns {Promise<EmbedBuilder>}
  */
 async function getBotInfoEmbed(locale = null, client = global.client) {
-    const { convertToSecondTimestamp } = require("../utils/timestamp.js");
-    const { get_lang_data } = require("../utils/language.js");
-    const { get_emojis } = require("../utils/rpg.js");
-    const { embed_default_color } = require("../utils/config.js");
-
-
     const fix = (num) => {
         num = num / 1024 / 1024;
         return Math.floor(num);
@@ -59,7 +60,7 @@ async function getBotInfoEmbed(locale = null, client = global.client) {
         )
         .setFooter({ text: lang_footer })
         .setEmbedAuthor(`${client.user.tag} 🤖`);
-}
+};
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -126,13 +127,6 @@ module.exports = {
      * @param {ChatInputCommandInteraction} interaction 
      */
     async execute(interaction) {
-        const { load_rpg_data } = require("../utils/file.js");
-        const { get_emojis, jobs } = require("../utils/rpg.js");
-        const { convertToSecondTimestamp } = require("../utils/timestamp.js");
-        const { get_lang_data } = require("../utils/language.js");
-        const { max_hunger } = require("../cogs/rpg/msg_handler.js");
-        const { embed_default_color } = require("../utils/config.js");
-
         await interaction.deferReply();
 
         const client = interaction.client;

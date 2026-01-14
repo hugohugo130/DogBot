@@ -1,6 +1,10 @@
-const { SlashCommandBuilder, MessageFlags } = require("discord.js");
+const { SlashCommandBuilder } = require("discord.js");
+
+const { get_name_of_id, recipes, tags } = require("../../../utils/rpg.js");
+const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
+const { get_emoji } = require("../../../utils/rpg.js");
+const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
-const { recipes, get_name_of_id } = require("../../../utils/rpg.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -40,11 +44,6 @@ module.exports = {
                 .setRequired(false),
         ),
     async execute(interaction) {
-        const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
-        const { get_name_of_id, tags } = require("../../../utils/rpg.js");
-        const { get_emoji } = require("../../../utils/rpg.js");
-        const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
-
         await interaction.deferReply();
 
         const userid = interaction.user.id;

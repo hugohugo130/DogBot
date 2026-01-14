@@ -1,4 +1,7 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction } = require("discord.js");
+
+const { load_rpg_data, writeJson, join_temp_folder } = require("../../../../utils/file.js");
+const { embed_default_color, admins } = require("../../../../utils/config.js");
 const EmbedBuilder = require("../../../../utils/customs/embedBuilder.js");
 
 // function split_msg(content, split = 2000) {
@@ -11,7 +14,6 @@ const EmbedBuilder = require("../../../../utils/customs/embedBuilder.js");
 // };
 
 // async function show_transactions(userid) {
-//     const { load_rpg_data } = require("../../../../utils/file.js");
 //     const { transactions = [] } = await load_rpg_data(userid);
 
 //     /* transactions 列表中的每個字典應該包含:
@@ -59,9 +61,6 @@ module.exports = {
      * @returns {Promise<any>}
      */
     async execute(interaction) {
-        const { load_rpg_data, writeJson, join_temp_folder } = require("../../../../utils/file.js");
-        const { embed_default_color, admins } = require("../../../../utils/config.js");
-        const { DateNow } = require("../../../../utils/timestamp.js");
         await interaction.deferReply();
 
         if (!admins.includes(interaction.user.id)) {

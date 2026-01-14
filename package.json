@@ -5,7 +5,9 @@
   "type": "commonjs",
   "scripts": {
     "start": "node .",
-    "test": "node ./test.js"
+    "test": "node ./test.js",
+    "check-deps": "node check_circular_dependencies.js",
+    "pretest": "npm run check-deps"
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",

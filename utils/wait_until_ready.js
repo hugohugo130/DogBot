@@ -1,5 +1,5 @@
 const { Client } = require("discord.js");
-const { get_logger, getCallerModuleName } = require("./logger");
+const { get_logger } = require("./logger");
 
 const logger = get_logger();
 

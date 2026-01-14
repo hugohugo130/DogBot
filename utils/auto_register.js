@@ -2,6 +2,7 @@ const path = require("path");
 const crypto = require("crypto");
 
 const { existsSync, readFile, readdir, writeFile } = require("./file.js");
+const { enable_auto_register_cmd, auto_register_cmd_file } = require("./config.js");
 
 const DEBUG = false;
 
@@ -46,8 +47,6 @@ async function read_all_files_in_dir(dir) {
  * @returns {Promise<boolean>}
  */
 async function should_register_cmd() {
-    const { enable_auto_register_cmd, auto_register_cmd_file } = require("./config.js");
-
     if (!enable_auto_register_cmd) return false;
 
     if (existsSync(auto_register_cmd_file)) {
@@ -72,12 +71,10 @@ async function should_register_cmd() {
  * @returns {Promise<void>}
  */
 async function update_cmd_hash() {
-    const { auto_register_cmd_file } = require("./config.js");
-    
     const file_datas = await read_all_files_in_dir("slashcmd");
     const [length, hash] = get_hash_of_datas(file_datas);
     await writeFile(auto_register_cmd_file, `${length}|${hash}`);
-    
+
     if (DEBUG) console.debug(`已更新 hash 文件: ${length}|${hash}`);
 };
 

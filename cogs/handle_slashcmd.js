@@ -1,7 +1,9 @@
 const { Events, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
-const EmbedBuilder = require("../utils/customs/embedBuilder.js");
+const util = require("util");
+
 const { get_logger } = require("../utils/logger.js");
-const util = require("node:util");
+const { get_loophole_embed } = require("../utils/rpg.js");
+const EmbedBuilder = require("../utils/customs/embedBuilder.js");
 const DogClient = require("../utils/customs/client.js");
 
 function parseOptions(options) {
@@ -78,8 +80,6 @@ module.exports = {
             interaction.client = client;
             await command.execute(interaction, client);
         } catch (error) {
-            const { get_loophole_embed } = require("../utils/rpg.js");
-
             const errorStack = util.inspect(error, { depth: null });
 
             if (errorStack.includes("Unknown Interaction")) return;

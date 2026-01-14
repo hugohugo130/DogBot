@@ -1,5 +1,9 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
 const { getVoiceConnection } = require("@discordjs/voice");
+
+const { get_emojis } = require("../../utils/rpg.js");
+const { getQueue, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
+const { embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -21,10 +25,6 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        const { embed_error_color } = require("../../utils/config.js");
-        const { get_emojis } = require("../../utils/rpg.js");
-        const { getQueue, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
-
         const voiceChannel = interaction.member.voice.channel;
         const guildId = interaction.guild.id;
         const queue = getQueue(guildId, false);

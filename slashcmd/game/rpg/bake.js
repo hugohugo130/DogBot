@@ -1,7 +1,9 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Collection } = require("discord.js");
-const { bake, oven_slots, food_data } = require("../../../utils/rpg.js");
-const { generateSessionId } = require("../../../utils/random.js");
 
+const { notEnoughItemEmbed, wrong_job_embed, get_emoji, bake, name, oven_slots, food_data } = require("../../../utils/rpg.js");
+const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
+const { generateSessionId } = require("../../../utils/random.js");
+const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
 function divide(amount, by) {
@@ -46,11 +48,6 @@ function divide(amount, by) {
  * @returns {Promise<number>}
  */
 async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
-    const { load_rpg_data, load_bake_data } = require("../../../utils/file.js");
-    const { notEnoughItemEmbed, name, oven_slots } = require("../../../utils/rpg.js");
-    const { get_emoji } = require("../../../utils/rpg.js");
-    const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
-
     if (![1, 2].includes(mode)) throw new Error("mode must be 1 or 2");
 
     const emoji_cross = await get_emoji("crosS", interaction.client);
@@ -336,10 +333,7 @@ module.exports = {
 
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
-        const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
-        const { name, oven_slots, notEnoughItemEmbed, wrong_job_embed } = require("../../../utils/rpg.js");
-        const { get_emoji } = require("../../../utils/rpg.js");
-        const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
+
 
         const bake_data_all = await load_bake_data();
         const bake_data = bake_data_all[userId];

@@ -1,6 +1,10 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags, BaseInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
-const { MusicQueue, MusicTrack, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
+const { get_emojis, get_emoji } = require("../../utils/rpg.js");
+const { formatMinutesSeconds } = require("../../utils/timestamp.js");
+const { MusicQueue, MusicTrack, getQueue, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
+const { loopStatus } = require("../../utils/music/music.js");
+const { embed_default_color, embed_error_color, DOCS, STATUS_PAGE } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -14,8 +18,6 @@ const DogClient = require("../../utils/customs/client.js");
  * @returns {Promise<string>} Discord 進度條字串
  */
 async function createProgressBar(start, played, end, debug = false, client = global.client) {
-    const { get_emojis } = require("../../utils/rpg.js");
-
     let emoji_progressStart;
     let emoji_progressDot;
     let emoji_progressFill;
@@ -94,9 +96,6 @@ async function createProgressBar(start, played, end, debug = false, client = glo
  * @returns {Promise<ActionRowBuilder[]>}
  */
 async function getNowPlayingRows(queue, client = global._client) {
-    const { get_emojis } = require("../../utils/rpg.js");
-    const { loopStatus } = require("../../utils/music/music.js");
-
     const [
         emoji_pauseGrad,
         emoji_playGrad,
@@ -209,10 +208,6 @@ async function getNowPlayingRows(queue, client = global._client) {
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder[]]>}
  */
 async function getNowPlayingEmbed(queue, currentTrack = null, interaction = null, client = global._client, start = false) {
-    const { embed_default_color, DOCS, STATUS_PAGE } = require("../../utils/config.js");
-    const { get_emoji } = require("../../utils/rpg.js");
-    const { formatMinutesSeconds } = require("../../utils/timestamp.js");
-
     const emoji = queue.isPaused()
         ? await get_emoji("pauseGrad", client)
         : await get_emoji("playGrad", client);
@@ -273,10 +268,6 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        const { embed_error_color } = require("../../utils/config.js");
-        const { get_emoji } = require("../../utils/rpg.js");
-        const { getQueue } = require("../../utils/music/music.js");
-
         const voiceChannel = interaction.member.voice.channel;
         const guildId = interaction.guild.id;
         const queue = getQueue(guildId, false);

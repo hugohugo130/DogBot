@@ -1,5 +1,7 @@
 const { SlashCommandBuilder, ChannelType } = require("discord.js");
 
+const { setDynamicVoice } = require("../../../utils/file.js");
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName("dvoice")
@@ -28,8 +30,6 @@ module.exports = {
         )
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
     async execute(interaction) {
-        const { setDynamicVoice } = require("../../../utils/file.js");
-
         await interaction.deferReply();
 
         if (!interaction.guild) return interaction.editReply({ content: "你不在伺服器內執行這個指令！" })
