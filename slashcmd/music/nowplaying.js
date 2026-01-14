@@ -99,6 +99,7 @@ async function getNowPlayingRows(queue, client = global._client) {
 
     const [
         emoji_pauseGrad,
+        emoji_playGrad,
         emoji_loop,
         emoji_skip,
         emoji_goodbye,
@@ -107,6 +108,7 @@ async function getNowPlayingRows(queue, client = global._client) {
         emoji_refresh
     ] = await get_emojis([
         "pauseGrad",
+        "playGrad",
         "loop",
         "skip",
         "goodbye",
@@ -153,7 +155,7 @@ async function getNowPlayingRows(queue, client = global._client) {
         .addComponents(
             new ButtonBuilder()
                 .setCustomId("music|any|pause")
-                .setEmoji(emoji_pauseGrad)
+                .setEmoji(queue.isPaused() ? emoji_pauseGrad : emoji_playGrad)
                 .setStyle(ButtonStyle.Secondary),
 
             new ButtonBuilder()
@@ -211,7 +213,9 @@ async function getNowPlayingEmbed(queue, currentTrack = null, interaction = null
     const { get_emoji } = require("../../utils/rpg.js");
     const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 
-    const emoji_playGrad = await get_emoji("playGrad", client);
+    const emoji = queue.isPaused()
+        ? await get_emoji("pauseGrad", client)
+        : await get_emoji("playGrad", client);
 
     /*
     這函數會在addTrack後執行
@@ -233,7 +237,7 @@ async function getNowPlayingEmbed(queue, currentTrack = null, interaction = null
     const formattedDuration = formatMinutesSeconds(currentTrack.duration);
 
     const description = `
-${emoji_playGrad} ${formattedPlayingAt}${progressBar}${formattedDuration}
+${emoji} ${formattedPlayingAt}${progressBar}${formattedDuration}
 
 [使用教學](<${DOCS}>) ∙ [機器人狀態](<${STATUS_PAGE}>)`
 
