@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags, BaseInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
 
-const { MusicQueue, MusicTrack } = require("../../utils/music/music.js");
+const { MusicQueue, MusicTrack, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -293,13 +293,9 @@ module.exports = {
             return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
         };
 
-        if (!queue || !queue.isPlaying() || !queue.currentTrack) {
-            const embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
-                .setEmbedFooter(interaction);
-
-            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+        const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
+        if (!notPlayingEmbed) {
+            return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };
 
         await interaction.deferReply();

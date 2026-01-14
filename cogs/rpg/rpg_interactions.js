@@ -1406,13 +1406,9 @@ module.exports = {
                     const guildId = interaction.guildId;
                     const queue = getQueue(guildId, true);
 
-                    if (!queue.isPlaying()) { // 沒有音樂正在播放
-                        const embed = new EmbedBuilder()
-                            .setColor(embed_error_color)
-                            .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
-                            .setEmbedFooter(interaction);
-
-                        return await interaction.update({ embeds: [embed], ephemeral: true });
+                    const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
+                    if (!notPlayingEmbed) {
+                        return await interaction.update({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
                     };
 
                     switch (feature) {

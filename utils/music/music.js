@@ -1071,17 +1071,22 @@ function IsValidURL(str) {
 
 /**
  *
+ * @param {MusicQueue} queue
  * @param {BaseInteraction} [interaction]
  * @param {DogClient} [client]
- * @returns {Promise<EmbedBuilder>}
+ * @returns {Promise<EmbedBuilder | null>}
  */
-async function noMusicIsPlayingEmbed(interaction=null,client = global._client) {
+async function noMusicIsPlayingEmbed(queue, interaction = null, client = global._client) {
     const emoji_cross = await get_emoji("crosS", client);
 
-    return new EmbedBuilder()
-        .setColor(embed_error_color)
-        .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
-        .setEmbedFooter(interaction);
+    return queue?.isPlaying?.()
+
+        ? new EmbedBuilder()
+            .setColor(embed_error_color)
+            .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
+            .setEmbedFooter(interaction)
+
+        : null;
 };
 
 module.exports = {

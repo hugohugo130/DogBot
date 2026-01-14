@@ -23,7 +23,7 @@ module.exports = {
     async execute(interaction, client) {
         const { embed_error_color } = require("../../utils/config.js");
         const { get_emojis } = require("../../utils/rpg.js");
-        const { getQueue } = require("../../utils/music/music.js");
+        const { getQueue, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
 
         const voiceChannel = interaction.member.voice.channel;
         const guildId = interaction.guild.id;
@@ -41,13 +41,9 @@ module.exports = {
             return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
         };
 
-        if (!queue || !queue.isPlaying()) {
-            const embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
-                .setEmbedFooter(interaction);
-
-            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+        const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
+        if (!notPlayingEmbed) {
+            return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };
 
         const connection = queue.connection || getVoiceConnection(guildId);

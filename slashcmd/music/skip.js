@@ -22,7 +22,7 @@ module.exports = {
     async execute(interaction, client) {
         const { embed_error_color, embed_default_color } = require("../../utils/config.js");
         const { get_emojis } = require("../../utils/rpg.js");
-        const { getQueue } = require("../../utils/music/music.js");
+        const { getQueue, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
         const { get_me } = require("../../utils/discord.js");
 
         const voiceChannel = interaction.member.voice.channel;
@@ -38,8 +38,6 @@ module.exports = {
 
             return interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
         };
-
-        await interaction.deferReply();
 
         const clientMember = await get_me(interaction.guild);
 
@@ -57,14 +55,12 @@ module.exports = {
 
         const queue = getQueue(interaction.guildId, false);
 
-        if (!queue || !queue.isPlaying()) {
-            const embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
-                .setEmbedFooter(interaction);
-
-            return interaction.editReply({ embeds: [embed] });
+        const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
+        if (!notPlayingEmbed) {
+            return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };
+
+        await interaction.deferReply();
 
         const [skippedTrack, _] = await queue.nextTrack();
 
