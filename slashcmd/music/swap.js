@@ -103,7 +103,7 @@ module.exports = {
         const firstTrack = queue.tracks[first - 1];
         const secondTrack = queue.tracks[second - 1];
 
-        if (!firstTrack || secondTrack) {
+        if (!firstTrack || !secondTrack) {
             const wrongTrack = !firstTrack ? "一" : "二"
 
             const embed = new EmbedBuilder()
