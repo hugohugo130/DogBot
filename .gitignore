@@ -142,4 +142,5 @@ database_recovery/
 temp/
 **/package-lock.json
 auto_register.cmd.data
+circular-dependencies-report.json
 test.js
