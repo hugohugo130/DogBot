@@ -63,13 +63,15 @@ module.exports = {
         };
 
         if (queue.isPaused()) {
-            queue.unpause();
-
-            return interaction.reply(`${emoji_play} | 繼續播放`);
+            await Promise.all([
+                queue.unpause(),
+                interaction.reply(`${emoji_play} | 繼續播放`),
+            ]);
         } else {
-            queue.pause();
-
-            return interaction.reply(`${emoji_pause} | 暫停!`);
+            await Promise.all([
+                queue.pause(),
+                interaction.reply(`${emoji_pause} | 暫停!`),
+            ]);
         };
     },
 };
