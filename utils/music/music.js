@@ -358,28 +358,24 @@ class MusicQueue {
                     this.playing = false;
 
                     switch (this.loopStatus) {
-                        case loopStatus.TRACK: {
+                        case loopStatus.TRACK: { // 單曲循環
                             if (!this.currentTrack) return; // 如果skip就會這樣
 
-                            // 如果是單曲循環
                             await this.play(this.currentTrack);
-
                             break;
                         };
 
-                        case loopStatus.ALL: {
+                        case loopStatus.ALL: { // 全部歌曲
                             if (!this.tracks.length) return;
 
-                            // 如果是循環播放所有歌曲
-                            this.tracks.push(this.tracks.shift());
-                            await this.play(this.tracks[0]);
-
+                            // currentTrack不會出現在this.tracks裡面
+                            this.addTrack(this.currentTrack);
+                            await this.play(this.tracks.shift()); // this.tracks[0] 也可以
                             break;
                         };
 
-                        case loopStatus.DISABLED: {
+                        case loopStatus.DISABLED: { // 循環已關閉
                             await this.nextTrack();
-
                             break;
                         };
                     };
@@ -528,7 +524,7 @@ class MusicQueue {
 
     /**
      * Subscribe to the player.
-     * @returns {AudioPlayerSubscription | null}
+     * @returns {PlayerSubscription | null}
      */
     subscribe() {
         if (
