@@ -118,6 +118,8 @@ module.exports = {
 
         // 連接到語音頻道
         if (voiceConnection?.joinConfig?.channelId !== voiceChannel.id) {
+            const emoji_cross = await get_emoji("crosS", client);
+            
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
