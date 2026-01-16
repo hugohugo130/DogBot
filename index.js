@@ -88,6 +88,7 @@ client.once(Events.ClientReady, async () => {
         } else if (input === "fstop") {
             process.exit(0);
         } else if (input === "music") {
+
             const musicQueues = getQueues();
 
             const playingPlayers = musicQueues.filter(queue => queue.isPlaying()).size;
@@ -97,8 +98,11 @@ client.once(Events.ClientReady, async () => {
             }, 0);
 
             logger.info(`\n- 連接用戶 (音樂播放器)：${playersCount}\n- 正在播放總人數: ${playingPlayers}\n- 正在播放 ${totalTracks} 首音樂。`);
-        } else if (input === "musicd") {
-            logger.info(util.inspect(getQueues(), { depth: null }));
+        } else if (input.startsWith("musicd ")) {
+            const [_, depth] = input.split(" ");
+            const depthNum = parseInt(depth) || null;
+
+            logger.info(util.inspect(getQueues(), { depth: depthNum }));
         };
 
         logger.info("=".repeat(20));
