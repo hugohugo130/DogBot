@@ -59,7 +59,7 @@ module.exports = {
 
         if (!voiceChannel) {
             return await interaction.reply({
-                embeds: [await youHaveToJoinVC_Embed(client)],
+                embeds: [await youHaveToJoinVC_Embed(interaction, client)],
                 flags: MessageFlags.Ephemeral,
             });
         };

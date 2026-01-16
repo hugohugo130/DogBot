@@ -1341,7 +1341,7 @@ module.exports = {
                         const voiceChannel = interaction.member.voice.channel;
 
                         if (!voiceChannel) return await interaction.followUp({
-                            embeds: [await youHaveToJoinVC_Embed(client)],
+                            embeds: [await youHaveToJoinVC_Embed(interaction, client)],
                             flags: MessageFlags.Ephemeral,
                         });
 
@@ -1435,7 +1435,7 @@ module.exports = {
                         case "queue-list": {
                             const queue = getQueue(interaction.guildId, true);
 
-                            const [embed, row] = await getQueueListEmbedRow(queue, client);
+                            const [embed, row] = await getQueueListEmbedRow(queue, interaction, client);
 
                             await interaction.update({ embeds: [embed], components: [row] });
                             break;

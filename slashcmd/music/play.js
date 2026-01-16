@@ -99,7 +99,7 @@ module.exports = {
 
         if (!voiceChannel?.joinable || !voiceChannel?.speakable) {
             return await interaction.reply({
-                embeds: [await youHaveToJoinVC_Embed(client)],
+                embeds: [await youHaveToJoinVC_Embed(interaction, client)],
                 flags: MessageFlags.Ephemeral,
             });
         };
