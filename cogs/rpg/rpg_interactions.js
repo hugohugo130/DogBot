@@ -58,6 +58,7 @@ const {
 } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
+const { getQueueListEmbedRow } = require("../../slashcmd/music/queue.js");
 
 const logger = get_logger();
 
@@ -1428,6 +1429,15 @@ module.exports = {
                             ]);
 
                             await interaction.update({ content: `${emoji_music} | 正在播放`, embeds: [embed], components: rows });
+                            break;
+                        };
+
+                        case "queue-list": {
+                            const queue = getQueue(interaction.guildId, true);
+
+                            const [embed, row] = await getQueueListEmbedRow(queue, client);
+
+                            await interaction.update({ embeds: [embed], components: [row] });
                             break;
                         };
                     };

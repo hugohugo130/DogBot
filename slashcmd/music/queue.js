@@ -1,12 +1,69 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
-const { ChatInputCommandInteraction, SlashCommandSubcommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder } = require("@discordjs/builders");
+const { ChatInputCommandInteraction, SlashCommandSubcommandBuilder, ButtonStyle } = require("discord.js");
 
-const { get_emojis } = require("../../utils/rpg.js");
-const { getQueue } = require("../../utils/music/music.js");
+const { get_emojis, get_emoji } = require("../../utils/rpg.js");
+const { getQueue, MusicQueue } = require("../../utils/music/music.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 const { embed_default_color, embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder");
 const DogClient = require("../../utils/customs/client");
+
+/**
+ * Get queue list embed
+ * @param {MusicQueue} queue
+ * @param {DogClient} [client]
+ * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>]>}
+ */
+async function getQueueListEmbedRow(queue, client = global._client) {
+    const [
+        emoji_cross,
+        emoji_playGrad,
+        emoji_skip,
+        emoji_update
+    ] = await get_emojis([
+        "crosS",
+        "playGrad",
+        "skip",
+        "update"
+    ], client);
+
+    const currentTrack = queue.currentTrack;
+
+    const embed = new EmbedBuilder()
+        .setColor(embed_default_color)
+        .setDescription(`${emoji_cross} | 清單是空的`)
+        .setFooter({ text: "第 1 / 1 頁" });
+
+    if (currentTrack) {
+        const queueString = queue.tracks.length
+            ? queue.tracks
+                .slice(0, 25)
+                .map((track, index) => {
+                    const duration = formatMinutesSeconds(track.duration);
+
+                    return `\`${index + 1}.\` [${track.title}](<${track.url}>) - ${duration}`;
+                })
+                .join("\n")
+            : "沒有音樂在佇列裡";
+
+        embed.setDescription(`
+${emoji_playGrad} 正在播放
+[${currentTrack.title}](<${currentTrack.url}>) - ${formatMinutesSeconds(currentTrack.duration)}
+${emoji_skip} 播放佇列
+${queueString}`
+        );
+    };
+
+    const row = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId("refresh|any|queue-list")
+                .setEmoji(emoji_update)
+                .setStyle(ButtonStyle.Success),
+        );
+
+    return [embed, row];
+};
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -64,7 +121,7 @@ module.exports = {
 
         const queue = getQueue(interaction.guildId);
 
-        const [emoji_cross, emoji_playGrad, emoji_skip] = await get_emojis(["crosS", "playGrad", "skip"], client);
+        const emoji_cross = await get_emoji("crosS", client);
 
         // 檢查有沒有歌在佇列裡面
         if (!queue.isPlaying() && !queue?.tracks?.length) {
@@ -78,36 +135,9 @@ module.exports = {
 
         switch (interaction.options.getSubcommand(false)) {
             case "list":
-                const currentTrack = queue.currentTrack;
+                const [embed, row] = await getQueueListEmbedRow(queue, client);
 
-                const embed = new EmbedBuilder()
-                    .setColor(embed_default_color);
-
-                if (currentTrack) {
-                    const queueString = queue.tracks.length
-                        ? queue.tracks
-                            .slice(0, 25)
-                            .map((track, index) => {
-                                const duration = formatMinutesSeconds(track.duration);
-
-                                return `\`${index + 1}.\` [${track.title}](<${track.url}>) - ${duration}`;
-                            })
-                            .join("\n")
-                        : "沒有音樂在佇列裡";
-
-                    embed.setDescription(`
-${emoji_playGrad} 正在播放
-[${currentTrack.title}](<${currentTrack.url}>) - ${formatMinutesSeconds(currentTrack.duration)}
-${emoji_skip} 播放佇列
-${queueString}`);
-
-                } else {
-                    embed.setDescription(`${emoji_cross} | 清單是空的`);
-                };
-
-                embed.setFooter({ text: "第 1 / 1 頁" });
-
-                return await interaction.editReply({ embeds: [embed] });
+                return await interaction.editReply({ embeds: [embed], components: [row] });
             case "remove":
                 const index = (interaction.options.getInteger("song", false) ?? 1) - 1;
 
@@ -124,4 +154,5 @@ ${queueString}`);
                 break;
         };
     },
+    getQueueListEmbedRow,
 };
