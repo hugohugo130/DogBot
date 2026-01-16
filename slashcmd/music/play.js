@@ -100,7 +100,7 @@ module.exports = {
 
         const voiceChannel = interaction.member.voice.channel;
 
-        if (!voiceChannel || !voiceChannel.joinable || !voiceChannel.speakable) {
+        if (!voiceChannel?.joinable || !voiceChannel?.speakable) {
             const emoji_music = await get_emoji("music", client);
 
             const error_embed = new EmbedBuilder()
@@ -117,9 +117,9 @@ module.exports = {
         const voiceConnection = getVoiceConnection(guildId);
 
         // 連接到語音頻道
-        if (voiceConnection?.joinConfig?.channelId !== voiceChannel.id) {
+        if (voiceConnection?.joinConfig?.channelId || voiceConnection?.joinConfig?.channelId !== voiceChannel.id) {
             const emoji_cross = await get_emoji("crosS", client);
-            
+
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
