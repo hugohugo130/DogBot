@@ -1389,11 +1389,11 @@ module.exports = {
 
                     const { track, next } = trackSession;
 
-                    queue.addTrack(track, next ? 0 : null);
-
                     const [embed, rows] = await getNowPlayingEmbed(queue, track, interaction, client, true);
 
-                    if (!queue.isPlaying()) {
+                    if (queue.isPlaying()) {
+                        queue.addTrack(track, next ? 0 : null);
+                    } else {
                         await queue.play(track);
                     };
 

@@ -367,11 +367,11 @@ class MusicQueue {
                         };
 
                         case loopStatus.ALL: { // 全部歌曲
-                            if (!this.tracks.length) return;
+                            if (!this.tracks.length || !this.currentTrack) return;
 
                             // currentTrack不會出現在this.tracks裡面
                             this.addTrack(this.currentTrack);
-                            await this.play(this.tracks.shift()); // this.tracks[0] 也可以
+                            await this.play(this.tracks.shift());
                             break;
                         };
 
@@ -487,7 +487,6 @@ class MusicQueue {
         this.currentTrack = track;
         this.currentResource = resource;
 
-        this.tracks = this.tracks.filter(track => track.id !== this.currentTrack?.id);
         return track;
     };
 
@@ -1075,7 +1074,7 @@ function IsValidURL(str) {
 async function noMusicIsPlayingEmbed(queue, interaction = null, client = global._client) {
     const emoji_cross = await get_emoji("crosS", client);
 
-    return queue?.isPlaying?.()
+    return queue?.isPlaying?.() && queue?.currentTrack
         ? new EmbedBuilder()
             .setColor(embed_error_color)
             .setTitle(`${emoji_cross} | 沒有音樂正在播放`)

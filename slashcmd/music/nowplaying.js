@@ -201,7 +201,7 @@ async function getNowPlayingRows(queue, client = global._client) {
 /**
  * 
  * @param {MusicQueue} queue - 音樂佇列
- * @param {MusicTrack} currentTrack - 當前播放的音樂曲目
+ * @param {MusicTrack} [currentTrack] - 當前播放的音樂曲目
  * @param {BaseInteraction} interaction - 互動
  * @param {DogClient} client - Discord 客戶端
  * @param {boolean} start - 是否剛開始播放
@@ -212,17 +212,8 @@ async function getNowPlayingEmbed(queue, currentTrack = null, interaction = null
         ? await get_emoji("pauseGrad", client)
         : await get_emoji("playGrad", client);
 
-    /*
-    這函數會在addTrack後執行
-    在play()之前
-    所以start要改成true
-
-    那麼因為還沒play, queue.currentTrack會是undefined
-    所以要用queue.tracks[0]來取得第一首歌
-    並且currentResource是null，因為還沒執行queue.play()
-    */
-
     if (!currentTrack) currentTrack = queue.currentTrack ?? queue.tracks[0];
+    if (!currentTrack) throw new Error("No current track found.");
 
     const playingAt = start ? 0 : Math.floor(queue.currentResource.playbackDuration / 1000);
     const formattedPlayingAt = formatMinutesSeconds(playingAt, false);
@@ -285,7 +276,7 @@ module.exports = {
         };
 
         const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
-        if (!notPlayingEmbed) {
+        if (notPlayingEmbed) {
             return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };
 

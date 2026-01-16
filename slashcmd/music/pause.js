@@ -42,7 +42,7 @@ module.exports = {
         };
 
         const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
-        if (!notPlayingEmbed) {
+        if (notPlayingEmbed) {
             return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };
 
