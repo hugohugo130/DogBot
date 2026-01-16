@@ -116,7 +116,7 @@ module.exports = {
         } else if (subcommand === "list") {
             const guildID = interaction.guildId;
             const prefixes = reserved_prefixes
-                .concat(getPrefixes(guildID))
+                .concat(await getPrefixes(guildID))
                 .map((prefix, index) => `${index + 1}. ${prefix}`);
 
             const embed = new EmbedBuilder()
