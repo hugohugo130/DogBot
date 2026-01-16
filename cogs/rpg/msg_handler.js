@@ -1226,6 +1226,16 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             // amount = parseInt(amount);
             // if (isNaN(amount)) amount = 1;
 
+            if (!foods[food_id]) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 這東東不能吃ㄟ`)
+                    .setEmbedFooter();
+
+                if (mode === 1) return { embeds: [embed] };
+                return await message.reply({ embeds: [embed] });
+            };
+
             if (!rpg_data.inventory[food_id]) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
@@ -1252,16 +1262,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你沒有那麼多的食物`)
-                    .setEmbedFooter();
-
-                if (mode === 1) return { embeds: [embed] };
-                return await message.reply({ embeds: [embed] });
-            };
-
-            if (!foods[food_id]) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 這啥東西？不能吃欸`)
                     .setEmbedFooter();
 
                 if (mode === 1) return { embeds: [embed] };
