@@ -97,6 +97,8 @@ client.once(Events.ClientReady, async () => {
             }, 0);
 
             logger.info(`\n- 連接用戶 (音樂播放器)：${playersCount}\n- 正在播放總人數: ${playingPlayers}\n- 正在播放 ${totalTracks} 首音樂。`);
+        } else if (input === "musicd") {
+            logger.info(util.inspect(getQueues(), { depth: null }));
         };
 
         logger.info("=".repeat(20));
