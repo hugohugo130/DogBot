@@ -132,7 +132,8 @@ module.exports = {
         const client = interaction.client;
         const subcommand = interaction.options.getSubcommand();
 
-        const [emoji_idCard,
+        const [
+            emoji_idCard,
             emoji_timer,
             emoji_job,
             emoji_adventure,
