@@ -334,7 +334,6 @@ module.exports = {
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
 
-
         const bake_data_all = await load_bake_data();
         const bake_data = bake_data_all[userId];
         const rpg_data = await load_rpg_data(userId);
