@@ -314,8 +314,7 @@ module.exports = {
             };
 
             case "get": {
-                // if (farm_data.farms.length === 0) {
-                if (!farm_data.waterAt) { // 行吧，YEE的機制也是這樣的。
+                if (!farm_data.waterAt && farm_data.farms.length === 0) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你還沒有農田`)
@@ -374,8 +373,7 @@ module.exports = {
                     return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
-                // if (farm_data.farms.length === 0) {
-                if (!farm_data.waterAt) { // 行吧，YEE的機制是這樣的，那我也這樣寫
+                if (!farm_data.waterAt && farm_data.farms.length === 0) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你的農田還沒有任何作物`)
