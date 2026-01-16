@@ -1447,7 +1447,7 @@ module.exports = {
                     const queue = getQueue(guildId, true);
 
                     const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
-                    if (!notPlayingEmbed) {
+                    if (notPlayingEmbed) {
                         return await interaction.update({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
                     };
 
