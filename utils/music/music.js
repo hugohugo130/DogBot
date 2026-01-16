@@ -1074,7 +1074,7 @@ function IsValidURL(str) {
 async function noMusicIsPlayingEmbed(queue, interaction = null, client = global._client) {
     const emoji_cross = await get_emoji("crosS", client);
 
-    return queue?.isPlaying?.() && queue?.currentTrack
+    return !queue?.isPlaying?.() || !queue?.currentTrack
         ? new EmbedBuilder()
             .setColor(embed_error_color)
             .setTitle(`${emoji_cross} | 沒有音樂正在播放`)
