@@ -48,7 +48,8 @@ const {
     getQueue,
     saveQueue,
     noMusicIsPlayingEmbed,
-    loopStatus
+    loopStatus,
+    youHaveToJoinVC_Embed
 } = require("../../utils/music/music.js");
 const {
     embed_default_color,
@@ -1336,17 +1337,10 @@ module.exports = {
                     if (!vconnection) {
                         const voiceChannel = interaction.member.voice.channel;
 
-                        const emoji_cross = await get_emoji("crosS", client);
-
-                        if (!voiceChannel) {
-                            const error_embed = new EmbedBuilder()
-                                .setColor(embed_error_color)
-                                .setTitle(`${emoji_cross} | 你需要先進到一個語音頻道`)
-                                .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
-                                .setEmbedFooter(interaction);
-
-                            return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
-                        };
+                        if (!voiceChannel) return await interaction.followUp({
+                            embeds: [await youHaveToJoinVC_Embed(client)],
+                            flags: MessageFlags.Ephemeral,
+                        });
 
                         const voiceConnection = joinVoiceChannel({
                             channelId: voiceChannel.id,

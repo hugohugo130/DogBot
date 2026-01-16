@@ -6,7 +6,7 @@ const crypto = require("crypto");
 const { getNowPlayingEmbed } = require("./nowplaying.js");
 const { generateSessionId } = require("../../utils/random.js");
 const { get_emojis, get_emoji } = require("../../utils/rpg.js");
-const { search_until, IsValidURL, getAudioStream, getQueue, saveQueue } = require("../../utils/music/music.js");
+const { search_until, IsValidURL, getAudioStream, getQueue, saveQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 const { embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
@@ -98,15 +98,10 @@ module.exports = {
         const voiceChannel = interaction.member.voice.channel;
 
         if (!voiceChannel?.joinable || !voiceChannel?.speakable) {
-            const emoji_music = await get_emoji("music", client);
-
-            const error_embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setTitle(`${emoji_music} | 你需要先進到一個語音頻道`)
-                .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
-                .setEmbedFooter(interaction);
-
-            return interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+            return await interaction.reply({
+                embeds: [await youHaveToJoinVC_Embed(client)],
+                flags: MessageFlags.Ephemeral,
+            });
         };
 
         const guildId = interaction.guildId;

@@ -2,9 +2,9 @@ const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags, BaseInte
 
 const { get_emojis, get_emoji } = require("../../utils/rpg.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
-const { MusicQueue, MusicTrack, getQueue, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
+const { MusicQueue, MusicTrack, getQueue, noMusicIsPlayingEmbed, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
 const { loopStatus } = require("../../utils/music/music.js");
-const { embed_default_color, embed_error_color, DOCS, STATUS_PAGE } = require("../../utils/config.js");
+const { embed_default_color, DOCS, STATUS_PAGE } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -263,16 +263,11 @@ module.exports = {
         const guildId = interaction.guild.id;
         const queue = getQueue(guildId, false);
 
-        const emoji_cross = await get_emoji("crosS", client);
-
         if (!voiceChannel) {
-            const error_embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 你需要先進到一個語音頻道`)
-                .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
-                .setEmbedFooter(interaction);
-
-            return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+            return await interaction.reply({
+                embeds: [await youHaveToJoinVC_Embed(client)],
+                flags: MessageFlags.Ephemeral,
+            });
         };
 
         const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);

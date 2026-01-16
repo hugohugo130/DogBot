@@ -1,7 +1,7 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
 
 const { get_emojis } = require("../../utils/rpg.js");
-const { getQueue, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
+const { getQueue, noMusicIsPlayingEmbed, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
 const { get_me } = require("../../utils/discord.js");
 const { embed_error_color, embed_default_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
@@ -30,13 +30,10 @@ module.exports = {
         const [emoji_cross, emoji_skip] = await get_emojis(["crosS", "skip"], client);
 
         if (!voiceChannel) {
-            const error_embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 你需要先進到一個語音頻道`)
-                .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
-                .setEmbedFooter(interaction);
-
-            return interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+            return await interaction.reply({
+                embeds: [await youHaveToJoinVC_Embed(client)],
+                flags: MessageFlags.Ephemeral,
+            });
         };
 
         const clientMember = await get_me(interaction.guild);

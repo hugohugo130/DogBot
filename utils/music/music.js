@@ -1083,6 +1083,21 @@ async function noMusicIsPlayingEmbed(queue, interaction = null, client = global.
         : null;
 };
 
+/**
+ * 
+ * @param {DogClient} client - Discord Client
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function youHaveToJoinVC_Embed(client = global._client) {
+    const emoji_cross = await get_emoji("crosS", client);
+
+    return new EmbedBuilder()
+        .setColor(embed_error_color)
+        .setTitle(`${emoji_cross} | 你需要先進到一個語音頻道`)
+        .setDescription("若你已經在一個語音頻道，請確認我有權限看的到頻道，或是退出再重新加入一次語音頻道")
+        .setEmbedFooter(interaction);
+};
+
 module.exports = {
     getQueue,
     getQueues,
@@ -1095,6 +1110,7 @@ module.exports = {
     clear_duplicate_temp,
     IsValidURL,
     noMusicIsPlayingEmbed,
+    youHaveToJoinVC_Embed,
     MusicQueue,
     MusicTrack,
     loopStatus,
