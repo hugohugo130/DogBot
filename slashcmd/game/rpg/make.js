@@ -1,8 +1,7 @@
 const { SlashCommandBuilder } = require("discord.js");
 
-const { get_name_of_id, recipes, tags } = require("../../../utils/rpg.js");
+const { get_name_of_id, get_emojis, recipes, tags } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
-const { get_emoji } = require("../../../utils/rpg.js");
 const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
@@ -55,6 +54,8 @@ module.exports = {
         item = item.split("|");
         const item_id = item[0];
 
+        const [emoji_toolbox, emoji_cross] = await get_emojis(["toolbox", "crosS"], interaction.client);
+
         let item_need = {};
         let item_missing = [];
 
@@ -98,7 +99,7 @@ module.exports = {
             };
 
             const embed = new EmbedBuilder()
-                .setTitle("你沒有足夠的材料")
+                .setTitle(`${emoji_cross} | 你沒有足夠的材料`)
                 .setColor(embed_error_color)
                 .setDescription(`你缺少了 ${items.join("、")}`)
                 .setEmbedFooter(interaction);
@@ -117,10 +118,9 @@ module.exports = {
         rpg_data.inventory[item_id] += output_amount;
         await save_rpg_data(userid, rpg_data);
 
-        const emoji = await get_emoji("toolbox", interaction.client);
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
-            .setTitle(`${emoji} | 製作物品`)
+            .setTitle(`${emoji_toolbox} | 製作物品`)
             .setDescription(`你製作出了 \`${output_amount}\` 個 ${get_name_of_id(item_id)}`)
             .setEmbedFooter(interaction);
 
