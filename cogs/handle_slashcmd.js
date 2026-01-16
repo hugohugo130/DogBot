@@ -1,10 +1,11 @@
-const { Events, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
+const { Events, ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits, PermissionsBitField, GuildChannel } = require("discord.js");
 const util = require("util");
 
 const { get_logger } = require("../utils/logger.js");
 const { get_loophole_embed } = require("../utils/rpg.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");
 const DogClient = require("../utils/customs/client.js");
+const { get_me, get_channel } = require("../utils/discord.js");
 
 function parseOptions(options) {
     if (!options || options.length === 0) return "";
@@ -35,20 +36,22 @@ function getFinalOptions(options) {
     return current || [];
 };
 
+const logger = get_logger();
+const backend_logger = get_logger({ backend: true });
+
 module.exports = {
     name: Events.InteractionCreate,
     /**
      * 
-     * @param {DogClient} client 
+     * @param {DogClient} client
      * @param {ChatInputCommandInteraction} interaction 
-     * @returns 
+     * @returns {Promise<any>}
      */
     async execute(client, interaction) {
         if (!interaction.isChatInputCommand()) return;
-        const logger = get_logger();
-        const backend_logger = get_logger({ backend: true });
 
-        const username = interaction.user.globalName || interaction.user.username;
+        const user = interaction.user;
+        const username = user.globalName || user.username;
         const command = interaction.client.commands.get(interaction.commandName);
 
         if (!command) {
@@ -65,19 +68,43 @@ module.exports = {
             const guild = interaction.guild;
             const channel = interaction.channel;
 
+            const botMember = await get_me(guild);
+            const channelPermission = channel.permissionsFor(botMember);
+
             logger.info(`${username} 正在執行斜線指令: ${fullCommand}${optionsStr ? `, 選項: ${optionsStr}` : ""}`);
 
             const embed = new EmbedBuilder()
                 .setTitle("指令執行")
-                .addFields({ name: "指令執行者", value: interaction.user.toString() })
+                .addFields({ name: "指令執行者", value: user.toString() })
                 .addFields({ name: "指令名稱", value: fullCommand })
                 .addFields({ name: "選項", value: optionsStr ? optionsStr : "無" })
-                .addFields({ name: "伺服器", value: `${guild.name} (${guild.id})` })
-                .addFields({ name: "頻道", value: `${channel.name} (${channel.id})` });
+                .addFields({ name: "伺服器", value: `${guild?.name} (${guild?.id})` })
+                .addFields({ name: "頻道", value: `${channel?.name} (${channel?.id})` });
 
             backend_logger.info(embed);
 
-            interaction.client = client;
+            // interaction的reply 需要 read message history 權限
+
+            /** @type {bigint[]} */
+            const permissionNeeded = [PermissionFlagsBits.ReadMessageHistory];
+
+            if (command.perm?.length) permissionNeeded.push(...command.perm);
+
+            const missingPerms = permissionNeeded.filter(perm => !channelPermission.has(perm));
+
+            const permKeys = Object.keys(PermissionFlagsBits);
+
+            if (missingPerms.length > 0) {
+                try {
+                    if (!interaction.replied || !interaction.deferred) await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+
+                    return interaction.followUp({
+                        content: `機器人缺少以下權限:\n${missingPerms.map(perm => `\`${permKeys.find(key => PermissionFlagsBits[key] === perm) ?? perm}\``).join("\n")}`.slice(0, 2000),
+                        flags: MessageFlags.Ephemeral,
+                    });
+                } catch { };
+            };
+
             await command.execute(interaction, client);
         } catch (error) {
             const errorStack = util.inspect(error, { depth: null });

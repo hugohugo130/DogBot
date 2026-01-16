@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction, ActionRowBuilder, StringSelectMenuBuilder } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");
 const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
 const { Soundcloud } = require("soundcloud.ts");
 const crypto = require("crypto");
@@ -15,14 +15,11 @@ const DogClient = require("../../utils/customs/client.js");
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
 
-function generateSHA256(input) {
-    const md5Hash = crypto.createHash('sha256');
-
-    md5Hash.update(input);
-    return md5Hash.digest('hex');
-};
-
 module.exports = {
+    perm: [
+        [PermissionFlagsBits.ViewChannel],
+        [PermissionFlagsBits.SendMessages],
+    ],
     data: new SlashCommandBuilder()
         .setName("play")
         .setNameLocalizations({
@@ -117,7 +114,7 @@ module.exports = {
         const voiceConnection = getVoiceConnection(guildId);
 
         // 連接到語音頻道
-        if (voiceConnection?.joinConfig?.channelId || voiceConnection?.joinConfig?.channelId !== voiceChannel.id) {
+        if (voiceConnection?.joinConfig?.channelId && voiceConnection.joinConfig.channelId !== voiceChannel.id) {
             const emoji_cross = await get_emoji("crosS", client);
 
             const embed = new EmbedBuilder()
@@ -189,11 +186,11 @@ module.exports = {
 
             queue.subscribe();
 
-            queue.addTrack(track);
-
             const [embed, rows] = await getNowPlayingEmbed(queue, track, interaction, client, true);
 
-            if (!queue.isPlaying()) {
+            if (queue.isPlaying()) {
+                queue.addTrack(track);
+            } else {
                 await queue.play(track);
             };
 
