@@ -183,7 +183,7 @@ async function getNowPlayingRows(queue, client = global._client) {
                 .setStyle(IsTrendingOn ? ButtonStyle.Success : ButtonStyle.Secondary), // Success按下去後關閉，Secondary按下去後啟用
 
             new ButtonBuilder()
-                .setCustomId("refresh|any|music")
+                .setCustomId("refresh|any|nowplaying")
                 .setEmoji(emoji_loop)
                 .setLabel("更新")
                 .setStyle(ButtonStyle.Success),

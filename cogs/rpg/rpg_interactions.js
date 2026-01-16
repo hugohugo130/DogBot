@@ -543,6 +543,8 @@ module.exports = {
      */
     execute: async function (client, interaction) {
         try {
+            const { getBotInfoEmbed } = require("../../slashcmd/info.js");
+
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
             const message = interaction.message;
@@ -1395,8 +1397,6 @@ module.exports = {
                     return await interaction.editReply({ content: "", embeds: [embed], components: rows });
                 };
                 case "refresh": {
-                    const { getBotInfoEmbed } = require("../../slashcmd/info.js");
-
                     const [_, feature] = otherCustomIDs;
 
                     switch (feature) {
@@ -1414,12 +1414,12 @@ module.exports = {
                             break;
                         };
 
-                        case "music": {
+                        case "nowplaying": {
                             const queue = getQueue(interaction.guildId, true);
 
-                            if (!queue.isPlaying() || !queue.currentTrack || !queue.currentResource) {
-                                const embed = await noMusicIsPlayingEmbed(interaction, client);
+                            const notPlayingEmbed = await noMusicIsPlayingEmbed(interaction, client);
 
+                            if (notPlayingEmbed) {
                                 return interaction.update({ content: "", embeds: [embed], components: [] });
                             };
 
