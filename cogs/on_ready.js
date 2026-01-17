@@ -4,8 +4,8 @@ const util = require("util");
 const { get_logger } = require("../utils/logger.js");
 const { checkDBFilesDefault } = require("../utils/check_db_files.js");
 const { run_schedule } = require("../utils/run_schedule.js");
-const { BotName } = require("../utils/config.js");
 const { safeshutdown } = require("../utils/safeshutdown.js");
+const { BotName } = require("../utils/config.js");
 const DogClient = require("../utils/customs/client.js");
 
 const logger = get_logger();
