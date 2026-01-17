@@ -1443,7 +1443,7 @@ module.exports = {
 
                     const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
                     if (notPlayingEmbed) {
-                        return await interaction.update({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
+                        return await interaction.update({ embeds: [notPlayingEmbed] });
                     };
 
                     switch (feature) {
