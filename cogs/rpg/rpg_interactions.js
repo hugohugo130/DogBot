@@ -1431,15 +1431,6 @@ module.exports = {
                             await interaction.update({ content: `${emoji_music} | 正在播放`, embeds: [embed], components: rows });
                             break;
                         };
-
-                        case "queue-list": {
-                            const queue = getQueue(interaction.guildId, true);
-
-                            const [embed, row] = await getQueueListEmbedRow(queue, interaction, client);
-
-                            await interaction.update({ embeds: [embed], components: [row] });
-                            break;
-                        };
                     };
 
                     break;
@@ -1554,6 +1545,15 @@ module.exports = {
                                 interaction.update({ content: `${emoji_wumpusWave} | \`${user.username}\` 讓我離開語音頻道`, embeds: [] }),
                             ]);
 
+                            break;
+                        };
+
+                        case "page": {
+                            const queue = getQueue(interaction.guildId, true);
+
+                            const [embed, row] = await getQueueListEmbedRow(queue, parseInt(options) ?? 1, interaction, client);
+
+                            await interaction.update({ embeds: [embed], components: [row] });
                             break;
                         };
                     };

@@ -33,7 +33,9 @@ const loopStatus = Object.freeze({
     TRACK: 1,
     ALL: 2,
     AUTO: 3,
-})
+});
+
+const queueListTrackPerPage = 7;
 
 const DEBUG = false;
 
@@ -1085,10 +1087,11 @@ async function noMusicIsPlayingEmbed(queue, interaction = null, client = global.
 
 /**
  * 
+ * @param {BaseInteraction} [interaction]
  * @param {DogClient} client - Discord Client
  * @returns {Promise<EmbedBuilder>}
  */
-async function youHaveToJoinVC_Embed(client = global._client) {
+async function youHaveToJoinVC_Embed(interaction = null, client = global._client) {
     const emoji_cross = await get_emoji("crosS", client);
 
     return new EmbedBuilder()
@@ -1114,4 +1117,5 @@ module.exports = {
     MusicQueue,
     MusicTrack,
     loopStatus,
+    queueListTrackPerPage,
 };
