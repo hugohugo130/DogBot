@@ -3,7 +3,7 @@ const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, Bu
 const { get_name_of_id, get_id_of_name, get_emojis, is_cooldown_finished, userHaveEnoughItems, wrong_job_embed, farm_slots } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
 const { convertToSecondTimestamp, DateNow, DateNowSecond } = require("../../../utils/timestamp.js");
-const { choice, randint } = require("../../../utils/random.js");
+const { randint } = require("../../../utils/random.js");
 const { embed_default_color, embed_error_color, rpg_lvlUp_per, probabilities } = require("../../../utils/config.js");
 const DogClient = require("../../../utils/customs/client.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
@@ -59,38 +59,87 @@ async function get_farm_info_embed(user, interaction = null, client = global._cl
     return [embed, row];
 };
 
-function get_harvest_items(amount) {
-    const farm_probability = probabilities.farm;
+/**
+ * 根據權重隨機選擇物品
+ * @param {Object} items - 物品字典
+ * @param {number} totalWeight - 總權重（預先計算以提高效率）
+ * @returns {string} - 選中的物品ID
+ */
+function weightedChoice(items, totalWeight) {
+    const randomValue = Math.floor(Math.random() * totalWeight);
+    let cumulativeWeight = 0;
 
-    /*
-    {
-        "key": [amount, ...],
-        "key2": [amount, ...],
-        ...
-    }
- 
-    -> [key * amount, key2 * amount, ...]
-    */
-    const res = [];
-    for (const [key, value] of Object.entries(farm_probability)) {
-        res.push(...Array(value[0]).fill(key));
-    };
-
-    const results = {};
-
-    for (let i = 0; i < amount; i++) {
-        const item = choice(res);
-        const item_data = farm_probability[item];
-        const amount = randint(item_data[1], item_data[2]);
-
-        if (results[item]) {
-            results[item] += amount;
-        } else {
-            results[item] = amount;
+    for (const [itemId, data] of Object.entries(items)) {
+        cumulativeWeight += data[0]; // 權重
+        if (randomValue < cumulativeWeight) {
+            return itemId;
         };
     };
 
-    return results;
+    // 如果由於浮點數精度問題到達這裡，返回最後一個物品
+    return Object.keys(items)[Object.keys(items).length - 1];
+};
+
+/**
+ * 獲取收穫物品
+ * @param {number} amount - 需要獲得的物品總數
+ * @returns {Object} - 物品ID到數量的映射字典
+ */
+function get_harvest_items(amount) {
+    const farm_probability = probabilities.farm;
+
+    // 計算總權重
+    let totalWeight = Object.values(farm_probability).reduce((sum, data) => sum + data[0], 0);
+
+    const result = {};
+    let remainingAmount = amount;
+    let attempts = 0;
+    const maxAttempts = amount * 10; // 防止無限循環
+
+    // 先選擇哪些物品會被獲得
+    while (remainingAmount > 0 && attempts < maxAttempts) {
+        attempts++;
+
+        // 隨機選擇一個物品
+        const selectedItem = weightedChoice(farm_probability, totalWeight);
+        const [_, minQty, maxQty] = farm_probability[selectedItem];
+
+        // 隨機決定該物品的數量
+        const quantity = randint(minQty, maxQty);
+
+        // 如果該物品的數量不會超過剩餘需求，則添加
+        if (quantity <= remainingAmount) {
+            // 如果已經有該物品，增加數量；否則新增
+            result[selectedItem] = (result[selectedItem] || 0) + quantity;
+            remainingAmount -= quantity;
+        }
+        // 如果只剩少量需求，可以選擇小數量的物品
+        else if (minQty <= remainingAmount) {
+            result[selectedItem] = (result[selectedItem] || 0) + remainingAmount;
+            remainingAmount = 0;
+        };
+    };
+
+    // 如果還有剩餘數量，調整最後一個物品的數量
+    if (remainingAmount !== 0) {
+        const itemIds = Object.keys(result);
+        if (itemIds.length > 0) {
+            const lastItem = itemIds[itemIds.length - 1];
+
+            // 計算調整後的值
+            const newQuantity = result[lastItem] + remainingAmount;
+
+            // 確保數量不會變為負數
+            if (newQuantity > 0) {
+                result[lastItem] = newQuantity;
+            } else {
+                // 如果調整後變為0或負數，移除該物品
+                delete result[lastItem];
+            };
+        };
+    };
+
+    return result;
 };
 
 module.exports = {
