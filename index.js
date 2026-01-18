@@ -13,6 +13,7 @@ const { getServerIPSync } = require("./utils/getSeverIPSync.js");
 const { getQueues, clear_duplicate_temp } = require("./utils/music/music.js");
 const DogClient = require("./utils/customs/client.js");
 const util = require("util");
+const { check_language_keys } = require("./utils/language.js");
 require("dotenv").config();
 
 const args = process.argv.slice(2);
@@ -88,7 +89,6 @@ client.once(Events.ClientReady, async () => {
         } else if (input === "fstop") {
             process.exit(0);
         } else if (input === "music") {
-
             const musicQueues = getQueues();
 
             const playingPlayers = musicQueues.filter(queue => queue.isPlaying()).size;
@@ -122,6 +122,7 @@ client.once(Events.ClientReady, async () => {
     // Promise.all也可以用於非async函數
     await Promise.all([
         checkDBFilesExists(),
+        check_language_keys(),
         check_item_data(),
         clear_duplicate_temp(),
     ]);

@@ -1,4 +1,4 @@
-const { SlashCommandBuilder } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
 
 const { setRPG } = require("../../../utils/file.js");
 
@@ -28,13 +28,20 @@ module.exports = {
                 .setRequired(true),
         )
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
+    /**
+     *
+     * @param {ChatInputCommandInteraction} interaction
+     * @returns {Promise<any>}
+     */
     async execute(interaction) {
+        if (!interaction.guild) return await interaction.reply({ content: "你不在伺服器內執行這個指令！", flags: MessageFlags.Ephemeral });
+
         await interaction.deferReply();
-        if (!interaction.guild) return interaction.editReply({ content: "你不在伺服器內執行這個指令！" })
+
         const enable = interaction.options.getBoolean("enable");
         const guildID = interaction.guildId;
 
-        setRPG(guildID, enable);
+        await setRPG(guildID, enable);
 
         await interaction.editReply({ content: `已${enable ? "啟用" : "停用"}RPG遊戲` });
     },

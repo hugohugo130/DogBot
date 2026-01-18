@@ -118,7 +118,7 @@ module.exports = {
                 .setDescription(`你必須待在 <#${voiceConnection.joinConfig.channelId}> 裡面`)
                 .setEmbedFooter(interaction);
 
-            return interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
+            return await interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
         await interaction.deferReply();
@@ -149,13 +149,13 @@ module.exports = {
                 .setDescription(`${emoji_cross} | url無效: HTTP Error ${audioStatusCode}`)
                 .setEmbedFooter(interaction);
 
-            return interaction.editReply({ content: "", embeds: [embed] });
+            return await interaction.editReply({ content: "", embeds: [embed] });
         };
 
         const tracks = await search_until(query, 25, will_play_audio_url);
 
         if (tracks.length === 0) {
-            return interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
+            return await interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
         };
 
         if (tracks.length === 1) {
@@ -189,7 +189,7 @@ module.exports = {
                 await queue.play(track);
             };
 
-            return interaction.editReply({ content: "", embeds: [embed], components: rows });
+            return await interaction.editReply({ content: "", embeds: [embed], components: rows });
         };
 
         const maxTrackIdLength = Math.max(...tracks.map(track => String(track.id).length));
@@ -204,8 +204,8 @@ module.exports = {
                     .setPlaceholder("選擇音樂")
                     .addOptions(
                         ...tracks.map((track) => ({
-                            label: track.title,
-                            description: `${track.author} · ${formatMinutesSeconds(track.duration)}`,
+                            label: track.title.slice(0, 100),
+                            description: `${track.author} · ${formatMinutesSeconds(track.duration)}`.slice(0, 100),
                             value: `${trackSessionID}|${track.id}`
                         }))
                     ),

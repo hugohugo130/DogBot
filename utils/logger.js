@@ -139,15 +139,35 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
 };
 
 /**
- * 
- * @param {number | null} depth 
- * @returns {string}
+ *
+ * @param {number | null | "list"} depth
+ * @returns {string | string[]}
  */
 function getCallerModuleName(depth = 4) {
     if (!depth) {
         const err = new Error();
 
         return err.stack || err;
+    };
+
+    if (depth === "list") {
+        const err = new Error();
+
+        const callers = [];
+        const stackLines = err.stack.split("\n");
+        for (let i = 1; i < stackLines.length; i++) {
+            const callerLine = stackLines[i];
+            const match = callerLine.match(/\((.*):(\d+):(\d+)\)$/) || callerLine.match(/(.*):(\d+):(\d+)$/);
+            if (match) {
+                const fullPath = match[1];
+                const fileName = fullPath.split(/[\\/]/).pop();
+                const lineNumber = match[2];
+                const columnNumber = match[3];
+                callers.push(`${fileName.replace(".js", "")}:${lineNumber}:${columnNumber}`);
+            };
+        };
+
+        return callers;
     };
 
     let res = "unknown";

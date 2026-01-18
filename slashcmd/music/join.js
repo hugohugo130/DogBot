@@ -47,7 +47,7 @@ module.exports = {
                 .setDescription(`你必須待在 <#${queue.connection?.joinConfig?.channelId || queue.voiceChannel.id}> 裡面`)
                 .setEmbedFooter(interaction);
 
-            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+            return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
         await interaction.deferReply();

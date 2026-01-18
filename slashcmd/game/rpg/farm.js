@@ -260,14 +260,13 @@ module.exports = {
 
         const cooldown_key = `farm_water`;
 
-        const [rpg_data, farm_data] = await Promise.all([
-            load_rpg_data(userId),
+        const rpg_data = await load_rpg_data(userId);
+        const [farm_data, [wrongJobEmbed, row]] = await Promise.all([
             load_farm_data(userId),
+            wrong_job_embed(rpg_data, "/farm", userId, interaction, interaction.client),
         ]);
 
-        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/farm", userId, interaction, interaction.client);
-
-        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
+        if (wrongJobEmbed) return await interaction.reply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
 
         const [
             emoji_farmer,
@@ -363,13 +362,22 @@ module.exports = {
             };
 
             case "get": {
-                if (!farm_data.waterAt && farm_data.farms.length === 0) {
-                    const embed = new EmbedBuilder()
-                        .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 你還沒有農田`)
-                        .setEmbedFooter(interaction);
+                if (farm_data.farms.length === 0) {
+                    if (farm_data.waterAt) {
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_error_color)
+                            .setTitle(`${emoji_cross} | 你還沒有農田`)
+                            .setEmbedFooter(interaction);
 
-                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                        return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                    } else {
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_error_color)
+                            .setTitle(`${emoji_cross} | 你的農田沒有正在種植的田地`)
+                            .setEmbedFooter(interaction);
+
+                        return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                    };
                 };
 
                 const completed_farms = farm_data.farms.filter(farm => DateNowSecond() >= farm.endsAt);

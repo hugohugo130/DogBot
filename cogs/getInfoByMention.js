@@ -23,7 +23,8 @@ module.exports = {
             const InfoEmbed = new EmbedBuilder()
                 .setColor(embed_default_color)
                 .setDescription(`
-**狗狗機器犬**
+**${client.name}**
+🐶 我是一隻狗狗，我會在伺服器裡為大家服務！
 
 ————————————
 

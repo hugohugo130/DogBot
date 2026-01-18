@@ -46,7 +46,7 @@ module.exports = {
                     .setDescription(`你必須待在 <#${queue.connection?.channel?.id}> 裡面`)
                     .setEmbedFooter(interaction);
 
-                return interaction.editReply({ embeds: [embed] });
+                return await interaction.editReply({ embeds: [embed] });
             };
         };
 
@@ -66,6 +66,6 @@ module.exports = {
             .setTitle(`${emoji_skip} | 跳過 \`${skippedTrack.title}\``)
             .setEmbedFooter(interaction);
 
-        return interaction.editReply({ embeds: [embed] });
+        return await interaction.editReply({ embeds: [embed] });
     },
 };

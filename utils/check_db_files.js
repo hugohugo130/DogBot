@@ -189,7 +189,7 @@ async function checkDBFilesDefault(client) {
 
     await make_db_compatible(users, guilds);
 
-    logger.info(`資料庫檔案檢查完成, 耗時 ${(Date.now() - start_time).toFixed(2)}ms`);
+    logger.info(`資料庫檔案檢查完成, 耗時 ${Date.now() - start_time}ms`);
 };
 
 module.exports = {

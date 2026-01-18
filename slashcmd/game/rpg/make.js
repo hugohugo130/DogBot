@@ -46,15 +46,17 @@ module.exports = {
         await interaction.deferReply();
 
         const userid = interaction.user.id;
-        let rpg_data = await load_rpg_data(userid);
+
+        const [rpg_data, [emoji_toolbox, emoji_cross]] = await Promise.all([
+            load_rpg_data(userid),
+            get_emojis(["toolbox", "crosS"], interaction.client),
+        ]);
 
         let item = interaction.options.getString("物品");
         const amount = interaction.options.getInteger("數量") ?? 1;
 
         item = item.split("|");
         const item_id = item[0];
-
-        const [emoji_toolbox, emoji_cross] = await get_emojis(["toolbox", "crosS"], interaction.client);
 
         let item_need = {};
         let item_missing = [];
@@ -73,11 +75,12 @@ module.exports = {
                         break;
                     };
                 };
+
                 if (!id.startsWith("#")) {
                     real_id = id;
                 } else {
                     real_id = need_item[0];
-                }
+                };
             }
             item_need[real_id] = (item_need[real_id] || 0) + count * amount;
         };

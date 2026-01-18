@@ -328,18 +328,26 @@ module.exports = {
                     .setRequired(false),
             ),
         ),
+    /**
+     *
+     * @param {ChatInputCommandInteraction} interaction
+     * @returns {Promise<any>}
+     */
     async execute(interaction) {
-        await interaction.deferReply();
-
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
 
-        const bake_data_all = await load_bake_data();
-        const bake_data = bake_data_all[userId];
         const rpg_data = await load_rpg_data(userId);
+        const [bake_data_all, [wrongJobEmbed, row]] = await Promise.all([
+            load_bake_data(),
+            wrong_job_embed(rpg_data, "/bake", userId, interaction, interaction.client),
+        ]);
 
-        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/bake", userId, interaction, interaction.client);
-        if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
+        if (wrongJobEmbed) return await interaction.reply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
+
+        await interaction.deferReply();
+
+        const bake_data = bake_data_all[userId];
 
         if (subcommand === "bake") {
             const emoji_cross = await get_emoji("crosS", interaction.client);
@@ -534,7 +542,7 @@ module.exports = {
 
             };
 
-            return interaction.editReply({ embeds });
+            return await interaction.editReply({ embeds });
         };
     },
     divide,

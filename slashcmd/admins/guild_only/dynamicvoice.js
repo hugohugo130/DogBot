@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChannelType } = require("discord.js");
+const { SlashCommandBuilder, ChannelType, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
 
 const { setDynamicVoice } = require("../../../utils/file.js");
 
@@ -29,10 +29,15 @@ module.exports = {
                 .setRequired(false),
         )
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
+    /**
+     *
+     * @param {ChatInputCommandInteraction} interaction
+     * @returns {Promise<any>}
+     */
     async execute(interaction) {
-        await interaction.deferReply();
+        if (!interaction.guild) return await interaction.reply({ content: "你不在伺服器內執行這個指令！", flags: MessageFlags.Ephemeral });
 
-        if (!interaction.guild) return interaction.editReply({ content: "你不在伺服器內執行這個指令！" })
+        await interaction.deferReply();
 
         const channel = interaction.options.getChannel("vchannel") ?? false;
         const guildID = interaction.guildId;

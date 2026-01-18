@@ -98,7 +98,7 @@ module.exports = {
                 try {
                     if (!interaction.replied || !interaction.deferred) await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-                    return interaction.followUp({
+                    return await interaction.followUp({
                         content: `機器人缺少以下權限:\n${missingPerms.map(perm => `\`${permKeys.find(key => PermissionFlagsBits[key] === perm) ?? perm}\``).join("\n")}`.slice(0, 2000),
                         flags: MessageFlags.Ephemeral,
                     });

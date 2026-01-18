@@ -1,7 +1,7 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
 const { ChatInputCommandInteraction, SlashCommandSubcommandBuilder, ButtonStyle, BaseInteraction, ActionRowBuilder, ButtonBuilder } = require("discord.js");
 
-const { get_emojis, get_emoji } = require("../../utils/rpg.js");
+const { get_emojis } = require("../../utils/rpg.js");
 const { getQueue, MusicQueue, queueListTrackPerPage } = require("../../utils/music/music.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 const { embed_default_color, embed_error_color } = require("../../utils/config.js");
@@ -130,7 +130,7 @@ module.exports = {
                         "zh-CN": "要移除的歌曲位置",
                         "zh-TW": "要移除的歌曲位置"
                     })
-                    .setMaxValue(1)
+                    .setMinValue(1)
                     .setRequired(false),
             ),
         ),
@@ -140,18 +140,21 @@ module.exports = {
      * @param {DogClient} client
     */
     execute: async (interaction, client) => {
-        await interaction.deferReply();
+        const [_, subcommand, queue, [emoji_cross, emoji_playlist]] = await Promise.all([
+            interaction.deferReply(),
+            interaction.options.getSubcommand(false),
+            getQueue(interaction.guildId),
+            get_emojis(["crosS", "playlist"], client),
+        ]);
 
-        const queue = getQueue(interaction.guildId);
-
-        const emoji_cross = await get_emoji("crosS", client);
-
-        switch (interaction.options.getSubcommand(false)) {
-            case "list":
+        switch (subcommand) {
+            case "list": {
                 const [embed, row] = await getQueueListEmbedRow(queue, 1, interaction, client);
 
                 return await interaction.editReply({ embeds: [embed], components: [row] });
-            case "remove":
+            };
+
+            case "remove": {
                 const index = (interaction.options.getInteger("song", false) ?? 1) - 1;
 
                 const track = queue.tracks[index];
@@ -164,7 +167,15 @@ module.exports = {
                     return await interaction.editReply({ embeds: [error_embed] });
                 };
 
-                break;
+                queue.removeTrack(index);
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_playlist} | 成功移除 \`${track.title}\``)
+                    .setEmbedFooter(interaction);
+
+                return await interaction.editReply({ embeds: [embed] });
+            };
         };
     },
     getQueueListEmbedRow,

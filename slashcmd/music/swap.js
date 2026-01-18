@@ -74,7 +74,7 @@ module.exports = {
                     .setDescription(`你必須待在 <#${queue.connection?.channel?.id || clientMember.voice.channelId}> 裡面`)
                     .setEmbedFooter(interaction);
 
-                return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
             };
         };
 
@@ -94,7 +94,7 @@ module.exports = {
                 .setTitle(`${emoji_cross} | 重複的索引`)
                 .setEmbedFooter(interaction);
 
-            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+            return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
         const firstTrack = queue.tracks[first - 1];
@@ -108,11 +108,11 @@ module.exports = {
                 .setTitle(`${emoji_cross} | 未知的第${wrongTrack}首索引`)
                 .setEmbedFooter(interaction);
 
-            return interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+            return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
         queue.swapTracks(first - 1, second - 1);
 
-        return interaction.reply({ content: `${emoji_loop} 成功交換了兩首歌 \`${firstTrack.title}\` 和 \`${secondTrack.title}\`` });
+        return await interaction.reply({ content: `${emoji_loop} 成功交換了兩首歌 \`${firstTrack.title}\` 和 \`${secondTrack.title}\`` });
     },
 };

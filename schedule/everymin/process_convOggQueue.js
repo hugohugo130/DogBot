@@ -12,7 +12,9 @@ async function execFFmpegCommand(cmdData) {
     if (!cmd || !input || !output) return;
 
     logger.info(`[執行中..] FFmpeg 指令: ${cmd}`);
+
     await execPromise(cmd);
+
     logger.info(`[執行完畢] FFmpeg 指令: ${cmd}`);
 };
 

@@ -126,7 +126,7 @@ function safeJSONParse(jsonString, defaultValue = {}) {
     } catch (error) {
         const errorStack = util.inspect(error, { depth: null });
 
-        logger.warn(`JSON 解析失敗: ${errorStack}`);
+        logger.warn(`JSON 解析失敗:\n${errorStack}\n${getCallerModuleName(null)}`);
         return defaultValue;
     };
 };
@@ -569,6 +569,7 @@ async function getPrefixes(guildID) {
  * @returns {Promise<object>}
  */
 async function load_rpg_data(userid) {
+    logger.debug(`load_rpg_data(${userid}) - ${getCallerModuleName("list")}`);
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     if (await exists(rpg_database_file)) {
@@ -592,6 +593,7 @@ async function load_rpg_data(userid) {
  * @returns {object}
  */
 function load_rpg_dataSync(userid) {
+    logger.debug(`load_rpg_dataSync(${userid}) - ${getCallerModuleName("list")}`);
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     if (existsSync(rpg_database_file)) {
@@ -616,6 +618,7 @@ function load_rpg_dataSync(userid) {
  * @returns {Promise<void>}
  */
 async function save_rpg_data(userid, rpg_data) {
+    logger.debug(`save_rpg_data(${userid}) - ${getCallerModuleName("list")}`);
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     let data = {};
@@ -650,6 +653,7 @@ async function save_rpg_data(userid, rpg_data) {
  * @returns {void}
  */
 function save_rpg_dataSync(userid, rpg_data) {
+    logger.debug(`save_rpg_dataSync(${userid}) - ${getCallerModuleName("list")}`);
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     let data = {};

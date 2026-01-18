@@ -258,193 +258,204 @@ module.exports = {
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
 
-        let rpg_data = await load_rpg_data(userId);
-        const smelt_data_all = await load_smelt_data();
-        const smelt_data = smelt_data_all[userId];
+        const rpg_data = await load_rpg_data(userId);
+        const [smelt_data_all, [wrongJobEmbed, row]] = await Promise.all([
+            load_smelt_data(),
+            wrong_job_embed(rpg_data, "/smelt", userId, interaction, interaction.client),
+        ]);
 
-        const [wrongJobEmbed, row] = await wrong_job_embed(rpg_data, "/smelt", userId, interaction, interaction.client);
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
+
+        const smelt_data = smelt_data_all[userId];
 
         const [emoji_cross, emoji_furnace] = await get_emojis(["crosS", "furnace"], interaction.client);
 
-        if (subcommand === "smelt") {
-            const smelt_remain_slots = smelter_slots - (smelt_data?.length || 0);
+        switch (subcommand) {
+            case "smelt": {
+                const smelt_remain_slots = smelter_slots - (smelt_data?.length || 0);
 
-            if (smelt_remain_slots < 1) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你的煉金爐已經滿了`)
-                    .setEmbedFooter(interaction);
+                if (smelt_remain_slots < 1) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你的煉金爐已經滿了`)
+                        .setEmbedFooter(interaction);
 
-                return await interaction.followUp({ embeds: [embed] });
-            };
-
-            const item_id = interaction.options.getString("recipe");
-            let items = item_id ? [item_id] : [];
-            let choosedAmount = Boolean(interaction.options.getInteger("amount"));
-            let amounts = [interaction.options.getInteger("amount") ?? 1];
-            const allAmount = interaction.options.getBoolean("all") ?? false;
-            const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
-
-            if (!item_id && !choosedAmount && !allAmount && !auto_amount) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 蛤？ 🤔 你什麼也不選`)
-                    .setEmbedFooter(interaction);
-
-                return await interaction.followUp({ embeds: [embed] });
-            };
-
-            if (!item_id && amounts[0] && !allAmount && !auto_amount) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 蛤？ 🤔 你選了數量然後?`)
-                    .setEmbedFooter(interaction);
-
-                return await interaction.followUp({ embeds: [embed] });
-            };
-
-            if (item_id && auto_amount === "foods") {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 什麼拉🤣 你選了礦物又選了自動選擇礦物 那我要選什麼阿`)
-                    .setEmbedFooter(interaction);
-
-                return await interaction.followUp({ embeds: [embed] });
-            };
-
-            if (allAmount && auto_amount) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 什麼拉🤣 你選了全部礦物又選了自動選擇礦物 那我要選什麼阿`)
-                    .setEmbedFooter(interaction);
-
-                return await interaction.followUp({ embeds: [embed] });
-            };
-
-            if (!item_id && auto_amount === "amount") {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你選了自動選擇數量但沒選礦物 蛤？`)
-                    .setEmbedFooter(interaction);
-
-                return await interaction.followUp({ embeds: [embed] });
-            };
-
-            if (allAmount && !auto_amount) {
-                amounts = [rpg_data.inventory[item_id] || 1];
-            } else if (auto_amount) {
-                if (auto_amount === "amount") {
-                    amounts = divide(rpg_data.inventory[item_id], smelt_remain_slots);
-                } else { // auto_amount === "foods"
-                    const entries = Object.entries(rpg_data.inventory)
-                        .filter(([key]) => key in bake) // 過濾掉不可熔鍊的物品
-                        .sort(([, valueA], [, valueB]) => valueB - valueA) // 按數量降序排序
-                        .slice(0, smelt_remain_slots); // 取前 {smelt_remain_slots} 個物品
-
-                    items = entries.map(([key]) => key);
-                    amounts = entries.map(([, value]) => value);
+                    return await interaction.followUp({ embeds: [embed] });
                 };
-            };
 
-            const total_need_coal = Math.ceil(amounts.reduce((sum, amount) => sum + amount, 0) / 2);
-            const coal_amount = rpg_data.inventory["coal"] || 0;
+                const item_id = interaction.options.getString("recipe");
+                let items = item_id ? [item_id] : [];
+                let choosedAmount = Boolean(interaction.options.getInteger("amount"));
+                let amounts = [interaction.options.getInteger("amount") ?? 1];
+                const allAmount = interaction.options.getBoolean("all") ?? false;
+                const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
 
-            if (coal_amount < total_need_coal) {
-                const item_list = [{
-                    name: "coal",
-                    amount: total_need_coal - coal_amount,
-                }];
+                if (!item_id && !choosedAmount && !allAmount && !auto_amount) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 蛤？ 🤔 你什麼也不選`)
+                        .setEmbedFooter(interaction);
 
-                return await interaction.followUp({ embeds: [await notEnoughItemEmbed(item_list)] });
-            };
-
-            for (const [index, item] of items.entries()) {
-                const amount = amounts[index];
-                if (!amount) continue;
-
-                await smelt_smelt(interaction, item, amount, index === 0 ? 1 : 2);
-            };
-        } else if (subcommand === "info") {
-            const used_slots = smelt_data ? smelt_data.length : 0;
-            const current_time = Math.floor(Date.now() / 1000);
-
-            const embed = new EmbedBuilder()
-                .setColor(embed_default_color)
-                .setTitle(`${emoji_furnace} | 你的煉金爐使用狀況`)
-                .setDescription(`使用率 \`[${used_slots} / ${smelter_slots}]\``)
-                .setEmbedFooter(interaction);
-
-            if (!smelt_data || smelt_data.length === 0) {
-                embed.setDescription(`使用率 \`[${used_slots} / ${smelter_slots}]\`\n\n你的煉金爐目前是空的`);
-            } else {
-                for (let i = 0; i < Math.min(25, smelt_data.length); i++) {
-                    const item = smelt_data[i];
-                    const input_name = name[item.item_id] || item.item_id;
-                    const output_name = name[item.output_item_id] || item.output_item_id;
-
-                    const total_duration = item.amount * 60;
-                    const start_time = item.end_time - total_duration;
-                    const elapsed_time = current_time - start_time;
-                    const progress = Math.min(100, Math.max(0, (elapsed_time / total_duration) * 100));
-
-                    const time_ago = `<t:${item.end_time}:R>`;
-
-                    embed.addFields({
-                        name: `${i + 1}. ${input_name} x${item.amount}`,
-                        value: `=> ${output_name}x${item.output_amount} (完成度：${Math.round(progress)}% ${time_ago})`,
-                        inline: false
-                    });
+                    return await interaction.followUp({ embeds: [embed] });
                 };
+
+                if (!item_id && amounts[0] && !allAmount && !auto_amount) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 蛤？ 🤔 你選了數量然後?`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.followUp({ embeds: [embed] });
+                };
+
+                if (item_id && auto_amount === "foods") {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 什麼拉🤣 你選了礦物又選了自動選擇礦物 那我要選什麼阿`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.followUp({ embeds: [embed] });
+                };
+
+                if (allAmount && auto_amount) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 什麼拉🤣 你選了全部礦物又選了自動選擇礦物 那我要選什麼阿`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.followUp({ embeds: [embed] });
+                };
+
+                if (!item_id && auto_amount === "amount") {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你選了自動選擇數量但沒選礦物 蛤？`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.followUp({ embeds: [embed] });
+                };
+
+                if (allAmount && !auto_amount) {
+                    amounts = [rpg_data.inventory[item_id] || 1];
+                } else if (auto_amount) {
+                    if (auto_amount === "amount") {
+                        amounts = divide(rpg_data.inventory[item_id], smelt_remain_slots);
+                    } else { // auto_amount === "foods"
+                        const entries = Object.entries(rpg_data.inventory)
+                            .filter(([key]) => key in bake) // 過濾掉不可熔鍊的物品
+                            .sort(([, valueA], [, valueB]) => valueB - valueA) // 按數量降序排序
+                            .slice(0, smelt_remain_slots); // 取前 {smelt_remain_slots} 個物品
+
+                        items = entries.map(([key]) => key);
+                        amounts = entries.map(([, value]) => value);
+                    };
+                };
+
+                const total_need_coal = Math.ceil(amounts.reduce((sum, amount) => sum + amount, 0) / 2);
+                const coal_amount = rpg_data.inventory["coal"] || 0;
+
+                if (coal_amount < total_need_coal) {
+                    const item_list = [{
+                        name: "coal",
+                        amount: total_need_coal - coal_amount,
+                    }];
+
+                    return await interaction.followUp({ embeds: [await notEnoughItemEmbed(item_list)] });
+                };
+
+                for (const [index, item] of items.entries()) {
+                    const amount = amounts[index];
+                    if (!amount) continue;
+
+                    await smelt_smelt(interaction, item, amount, index === 0 ? 1 : 2);
+                };
+                break;
             };
 
-            await interaction.editReply({ embeds: [embed] });
-        } else if (subcommand === "get") {
-            if (!smelt_data || smelt_data.length === 0) {
+            case "info": {
+                const used_slots = smelt_data ? smelt_data.length : 0;
+                const current_time = Math.floor(Date.now() / 1000);
+
                 const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 你的煉金爐是空的`)
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_furnace} | 你的煉金爐使用狀況`)
+                    .setDescription(`使用率 \`[${used_slots} / ${smelter_slots}]\``)
+                    .setEmbedFooter(interaction);
+
+                if (!smelt_data || smelt_data.length === 0) {
+                    embed.setDescription(`使用率 \`[${used_slots} / ${smelter_slots}]\`\n\n你的煉金爐目前是空的`);
+                } else {
+                    for (let i = 0; i < Math.min(25, smelt_data.length); i++) {
+                        const item = smelt_data[i];
+                        const input_name = name[item.item_id] || item.item_id;
+                        const output_name = name[item.output_item_id] || item.output_item_id;
+
+                        const total_duration = item.amount * 60;
+                        const start_time = item.end_time - total_duration;
+                        const elapsed_time = current_time - start_time;
+                        const progress = Math.min(100, Math.max(0, (elapsed_time / total_duration) * 100));
+
+                        const time_ago = `<t:${item.end_time}:R>`;
+
+                        embed.addFields({
+                            name: `${i + 1}. ${input_name} x${item.amount}`,
+                            value: `=> ${output_name}x${item.output_amount} (完成度：${Math.round(progress)}% ${time_ago})`,
+                            inline: false
+                        });
+                    };
+                };
+
+                await interaction.editReply({ embeds: [embed] });
+                break;
+            };
+
+            case "get": {
+                if (!smelt_data || smelt_data.length === 0) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你的煉金爐是空的`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.editReply({ embeds: [embed] });
+                };
+
+                const index = interaction.options.getInteger("編號") - 1;
+                if (index < 0 || index >= smelt_data.length) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 錯誤的物品編號`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.editReply({ embeds: [embed] });
+                };
+
+                const item = smelt_data[index];
+                const current_time = Math.floor(Date.now() / 1000);
+                if (current_time < item.end_time) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 熔鍊還沒完成`)
+                        .setFooter({ text: `等待至 <t:${item.end_time}:R>` })
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.editReply({ embeds: [embed] });
+                };
+
+                // 將熔鍊完成的物品加入背包
+                rpg_data.inventory[item.output_item_id] = (rpg_data.inventory[item.output_item_id] || 0) + item.output_amount;
+                // 從煉金爐移除該物品
+                smelt_data.splice(index, 1);
+                // 儲存資料
+                await save_smelt_data(smelt_data_all);
+                await save_rpg_data(userId, rpg_data);
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_furnace} | 成功從煉金爐取出了 ${name[item.output_item_id] || item.output_item_id}x${item.output_amount}`)
                     .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
             };
-
-            const index = interaction.options.getInteger("編號") - 1;
-            if (index < 0 || index >= smelt_data.length) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 錯誤的物品編號`)
-                    .setEmbedFooter(interaction);
-
-                return await interaction.editReply({ embeds: [embed] });
-            };
-
-            const item = smelt_data[index];
-            const current_time = Math.floor(Date.now() / 1000);
-            if (current_time < item.end_time) {
-                const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
-                    .setTitle(`${emoji_cross} | 熔鍊還沒完成`)
-                    .setFooter({ text: `等待至 <t:${item.end_time}:R>` })
-                    .setEmbedFooter(interaction);
-
-                return await interaction.editReply({ embeds: [embed] });
-            };
-
-            // 將熔鍊完成的物品加入背包
-            rpg_data.inventory[item.output_item_id] = (rpg_data.inventory[item.output_item_id] || 0) + item.output_amount;
-            // 從煉金爐移除該物品
-            smelt_data.splice(index, 1);
-            // 儲存資料
-            await save_smelt_data(smelt_data_all);
-            await save_rpg_data(userId, rpg_data);
-
-            const embed = new EmbedBuilder()
-                .setColor(embed_default_color)
-                .setTitle(`${emoji_furnace} | 成功從煉金爐取出了 ${name[item.output_item_id] || item.output_item_id}x${item.output_amount}`)
-                .setEmbedFooter(interaction);
-
-            return await interaction.editReply({ embeds: [embed] });
         };
     },
 };

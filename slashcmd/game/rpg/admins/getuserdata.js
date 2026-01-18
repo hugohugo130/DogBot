@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction } = require("discord.js");
+const { SlashCommandBuilder, ChatInputCommandInteraction, AttachmentBuilder, FileBuilder, MessageFlags } = require("discord.js");
 
 const { load_rpg_data, writeJson, join_temp_folder } = require("../../../../utils/file.js");
 const { embed_default_color, admins } = require("../../../../utils/config.js");
@@ -56,14 +56,14 @@ module.exports = {
         )
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
     /**
-     * 
-     * @param {ChatInputCommandInteraction} interaction 
+     *
+     * @param {ChatInputCommandInteraction} interaction
      * @returns {Promise<any>}
      */
     async execute(interaction) {
         if (!admins.includes(interaction.user.id)) return
 
-        await interaction.deferReply();
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const user = interaction.options.getUser("user");
         const rpg_data = await load_rpg_data(user.id);
@@ -86,16 +86,28 @@ module.exports = {
             "privacy": [],
         */
 
-        const filename = `rpg_data@${user.id}@${Math.floor(rpg_data)}`
+        const filename = `rpg_data-${user.id}-${Math.floor(Date.now())}.json`;
         const filePath = join_temp_folder(filename);
         await writeJson(filePath, rpg_data);
+
+        const attachment = new AttachmentBuilder(filePath)
+            .setName(filename);
+
+        const fileComponent = new FileBuilder()
+            .setURL(`attachment://${filename}`);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${user.username}的RPG數據`)
             .setTimestamp();
 
-        await interaction.editReply({ embeds: [embed], files: [filePath] });
+        await interaction.editReply({
+            content:null,
+            embeds: [embed],
+            files: [attachment],
+            components: [fileComponent],
+            flags: MessageFlags.IsComponentsV2,
+        });
 
         // const msgs = [
         //     Object.entries(rpg_data?.inventory)

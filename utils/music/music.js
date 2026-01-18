@@ -592,6 +592,14 @@ class MusicQueue {
     };
 
     /**
+     * Remove a track by its index.
+     * @param {number} trackIndex - The index of the track to remove
+     */
+    removeTrack(trackIndex) {
+        this.tracks.splice(trackIndex, 1);
+    };
+
+    /**
      * Shuffle the queue.
      * @returns {MusicTrack[]} - The shuffled queue.
      */
@@ -650,7 +658,7 @@ function filenamify(string, { fileMode = false } = {}) {
  *
  * @param {string} [guildID]
  * @param {boolean} [create=true]
- * @returns {MusicQueue}
+ * @returns {MusicQueue | null}
  */
 function getQueue(guildID, create = true) {
     const queueExists = queues.get(guildID);

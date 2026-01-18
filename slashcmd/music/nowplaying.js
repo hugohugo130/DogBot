@@ -1,5 +1,7 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags, BaseInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const util = require("util");
 
+const { get_logger } = require("../../utils/logger.js");
 const { get_emojis, get_emoji } = require("../../utils/rpg.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 const { MusicQueue, MusicTrack, getQueue, noMusicIsPlayingEmbed, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
@@ -136,9 +138,6 @@ async function getNowPlayingRows(queue, client = global._client) {
             break;
         };
         default: {
-            const util = require("util");
-            const { get_logger } = require("../../utils/logger.js");
-
             const logger = get_logger();
             logger.warn(`[${queue.guildID}] 的loopstatus是 ${queue.loopStatus}，而不是0,1,2,3\n${util.inspect(queue, { depth: null })}`);
             queue.setLoopStatus(loopStatus.DISABLED);

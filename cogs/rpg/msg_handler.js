@@ -42,6 +42,7 @@ const {
     shop_lowest_price,
     sell_data,
     jobs,
+    PrivacySettings,
 } = require("../../utils/rpg.js");
 const {
     load_rpg_data,
@@ -152,29 +153,6 @@ async function redirect({ client, message, command, mode = 0 }) {
 
     if (mode === 1) return message_args;
     return await message.reply(message_args);
-};
-
-/**
- * 
- * @param {DogClient} client 
- * @param {EmbedBuilder} embed 
- * @param {string} [text=""]
- * @param {object | string | null} [rpg_data=null] 顯示飽食度，傳入rpg_data或user id
- * @param {boolean} [force=false] text參數將不會增加飽食度或機器犬文字
- * @returns {EmbedBuilder}
- */
-// [DEPRECATED] setEmbedFooter 和 setEmbedAuthor 已移至 EmbedBuilder 類別方法
-// 向後兼容
-function setEmbedFooter(client = global._client, embed, text = "", rpg_data = null, force = false) {
-    logger.warn(`setEmbedFooter 已棄用，請改用 EmbedBuilder.setEmbedFooter 方法, called from:\n${getCallerModuleName(null)}`)
-    return embed.setEmbedFooter({ text, rpg_data, force, client });
-};
-
-// [DEPRECATED] setEmbedFooter 和 setEmbedAuthor 已移至 EmbedBuilder 類別方法
-// 向後兼容
-function setEmbedAuthor(client = global._client, embed, author = "") {
-    logger.warn(`setEmbedAuthor 已棄用，請改用 EmbedBuilder.setEmbedAuthor 方法, called from:\n${getCallerModuleName(null)}`)
-    return embed.setEmbedAuthor(author, client);
 };
 
 /**
@@ -1247,6 +1225,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             };
 
             let amount = await get_amount(food_id, user, args[1]);
+            const force_eat = (args[2] ?? args[1])?.toLowerCase().trim() === "force";
+            // if (force_eat && !amount) amount = 1;
 
             if (amount < 1) {
                 const embed = new EmbedBuilder()
@@ -1290,8 +1270,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             let newadd = add * amount;
             if ((rpg_data.hunger + newadd) > max_hunger) {
-                const force_eat = args[2]?.toLowerCase().trim() === "force";
-
                 const old_amount = amount;
 
                 const new_amount = Math.floor((max_hunger - rpg_data.hunger) / add);
@@ -1316,13 +1294,13 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你會吃太飽撐死!`)
-                    .setDescription(`你想吃掉\`${old_amount.toLocaleString()}\` 個 \`${food_name}\` \n但你最多只能吃掉 \`${amount}\` 個 \`${food_name}\``)
+                    .setDescription(`你想吃掉\`${old_amount.toLocaleString()}\` 個 \`${food_name}\`\n但你最多只能吃掉 \`${amount}\` 個 \`${food_name}\``)
                     .setEmbedFooter();
 
                 if (force_eat) {
                     embed.setColor(embed_warn_color)
-                    embed.setTitle(`${emoji_cross} | 爆體保護被停用！`)
-                        .setDescription(`你停用了爆體保護，浪費了 \`${newadd - new_newadd}\` 飽食度`);
+                        .setTitle(`${emoji_cross} | 爆體保護被停用！`)
+                        .setDescription(`你停用了爆體保護，浪費了 \`${(rpg_data.hunger + newadd) - max_hunger}\` 飽食度`);
                 };
 
                 extra_embeds.push(embed);
@@ -2271,11 +2249,8 @@ module.exports = {
     redirect_data_reverse,
     rpg_actions,
     redirect,
-    get_number_of_items,
-    randint,
-    setEmbedFooter,
-    setEmbedAuthor,
-    MockMessage,
     rpg_handler,
+    get_number_of_items,
     find_redirect_targets_from_id,
+    MockMessage,
 };

@@ -1,4 +1,5 @@
 const { Locale } = require("discord.js");
+
 const { get_logger } = require("./logger");
 
 /**
@@ -96,39 +97,122 @@ Since <t:{1}:R>`,
 const logger = get_logger();
 
 /**
- * 檢查所有語言是否都有相同的 key
+ * 檢查所有語言中的翻譯鍵是否完整
+ * 收集所有語言中所有分類及其鍵，然後逐個語言檢查每個分類中是否有相應的鍵
+ * 如果缺少鍵則使用 logger.warn 記錄警告
  */
 function check_language_keys() {
-    // 收集所有語言的所有category和key
-    const all_keys = new Set();
-    for (const lang in language) {
-        for (const category in language[lang]) {
-            for (const key in language[lang][category]) {
-                all_keys.add(`${category}.${key}`);
+    const logger = get_logger();
+
+    // 收集所有語言中所有分類及其鍵的集合
+    const allCategories = new Set();
+
+    /** @type {Map<string, Set<string>>} */
+    const allKeysByCategory = new Map();
+
+    // 第一步：收集所有語言中的所有分類和鍵
+    for (const locale of Object.values(Locale)) {
+        if (!language[locale]) continue;
+
+        const localeData = language[locale];
+
+        for (const [category, translations] of Object.entries(localeData)) {
+            // 添加分類到集合
+            allCategories.add(category);
+
+            // 初始化該分類的鍵集合（如果還不存在）
+            if (!allKeysByCategory.has(category)) {
+                allKeysByCategory.set(category, new Set());
             };
+
+            // 收集該分類下的所有鍵（遞歸處理嵌套對象）
+            collectKeys(translations, '', allKeysByCategory.get(category));
         };
     };
 
-    // 檢查每個語言是否都有相應category中的key
-    for (const lang in language) {
-        for (const category in language[lang]) {
-            for (const key of all_keys) {
-                if (!language[lang][category][key]) {
-                    logger.warn(`Language ${lang} is missing key ${category}.${key}`);
+    // 第二步：逐個語言檢查每個分類中是否有相應的鍵
+    for (const locale of Object.values(Locale)) {
+        if (!language[locale]) continue;
+
+        const localeData = language[locale];
+        const localeName = getLocaleName(locale);
+
+        // 檢查每個分類
+        for (const category of allCategories) {
+            const expectedKeys = allKeysByCategory.get(category);
+            if (!expectedKeys || expectedKeys.size === 0) continue;
+
+            // 獲取該語言中該分類的翻譯對象
+            const categoryTranslations = localeData[category];
+
+            if (!categoryTranslations) {
+                // 該語言完全缺少這個分類
+                logger.warn(`語言 "${localeName}" (${locale}) 缺少分類 "${category}"`);
+                continue;
+            };
+
+            // 收集該語言中該分類的所有鍵
+            const actualKeys = new Set();
+            collectKeys(categoryTranslations, '', actualKeys);
+
+            // 檢查缺少哪些鍵
+            for (const expectedKey of expectedKeys) {
+                if (!actualKeys.has(expectedKey)) {
+                    logger.warn(`語言 "${localeName}" (${locale}) 的分類 "${category}" 缺少鍵 "${expectedKey}"`);
+                };
+            };
+
+            // 檢查是否有額外的鍵（不在所有鍵集合中的鍵）
+            for (const actualKey of actualKeys) {
+                if (!expectedKeys.has(actualKey)) {
+                    logger.warn(`語言 "${localeName}" (${locale}) 的分類 "${category}" 有多餘的鍵 "${actualKey}"`);
                 };
             };
         };
     };
 };
 
-// 想問一個問題，像上面check language keys是一個sync function
-// 那麼我直接加上async讓他變成async function，但沒有用到任何await的話，他是不是也會在await func() 的時候不阻塞主執行緒？
-// 回答我: 
+/**
+ * 遞歸收集對象中的所有鍵（使用點號表示法）
+ * @param {Object} obj - 要收集鍵的對象
+ * @param {string} prefix - 當前鍵的前綴
+ * @param {Set<string>} keysSet - 存儲鍵的集合
+ * @returns {void}
+ */
+function collectKeys(obj, prefix, keysSet) {
+    if (!obj || typeof obj !== 'object') return;
+
+    for (const [key, value] of Object.entries(obj)) {
+        const fullKey = prefix ? `${prefix}.${key}` : key;
+
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            // 如果是嵌套對象，遞歸收集
+            collectKeys(value, fullKey, keysSet);
+        } else {
+            // 如果是葉子節點，添加鍵到集合
+            keysSet.add(fullKey);
+        };
+    };
+};
 
 /**
- * 
+ * 獲取語言的名稱（用於日誌輸出）
+ * @param {string} locale - 語言代碼
+ * @returns {string} 語言名稱
+ */
+function getLocaleName(locale) {
+    const localeNames = {
+        [Locale.EnglishUS]: "英文（美式）",
+        [Locale.ChineseTW]: "中文（繁體）",
+    };
+
+    return localeNames[locale] || locale;
+};
+
+/**
+ *
  * @param {string} lang
- * @param {Locale | string} [default_lang]
+ * @param {string} [default_lang]
  * @returns {object}
  */
 function get_lang(lang, default_lang = Locale.ChineseTW) {
@@ -138,10 +222,10 @@ function get_lang(lang, default_lang = Locale.ChineseTW) {
 };
 
 /**
- * 
- * @param {Locale | string} lang
+ *
+ * @param {string} lang
  * @param {string} category
- * @param {Locale | string} [default_lang]
+ * @param {string} [default_lang]
  * @returns {object}
  */
 function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
@@ -154,10 +238,10 @@ function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
 };
 
 /**
- * 
- * @param {Locale | string | null} lang
+ * 獲取語言資料
+ * @param {string | null} lang
  * @param {string} category
- * @param {Locale | string} key
+ * @param {string} key
  * @param {string[]} replace - 文字中需要的變量
  * @returns {string}
  */

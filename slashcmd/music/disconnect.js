@@ -48,7 +48,7 @@ module.exports = {
                 .setTitle(`${emoji_cross} | 我不在一個語音頻道`)
                 .setEmbedFooter(interaction);
 
-            return interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
+            return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         } else if (queue.voiceChannel.id !== voiceChannel.id) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -56,10 +56,12 @@ module.exports = {
                 .setDescription(`你必須待在 <#${queue.voiceChannel?.id}> 裡面`)
                 .setEmbedFooter(interaction);
 
-            return interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
+            return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
-        queue.destroy();
-        await interaction.reply(`👋 | 掰掰`);
+        await Promise.all([
+            queue.destroy(),
+            interaction.reply(`👋 | 掰掰`),
+        ]);
     },
 };

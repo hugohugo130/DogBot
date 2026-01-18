@@ -1420,7 +1420,7 @@ module.exports = {
                             const notPlayingEmbed = await noMusicIsPlayingEmbed(interaction, client);
 
                             if (notPlayingEmbed) {
-                                return interaction.update({ content: "", embeds: [embed], components: [] });
+                                return await interaction.update({ content: "", embeds: [notPlayingEmbed], components: [] });
                             };
 
                             const [emoji_music, [embed, rows]] = await Promise.all([
@@ -1568,7 +1568,7 @@ module.exports = {
 
             const loophole_embeds = await get_loophole_embed(errorStack, interaction, client);
 
-            if (!interaction.deferred) await interaction.deferReply();
+            if (!interaction.deferred || !interaction.replied) await interaction.deferReply({ flags: MessageFlags.Ephemeral });
             await interaction.followUp({ embeds: loophole_embeds, flags: MessageFlags.Ephemeral });
         };
     },

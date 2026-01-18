@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, EmbedBuilder } = require("discord.js");
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, EmbedBuilder, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
 
 const { addPrefix, rmPrefix, getPrefixes } = require("../../../utils/file.js");
 const { embed_default_color, reserved_prefixes } = require("../../../utils/config.js");
@@ -80,40 +80,45 @@ module.exports = {
             }),
         )
         .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
+    /**
+     *
+     * @param {ChatInputCommandInteraction} interaction
+     * @returns {Promise<any>}
+     */
     async execute(interaction) {
-        await interaction.deferReply();
+        if (!interaction.guild) return await interaction.reply({ content: "你不在伺服器內執行這個指令！", flags: MessageFlags.Ephemeral });
 
         const subcommand = interaction.options.getSubcommand();
 
-        if (!interaction.guild) return interaction.editReply({ content: "你不在伺服器內執行這個指令！" })
+        const prefix = interaction.options.getString("prefix")?.trim();
 
         if (subcommand === "add") {
-            const prefix = interaction.options.getString("prefix")?.trim();
             if (!prefix) return;
 
             const guildID = interaction.guildId;
 
-            const res = addPrefix(guildID, prefix);
+            const res = await addPrefix(guildID, prefix);
 
-            if (!res) return await interaction.editReply({ content: "這個前綴已經存在了！" });
+            if (!res) return await interaction.reply({ content: "這個前綴已經存在了！", flags: MessageFlags.Ephemeral });
 
-            await interaction.editReply({ content: `已增加前綴：${prefix}` });
+            await interaction.reply({ content: `已增加前綴：${prefix}` });
         } else if (subcommand === "remove") {
-            const prefix = interaction.options.getString("prefix")?.trim();
             if (!prefix) return;
 
             const guildID = interaction.guildId;
 
             if (reserved_prefixes.includes(prefix)) {
-                return await interaction.editReply({ content: "這是一個已保留的前綴，無法移除。" });
+                return await interaction.reply({ content: "這是一個已保留的前綴，無法移除。", flags: MessageFlags.Ephemeral });
             };
 
-            const res = rmPrefix(guildID, prefix);
+            const res = await rmPrefix(guildID, prefix);
 
-            if (!res) return await interaction.editReply({ content: "這個前綴不存在！" });
+            if (!res) return await interaction.reply({ content: "這個前綴不存在！", flags: MessageFlags.Ephemeral });
 
-            await interaction.editReply({ content: `已移除前綴：${prefix}` });
+            await interaction.reply({ content: `已移除前綴：${prefix}` });
         } else if (subcommand === "list") {
+            await interaction.deferReply();
+
             const guildID = interaction.guildId;
             const prefixes = reserved_prefixes
                 .concat(await getPrefixes(guildID))
@@ -125,11 +130,7 @@ module.exports = {
                 .setDescription(prefixes.join("\n"))
                 .setFooter({ text: `${prefixes.length} 個前綴` })
 
-            // if (prefixes.length === 0) {
-            // await interaction.editReply({ content: "此伺服器沒有設定任何前綴！" });
-            // } else {
             await interaction.editReply({ embeds: [embed] });
-            // };
         }
     },
 };

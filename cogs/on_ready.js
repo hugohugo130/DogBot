@@ -41,14 +41,6 @@ module.exports = {
 
         logger.info(`機器人 ${client.name} 啟動成功`);
         logger.info(`好欸！已經有${client.guilds.cache.size}個伺服器在使用${client.name}了！`);
-        client.user.setPresence({
-            activities: [
-                {
-                    name: `啟動時間: ${new Date().toLocaleString()}`,
-                    type: ActivityType.Custom,
-                },
-            ],
-        });
 
         process.on("SIGTERM", async () => {
             await handle_shutdown("SIGTERM", client);
@@ -58,6 +50,16 @@ module.exports = {
             await handle_shutdown("SIGINT", client);
         });
 
-        await checkDBFilesDefault(client);
+        await Promise.all([
+            client.user.setPresence({
+                activities: [
+                    {
+                        name: `啟動時間: ${new Date().toLocaleString()}`,
+                        type: ActivityType.Custom,
+                    },
+                ],
+            }),
+            checkDBFilesDefault(client),
+        ]);
     },
 }
