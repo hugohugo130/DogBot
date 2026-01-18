@@ -61,11 +61,9 @@ module.exports = {
      * @returns {Promise<any>}
      */
     async execute(interaction) {
-        await interaction.deferReply();
+        if (!admins.includes(interaction.user.id)) return
 
-        if (!admins.includes(interaction.user.id)) {
-            return await interaction.editReply({ content: "你沒有權限使用這個指令" });
-        };
+        await interaction.deferReply();
 
         const user = interaction.options.getUser("user");
         const rpg_data = await load_rpg_data(user.id);
