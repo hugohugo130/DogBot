@@ -173,7 +173,7 @@ module.exports = {
                     return message.reply("請標記一個用戶！");
                 };
 
-                const rpg_data = add_item(load_rpg_data(user.id), item, parseInt(amount));
+                const rpg_data = add_item(await load_rpg_data(user.id), item, parseInt(amount));
                 await save_rpg_data(user.id, rpg_data);
 
                 return message.reply(`done adding user ${user.toString()} 's inventory: ${item}*${amount}`);
