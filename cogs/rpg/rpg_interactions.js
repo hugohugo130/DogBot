@@ -36,6 +36,7 @@ const {
     smelter_slots,
     oven_slots,
     PrivacySettings,
+    get_emojis,
 } = require("../../utils/rpg.js");
 const {
     get_farm_info_embed,
@@ -558,7 +559,7 @@ module.exports = {
             const customIdParts = interaction.customId.split("|");
             const interactionCategory = customIdParts[0];
             const originalUserId = customIdParts[1];
-            const otherCustomIDs = customIdParts.slice(1); // 移除 customId 的ID (類別)
+            const otherCustomIDs = customIdParts.slice(1); // 移除 customId 的 Category 部分
 
             const locale = interaction.locale;
 
@@ -866,7 +867,7 @@ module.exports = {
                 };
                 case "buy":
                 case "buyc": {
-                    let [_, buyerUserId, targetUserId, amount, price, item] = interaction.customId.split("|");
+                    let [_, buyerUserId, targetUserId, amount, price, item] = otherCustomIDs;
 
                     await interaction.deferUpdate();
 
@@ -875,12 +876,12 @@ module.exports = {
                     amount = parseInt(amount);
                     price = parseInt(price);
 
-                    const emoji_cross = await get_emoji("crosS", client);
-                    const emoji_store = await get_emoji("store", client);
-
-                    const buyerRPGData = await load_rpg_data(buyerUserId);
-                    const targetUserRPGData = await load_rpg_data(targetUserId);
-                    const targetUserShopData = await load_shop_data(targetUserId);
+                    const [[emoji_cross, emoji_store], buyerRPGData, targetUserRPGData, targetUserShopData] = await Promise.all([
+                        get_emojis(["crosS", "store"], client),
+                        load_rpg_data(buyerUserId),
+                        load_rpg_data(targetUserId),
+                        load_shop_data(targetUserId),
+                    ]);
 
                     const item_data = targetUserShopData.items[item];
 
@@ -933,7 +934,7 @@ module.exports = {
 
                     if (isConfirm) await interaction.followUp({
                         content: `${emoji_store} | 你同意了 <@${buyerUserId}> 以 \`${total_price}$\` 購買 ${item_name} \`x${amount}\` 的交易`,
-                        flags: MessageFlags.Ephemeral
+                        flags: MessageFlags.Ephemeral,
                     });
 
                     const embed = new EmbedBuilder()
