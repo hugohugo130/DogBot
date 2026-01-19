@@ -345,8 +345,10 @@ async function process_send_queue(client) {
 };
 
 /**
- * 
- * @param {boolean} quiet
+ * 關閉所有 logger
+ * @param {boolean} [quiet]
+ * @param {number} [wait]
+ * @returns {Promise<void>}
  */
 async function shutdown(quiet = false, wait = 1000) {
     for (const [name, logger] of loggerManager) {
