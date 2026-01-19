@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, AttachmentBuilder, FileBuilder, MessageFlags } = require("discord.js");
+const { SlashCommandBuilder, ChatInputCommandInteraction, AttachmentBuilder, FileBuilder, MessageFlags, TextDisplayBuilder, ContainerBuilder } = require("discord.js");
 
 const { load_rpg_data, writeJson, join_temp_folder } = require("../../../../utils/file.js");
 const { embed_default_color, admins } = require("../../../../utils/config.js");
@@ -53,8 +53,7 @@ module.exports = {
                     "zh-TW": "要獲取數據的用戶",
                 })
                 .setRequired(true),
-        )
-        .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
+        ),
     /**
      *
      * @param {ChatInputCommandInteraction} interaction
@@ -96,16 +95,18 @@ module.exports = {
         const fileComponent = new FileBuilder()
             .setURL(`attachment://${filename}`);
 
-        const embed = new EmbedBuilder()
-            .setColor(embed_default_color)
-            .setTitle(`${user.username}的RPG數據`)
-            .setTimestamp();
+        const textDisplay = new TextDisplayBuilder()
+            .setContent(`${user.username}的RPG數據`);
+
+        const container = new ContainerBuilder()
+            .addTextDisplayComponents(textDisplay)
+            .addFileComponents(fileComponent);
 
         await interaction.editReply({
-            content:null,
-            embeds: [embed],
+            content: null,
+            embeds: null,
             files: [attachment],
-            components: [fileComponent],
+            components: [container],
             flags: MessageFlags.IsComponentsV2,
         });
 
