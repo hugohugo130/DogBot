@@ -883,7 +883,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             .setEmbedFooter();
 
         const confirmButton = new ButtonBuilder()
-            .setCustomId(`buy|${message.author.id}|${target_user.id}|${amount}|${item_exist.price}|${item}`)
+            .setCustomId(`buy|${message.author.id}|${message.author.id}|${target_user.id}|${amount}|${item_exist.price}|${item}`)
             .setLabel("確認購買")
             .setDisabled(!shop_data.status)
             .setStyle(ButtonStyle.Success);
@@ -898,7 +898,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
         if (!shop_data.status) {
             const solderConfirmButton = new ButtonBuilder()
-                .setCustomId(`buyc|${target_user.id}|${target_user.id}|${amount}|${item_exist.price}|${item}`)
+                .setCustomId(`buyc|${target_user.id}|${message.author.id}|${target_user.id}|${amount}|${item_exist.price}|${item}`)
                 .setLabel("店主確認")
                 .setStyle(ButtonStyle.Primary);
 
