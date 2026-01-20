@@ -27,9 +27,7 @@ module.exports = {
     async execute(interaction, client) {
         const voiceChannel = interaction.member.voice.channel;
         const guildId = interaction.guild.id;
-        const queue = getQueue(guildId, false);
 
-        const [emoji_cross, emoji_pause, emoji_play] = await get_emojis(["crosS", "pause", "play"], client);
 
         if (!voiceChannel) {
             return await interaction.reply({
@@ -38,12 +36,17 @@ module.exports = {
             });
         };
 
+        const [[emoji_cross, emoji_pause, emoji_play], queue] = await Promise.all([
+            get_emojis(["crosS", "pause", "play"], client),
+            getQueue(guildId, false),
+        ]);
+
         const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
         if (notPlayingEmbed) {
             return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };
 
-        const connection = queue.connection || getVoiceConnection(guildId);
+        const connection = getVoiceConnection(guildId);
 
         if (connection && connection.joinConfig.channelId !== voiceChannel.id) {
             const embed = new EmbedBuilder()
