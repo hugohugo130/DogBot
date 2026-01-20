@@ -64,7 +64,10 @@ module.exports = {
             });
         };
 
-        const clientMember = await get_me(interaction.guild);
+        const [clientMember, queue] = await Promise.all([
+            get_me(interaction.guild),
+            getQueue(interaction.guildId, false),
+        ]);
 
         if (clientMember.voice.channelId) {
             if (clientMember.voice.channelId !== voiceChannel.id) {
@@ -78,7 +81,6 @@ module.exports = {
             };
         };
 
-        const queue = getQueue(interaction.guildId, false);
 
         const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
         if (notPlayingEmbed) {
@@ -111,8 +113,9 @@ module.exports = {
             return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
-        queue.swapTracks(first - 1, second - 1);
-
-        return await interaction.reply({ content: `${emoji_loop} 成功交換了兩首歌 \`${firstTrack.title}\` 和 \`${secondTrack.title}\`` });
+        await Promise.all([
+            queue.swapTracks(first - 1, second - 1),
+            interaction.reply({ content: `${emoji_loop} 成功交換了兩首歌 \`${firstTrack.title}\` 和 \`${secondTrack.title}\`` }),
+        ]);
     },
 };
