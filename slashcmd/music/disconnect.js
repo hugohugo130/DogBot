@@ -5,6 +5,7 @@ const { get_emoji } = require("../../utils/rpg.js");
 const { embed_error_color } = require("../../utils/config.js");
 const DogClient = require("../../utils/customs/client.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
+const { get_channel } = require("../../utils/discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -39,7 +40,9 @@ module.exports = {
         const vconnection = getVoiceConnection(interaction.guildId);
         if (vconnection) {
             if (!queue.connection) queue.connection = vconnection;
-            if (!queue.voiceChannel) queue.voiceChannel = await client.channels.fetch(vconnection.joinConfig.channelId);
+
+            const vchannel = await get_channel(interaction.guild, vconnection.joinConfig.channelId)
+            if (!queue.voiceChannel && vchannel) queue.setConnection(vchannel);
         };
 
         if (!queue.connection) {

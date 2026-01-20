@@ -41,16 +41,14 @@ const {
 const {
     get_farm_info_embed,
 } = require("../../slashcmd/game/rpg/farm.js");
-
 const {
     getNowPlayingEmbed,
 } = require("../../slashcmd/music/nowplaying.js");
 const {
     getQueue,
-    saveQueue,
     noMusicIsPlayingEmbed,
+    youHaveToJoinVC_Embed,
     loopStatus,
-    youHaveToJoinVC_Embed
 } = require("../../utils/music/music.js");
 const {
     embed_default_color,
@@ -60,6 +58,7 @@ const {
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 const { getQueueListEmbedRow } = require("../../slashcmd/music/queue.js");
+const { get_channel } = require("../../utils/discord.js");
 
 const logger = get_logger();
 
@@ -1354,20 +1353,22 @@ module.exports = {
                             adapterCreator: interaction.guild.voiceAdapterCreator,
                         });
 
-                        queue.connection = voiceConnection;
-                        queue.voiceChannel = voiceChannel;
-                        queue.textChannel = interaction.channel;
+                        queue.setConnection(voiceConnection);
+                        queue.setVoiceChannel(voiceChannel);
+                        queue.setTextChannel(interaction.channel);
                     } else if (!queue.connection) { // 強制把機器犬拉進來可能會這樣
-                        queue.connection = vconnection;
+                        queue.setConnection(vconnection);
+
                         if (vconnection.joinConfig.channelId) {
-                            queue.voiceChannel = await interaction.guild.channels.fetch(vconnection.joinConfig.channelId);
+                            const vchannel = await get_channel(interaction.guild, vconnection.joinConfig.channelId);
+                            if (vchannel) {
+                                queue.setVoiceChannel(vchannel);
+                            };
                         };
                     };
 
-                    if (!queue.textChannel && interaction.channel) queue.textChannel = interaction.channel;
+                    if (!queue.textChannel && interaction.channel) queue.setTextChannel(interaction.channel);
                     queue.subscribe();
-
-                    saveQueue(interaction.guildId, queue);
 
                     const [trackSessionID, trackID] = interaction.values[0].split("|");
                     const trackSession = client.musicTrackSession.get(trackSessionID)?.[trackID]?.[0];

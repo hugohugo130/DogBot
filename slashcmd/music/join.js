@@ -2,7 +2,7 @@ const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = requi
 const { joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
 
 const { get_emojis } = require("../../utils/rpg.js");
-const { getQueue, saveQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
+const { getQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
 const { embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
@@ -20,8 +20,8 @@ module.exports = {
             "zh-CN": "让机器人加入你的语音频道"
         }),
     /**
-     * 
-     * @param {ChatInputCommandInteraction} interaction 
+     *
+     * @param {ChatInputCommandInteraction} interaction
      * @param {DogClient} client
      */
     async execute(interaction, client) {
@@ -62,11 +62,10 @@ module.exports = {
             });
         };
 
-        queue.connection = connection;
-        queue.voiceChannel = voiceChannel;
-
-        saveQueue(guildId, queue);
-
-        return await interaction.editReply(`${emoji_voice} | 加入了 \`${interaction.user.username}\` 的語音頻道`);
+        await Promise.all([
+            queue.setConnection(connection),
+            queue.setVoiceChannel(voiceChannel),
+            interaction.editReply(`${emoji_voice} | 加入了 \`${interaction.user.username}\` 的語音頻道`),
+        ]);
     },
 };

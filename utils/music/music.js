@@ -354,7 +354,9 @@ class MusicQueue {
                     if (this.textChannel?.send) {
                         await this.textChannel.send({ embeds: [embed] });
                     };
-                } else if (
+                }
+
+                else if (
                     oldState.status === AudioPlayerStatus.Playing &&
                     newState.status === AudioPlayerStatus.Idle
                 ) {
@@ -622,6 +624,33 @@ class MusicQueue {
     };
 
     /**
+     * Set the connection of the queue.
+     * @param {VoiceConnection} connection
+     * @returns {void}
+     */
+    setConnection(connection) {
+        this.connection = connection;
+    };
+
+    /**
+     * Set the voice channel of the queue.
+     * @param {VoiceChannel} voiceChannel
+     * @returns {void}
+     */
+    setVoiceChannel(voiceChannel) {
+        this.voiceChannel = voiceChannel;
+    };
+
+    /**
+     * Set the text channel of the queue.
+     * @param {TextChannel} textChannel
+     * @returns {void}
+     */
+    setTextChannel(textChannel) {
+        this.textChannel = textChannel;
+    };
+
+    /**
      * Destroy the queue and stop the player.
      * @returns {void}
      */
@@ -681,18 +710,6 @@ function getQueue(guildID, create = true) {
  */
 function getQueues() {
     return queues;
-};
-
-/**
- *
- * @param {string} guildID
- * @param {MusicQueue} queue
- * @returns {MusicQueue}
- */
-function saveQueue(guildID, queue) {
-    queues.set(guildID, queue);
-
-    return queue;
 };
 
 /**
@@ -1111,7 +1128,6 @@ async function youHaveToJoinVC_Embed(interaction = null, client = global._client
 module.exports = {
     getQueue,
     getQueues,
-    saveQueue,
     getTrack,
     fixStructure,
     search_until,

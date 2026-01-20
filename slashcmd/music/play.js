@@ -1,12 +1,11 @@
 const { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");
 const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
 const { Soundcloud } = require("soundcloud.ts");
-const crypto = require("crypto");
 
 const { getNowPlayingEmbed } = require("./nowplaying.js");
 const { generateSessionId } = require("../../utils/random.js");
 const { get_emojis, get_emoji } = require("../../utils/rpg.js");
-const { search_until, IsValidURL, getAudioStream, getQueue, saveQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
+const { search_until, IsValidURL, getAudioStream, getQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 const { embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
@@ -162,8 +161,8 @@ module.exports = {
 
             const queue = getQueue(guildId);
 
-            if (!queue.voiceChannel) queue.voiceChannel = voiceChannel;
-            if (!queue.textChannel && interaction.channel) queue.textChannel = interaction.channel;
+            if (!queue.voiceChannel) queue.setVoiceChannel(voiceChannel);
+            if (!queue.textChannel && interaction.channel) queue.setTextChannel(interaction.channel);
             if (!queue.connection) {
                 const connection = getVoiceConnection(guildId) || joinVoiceChannel({
                     channelId: voiceChannel.id,
@@ -173,11 +172,10 @@ module.exports = {
                     adapterCreator: interaction.guild.voiceAdapterCreator,
                 });
 
-                queue.connection = connection;
+                queue.setConnection(connection);
             };
 
-            const [_, __, [embed, rows]] = await Promise.all([
-                saveQueue(guildId, queue),
+            const [_, [embed, rows]] = await Promise.all([
                 queue.subscribe(),
                 getNowPlayingEmbed(queue, track, interaction, client, true),
             ]);
@@ -188,7 +186,7 @@ module.exports = {
                 await queue.play(track);
             };
 
-            return await interaction.editReply({ content: "", embeds: [embed], components: rows });
+            return await interaction.editReply({ embeds: [embed], components: rows });
         };
 
         const maxTrackIdLength = Math.max(...tracks.map(track => String(track.id).length));

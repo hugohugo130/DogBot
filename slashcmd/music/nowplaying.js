@@ -253,8 +253,8 @@ module.exports = {
             "zh-CN": "查询正在播放的音乐"
         }),
     /**
-     * 
-     * @param {ChatInputCommandInteraction} interaction 
+     *
+     * @param {ChatInputCommandInteraction} interaction
      * @param {DogClient} client
      */
     async execute(interaction, client) {
