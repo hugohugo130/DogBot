@@ -337,8 +337,9 @@ class MusicQueue {
                 };
 
                 if (
-                    [AudioPlayerStatus.Buffering, AudioPlayerStatus.Idle].includes(oldState.status) &&
-                    newState.status === AudioPlayerStatus.Playing
+                    [AudioPlayerStatus.Buffering, AudioPlayerStatus.Idle].includes(oldState.status)
+                    && newState.status === AudioPlayerStatus.Playing
+                    && this.loopStatus !== loopStatus.TRACK
                 ) {
                     const emoji_music = await get_emoji("music", client);
 
@@ -497,8 +498,6 @@ class MusicQueue {
      * @param {boolean} force - 是否強制停止播放器
      */
     stopPlaying(force = false) {
-        this.tracks = this.tracks.filter(track => track.id !== this.currentTrack?.id);
-
         this.player.stop(force);
 
         this.playing = false;
