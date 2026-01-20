@@ -95,6 +95,7 @@ module.exports = {
         const play_audio_url = interaction.options.getBoolean("play_audio_url") ?? false;
         // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
 
+        const guildId = interaction.guildId;
         const voiceChannel = interaction.member.voice.channel;
 
         if (!voiceChannel?.joinable || !voiceChannel?.speakable) {
@@ -103,8 +104,6 @@ module.exports = {
                 flags: MessageFlags.Ephemeral,
             });
         };
-
-        const guildId = interaction.guildId;
 
         const voiceConnection = getVoiceConnection(guildId);
 
@@ -177,11 +176,11 @@ module.exports = {
                 queue.connection = connection;
             };
 
-            saveQueue(guildId, queue);
-
-            queue.subscribe();
-
-            const [embed, rows] = await getNowPlayingEmbed(queue, track, interaction, client, true);
+            const [_, __, [embed, rows]] = await Promise.all([
+                saveQueue(guildId, queue),
+                queue.subscribe(),
+                getNowPlayingEmbed(queue, track, interaction, client, true),
+            ]);
 
             if (queue.isPlaying()) {
                 queue.addTrack(track);
