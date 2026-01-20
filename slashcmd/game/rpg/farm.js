@@ -338,12 +338,15 @@ module.exports = {
                     farm_data.farms.push(farm);
                 };
 
-                if (need_hunger) {
-                    rpg_data.hunger -= need_hunger;
-                    await save_rpg_data(userId, rpg_data);
-                };
+                if (need_hunger) rpg_data.hunger -= need_hunger;
 
-                await save_farm_data(userId, farm_data);
+                if (!rpg_data.inventory[hoe]) rpg_data.inventory[hoe] = 0;
+                rpg_data.inventory[hoe] -= amount;
+
+                await Promise.all([
+                    save_rpg_data(userId, rpg_data),
+                    save_farm_data(userId, farm_data),
+                ]);
 
                 const success_embed = new EmbedBuilder()
                     .setColor(embed_default_color)
