@@ -1568,8 +1568,13 @@ module.exports = {
 
             const loophole_embeds = await get_loophole_embed(errorStack, interaction, client);
 
-            if (!interaction.deferred || !interaction.replied) await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-            await interaction.followUp({ embeds: loophole_embeds, flags: MessageFlags.Ephemeral });
+            if (!interaction.deferred || !interaction.replied) try {
+                await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+            } catch { };
+
+            try {
+                await interaction.followUp({ embeds: loophole_embeds, flags: MessageFlags.Ephemeral });
+            } catch { };
         };
     },
     get_help_embed,
