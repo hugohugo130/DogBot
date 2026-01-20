@@ -9,15 +9,15 @@ const DogClient = require("../../utils/customs/client.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName("resume")
-        .setDescription("Resume music playback")
+        .setName("pause")
+        .setDescription("pause the music")
         .setNameLocalizations({
-            "zh-TW": "繼續播放",
-            "zh-CN": "继续播放"
+            "zh-TW": "暫停",
+            "zh-CN": "暂停"
         })
         .setDescriptionLocalizations({
-            "zh-TW": "繼續音樂播放",
-            "zh-CN": "继续音乐播放"
+            "zh-TW": "暫停音樂播放",
+            "zh-CN": "暂停音乐播放"
         }),
     /**
      * 

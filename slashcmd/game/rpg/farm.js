@@ -63,6 +63,7 @@ async function get_farm_info_embed(user, interaction = null, client = global._cl
  * 獲取農作物採收物品
  * @param {number} amount - 需要獲得的物品總數
  * @returns {Object} - 物品ID到數量的映射字典
+ * @throws {Error} - 如果amount不是正整數 或 amount不是整數
  */
 function get_harvest_items(amount) {
     const farm_probability = probabilities.farm;
