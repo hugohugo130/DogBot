@@ -1,5 +1,5 @@
 const { Guild, GuildChannel, GuildMember } = require("discord.js");
-const { wait_until_ready } = require("./wait_until_ready.js")
+const { wait_until_ready, wait_for_client } = require("./wait_until_ready.js")
 const DogClient = require("../utils/customs/client.js");
 
 /**
@@ -65,16 +65,18 @@ async function get_guild(guildID, client = global.client) {
  * 
  * @param {Guild} guild
  * @param {boolean} fetch_first
- * @returns {Promise<GuildChannel>}
+ * @returns {Promise<GuildChannel[] | null>}
 */
 async function get_channels(guild, fetch_first = false) {
+    if (!guild) return null;
+
     let channels = fetch_first
         ? await guild.channels.fetch()
         : guild.channels.cache
 
-    if (channels) channels = await guild.channels.fetch();
+    if (!channels && !fetch_first) channels = await guild.channels.fetch();
 
-    return channels.values();
+    return Array.from(channels.values());
 };
 
 /**
@@ -82,21 +84,23 @@ async function get_channels(guild, fetch_first = false) {
  * @param {Guild} guild
  * @param {string} channelId
  * @param {boolean} fetch_first
- * @returns {Promise<GuildChannel | false>}
+ * @returns {Promise<GuildChannel | null>}
  */
-async function get_channel(guild, channelId, fetch_first = false) {
+async function get_channel(channelId, guild = null, fetch_first = false) {
     try {
-        if (!guild || !channelId) return false;
+        if (!channelId) return null;
+
+        if (!guild) guild = global._client ?? wait_for_client();
 
         let channel = fetch_first
             ? await guild.channels.fetch(channelId)
             : guild.channels.cache.get(channelId);
 
-        if (!channel) channel = await guild.channels.fetch(channelId);
+        if (!channel && !fetch_first) channel = await guild.channels.fetch(channelId);
 
-        return channel
+        return channel;
     } catch {
-        return false;
+        return null;
     };
 };
 
