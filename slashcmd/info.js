@@ -123,13 +123,13 @@ module.exports = {
             }),
         ),
     /**
-     * 
-     * @param {ChatInputCommandInteraction} interaction 
+     *
+     * @param {ChatInputCommandInteraction} interaction
+     * @param {DogClient} client
      */
-    async execute(interaction) {
+    async execute(interaction, client) {
         await interaction.deferReply();
 
-        const client = interaction.client;
         const subcommand = interaction.options.getSubcommand();
 
         const [
@@ -156,198 +156,234 @@ module.exports = {
 
         const locale = interaction.locale;
 
-        if (subcommand === "user") {
-            const lang_no_data = get_lang_data(locale, "/info", "user.no_data"); // 無資料
-            const lang_none = get_lang_data(locale, "/info", "user.none"); // 無
-            const lang_privacy = get_lang_data(locale, "/info", "user.privacy"); // 隱私設定關閉
-            const lang_single = get_lang_data(locale, "/info", "user.single"); // 單身
-            const lang_id = get_lang_data(locale, "/info", "user.id"); // ID
-            const lang_created_at = get_lang_data(locale, "/info", "user.created_at"); // 創建時間
-            const lang_money = get_lang_data(locale, "/info", "user.money"); // 金錢
-            const lang_hunger = get_lang_data(locale, "/info", "user.hunger"); // 飽食度
-            const lang_job = get_lang_data(locale, "/info", "user.job"); // 民生職業
-            const lang_fightjob = get_lang_data(locale, "/info", "user.adventure_job"); // 冒險職業
-            const lang_badge = get_lang_data(locale, "/info", "user.badge"); // 稱號
-            const lang_relationship = get_lang_data(locale, "/info", "user.relationship"); // 感情狀態
+        switch (subcommand) {
+            case "user": {
+                const [
+                    lang_no_data, // 無資料
+                    lang_none, // 無
+                    lang_privacy, // 隱私設定關閉
+                    lang_single, // 單身
+                    lang_id, // ID
+                    lang_created_at, // 創建時間
+                    lang_money, // 金錢
+                    lang_hunger, // 飽食度
+                    lang_job, // 民生職業
+                    lang_fightjob, // 冒險職業
+                    lang_badge, // 稱號
+                    lang_relationship, // 感情狀態
+                ] = await Promise.all([
+                    get_lang_data(locale, "/info", "user.no_data"),
+                    get_lang_data(locale, "/info", "user.none"),
+                    get_lang_data(locale, "/info", "user.privacy"),
+                    get_lang_data(locale, "/info", "user.single"),
+                    get_lang_data(locale, "/info", "user.id"),
+                    get_lang_data(locale, "/info", "user.created_at"),
+                    get_lang_data(locale, "/info", "user.money"),
+                    get_lang_data(locale, "/info", "user.hunger"),
+                    get_lang_data(locale, "/info", "user.job"),
+                    get_lang_data(locale, "/info", "user.adventure_job"),
+                    get_lang_data(locale, "/info", "user.badge"),
+                    get_lang_data(locale, "/info", "user.relationship"),
+                ]);
 
-            const user = interaction.options.getUser("user") ?? interaction.user;
-            const userTag = user.tag;
-            const userId = user.id;
+                const user = interaction.options.getUser("user") ?? interaction.user;
+                const userTag = user.tag;
+                const userId = user.id;
 
-            const rpg_data = await load_rpg_data(userId);
-            const marry_data = rpg_data.marry || {};
-            const lang_marry_info = get_lang_data(locale, "/info", "user.marry_info", marry_data.with, convertToSecondTimestamp(marry_data.time));
+                const rpg_data = await load_rpg_data(userId);
+                const marry_data = rpg_data.marry || {};
+                const lang_marry_info = get_lang_data(locale, "/info", "user.marry_info", marry_data.with, convertToSecondTimestamp(marry_data.time));
 
-            const show_money = rpg_data.privacy.includes("money");
-            let money = show_money ? rpg_data.money ?? lang_no_data : lang_privacy;
-            if (typeof money === "number") money = `\`${money}$\``
+                const show_money = rpg_data.privacy.includes("money");
+                let money = show_money ? rpg_data.money ?? lang_no_data : lang_privacy;
+                if (typeof money === "number") money = `\`${money}$\``
 
-            const hunger = rpg_data.hunger ?? lang_no_data;
-            const job = rpg_data.job || lang_none;
-            const fightjob = rpg_data.fightjob || lang_none;
-            const badge = rpg_data.badge || lang_none;
+                const hunger = rpg_data.hunger ?? lang_no_data;
+                const job = rpg_data.job || lang_none;
+                const fightjob = rpg_data.fightjob || lang_none;
+                const badge = rpg_data.badge || lang_none;
 
-            const marry_str = marry_data.status
-                ? lang_marry_info
-                : lang_single;
+                const marry_str = marry_data.status
+                    ? lang_marry_info
+                    : lang_single;
 
-            const createdAt = convertToSecondTimestamp(user.createdAt.getTime());
-            const emojiOfTheJob = jobs[job]?.emoji ? `${jobs[job]?.emoji} ` : "";
-            const nameOfTheJob = jobs[job]?.name ? jobs[job]?.name : job;
+                const createdAt = convertToSecondTimestamp(user.createdAt.getTime());
+                const emojiOfTheJob = jobs[job]?.emoji ? `${jobs[job]?.emoji} ` : "";
+                const nameOfTheJob = jobs[job]?.name ? jobs[job]?.name : job;
 
-            const user_data_embed = new EmbedBuilder()
-                .setColor(embed_default_color)
-                .setThumbnail(user.displayAvatarURL({ size: 1024 }))
-                .setTitle(escapeMarkdown(userTag))
-                .setFields(
-                    {
-                        name: `${emoji_idCard} ${lang_id}`,
-                        value: `\`${userId}\``,
-                    },
-                    {
-                        name: `${emoji_timer} ${lang_created_at}`,
-                        value: `<t:${createdAt}:F> (<t:${createdAt}:R>)`,
-                    },
-                );
+                const user_data_embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setThumbnail(user.displayAvatarURL({ size: 1024 }))
+                    .setTitle(escapeMarkdown(userTag))
+                    .setFields(
+                        {
+                            name: `${emoji_idCard} ${lang_id}`,
+                            value: `\`${userId}\``,
+                        },
+                        {
+                            name: `${emoji_timer} ${lang_created_at}`,
+                            value: `<t:${createdAt}:F> (<t:${createdAt}:R>)`,
+                        },
+                    );
 
-            const rpg_data_embed = new EmbedBuilder()
-                .setColor(embed_default_color)
-                .setFields(
-                    {
-                        name: `${emoji_job} ${lang_job}`,
-                        value: `${emojiOfTheJob}${nameOfTheJob}`,
-                        inline: true,
-                    },
-                    {
-                        name: `${emoji_adventure} ${lang_fightjob}`,
-                        value: fightjob,
-                        inline: true,
-                    },
-                    {
-                        name: `${emoji_drumstick} ${lang_hunger}`,
-                        value: `\`${hunger}\` / \`${max_hunger}\``,
-                        inline: true,
-                    },
-                    {
-                        name: `💰 ${lang_money}`,
-                        value: money,
-                        inline: true,
-                    },
-                    {
-                        name: `${emoji_badge} ${lang_badge}`,
-                        value: badge,
-                        inline: true,
-                    },
-                    {
-                        name: `❤️ ${lang_relationship}`,
-                        value: marry_str,
-                        inline: false,
-                    },
-                );
+                const rpg_data_embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setFields(
+                        {
+                            name: `${emoji_job} ${lang_job}`,
+                            value: `${emojiOfTheJob}${nameOfTheJob}`,
+                            inline: true,
+                        },
+                        {
+                            name: `${emoji_adventure} ${lang_fightjob}`,
+                            value: fightjob,
+                            inline: true,
+                        },
+                        {
+                            name: `${emoji_drumstick} ${lang_hunger}`,
+                            value: `\`${hunger}\` / \`${max_hunger}\``,
+                            inline: true,
+                        },
+                        {
+                            name: `💰 ${lang_money}`,
+                            value: money,
+                            inline: true,
+                        },
+                        {
+                            name: `${emoji_badge} ${lang_badge}`,
+                            value: badge,
+                            inline: true,
+                        },
+                        {
+                            name: `❤️ ${lang_relationship}`,
+                            value: marry_str,
+                            inline: false,
+                        },
+                    );
 
-            await interaction.editReply({
-                embeds: [user_data_embed, rpg_data_embed],
-            });
-        } else if (subcommand === "guild") {
-            const lang_id = get_lang_data(locale, "/info", "guild.id") // ID
-            const lang_members = get_lang_data(locale, "/info", "guild.members") // Members 成員
-            const lang_boosts = get_lang_data(locale, "/info", "guild.boosts") // Boosts 加成狀態
-            const lang_owner = get_lang_data(locale, "/info", "guild.owner") // Owner 擁有者
-            const lang_created_at = get_lang_data(locale, "/info", "guild.created_at") // Created At 創建時間
-            const lang_icon = get_lang_data(locale, "/info", "guild.icon") // Icon 圖標
-            const lang_banner = get_lang_data(locale, "/info", "guild.banner") // Banner 橫幅
-            const lang_splash = get_lang_data(locale, "/info", "guild.splash") // Splash 邀請背景
-
-            const guild = interaction.guild;
-            const guildId = guild.id;
-            const guildName = guild.name;
-            const guildMembers = guild.memberCount;
-            const boosts = guild.premiumSubscriptionCount ?? 0;
-            const boostLevel = guild.premiumTier;
-            const ownerId = guild.ownerId;
-            const serverIconURL = guild.iconURL({ dynamic: true });
-            const serverBanner = guild.bannerURL({ dynamic: true });
-            const serverSplash = guild.splashURL({ dynamic: true });
-            const createdAt = convertToSecondTimestamp(interaction.guild.createdAt.getTime());
-
-            const embed = new EmbedBuilder()
-                .setColor(embed_default_color)
-                .setTitle(guildName)
-                .setThumbnail(serverIconURL)
-                .setFields(
-                    {
-                        name: `${emoji_idCard} ${lang_id}`,
-                        value: `\`${guildId}\``,
-                        inline: true,
-                    },
-                    {
-                        name: `${emoji_user} ${lang_members}`,
-                        value: `\`${guildMembers}\``,
-                        inline: true,
-                    },
-                    {
-                        name: `${emoji_boost2} ${lang_boosts}`,
-                        value: `${boosts} 個加成 / ${boostLevel} 級`,
-                        inline: true,
-                    },
-                    {
-                        name: `${emoji_timer} ${lang_created_at}`,
-                        value: `<t:${createdAt}:F> (<t:${createdAt}:R>)`,
-                        inline: true,
-                    },
-                    {
-                        name: `👑 ${lang_owner}`,
-                        value: `<@${ownerId}>`,
-                        inline: true,
-                    },
-                );
-
-            const BtnLinks = [];
-
-            if (serverIconURL) {
-                BtnLinks.push(new ButtonBuilder()
-                    .setLabel(lang_icon)
-                    .setStyle(ButtonStyle.Link)
-                    .setURL(serverIconURL)
-                );
+                await interaction.editReply({
+                    embeds: [user_data_embed, rpg_data_embed],
+                });
+                break;
             };
 
-            if (serverBanner) {
-                BtnLinks.push(new ButtonBuilder()
-                    .setLabel(lang_banner)
-                    .setStyle(ButtonStyle.Link)
-                    .setURL(serverBanner)
-                );
+            case "guild": {
+                const [
+                    lang_id, // ID
+                    lang_members, // Members 成員
+                    lang_boosts, // Boosts 加成狀態
+                    lang_owner, // Owner 擁有者
+                    lang_created_at, // Created At 創建時間
+                    lang_icon, // Icon 圖標
+                    lang_banner, // Banner 橫幅
+                    lang_splash, // Splash 邀請背景
+                ] = await Promise.all([
+                    get_lang_data(locale, "/info", "guild.id"),
+                    get_lang_data(locale, "/info", "guild.members"),
+                    get_lang_data(locale, "/info", "guild.boosts"),
+                    get_lang_data(locale, "/info", "guild.owner"),
+                    get_lang_data(locale, "/info", "guild.created_at"),
+                    get_lang_data(locale, "/info", "guild.icon"),
+                    get_lang_data(locale, "/info", "guild.banner"),
+                    get_lang_data(locale, "/info", "guild.splash"),
+                ]);
+
+                const guild = interaction.guild;
+                const guildId = guild.id;
+                const guildName = guild.name;
+                const guildMembers = guild.memberCount;
+                const boosts = guild.premiumSubscriptionCount ?? 0;
+                const boostLevel = guild.premiumTier;
+                const ownerId = guild.ownerId;
+                const serverIconURL = guild.iconURL({ dynamic: true });
+                const serverBanner = guild.bannerURL({ dynamic: true });
+                const serverSplash = guild.splashURL({ dynamic: true });
+                const createdAt = convertToSecondTimestamp(interaction.guild.createdAt.getTime());
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle(guildName)
+                    .setThumbnail(serverIconURL)
+                    .setFields(
+                        {
+                            name: `${emoji_idCard} ${lang_id}`,
+                            value: `\`${guildId}\``,
+                            inline: true,
+                        },
+                        {
+                            name: `${emoji_user} ${lang_members}`,
+                            value: `\`${guildMembers}\``,
+                            inline: true,
+                        },
+                        {
+                            name: `${emoji_boost2} ${lang_boosts}`,
+                            value: `${boosts} 個加成 / ${boostLevel} 級`,
+                            inline: true,
+                        },
+                        {
+                            name: `${emoji_timer} ${lang_created_at}`,
+                            value: `<t:${createdAt}:F> (<t:${createdAt}:R>)`,
+                            inline: true,
+                        },
+                        {
+                            name: `👑 ${lang_owner}`,
+                            value: `<@${ownerId}>`,
+                            inline: true,
+                        },
+                    );
+
+                const BtnLinks = [];
+
+                if (serverIconURL) {
+                    BtnLinks.push(new ButtonBuilder()
+                        .setLabel(lang_icon)
+                        .setStyle(ButtonStyle.Link)
+                        .setURL(serverIconURL)
+                    );
+                };
+
+                if (serverBanner) {
+                    BtnLinks.push(new ButtonBuilder()
+                        .setLabel(lang_banner)
+                        .setStyle(ButtonStyle.Link)
+                        .setURL(serverBanner)
+                    );
+                };
+
+                if (serverSplash) {
+                    BtnLinks.push(new ButtonBuilder()
+                        .setLabel(lang_splash)
+                        .setStyle(ButtonStyle.Link)
+                        .setURL(serverSplash)
+                    );
+                };
+
+                const row = BtnLinks.length ?
+                    new ActionRowBuilder()
+                        .addComponents(BtnLinks)
+                    : null;
+
+                await interaction.editReply({ embeds: [embed], components: row ? [row] : [] });
+                break;
             };
 
-            if (serverSplash) {
-                BtnLinks.push(new ButtonBuilder()
-                    .setLabel(lang_splash)
-                    .setStyle(ButtonStyle.Link)
-                    .setURL(serverSplash)
-                );
+            case "bot": {
+                const [embed, lang_refresh] = await Promise.all([
+                    getBotInfoEmbed(locale, client),
+                    get_lang_data(locale, "/info", "bot.refresh"),
+                ]);
+
+                const refreshButton = new ButtonBuilder()
+                    .setCustomId(`refresh|any|/info bot`)
+                    .setEmoji(emoji_robot)
+                    .setLabel(lang_refresh)
+                    .setStyle(ButtonStyle.Primary);
+
+                const row = new ActionRowBuilder()
+                    .addComponents(refreshButton);
+
+                await interaction.editReply({ embeds: [embed], components: [row] });
             };
-
-            const row = BtnLinks.length ?
-                new ActionRowBuilder()
-                    .addComponents(BtnLinks)
-                : null;
-
-            await interaction.editReply({ embeds: [embed], components: row ? [row] : [] });
-        } else if (subcommand === "bot") {
-            const embed = await getBotInfoEmbed(locale, client);
-            const lang_refresh = get_lang_data(locale, "/info", "bot.refresh");
-
-            const refreshButton = new ButtonBuilder()
-                .setCustomId(`refresh|any|/info bot`)
-                .setEmoji(emoji_robot)
-                .setLabel(lang_refresh)
-                .setStyle(ButtonStyle.Primary);
-
-            const row = new ActionRowBuilder()
-                .addComponents(refreshButton);
-
-            await interaction.editReply({ embeds: [embed], components: [row] });
         };
     },
     getBotInfoEmbed,
