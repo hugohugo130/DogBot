@@ -7,6 +7,7 @@ const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 const { embed_default_color, embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder");
 const DogClient = require("../../utils/customs/client");
+const { get_lang_data } = require("../../utils/language.js");
 
 /**
  * Get queue list embed
@@ -31,6 +32,16 @@ async function getQueueListEmbedRow(queue, currentPage = 1, interaction = null, 
 
     const currentTrack = queue.currentTrack;
 
+    const locale = interaction?.locale;
+
+    const lang_no_music_in_queue = get_lang_data(locale, "/queue", "list.no_music_in_queue"); // 沒有音樂在佇列裡
+    const lang_playing = get_lang_data(locale, "/queue", "list.playing"); // 正在播放
+    const lang_queue = get_lang_data(locale, "/queue", "list.queue"); // 播放佇列
+    const lang_prev_page = get_lang_data(locale, "/queue", "list.prev_page"); // 上一頁
+    const lang_next_page = get_lang_data(locale, "/queue", "list.next_page"); // 下一頁
+    const lang_update = get_lang_data(locale, "/queue", "list.update"); // 更新
+    const lang_list_empty = get_lang_data(locale, "/queue", "list.list_empty"); // 清單是空的
+
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
         .setEmbedFooter(interaction);
@@ -49,17 +60,17 @@ async function getQueueListEmbedRow(queue, currentPage = 1, interaction = null, 
                     return `\`${starts + index + 1}.\` [${track.title}](<${track.url}>) - ${duration}`;
                 })
                 .join("\n")
-            || "沒有音樂在佇列裡";
+            || lang_no_music_in_queue;
 
         embed
             .setDescription(`
-${emoji_playGrad} 正在播放
+${emoji_playGrad} ${lang_playing}
 [${currentTrack.title}](<${currentTrack.url}>) - ${formatMinutesSeconds(currentTrack.duration)}
-${emoji_skip} 播放佇列
+${emoji_skip} ${lang_queue}
 ${queueString}`)
-            .setFooter({ text: `第 ${currentPage} / ${pages} 頁` });
+            .setFooter({ text: get_lang_data(locale, "/queue", "list.page", [currentPage, pages]) }); // 第 {currentPage} / {pages} 頁
     } else {
-        embed.setTitle(`${emoji_cross} | 清單是空的`);
+        embed.setTitle(`${emoji_cross} | ${lang_list_empty}`);
     };
 
     const row = new ActionRowBuilder()
@@ -67,21 +78,21 @@ ${queueString}`)
             new ButtonBuilder()
                 .setCustomId(`music|any|page|${currentPage - 1}`)
                 .setEmoji("◀️")
-                .setLabel("上一頁")
+                .setLabel(lang_prev_page)
                 .setDisabled(currentPage <= 1)
                 .setStyle(ButtonStyle.Primary),
 
             new ButtonBuilder()
                 .setCustomId(`music|any|page|${currentPage + 1}`)
                 .setEmoji("▶️")
-                .setLabel("下一頁")
+                .setLabel(lang_next_page)
                 .setDisabled(currentPage >= pages)
                 .setStyle(ButtonStyle.Primary),
 
             new ButtonBuilder()
                 .setCustomId(`music|any|page|${currentPage}`)
                 .setEmoji(emoji_update)
-                .setLabel("更新")
+                .setLabel(lang_update)
                 .setStyle(ButtonStyle.Success),
         );
 

@@ -91,6 +91,17 @@ Since <t:{1}:R>`,
             "bot.footer": "我們使用 discord.js 製作這個機器人",
             "bot.refresh": "更新",
         },
+
+        "/queue": {
+            "list.no_music_in_queue": "沒有音樂在佇列裡",
+            "list.playing": "正在播放",
+            "list.queue": "播放佇列",
+            "list.page": "第 {0} / {1} 頁",
+            "list.prev_page": "上一頁",
+            "list.next_page": "下一頁",
+            "list.update": "更新",
+            "list.empty": "清單是空的",
+        },
     },
 };
 
@@ -102,8 +113,6 @@ const logger = get_logger();
  * 如果缺少鍵則使用 logger.warn 記錄警告
  */
 function check_language_keys() {
-    const logger = get_logger();
-
     // 收集所有語言中所有分類及其鍵的集合
     const allCategories = new Set();
 
