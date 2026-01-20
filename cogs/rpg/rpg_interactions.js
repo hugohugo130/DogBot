@@ -1418,8 +1418,7 @@ module.exports = {
                         case "nowplaying": {
                             const queue = getQueue(interaction.guildId, true);
 
-                            const notPlayingEmbed = await noMusicIsPlayingEmbed(interaction, client);
-
+                            const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
                             if (notPlayingEmbed) {
                                 return await interaction.update({ content: "", embeds: [notPlayingEmbed], components: [] });
                             };
