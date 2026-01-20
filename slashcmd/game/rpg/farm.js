@@ -60,81 +60,59 @@ async function get_farm_info_embed(user, interaction = null, client = global._cl
 };
 
 /**
- * 根據權重隨機選擇物品
- * @param {Object} items - 物品字典
- * @param {number} totalWeight - 總權重（預先計算以提高效率）
- * @returns {string} - 選中的物品ID
- */
-function weightedChoice(items, totalWeight) {
-    const randomValue = Math.floor(Math.random() * totalWeight);
-    let cumulativeWeight = 0;
-
-    for (const [itemId, data] of Object.entries(items)) {
-        cumulativeWeight += data[0]; // 權重
-        if (randomValue < cumulativeWeight) {
-            return itemId;
-        };
-    };
-
-    // 如果由於浮點數精度問題到達這裡，返回最後一個物品
-    return Object.keys(items)[Object.keys(items).length - 1];
-};
-
-/**
- * 獲取收穫物品
+ * 獲取農作物採收物品
  * @param {number} amount - 需要獲得的物品總數
  * @returns {Object} - 物品ID到數量的映射字典
  */
 function get_harvest_items(amount) {
     const farm_probability = probabilities.farm;
 
-    // 計算總權重
-    let totalWeight = Object.values(farm_probability).reduce((sum, data) => sum + data[0], 0);
-
-    const result = {};
-    let remainingAmount = amount;
-    let attempts = 0;
-    const maxAttempts = amount * 10; // 防止無限循環
-
-    // 先選擇哪些物品會被獲得
-    while (remainingAmount > 0 && attempts < maxAttempts) {
-        attempts++;
-
-        // 隨機選擇一個物品
-        const selectedItem = weightedChoice(farm_probability, totalWeight);
-        const [_, minQty, maxQty] = farm_probability[selectedItem];
-
-        // 隨機決定該物品的數量
-        const quantity = randint(minQty, maxQty);
-
-        // 如果該物品的數量不會超過剩餘需求，則添加
-        if (quantity <= remainingAmount) {
-            // 如果已經有該物品，增加數量；否則新增
-            result[selectedItem] = (result[selectedItem] || 0) + quantity;
-            remainingAmount -= quantity;
-        }
-        // 如果只剩少量需求，可以選擇小數量的物品
-        else if (minQty <= remainingAmount) {
-            result[selectedItem] = (result[selectedItem] || 0) + remainingAmount;
-            remainingAmount = 0;
-        };
+    // 驗證 amount 參數
+    if (typeof amount !== 'number' || amount <= 0) {
+        throw new Error('amount must be a positive number');
     };
 
-    // 如果還有剩餘數量，調整最後一個物品的數量
-    if (remainingAmount !== 0) {
-        const itemIds = Object.keys(result);
-        if (itemIds.length > 0) {
-            const lastItem = itemIds[itemIds.length - 1];
+    // 驗證 amount 是整數
+    if (!Number.isInteger(amount)) {
+        throw new Error('amount must be an integer');
+    };
 
-            // 計算調整後的值
-            const newQuantity = result[lastItem] + remainingAmount;
+    const result = {};
 
-            // 確保數量不會變為負數
-            if (newQuantity > 0) {
-                result[lastItem] = newQuantity;
-            } else {
-                // 如果調整後變為0或負數，移除該物品
-                delete result[lastItem];
+    // 預先計算加權選擇的數據
+    const items = Object.keys(farm_probability);
+    const weights = items.map(item => farm_probability[item][0]);
+
+    // 計算總權重
+    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+
+    // 如果所有物品權重都是0或沒有物品，直接返回空結果
+    if (totalWeight <= 0 || items.length === 0) {
+        return {};
+    };
+
+    // 進行 amount 次抽取
+    for (let i = 0; i < amount; i++) {
+        // 加權隨機選擇
+        let randomValue = Math.random() * totalWeight;
+        let weightSum = 0;
+
+        // 根據權重選擇物品
+        for (let j = 0; j < items.length; j++) {
+            weightSum += weights[j];
+
+            if (randomValue < weightSum) {
+                const selectedItem = items[j];
+
+                // 獲取該物品的數量範圍
+                const [_, minAmount, maxAmount] = farm_probability[selectedItem];
+
+                // 產生隨機數量
+                const quantity = randint(minAmount, maxAmount);
+
+                // 累加到結果中
+                result[selectedItem] = (result[selectedItem] || 0) + quantity;
+                break;
             };
         };
     };
