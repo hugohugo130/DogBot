@@ -2184,11 +2184,12 @@ module.exports = {
         if (!client.lock) client.lock = {};
         if (!client.lock.rpg_handler) client.lock.rpg_handler = {};
 
-        const data = await loadData(guildID);
-        const inpref = await InPrefix(guildID, message.content.trim());
+        const [data, inpref] = await Promise.all([
+            loadData(guildID),
+            InPrefix(guildID, message.content.trim()),
+        ]);
 
-        if (!data["rpg"]) return;
-        if (!inpref.length) return;
+        if (!data["rpg"] || !inpref?.length) return;
 
         if (client.lock.rpg_handler.hasOwnProperty(userId)) {
             const emoji_cross = await get_emoji("crosS", client);
@@ -2205,7 +2206,7 @@ module.exports = {
             const command = message.content.split(" ")[0].toLowerCase();
 
             if (rpg_commands[command]) {
-                let cmdName = structuredClone(command);
+                let cmdName = command;
 
                 for (const pref of inpref) {
                     cmdName = cmdName.replace(pref, "");
