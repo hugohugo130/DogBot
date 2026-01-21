@@ -1,11 +1,11 @@
+const { Logger } = require("winston");
+const { VoiceChannel } = require("discord.js");
+const { finished } = require('stream/promises');
 const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
 const util = require("util");
 const axios = require("axios");
-const { Logger } = require("winston");
-const { VoiceChannel } = require("discord.js");
-const { finished } = require('stream/promises');
 
 const {
     INDENT,
@@ -27,6 +27,9 @@ const {
 } = require("./config.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
 const { asleep } = require("./sleep.js");
+const { CacheTypes } = require("./cache.js");
+
+const cacheManager = global._cacheManager;
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
@@ -413,6 +416,14 @@ async function loadData(guildID = null, mode = 0) {
 
     if (!(await exists(database_file))) return {};
 
+    if (mode == 0 && guildID) {
+        // 從緩存中獲取
+        const cached = cacheManager.get(CacheTypes.GUILD, guildID);
+        if (cached) {
+            return cached;
+        };
+    };
+
     const data = await readJson(database_file);
 
     if (mode == 0 && guildID) {
@@ -420,6 +431,9 @@ async function loadData(guildID = null, mode = 0) {
             data[guildID] = database_emptyeg;
             await saveData(guildID, data[guildID]);
         };
+
+        // 存入緩存
+        cacheManager.set(CacheTypes.GUILD, guildID, data[guildID]);
 
         return data[guildID];
     };
@@ -470,6 +484,9 @@ async function saveData(guildID, guildData) {
     if (retries === 0) {
         throw lastError;
     };
+
+    // 更新緩存
+    cacheManager.set(CacheTypes.GUILD, guildID, data[guildID]);
 };
 
 /*
@@ -570,6 +587,13 @@ async function getPrefixes(guildID) {
  */
 async function load_rpg_data(userid) {
     logger.debug(`load_rpg_data(${userid}) - ${getCallerModuleName("list")}`);
+
+    // 嘗試從緩存中獲取
+    const cached = cacheManager.get(CacheTypes.RPG, userid);
+    if (cached) {
+        return cached;
+    };
+
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     if (await exists(rpg_database_file)) {
@@ -580,7 +604,12 @@ async function load_rpg_data(userid) {
             return rpg_emptyeg;
         };
 
-        return order_data(data[userid], rpg_emptyeg);
+        const userData = order_data(data[userid], rpg_emptyeg);
+
+        // 存入緩存
+        cacheManager.set(CacheTypes.RPG, userid, userData);
+
+        return userData;
     } else {
         await save_rpg_data(userid, rpg_emptyeg);
         return rpg_emptyeg;
@@ -644,6 +673,9 @@ async function save_rpg_data(userid, rpg_data) {
     data[userid] = order_data(data[userid], rpg_emptyeg);
 
     await writeJson(rpg_database_file, data);
+
+    // 更新緩存
+    cacheManager.set(CacheTypes.RPG, userid, data[userid]);
 };
 
 /**

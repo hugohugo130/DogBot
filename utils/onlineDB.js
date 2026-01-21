@@ -1,16 +1,15 @@
+const { Collection } = require("discord.js");
 const fs = require("fs");
 const path = require("path");
 const axios = require("axios");
 const FormData = require("form-data");
 const util = require("util");
 const jsdiff = require("diff");
-const { Collection } = require("discord.js");
 
 const { getServerIPSync } = require("./getSeverIPSync.js");
 const { get_logger } = require("./logger.js");
-const { existsSync, compareLocalRemote, join_db_folder, readFile } = require("./file.js");
+const { existsSync, compareLocalRemote, join_db_folder, readFile, stringify } = require("./file.js");
 const { get_areadline } = require("./readline.js");
-const { stringify } = require("./file.js");
 const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
 
 const { IP: serverIP, PORT } = global._client?.serverIP ?? getServerIPSync();
@@ -275,10 +274,10 @@ async function downloadDatabaseFile(src, dst = null) {
 };
 
 async function downloadAllFiles() {
-    for (const filename of DATABASE_FILES.filter(e => existsSync(join_db_folder(e)) && onlineDB_Files.includes(e))) {
+    await Promise.all(DATABASE_FILES.map(async filename => {
         const res = await onlineDB_downloadFile(filename);
         logger.debug(`downloaded ${filename}, saved to ${res}`);
-    };
+    }));
 };
 
 async function uploadChangedDatabaseFiles() {

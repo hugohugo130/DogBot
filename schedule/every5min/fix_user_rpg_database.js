@@ -52,7 +52,7 @@ module.exports = {
             //         rpg_data.backpack = backpack;
 
             //         await save_rpg_data(user.id, rpg_data);
-            //         logger.info(`已修復用戶 ${user.id} 的背包資料`);
+            //         logger.warn(`已修復用戶 ${user.id} 的背包資料`);
             //     };
             // };
         } catch (error) {

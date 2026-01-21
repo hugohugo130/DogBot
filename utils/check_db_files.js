@@ -1,8 +1,9 @@
+const { User, Guild } = require("discord.js");
+
 const { readJson, writeJson, existsSync, basename, join_db_folder, load_rpg_data, save_rpg_data, loadData, saveData } = require("./file.js");
 const { DATABASE_FILES, DEFAULT_VALUES, priorityUserIDs, priorityGuildIDs } = require("./config.js");
 const { get_logger } = require("./logger.js");
 const { wait_until_ready, client_ready } = require("./wait_until_ready.js");
-const { User, Guild } = require("discord.js");
 const DogClient = require("./customs/client.js");
 
 const logger = get_logger();
@@ -97,12 +98,12 @@ async function make_db_compatible(users, guilds) {
         - feat: 每日簽到 (增加daily鍵)
         */
 
-        if (!rpg_data.daily) {
+        if (!rpg_data.daily && rpg_data.daily !== 0) {
             rpg_data.daily = 0;
             modified = true;
         };
 
-        if (!rpg_data.daily_times) {
+        if (!rpg_data.daily_times && rpg_data.daily_times !== 0) {
             rpg_data.daily_times = 0;
             modified = true;
         };
