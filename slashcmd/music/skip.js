@@ -36,11 +36,12 @@ module.exports = {
             });
         };
 
-        const [clientMember, queue, notPlayingEmbed] = await Promise.all([
+        const [clientMember, queue] = await Promise.all([
             get_me(interaction.guild),
             getQueue(interaction.guildId, false),
-            noMusicIsPlayingEmbed(queue, interaction, client),
         ]);
+
+        const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
 
         if (clientMember?.voice?.channelId && clientMember.voice.channelId !== voiceChannel.id) {
             const embed = new EmbedBuilder()
