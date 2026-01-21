@@ -50,67 +50,88 @@ async function checkDBFilesCorrupted() {
  */
 async function make_db_compatible(users, guilds) {
     for (const user of users) {
-        continue;
-        if (user instanceof User) {
-            // const rpg_data = await load_rpg_data(user.id);
+        if (!user instanceof User) continue;
 
-            /*
-            2025 12 02:
-            - 把db.count的mine, hew, herd, brew, fish, fell，合併成work，並刪除
-            - 增加work鍵
-            */
+        const rpg_data = await load_rpg_data(user.id);
+        let modified = false;
 
-            /*
-            if (!rpg_data.count) rpg_data.count = {};
+        /*
+        2025 12 02:
+        - 把db.count的mine, hew, herd, brew, fish, fell，合併成work，並刪除
+        - 增加work鍵
+        */
 
-            const keys = ["mine", "hew", "herd", "brew", "fish", "fell"];
-            for (const key of keys) {
-                if (!rpg_data.count.work) {
-                    rpg_data.count.work = 0
-                };
-
-                if (typeof rpg_data.count.work === "string") {
-                    logger.warn(`[userId ${user.id}] rpg_data.count.work is string, converted to number: ${rpg_data.count.work}`);
-
-                    rpg_data.count.work = parseInt(rpg_data.count.work);
-                };
-
-                if (rpg_data.count.work[key]) {
-                    if (typeof rpg_data.count.work[key] === "number") {
-                        rpg_data.count.work += rpg_data.count.work[key];
-                    };
-
-                    delete rpg_data.count.work[key];
-                };
-            };
-            */
-
-            // =================================================================
-
-            // await save_rpg_data(user.id, rpg_data);
+        /*
+        if (!rpg_data.count) {
+            rpg_data.count = {};
+            modified = true;
         };
+
+        const keys = ["mine", "hew", "herd", "brew", "fish", "fell"];
+        for (const key of keys) {
+            if (!rpg_data.count.work) {
+                rpg_data.count.work = 0
+                modified = true;
+            };
+
+            if (typeof rpg_data.count.work === "string") {
+                logger.warn(`[userId ${user.id}] rpg_data.count.work is string, converted to number: ${rpg_data.count.work}`);
+
+                rpg_data.count.work = parseInt(rpg_data.count.work);
+                modified = true;
+            };
+
+            if (rpg_data.count.work[key]) {
+                if (typeof rpg_data.count.work[key] === "number") {
+                    rpg_data.count.work += rpg_data.count.work[key];
+                };
+
+                delete rpg_data.count.work[key];
+                modified = true;
+            };
+        };
+        */
+
+        /*
+        2026 01 21:
+        - feat: 每日簽到 (增加daily鍵)
+        */
+
+        if (!rpg_data.daily) {
+            rpg_data.daily = 0;
+            modified = true;
+        };
+
+        if (!rpg_data.daily_times) {
+            rpg_data.daily_times = 0;
+            modified = true;
+        };
+
+        // =================================================================
+
+        if (modified) await save_rpg_data(user.id, rpg_data);
     };
 
     for (const guild of guilds) {
         continue;
-        if (guild instanceof Guild) {
-            /*
-            2025 12 05:
-            - 更好的自定義前綴(prefix)
-            -> prefix: "&" -> prefix: ["&"]
-            */
+        if (!guild instanceof Guild) continue;
 
-            /*
-            const guild_data = await loadData(guild.id);
+        /*
+        2025 12 05:
+        - 更好的自定義前綴(prefix)
+        -> prefix: "&" -> prefix: ["&"]
+        */
 
-            const prefix = guild_data.prefix;
-            if (typeof prefix === "string") {
-                guild_data.prefix = [guild_data.prefix];
-            };
+        /*
+        const guild_data = await loadData(guild.id);
 
-            await saveData(guild.id, guild_data);
-            */
+        const prefix = guild_data.prefix;
+        if (typeof prefix === "string") {
+            guild_data.prefix = [guild_data.prefix];
         };
+
+        await saveData(guild.id, guild_data);
+        */
     };
 };
 

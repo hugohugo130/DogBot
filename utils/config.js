@@ -28,6 +28,7 @@ const DEFAULT_VALUES = {
         "rpg_database.json": {
             "money": 1000,
             "hunger": 20,
+            "daily": 0,
             "job": null,
             "fightjob": null,
             "badge": null,
@@ -133,6 +134,7 @@ const DOCS = "無";
 const STATUS_PAGE = "https://hugostatus.904037.xyz";
 
 // misc
+const daily_sign_guildIDs = ["1422545977226690683"];
 const admins = ["898836485397180426"];
 const reserved_prefixes = [`<@${BotID}>`];
 const temp_folder = join(cwd(), "temp");
@@ -375,6 +377,7 @@ module.exports = {
     DOCS,
     STATUS_PAGE,
 
+    daily_sign_guildIDs,
     admins,
     reserved_prefixes,
     temp_folder,
