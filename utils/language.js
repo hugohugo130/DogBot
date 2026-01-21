@@ -50,6 +50,20 @@ Since <t:{1}:R>`,
             "bot.footer": "We made this with discord.js",
             "bot.refresh": "Refresh",
         },
+
+        "/queue": {
+            "list.no_track_in_queue": "There is no tracks in the queue",
+            "list.playing": "Now Playing",
+            "list.queue": "Queue",
+            "list.page": "Page {0} of {1}",
+            "list.prev_page": "Previous Page",
+            "list.next_page": "Next Page",
+            "list.update": "Update",
+            "list.empty": "The list is empty",
+
+            "remove.invalid_track": "Invalid track index",
+            "remove.success": "Removed track",
+        },
     },
 
     [Locale.ChineseTW]: {
@@ -93,7 +107,7 @@ Since <t:{1}:R>`,
         },
 
         "/queue": {
-            "list.no_music_in_queue": "沒有音樂在佇列裡",
+            "list.no_track_in_queue": "沒有音樂在佇列裡",
             "list.playing": "正在播放",
             "list.queue": "播放佇列",
             "list.page": "第 {0} / {1} 頁",
@@ -101,6 +115,9 @@ Since <t:{1}:R>`,
             "list.next_page": "下一頁",
             "list.update": "更新",
             "list.empty": "清單是空的",
+
+            "remove.invalid_track": "沒有這首歌",
+            "remove.success": "成功移除",
         },
     },
 };
@@ -251,20 +268,20 @@ function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
  * @param {string | null} lang
  * @param {string} category
  * @param {string} key
- * @param {string[]} replace - 文字中需要的變量
+ * @param {string[]} [replace] - 文字中需要的變量
  * @returns {string}
  */
 function get_lang_data(lang, category, key, ...replace) {
     const default_lang = Locale.ChineseTW;
 
-    if (!lang) lang = default_lang;
+    lang = (lang && lang in language)
+        ? lang
+        : default_lang;
 
     const lang_category = get_lang_category(lang, category, default_lang);
-    let lang_value = lang_category[key];
+    let lang_value = lang_category[key] ?? language[default_lang][category][key];
 
-    if (!lang_value) lang_value = language[default_lang][category][key];
-
-    if (replace.length > 0) {
+    if (replace?.length > 0) {
         for (let i = 0; i < replace.length; i++) {
             lang_value = lang_value.replace(`{${i}}`, replace[i]);
         };

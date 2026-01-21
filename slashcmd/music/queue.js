@@ -1,5 +1,5 @@
 const { SlashCommandBuilder } = require("@discordjs/builders");
-const { ChatInputCommandInteraction, SlashCommandSubcommandBuilder, ButtonStyle, BaseInteraction, ActionRowBuilder, ButtonBuilder } = require("discord.js");
+const { ChatInputCommandInteraction, SlashCommandSubcommandBuilder, ButtonStyle, BaseInteraction, ActionRowBuilder, ButtonBuilder, MessageFlags } = require("discord.js");
 
 const { get_emojis } = require("../../utils/rpg.js");
 const { getQueue, MusicQueue, queueListTrackPerPage } = require("../../utils/music/music.js");
@@ -12,7 +12,7 @@ const { get_lang_data } = require("../../utils/language.js");
 /**
  * Get queue list embed
  * @param {MusicQueue} queue
- * @param {number} [currentPage]
+ * @param {number} [currentPage=1]
  * @param {BaseInteraction} [interaction]
  * @param {DogClient} [client]
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>]>}
@@ -31,16 +31,17 @@ async function getQueueListEmbedRow(queue, currentPage = 1, interaction = null, 
     ], client);
 
     const currentTrack = queue.currentTrack;
-
     const locale = interaction?.locale;
 
-    const lang_no_music_in_queue = get_lang_data(locale, "/queue", "list.no_music_in_queue"); // 沒有音樂在佇列裡
-    const lang_playing = get_lang_data(locale, "/queue", "list.playing"); // 正在播放
-    const lang_queue = get_lang_data(locale, "/queue", "list.queue"); // 播放佇列
-    const lang_prev_page = get_lang_data(locale, "/queue", "list.prev_page"); // 上一頁
-    const lang_next_page = get_lang_data(locale, "/queue", "list.next_page"); // 下一頁
-    const lang_update = get_lang_data(locale, "/queue", "list.update"); // 更新
-    const lang_list_empty = get_lang_data(locale, "/queue", "list.list_empty"); // 清單是空的
+    const [lang_no_track_in_queue, lang_playing, lang_queue, lang_prev_page, lang_next_page, lang_update, lang_list_empty] = await Promise.all([
+        get_lang_data(locale, "/queue", "list.no_track_in_queue"), // 沒有音樂在佇列裡
+        get_lang_data(locale, "/queue", "list.playing"), // 正在播放
+        get_lang_data(locale, "/queue", "list.queue"), // 播放佇列
+        get_lang_data(locale, "/queue", "list.prev_page"), // 上一頁
+        get_lang_data(locale, "/queue", "list.next_page"), // 下一頁
+        get_lang_data(locale, "/queue", "list.update"), // 更新
+        get_lang_data(locale, "/queue", "list.list_empty") // 清單是空的
+    ]);
 
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
@@ -60,7 +61,7 @@ async function getQueueListEmbedRow(queue, currentPage = 1, interaction = null, 
                     return `\`${starts + index + 1}.\` [${track.title}](<${track.url}>) - ${duration}`;
                 })
                 .join("\n")
-            || lang_no_music_in_queue;
+            || lang_no_track_in_queue;
 
         embed
             .setDescription(`
@@ -150,42 +151,53 @@ module.exports = {
      * @param {ChatInputCommandInteraction} interaction
      * @param {DogClient} client
     */
-    execute: async (interaction, client) => {
-        const [_, subcommand, queue, [emoji_cross, emoji_playlist]] = await Promise.all([
-            interaction.deferReply(),
+    execute: async function (interaction, client) {
+        const [subcommand, queue, [emoji_cross, emoji_playlist]] = await Promise.all([
             interaction.options.getSubcommand(false),
             getQueue(interaction.guildId),
             get_emojis(["crosS", "playlist"], client),
         ]);
 
+        const locale = interaction.locale;
+
         switch (subcommand) {
             case "list": {
-                const [embed, row] = await getQueueListEmbedRow(queue, 1, interaction, client);
+                const [_, [embed, row]] = await Promise.all([
+                    interaction.deferReply(),
+                    getQueueListEmbedRow(queue, 1, interaction, client),
+                ]);
 
                 return await interaction.editReply({ embeds: [embed], components: [row] });
             };
 
             case "remove": {
-                const index = (interaction.options.getInteger("song", false) ?? 1) - 1;
+                const [lang_invalid_track, lang_success, index] = await Promise.all([
+                    get_lang_data(locale, "/queue", "remove.invalid_track"), // 沒有這首歌
+                    get_lang_data(locale, "/queue", "remove.success"), // 成功移除
+                    (interaction.options.getInteger("song", false) ?? 1) - 1,
+                ]);
 
                 const track = queue.tracks[index];
                 if (!track) {
                     const error_embed = new EmbedBuilder()
                         .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 沒有這首歌`)
+                        .setTitle(`${emoji_cross} | ${lang_invalid_track}`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.editReply({ embeds: [error_embed] });
+                    return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
                 };
-
-                queue.removeTrack(index);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
-                    .setTitle(`${emoji_playlist} | 成功移除 \`${track.title}\``)
+                    .setTitle(`${emoji_playlist} | ${lang_success} \`${track.title}\``) // 成功移除 `track_title`
                     .setEmbedFooter(interaction);
 
-                return await interaction.editReply({ embeds: [embed] });
+                await Promise.all([
+                    queue.removeTrack(index),
+                    interaction.reply({ embeds: [embed] }),
+                ]);
+
+                break;
             };
         };
     },
