@@ -991,13 +991,13 @@ async function wrong_job_embed(rpg_data, command, userId, interaction = null, cl
  * @returns {Promise<Emoji>}
  */
 async function get_emoji_object(name, client = global._client) {
-    client = wait_until_ready(client);
+    if (!client) client = wait_until_ready(client);
 
-    let emojis = client.application.emojis.cache;
-    let emoji = emojis.find(e => e.name === name);
+    let emojis = client.application?.emojis.cache;
+    let emoji = emojis?.find(e => e.name === name);
 
     if (!emoji) {
-        emojis = await client.application.emojis.fetch();
+        emojis = await client.application?.emojis.fetch();
         emoji = emojis.find(e => e.name === name);
     };
 
@@ -1011,7 +1011,7 @@ async function get_emoji_object(name, client = global._client) {
  * @returns {Promise<Emoji[]>}
  */
 async function get_emoji_objects(names, client = global._client) {
-    client = wait_until_ready(client);
+    if (!client) client = wait_until_ready(client);
 
     const emojis = await Promise.all(
         names.map(name => get_emoji_object(name, client)),
@@ -1027,7 +1027,7 @@ async function get_emoji_objects(names, client = global._client) {
  * @returns {Promise<string>}
  */
 async function get_emoji(name, client = global._client) {
-    client = wait_until_ready(client);
+    if (!client) client = wait_until_ready(client);
 
     const emojiObject = await get_emoji_object(name, client);
 
@@ -1044,14 +1044,14 @@ async function get_emoji(name, client = global._client) {
  * @returns {Promise<string[]>}
  */
 async function get_emojis(names, client = global.client) {
-    client = wait_until_ready(client);
+    if (!client) client = wait_until_ready(client);
 
     const emojis = await Promise.all(
         names.map(name => get_emoji(name, client)),
     );
 
     return emojis;
-}
+};
 
 /**
  * 
