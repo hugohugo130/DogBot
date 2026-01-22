@@ -64,7 +64,7 @@ const {
 } = require("../../utils/config.js");
 const {
     get_help_command,
-} = require("./rpg_interactions.js");
+} = require("./interactions.js");
 const {
     mentions_users,
 } = require("../../utils/message.js");
