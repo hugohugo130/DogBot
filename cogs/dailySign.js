@@ -19,8 +19,8 @@ module.exports = {
         if (user.bot || !guild || !daily_sign_guildIDs.includes(guild.id)) return;
 
         const rpg_data = await load_rpg_data(user.id);
-        if (!rpg_data.daily) rpg_data.daily = 0;
-        if (!rpg_data.daily_times) rpg_data.daily_times = 0;
+        if (!rpg_data.daily || typeof rpg_data.daily !== "number") rpg_data.daily = 0;
+        if (!rpg_data.daily_times || typeof rpg_data.daily_times !== "number") rpg_data.daily_times = 0;
 
         const daily_times = rpg_data.daily_times;
 
@@ -42,6 +42,7 @@ module.exports = {
         });
 
         rpg_data.daily = now.getTime();
+        rpg_data.daily_times += 1;
 
         await Promise.all([
             message.react("💰"),
