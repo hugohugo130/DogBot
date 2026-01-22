@@ -1093,7 +1093,7 @@ module.exports = {
                         const need_amount = need_item.amount;
                         const have_amount = (rpg_data.inventory[current_item_id] || 0);
 
-                        if (!(await userHaveEnoughItems(userId, current_item_id, need_amount))) {
+                        if (!userHaveEnoughItems(rpg_data, current_item_id, need_amount)) {
                             item_missing.push({
                                 item: get_name_of_id(current_item_id),
                                 amount: need_amount - have_amount,

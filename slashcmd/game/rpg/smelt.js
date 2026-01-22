@@ -43,10 +43,11 @@ const logger = get_logger();
 async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     const userId = interaction.user.id;
 
-    const rpg_data = await load_rpg_data(userId);
-    const smelt_data = await load_smelt_data()[userId];
-
-    const [emoji_cross, emoji_furnace] = await get_emojis(["crosS", "furnace"], interaction.client);
+    const [rpg_data, smelt_data, [emoji_cross, emoji_furnace]] = await Promise.all([
+        load_rpg_data(userId),
+        load_smelt_data()[userId],
+        get_emojis(["crosS", "furnace"], interaction.client)
+    ]);
 
     if (smelt_data && smelt_data.length >= smelter_slots) {
         const embed = new EmbedBuilder()
@@ -95,8 +96,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
         const need_amount = need_item.amount;
         const have_amount = (rpg_data.inventory[current_item_id] || 0);
 
-        // if (have_amount < need_amount) {
-        if (!(await userHaveEnoughItems(interaction.user.id, current_item_id, need_amount))) {
+        if (!userHaveEnoughItems(rpg_data, current_item_id, need_amount)) {
             item_missing.push({
                 item: get_name_of_id(current_item_id),
                 amount: need_amount - have_amount,
