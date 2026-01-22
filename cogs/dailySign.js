@@ -42,6 +42,10 @@ module.exports = {
         });
 
         rpg_data.daily = now.getTime();
-        await save_rpg_data(user.id, rpg_data);
+
+        await Promise.all([
+            message.react("💰"),
+            save_rpg_data(user.id, rpg_data),
+        ]);
     },
 };
