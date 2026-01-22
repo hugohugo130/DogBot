@@ -222,6 +222,7 @@ const foods_crops = [
     "bread",
     "raw_potato",
     "tomato",
+    "tomato_egg",
     "carrot",
     "corn",
     "cooked_corn",
@@ -360,6 +361,7 @@ const shop_lowest_price = {
     tuna: 105,
     pork: 135,
     beef: 175,
+    tomato_egg: 175,
     duck: 150,
     chicken: 150,
     mutton: 150,
@@ -495,6 +497,7 @@ const food_data = {
     pork: 4,
     potato: 2,
     tomato: 1,
+    tomato_egg: 3,
     carrot: 1,
     corn: 1,
     cooked_corn: 3,
@@ -622,6 +625,17 @@ for (const raw_food of Object.keys(foods_meat).filter(e => e.startsWith("raw_"))
     bake[raw_food] = food;
 };
 
+const cook = [
+    {
+        input: [
+            { name: "tomato", amount: 1 },
+            { name: "egg", amount: 1 },
+        ],
+        output: "tomato_egg",
+        amount: 1,
+    },
+];
+
 const name = {
     // ==============礦物==============
     coal: "煤炭",
@@ -676,6 +690,7 @@ const name = {
     pork: "烤豬肉",
     potato: "烤馬鈴薯",
     tomato: "番茄",
+    tomato_egg: "番茄炒蛋",
     carrot: "紅蘿蔔",
     corn: "玉米",
     cooked_corn: "烤玉米",
@@ -863,17 +878,25 @@ async function get_number_of_items(name, userid) {
 };
 
 /**
- * 
- * @param {string} userid 
- * @param {string} item 
- * @param {number} item_amount 
- * @returns {Promise<boolean>} 如果玩家有足夠的物品，回傳true
+ *
+ * @param {object} rpg_data
+ * @param {string} item
+ * @param {number} amount_needed
+ * @returns {null | {item: string, amount: number}} 如果玩家有足夠的物品，回傳null，否則返回物品id和數量
  */
-async function userHaveEnoughItems(userid, item, item_amount) {
-    const rpg_data = await load_rpg_data(userid);
+function userHaveEnoughItems(rpg_data, item, amount_needed) {
     const items = rpg_data.inventory;
 
-    return items?.[item] && items[item] >= item_amount;
+    const item_amount = items?.[item];
+
+    if (item_amount && item_amount >= amount_needed) {
+        return null;
+    } else {
+        return {
+            item: item,
+            amount: amount_needed - item_amount,
+        };
+    };
 };
 
 /**
@@ -1638,49 +1661,49 @@ function all(iterable, defaultValue = true) {
 
 const jobs = {
     "fisher": { // 漁夫
-        "command": "fish",
+        "command": ["fish"],
         "emoji": "fisher",
         "desc": "是個需要勞力的職業，你必須要努力勤奮的抓魚，才會獲得收益",
         "name": "漁夫",
     },
     "pharmacist": { // 藥劑師
-        "command": "brew",
+        "command": ["brew"],
         "emoji": "potion",
         "desc": "這個世界神秘力量的來源，製作藥水以及科學實驗來幫助成長",
         "name": "藥劑師",
     },
     "farmer": { // 農夫
-        "command": "/farm",
+        "command": ["/farm"],
         "emoji": "farmer",
         "desc": "和漁夫是差不多辛勤的職業，只是會遇到颱風之類的災難",
         "name": "農夫",
     },
     "cook": { // 廚師
-        "command": "/bake",
+        "command": ["/bake", "/cook"],
         "emoji": "cook",
         "desc": "需購買食材，烘烤食物並轉賣來獲得收益 (新手不建議)",
         "name": "廚師",
     },
     "miner": { // 礦工
-        "command": "mine",
+        "command": ["mine"],
         "emoji": "ore",
         "desc": "這個世界各類金屬的來源，挖取原礦並轉賣給鐵匠",
         "name": "礦工",
     },
     "herder": { // 牧農
-        "command": "herd",
+        "command": ["herd"],
         "emoji": "cow",
         "desc": "肉類的來源，養殖各類動物",
         "name": "牧農",
     },
     "blacksmith": { // 鐵匠
-        "command": "/smelt",
+        "command": ["/smelt"],
         "emoji": "anvil",
         "desc": "熔煉各類原礦轉換成有價值的礦物 (新手不建議)",
         "name": "鐵匠",
     },
     "lumberjack": { // 伐木工
-        "command": "fell",
+        "command": ["fell"],
         "emoji": "wood",
         "desc": "在森林中砍伐木頭，是木頭的來源",
         "name": "伐木工",
@@ -1693,7 +1716,7 @@ const PrivacySettings = Object.freeze({
     Partner: "partner",
 });
 
-const workCmdJobs = Object.fromEntries(Object.entries(jobs).filter(([_, value]) => value.command).map(([key, value]) => [value.command, [key, value]]));
+const workCmdJobs = Object.fromEntries(Object.entries(jobs).filter(([_, value]) => value.command).flatMap(([key, value]) => value.command.map(cmd => [cmd, [key, value]])));
 
 const oven_slots = 3;
 const farm_slots = 4;
@@ -1721,6 +1744,7 @@ module.exports = {
     weapons_armor,
     tags,
     bake,
+    cook,
     sell_data,
     PrivacySettings,
     check_item_data,
