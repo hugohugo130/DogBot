@@ -43,7 +43,7 @@ module.exports = {
             if (!oldChannel?.id && !newChannel?.id) return;
             if (oldChannel?.id === newChannel?.id) return;
 
-            const botMember = botMember;
+            const botMember = await get_me(guild);
 
             // 檢查機器人是否有權限管理頻道
             if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return;
