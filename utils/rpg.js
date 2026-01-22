@@ -1185,6 +1185,8 @@ async function get_failed_embed(failed_reason, rpg_data, interaction = null, cli
  * @returns {number}
  */
 function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
+    if (amount_limit(rpg_data.money) || amount_limit(rpg_data.money + amount) || amount_limit(amount)) throw new Error("金額超過上限");
+
     rpg_data.money += amount;
     rpg_data.transactions.push({
         timestamp: Math.floor(Date.now() / 1000),
@@ -1193,6 +1195,7 @@ function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
         amount,
         type
     });
+
     return rpg_data.money;
 };
 
@@ -1206,6 +1209,8 @@ function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
  * @returns {number}
  */
 function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
+    if (amount_limit(rpg_data.money) || amount_limit(rpg_data.money + amount) || amount_limit(amount)) throw new Error("金額超過上限");
+
     rpg_data.money -= amount;
     rpg_data.transactions.push({
         timestamp: Math.floor(Date.now() / 1000),
@@ -1214,6 +1219,7 @@ function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
         amount,
         type
     });
+
     return rpg_data.money;
 };
 
@@ -1432,29 +1438,15 @@ async function choose_job_row(userid) {
 };
 
 /**
- * 
+ * Checks if the given amount exceeds the maximum or minimum safe integer limit.
  * @param {number} amount
- * @param {BaseInteraction} [interaction]
- * @returns {Promise<EmbedBuilder | null>}
+ * @returns {boolean}
  */
-async function amount_limit_embed(amount, interaction = null) {
-    if (amount <= item_amount_limit) {
-        return null;
-    };
-
-    const emoji_cross = await get_emoji("crosS", client);
-
-    const embed = new EmbedBuilder()
-        .setColor(embed_error_color)
-        .setTitle(`${emoji_cross} | 數量超過上限!`)
-        .setDescription(`請輸入小於等於 ${item_amount_limit} 的數字`)
-        .setEmbedFooter(interaction);
-
-    return embed;
+function amount_limit(amount) {
+    return amount > Number.MAX_SAFE_INTEGER || amount < Number.MIN_SAFE_INTEGER;
 };
 
 async function ls_function({ client, message, rpg_data, mode, PASS, interaction = null }) {
-
     if (!rpg_data.privacy.includes(PrivacySettings.Inventory) && !PASS) {
         const guildData = await loadData(message.guild.id);
 
@@ -1753,6 +1745,7 @@ module.exports = {
     add_money,
     remove_money,
     get_loophole_embed,
+    amount_limit,
     ls_function,
     firstPrefix,
     InPrefix,
