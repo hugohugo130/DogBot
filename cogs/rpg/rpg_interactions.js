@@ -1,6 +1,6 @@
+const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
 const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, ButtonStyle, ButtonBuilder, ButtonInteraction, StringSelectMenuInteraction, BaseInteraction } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
-const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
 const util = require("util");
 
 const {
@@ -55,10 +55,14 @@ const {
     embed_error_color,
     embed_job_color,
 } = require("../../utils/config.js");
+const {
+    getQueueListEmbedRow
+} = require("../../slashcmd/music/queue.js");
+const {
+    get_channel
+} = require("../../utils/discord.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
-const { getQueueListEmbedRow } = require("../../slashcmd/music/queue.js");
-const { get_channel } = require("../../utils/discord.js");
 
 const logger = get_logger();
 
@@ -755,7 +759,6 @@ module.exports = {
                         .addComponents(selectMenu);
 
                     return await interaction.editReply({ embeds: [embed], components: [row] });
-                    break;
                 };
                 case "choose_command": {
                     await interaction.deferUpdate();
@@ -1202,7 +1205,6 @@ module.exports = {
                         .setEmbedFooter(interaction);
 
                     return await interaction.editReply({ content: "", embeds: [embed], components: [] });
-                    break;
                 };
                 case "divorce": {
                     const [_, userId, with_UserId] = interaction.customId.split("|");
@@ -1296,9 +1298,11 @@ module.exports = {
                     const [_, __, job] = interaction.customId.split("|");
                     const job_name = jobs?.[job]?.name;
 
-                    const emoji_job = await get_emoji("job", client);
+                    const [emoji_job, delay_embed] = await Promise.all([
+                        get_emoji("job", client),
+                        job_delay_embed(user.id, interaction, client),
+                    ]);
 
-                    const delay_embed = await job_delay_embed(user.id, interaction, client);
                     if (delay_embed) {
                         return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
                     };
@@ -1315,14 +1319,18 @@ module.exports = {
                     if (!rpg_data.lastRunTimestamp) rpg_data.lastRunTimestamp = {};
                     rpg_data.lastRunTimestamp.job = Date.now();
 
-                    await save_rpg_data(user.id, rpg_data);
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_job_color)
                         .setTitle(`${emoji_job} | 成功轉職為 ${job_name}!`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.update({ embeds: [embed], components: [] });
+                    await Promise.all([
+                        interaction.update({ embeds: [embed], components: [] }),
+                        save_rpg_data(user.id, rpg_data),
+                    ]);
+
+                    break;
                 };
                 case "play-s": {
                     // 下拉式選單
@@ -1421,7 +1429,7 @@ module.exports = {
 
                             const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
                             if (notPlayingEmbed) {
-                                return await interaction.update({ content: "", embeds: [notPlayingEmbed], components: [] });
+                                return await interaction.update({ content: "", embeds: [notPlayingEmbed] });
                             };
 
                             const [emoji_music, [embed, rows]] = await Promise.all([
@@ -1444,7 +1452,7 @@ module.exports = {
 
                     const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
                     if (notPlayingEmbed) {
-                        return await interaction.update({ embeds: [notPlayingEmbed] });
+                        return await interaction.update({ content: "", embeds: [notPlayingEmbed] });
                     };
 
                     switch (feature) {
@@ -1466,6 +1474,8 @@ module.exports = {
                                     interaction.update({ content: `${emoji_pause} | \`${user.username}\` 暫停了音樂`, embeds: [] }),
                                 ]);
                             };
+
+                            break;
                         };
 
                         case "skip": {
@@ -1478,6 +1488,8 @@ module.exports = {
                                 queue.nextTrack(),
                                 interaction.update({ content: `${emoji_skip} | \`${user.username}\` 跳過了 \`${currentTrack.title}\``, embeds: [] }),
                             ]);
+
+                            break;
                         };
 
                         case "shuffle": {
@@ -1487,6 +1499,8 @@ module.exports = {
                                 queue.shuffle(),
                                 interaction.update({ content: `${emoji_shuffle} | \`${user.username}\` 隨機排序了音樂佇列`, embeds: [] }),
                             ]);
+
+                            break;
                         };
 
                         case "loop": {
