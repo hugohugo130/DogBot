@@ -60,6 +60,9 @@ class DogClient extends Client {
         this.oven_sessions = new Collection();
 
         /** @type {Collection<string, object>} */
+        this.smelter_sessions = new Collection();
+
+        /** @type {Collection<string, object>} */
         this.cook_sessions = new Collection();
 
         /** @type {Collection<string, object>} */
@@ -102,7 +105,7 @@ class DogClient extends Client {
     /**
      * Get all members from a guild.
      * @param {Guild} guild
-     * @param {boolean} [fetch] - 是否fetch guild的member而不是使用cache
+     * @param {boolean | "necessary"} [fetch] - 是否fetch guild的member而不是使用cache
      * @param {number} [fetch_timeout=360] - fetch members的timeout
      * @returns {Promise<GuildMember[]>}
      */

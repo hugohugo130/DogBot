@@ -1096,7 +1096,7 @@ module.exports = {
                     const parsedDuration = parseInt(duration);
 
                     // 從全域變數中取得 item_need 資料
-                    const item_need = global.smelter_sessions?.[session_id];
+                    const item_need = client.smelter_sessions.get(session_id);
                     if (!item_need) {
                         const embed = new EmbedBuilder()
                             .setColor(embed_error_color)
@@ -1164,7 +1164,7 @@ module.exports = {
                     await save_smelt_data(smelt_data);
 
                     // 清理 session 資料
-                    delete global.smelter_sessions[session_id];
+                    client.smelter_sessions.delete(session_id);
 
                     const emoji_furnace = await get_emoji("furnace", client);
                     const embed = new EmbedBuilder()

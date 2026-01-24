@@ -118,10 +118,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     const session_id = `${userId}_${Date.now()}`;
 
     // 將 item_need 資料儲存在全域變數或快取中
-    if (!global.smelter_sessions) {
-        global.smelter_sessions = {};
-    };
-    global.smelter_sessions[session_id] = item_need;
+    interaction.client.smelter_sessions.set(session_id, item_need);
 
     const confirm_button = new ButtonBuilder()
         // const [_, userId, item_id, amount, coal_amount, duration, output_amount, session_id] = interaction.customId.split("|");
