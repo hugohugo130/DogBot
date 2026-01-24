@@ -26,7 +26,10 @@ async function getCookingContainer(inputed_foods, item_needed, userId, sessionId
         .replace(/、 ([^、]*)$/, " 和 $1"); // 將最後一個、替換為 和
 
     const gbmi_session_id = generateSessionId(100 - 5 - `gbmi|${userId}|`.length);
-    client.gbmi_sessions.set(gbmi_session_id, item_needed);
+    client.gbmi_sessions.set(gbmi_session_id, {
+        userId,
+        item_needed
+    });
 
     const cookButton = new ButtonBuilder()
         .setCustomId(`cook|${userId}|${sessionId}`)

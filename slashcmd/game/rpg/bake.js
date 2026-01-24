@@ -137,6 +137,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     if (!interaction.client.oven_sessions) interaction.client.oven_sessions = new Collection();
 
     interaction.client.oven_sessions.set(session_id, {
+        userId,
         item_id,
         amount,
         coal_amount,

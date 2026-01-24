@@ -970,16 +970,28 @@ module.exports = {
                     const oven_bake = client.oven_sessions.get(session_id);
                     if (!oven_bake) {
                         const emoji_cross = await get_emoji("crosS", client);
-                        const embed = new EmbedBuilder()
+
+                        const error_embed = new EmbedBuilder()
                             .setColor(embed_error_color)
                             .setTitle(`${emoji_cross} | 烘烤會話已過期`)
                             .setDescription(`請重新執行烘烤指令`)
                             .setEmbedFooter(interaction);
 
-                        return await interaction.editReply({ embeds: [embed], components: [] });
+                        return await interaction.editReply({ content: "", embeds: [error_embed], components: [] });
                     };
 
-                    const { item_id, amount, coal_amount, duration, item_need } = oven_bake;
+                    const { item_id, amount, coal_amount, duration, item_need, userId: _userId } = oven_bake;
+
+                    if (userId !== _userId) {
+                        const emoji_cross = await get_emoji("crosS", client);
+
+                        const error_embed = new EmbedBuilder()
+                            .setColor(embed_error_color)
+                            .setTitle(`${emoji_cross} | 這不是你的烘烤會話`)
+                            .setEmbedFooter(interaction);
+
+                        return await interaction.editReply({ content: "", embeds: [error_embed], components: [] });
+                    };
 
                     // 確保所有數值都被正確解析為整數
                     const parsedAmount = parseInt(amount);
@@ -1600,12 +1612,24 @@ module.exports = {
                     };
 
                     const {
+                        userId,
                         recipe,
                         item_needed,
                         inputed_foods,
                         amount,
                         last_cook_time,
                     } = session;
+
+                    if (user.id !== userId) {
+                        const emoji_cross = await get_emoji("crosS", client);
+
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_error_color)
+                            .setTitle(`${emoji_cross} | 這不是你的烹飪會話`)
+                            .setEmbedFooter(interaction);
+
+                        return await interaction.reply({ embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
+                    };
 
                     const food_name = get_name_of_id(recipe.output);
 
@@ -1672,6 +1696,17 @@ module.exports = {
                             .setColor(embed_error_color)
                             .setTitle(`${emoji_cross} | 退回失敗`)
                             .setDescription(`${emoji_panic} 正在偷吃你的物品，但被你抓到了 (跑走`)
+                            .setEmbedFooter(interaction);
+
+                        return await interaction.reply({ embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
+                    };
+
+                    if (user.id !== session.userId) {
+                        const emoji_cross = await get_emoji("crosS", client);
+
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_error_color)
+                            .setTitle(`${emoji_cross} | 這不是你的會話`)
                             .setEmbedFooter(interaction);
 
                         return await interaction.reply({ embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
