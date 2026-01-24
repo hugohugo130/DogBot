@@ -73,6 +73,9 @@ const {
     getCookingContainer,
     getCookingResultContainer
 } = require("../../slashcmd/game/rpg/cook.js");
+const {
+    getBotInfoEmbed,
+} = require("../../slashcmd/info.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -570,14 +573,12 @@ module.exports = {
      */
     execute: async function (client, interaction) {
         try {
-            const { getBotInfoEmbed } = require("../../slashcmd/info.js");
+            const { rpg_handler, MockMessage } = require("./msg_handler.js");
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
             const message = interaction.message;
             const user = interaction.user;
-
-            const prefix = await firstPrefix(interaction.guild.id);
 
             if (message.author.id !== client.user.id) return;
 
@@ -604,7 +605,9 @@ module.exports = {
                 return;
             };
 
-            logger.info(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`);
+            setImmediate(() => {
+                logger.info(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`)
+            });
 
             switch (interactionCategory) {
                 case "rpg_transaction": {
@@ -784,11 +787,12 @@ module.exports = {
                     return await interaction.editReply({ embeds: [embed], components: [row] });
                 };
                 case "choose_command": {
-                    await interaction.deferUpdate();
+                    const [_, prefix] = await Promise.all([
+                        interaction.deferUpdate(),
+                        firstPrefix(interaction.guild.id),
+                    ]);
 
-                    const { rpg_handler, MockMessage } = require("./msg_handler.js");
-
-                    const [_, __, command] = interaction.customId.split("|");
+                    const [__, command] = otherCustomIDs;
 
                     const message = new MockMessage(`${prefix}${command}`, interaction.channel, interaction.user, interaction.guild);
                     let response = await rpg_handler({ client: client, message, d: true, mode: 1 });
@@ -800,11 +804,12 @@ module.exports = {
                     break;
                 };
                 case "ls": {
-                    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-                    const { MockMessage } = require("./msg_handler.js");
+                    const [_, prefix] = await Promise.all([
+                        interaction.deferReply({ flags: MessageFlags.Ephemeral }),
+                        firstPrefix(interaction.guild.id),
+                    ]);
 
-
-                    const [_, userId] = interaction.customId.split("|");
+                    const [__, userId] = interaction.customId.split("|");
                     const message = new MockMessage(`${prefix}ls`, interaction.message.channel, interaction.user, interaction.guild);
                     const res = await ls_function({
                         client: client,
