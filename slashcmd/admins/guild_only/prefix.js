@@ -1,7 +1,8 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, EmbedBuilder, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
 
 const { addPrefix, rmPrefix, getPrefixes } = require("../../../utils/file.js");
 const { embed_default_color, reserved_prefixes } = require("../../../utils/config.js");
+const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
