@@ -328,7 +328,7 @@ const rpg_commands = {
 
         rpg_data.inventory[product] += amount;
 
-        const product_name = name[product];
+        const product_name = get_name_of_id(product);
         const animal_name = product_name.replace("生", "").replace("肉", "");
         const emoji_cow = await get_emoji("cow", client);
 
@@ -346,10 +346,10 @@ const rpg_commands = {
             description = `呱呱呱呱呱，呱呱呱呱 \`${amount}\` 呱呱呱！`;
         } else if (product === "raw_hugo") {
             title = `哈狗!`;
-            description = `你把哈狗的巢穴連根拔起，並且抓到了 \`${amount}\` 隻 ${get_name_of_id("raw_hugo")} 並逃走了！`;
+            description = `你把哈狗的巢穴連根拔起，並且抓到了 \`${amount}\` 隻 ${product_name} 並逃走了！`;
         } else if (product === "dogdog") {
             title = `🐶 汪!`
-            description = `你偷走了機器犬的幼崽！拿到了 \`${amount}\` 隻 ${get_name_of_id("dogdog")}`
+            description = `你偷走了機器犬的幼崽！拿到了 \`${amount}\` 隻 ${product_name}`
         };
 
         await save_rpg_data(userid, rpg_data);

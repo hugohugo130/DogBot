@@ -59,6 +59,12 @@ class DogClient extends Client {
         /** @type {Collection<string, object>} */
         this.oven_sessions = new Collection();
 
+        /** @type {Collection<string, object>} */
+        this.cook_sessions = new Collection();
+
+        /** @type {Collection<string, object>} */
+        this.gbmi_sessions = new Collection();
+
         /**
          * @type {Object.<string, Object.<string, Object.<string, string>>>}
          * USERID: {

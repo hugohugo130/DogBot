@@ -118,20 +118,12 @@ async function readFile(file_path, options = { encoding: "utf-8" }) {
 };
 
 /**
- * 從 JSON 字串轉換物件，處理錯誤
+ * 轉換 JSON 字串到物件
  * @argument {string} jsonString - 要解析的 JSON 字串
- * @argument {any} defaultValue - 解析失敗時的預設值
- * @returns {object | any} 解析後的物件或預設值
+ * @returns {object} 解析後的物件
  */
-function safeJSONParse(jsonString, defaultValue = {}) {
-    try {
-        return JSON.parse(jsonString);
-    } catch (error) {
-        const errorStack = util.inspect(error, { depth: null });
-
-        logger.warn(`JSON 解析失敗:\n${errorStack}\n${getCallerModuleName(null)}`);
-        return defaultValue;
-    };
+function safeJSONParse(jsonString) {
+    return JSON.parse(jsonString)
 };
 
 function needsStringify(obj) {

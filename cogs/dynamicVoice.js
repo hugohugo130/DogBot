@@ -31,10 +31,10 @@ module.exports = {
             const member = newState.member || oldState.member;
             if (!member) return;
 
-            const mainchannelID = getDynamicVoice(guild.id);
+            const mainchannelID = await getDynamicVoice(guild.id);
             if (!mainchannelID) return;
 
-            const mainchannel = await get_channel(guild, mainchannelID);
+            const mainchannel = await get_channel(mainchannelID, guild);
             if (!mainchannel) return;
 
             const oldChannel = oldState.channel;
@@ -47,11 +47,11 @@ module.exports = {
 
             // 檢查機器人是否有權限管理頻道
             if (!botMember.permissions.has(PermissionFlagsBits.ManageChannels)) return;
-            if (!mainchannel.permissionsFor((botMember)).has(PermissionFlagsBits.ManageChannels)) return;
+            if (!mainchannel.permissionsFor(botMember).has(PermissionFlagsBits.ManageChannels)) return;
 
             // 檢查機器人是否有權限移動成員
             if (!botMember.permissions.has(PermissionFlagsBits.MoveMembers)) return;
-            if (!mainchannel.permissionsFor((botMember)).has(PermissionFlagsBits.MoveMembers)) return;
+            if (!mainchannel.permissionsFor(botMember).has(PermissionFlagsBits.MoveMembers)) return;
 
             // 成員加入語音頻道
             if (newChannel && newChannel.id === mainchannelID) {
@@ -69,7 +69,7 @@ module.exports = {
                                 channel?.type &&
                                 channel?.type === ChannelType.GuildVoice
                             ) && (
-                                await get_channel(guild, channel.id)
+                                await get_channel(channel.id, guild)
                             )
                         ) {
                             createChannel = false;

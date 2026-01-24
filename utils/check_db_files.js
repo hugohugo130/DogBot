@@ -51,6 +51,7 @@ async function checkDBFilesCorrupted() {
  */
 async function make_db_compatible(users, guilds) {
     for (const user of users) {
+        continue;
         if (!user instanceof User) continue;
 
         const rpg_data = await load_rpg_data(user.id);
@@ -98,6 +99,7 @@ async function make_db_compatible(users, guilds) {
         - feat: 每日簽到 (增加daily鍵)
         */
 
+        /*
         if (!rpg_data.daily && rpg_data.daily !== 0) {
             rpg_data.daily = 0;
             modified = true;
@@ -107,6 +109,7 @@ async function make_db_compatible(users, guilds) {
             rpg_data.daily_times = 0;
             modified = true;
         };
+        */
 
         // =================================================================
 

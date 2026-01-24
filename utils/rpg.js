@@ -5,7 +5,7 @@ const { wait_until_ready } = require("./wait_until_ready.js");
 const { get_logger } = require("./logger.js");
 const { load_rpg_data, loadData, get_probability_of_id } = require("./file.js");
 const { convertToSecondTimestamp, DateNowSecond } = require("./timestamp.js");
-const { embed_default_color, embed_error_color, embed_fell_color, reserved_prefixes, setJobDelay, item_amount_limit } = require("./config.js");
+const { embed_default_color, embed_error_color, embed_fell_color, reserved_prefixes, setJobDelay } = require("./config.js");
 const EmbedBuilder = require("./customs/embedBuilder.js");
 const DogClient = require("./customs/client.js");
 
@@ -832,7 +832,8 @@ function check_item_data() {
     ]
         .flat()
         .filter(item => !Object.values(animal_products).includes(item))
-        .filter(item => !Object.values(bake).includes(item));
+        .filter(item => !Object.values(bake).includes(item))
+        .filter(item => !cook.map(data => data.output).includes(item));
 
 
     for (const item_id of all_items) {
@@ -925,7 +926,7 @@ async function notEnoughItemEmbed(item_datas, interaction = null, client = globa
         };
 
         const length = Object.keys(item_data).length;
-        if (!item_data.item || !item_data.amount || length !== 2) {
+        if (!item_data.hasOwnProperty("item") || !item_data.hasOwnProperty("amount") || length !== 2) {
             logger.warn(`item_data應該只有item和amount屬性，但：\n${JSON.stringify(item_data, null, 4)}`)
         };
 
@@ -1232,7 +1233,7 @@ function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
  * @returns {number}
  */
 function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
-    if (amount_limit(rpg_data.money) || amount_limit(rpg_data.money + amount) || amount_limit(amount)) throw new Error("金額超過上限");
+    if ((amount_limit(rpg_data.money) && amount_limit(rpg_data.money - amount)) || amount_limit(amount)) throw new Error("金額超過上限");
 
     rpg_data.money -= amount;
     rpg_data.transactions.push({
@@ -1303,7 +1304,7 @@ function error_analyze(errorStack) {
     // at async Object.execute (path/to/file.usuallyJs:Line:Column)
     // async may be missing
     for (const errorStackLine of errorStack.split("\n")) {
-        const match_execute = errorStackLine.trim().match(/^at\s+(?:async\s+)?[\w$.]+\s+\(((?:[a-zA-Z]:)?[^:]+?):(\d+):(\d+)\)$/);
+        const match_execute = errorStackLine.trim().match(/^at (?:async )?Object\.execute \((.+):(\d+):(\d+)\)$/);
         if (match_execute) {
             const file = match_execute[1].replace("/app/", ""); // 檔案路徑，並且移除 docker 路徑 /app/
             const line = match_execute[2]; // 行
@@ -1359,12 +1360,12 @@ async function get_loophole_embed(text, interaction = null, client = global._cli
         codeBlock: true,
     });
 
-    text = `\`\`\`\n${text}\n\`\`\``;
-
     // embed 描述最長：4096 字元
-    if (text.length > 4096) {
-        text = text.slice(0, 4093) + "...";
+    if (text.length > 4000) {
+        text = text.slice(0, 4000) + "...";
     };
+
+    text = `\`\`\`\n${text}\n\`\`\``;
 
     const embed = new EmbedBuilder()
         .setColor(embed_error_color)

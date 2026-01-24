@@ -31,6 +31,20 @@ const CHANNEL_MAPPING = {
     verbose: config.log_channel_id
 };
 
+function any(iterable) {
+    if (iterable == null) {
+        throw new TypeError("any() argument must be an iterable");
+    };
+
+    for (const element of iterable) {
+        if (element) {
+            return true;
+        };
+    };
+
+    return false;
+};
+
 function splitStringByLength(text, maxLength = 3900) {
     const result = [];
     for (let i = 0; i < text.length; i += maxLength) {
@@ -55,6 +69,11 @@ class DiscordTransport extends winston.Transport {
         });
 
         if (DEBUG) console.debug(`[DEBUG] [DiscordTransport] pushed info to sendQueue: ${JSON.stringify(info, null, 4)}`);
+
+        // 如果message含有config.dc_send_ignore_keywords中任何一個關鍵字，則不發送
+        if (info.message && any(config.dc_send_ignore_keywords.map(keyword => info.message.includes(keyword)))) return;
+        if (info.stack && any(config.dc_send_ignore_keywords.map(keyword => info.stack.includes(keyword)))) return;
+
         global.sendQueue.push(info);
 
         if (callback && this.levels[info.level] <= this.levels[this.level]) callback();
@@ -94,7 +113,15 @@ class BackendTransport extends winston.Transport {
 const consoleFormat = winston.format.combine(
     winston.format.timestamp(),
     winston.format((info) => {
-        if (info.message && typeof info.message === "object" && info.message.data) {
+        if (
+            (
+                info.message &&
+                typeof info.message === "object" &&
+                info.message.data
+            ) || (
+                any(config.console_ignore_keywords.map((keyword) => (info.stack || info.message).includes(keyword)))
+            )
+        ) {
             return false; // 返回 false 表示過濾掉此日誌
         };
 

@@ -1,5 +1,5 @@
 const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
-const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, ButtonStyle, ButtonBuilder, ButtonInteraction, StringSelectMenuInteraction, BaseInteraction } = require("discord.js");
+const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, ButtonStyle, ButtonBuilder, ButtonInteraction, StringSelectMenuInteraction, BaseInteraction, ContainerBuilder, SectionBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
 const util = require("util");
 
@@ -37,6 +37,7 @@ const {
     oven_slots,
     PrivacySettings,
     get_emojis,
+    get_id_of_name,
 } = require("../../utils/rpg.js");
 const {
     get_farm_info_embed,
@@ -54,6 +55,10 @@ const {
     embed_default_color,
     embed_error_color,
     embed_job_color,
+    cookBurntOverTime,
+    cookBurntWeight,
+    container_default_color,
+    cookClickAmount,
 } = require("../../utils/config.js");
 const {
     getQueueListEmbedRow
@@ -61,6 +66,13 @@ const {
 const {
     get_channel
 } = require("../../utils/discord.js");
+const {
+    getRandomBooleanWithWeight
+} = require("../../utils/random.js");
+const {
+    getCookingContainer,
+    getCookingResultContainer
+} = require("../../slashcmd/game/rpg/cook.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -1091,14 +1103,9 @@ module.exports = {
                     for (const need_item of item_need) {
                         const current_item_id = need_item.item;
                         const need_amount = need_item.amount;
-                        const have_amount = (rpg_data.inventory[current_item_id] || 0);
 
-                        if (!userHaveEnoughItems(rpg_data, current_item_id, need_amount)) {
-                            item_missing.push({
-                                item: get_name_of_id(current_item_id),
-                                amount: need_amount - have_amount,
-                            });
-                        };
+                        const not_enough_item = userHaveEnoughItems(rpg_data, current_item_id, need_amount);
+                        if (not_enough_item) item_missing.push(not_enough_item);
                     };
 
                     if (item_missing.length > 0) {
@@ -1368,7 +1375,7 @@ module.exports = {
                         queue.setConnection(vconnection);
 
                         if (vconnection.joinConfig.channelId) {
-                            const vchannel = await get_channel(interaction.guild, vconnection.joinConfig.channelId);
+                            const vchannel = await get_channel(vconnection.joinConfig.channelId, interaction.guild);
                             if (vchannel) {
                                 queue.setVoiceChannel(vchannel);
                             };
@@ -1572,6 +1579,129 @@ module.exports = {
                             break;
                         };
                     };
+
+                    break;
+                };
+                case "cook": {
+                    const [_, sessionId] = otherCustomIDs;
+
+                    /** @type {{food: string, item_needed: object[], amount: number, cooked: number, last_cook_time: number} | undefined} */
+                    const session = client.cook_sessions.get(sessionId);
+                    if (!session) {
+                        const emoji_cross = await get_emoji("crosS", client);
+
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_error_color)
+                            .setTitle(`${emoji_cross} | 烹飪會話已過期`)
+                            .setDescription(`請重新執行烹飪指令`)
+                            .setEmbedFooter(interaction);
+
+                        return await interaction.reply({ embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
+                    };
+
+                    const {
+                        recipe,
+                        item_needed,
+                        inputed_foods,
+                        amount,
+                        last_cook_time,
+                    } = session;
+
+                    const food_name = get_name_of_id(recipe.output);
+
+                    let burnt = false;
+                    const now = Date.now();
+                    const time_diff = now - last_cook_time;
+                    if (time_diff > cookBurntOverTime) {
+                        burnt = getRandomBooleanWithWeight(cookBurntWeight);
+                    };
+
+                    if (burnt) {
+                        const emoji_cross = await get_emoji("crosS", client);
+
+                        const textDisplay = new TextDisplayBuilder()
+                            .setContent(`**${emoji_cross} | 烹飪失敗**\n你的${food_name}燒焦了，下次炒快點！`)
+
+                        const section = new SectionBuilder()
+                            .addTextDisplayComponents(textDisplay)
+
+                        return await Promise.all([
+                            client.cook_sessions.delete(sessionId),
+                            interaction.update({ components: [section] }),
+                        ]);
+                    };
+
+                    session.cooked += 1;
+                    session.last_cook_time = Date.now();
+
+                    let container;
+
+                    if (session.cooked >= cookClickAmount) {
+                        container = await getCookingResultContainer(recipe.output, amount, client);
+
+                        const rpg_data = await load_rpg_data(user.id, client);
+                        const output_item = recipe.output;
+
+                        if (!rpg_data.inventory[output_item]) rpg_data.inventory[output_item] = 0;
+                        rpg_data.inventory[output_item] += amount;
+
+                        await Promise.all([
+                            client.cook_sessions.delete(sessionId),
+                            save_rpg_data(user.id, rpg_data, client),
+                        ]);
+                    } else {
+                        container = await getCookingContainer(inputed_foods, item_needed, user.id, sessionId, session.cooked, client);
+                    };
+
+                    await interaction.update({
+                        content: null,
+                        embeds: null,
+                        components: [container],
+                    });
+
+                    break;
+                };
+                case "gbmi": { // get back my items!
+                    const [_, session_id] = otherCustomIDs;
+
+                    const session = client.gbmi_sessions.get(session_id);
+                    if (!session) {
+                        const [emoji_cross, emoji_panic] = await get_emojis(["crosS", "panic"], client);
+
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_error_color)
+                            .setTitle(`${emoji_cross} | 退回失敗`)
+                            .setDescription(`${emoji_panic} 正在偷吃你的物品，但被你抓到了 (跑走`)
+                            .setEmbedFooter(interaction);
+
+                        return await interaction.reply({ embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
+                    };
+
+                    const items = session
+                        .map(item => {
+                            const name = get_id_of_name(item.item);
+                            const amount = item.amount;
+
+                            return { name, amount };
+                        })
+
+                    const rpg_data = await load_rpg_data(user.id);
+
+                    for (const item of items) {
+                        if (!rpg_data.inventory[item.name]) rpg_data.inventory[item.name] = 0;
+                        rpg_data.inventory[item.name] += item.amount;
+                    };
+
+                    const [__, ___, ____, emoji_check] = await Promise.all([
+                        interaction.message.delete(),
+                        interaction.deferReply({ flags: MessageFlags.Ephemeral }),
+                        save_rpg_data(user.id, rpg_data),
+                        get_emoji("check", client),
+                    ]);
+
+                    const textDisplay = new TextDisplayBuilder().setContent(`**${emoji_check} | 成功取回 ${items.map(item => `${item.amount} 個 ${get_name_of_id(item.name)}`).join(", ")}**`);
+
+                    await interaction.followUp({ components: [textDisplay], flags: MessageFlags.IsComponentsV2 });
 
                     break;
                 };

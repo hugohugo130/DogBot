@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Collection } = require("discord.js");
 
-const { notEnoughItemEmbed, wrong_job_embed, get_emoji, bake, name, oven_slots, food_data } = require("../../../utils/rpg.js");
+const { notEnoughItemEmbed, wrong_job_embed, get_emoji, bake, name, oven_slots, food_data, get_emojis } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
 const { generateSessionId } = require("../../../utils/random.js");
 const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
@@ -50,8 +50,7 @@ function divide(amount, by) {
 async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     if (![1, 2].includes(mode)) throw new Error("mode must be 1 or 2");
 
-    const emoji_cross = await get_emoji("crosS", interaction.client);
-    const emoji_drumstick = await get_emoji("drumstick", interaction.client);
+    const [emoji_cross, emoji_drumstick] = await get_emojis(["crosS", "drumstick"], interaction.client);
 
     let rpg_data = await load_rpg_data(userId);
     const bake_data = await load_bake_data()[userId];
@@ -64,7 +63,13 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
             .setTitle(`${emoji_cross} | 你的烤箱已經滿了`)
             .setEmbedFooter(interaction);
 
-        return await interaction.followUp({ embeds: [embed] });
+        if (mode === 1) {
+            await interaction.editReply({ embeds: [embed] })
+        } else {
+            await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral })
+        };
+
+        return;
     };
 
     const allFoods = interaction.options.getBoolean("all") ?? false;
@@ -345,8 +350,6 @@ module.exports = {
 
         if (wrongJobEmbed) return await interaction.reply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
 
-        await interaction.deferReply();
-
         const bake_data = bake_data_all[userId];
 
         if (subcommand === "bake") {
@@ -356,15 +359,27 @@ module.exports = {
             const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
 
             if (oven_remain_slots < 1) {
-                const embed = new EmbedBuilder()
+                const error_embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你的烤箱已經滿了`)
                     .setEmbedFooter(interaction);
 
-                return await interaction.followUp({ embeds: [embed] });
+                return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
             };
 
             const first_food = interaction.options.getString("food");
+
+            if (first_food && !bake[first_food]) {
+                const emoji_cross = await get_emoji("crosS", interaction.client);
+
+                const error_embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 這不是個食材`)
+                    .setEmbedFooter(interaction);
+
+                return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+            };
+
             let items = first_food ? [first_food] : [];
             let amounts = [interaction.options.getInteger("amount") ?? 1];
             const allFoods = interaction.options.getBoolean("all") ?? false;
@@ -375,7 +390,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 蛤？ 🤔 你什麼也不選`)
                     .setEmbedFooter(interaction);
 
-                return await interaction.followUp({ embeds: [embed] });
+                return await interaction.reply({ embeds: [embed] });
             };
 
             if (!first_food && amounts[0] && !allFoods && !auto_amount) {
@@ -384,7 +399,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 蛤？ 🤔 你選了數量但沒選食物`)
                     .setEmbedFooter(interaction);
 
-                return await interaction.followUp({ embeds: [embed] });
+                return await interaction.reply({ embeds: [embed] });
             };
 
             if (first_food && auto_amount === "foods") {
@@ -393,7 +408,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 什麼拉🤣 你選了食物又選了自動選擇食物 那我要選什麼阿`)
                     .setEmbedFooter(interaction);
 
-                return await interaction.followUp({ embeds: [embed] });
+                return await interaction.reply({ embeds: [embed] });
             };
 
             if (allFoods && auto_amount) {
@@ -402,7 +417,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 什麼拉🤣 你選了全部食物又選了自動選擇食物 那我要選什麼阿`)
                     .setEmbedFooter(interaction);
 
-                return await interaction.followUp({ embeds: [embed] });
+                return await interaction.reply({ embeds: [embed] });
             };
 
             if (!first_food && auto_amount === "amount") {
@@ -411,7 +426,7 @@ module.exports = {
                     .setTitle(`${emoji_cross} | 你選了自動選擇數量但沒選食物 蛤？`)
                     .setEmbedFooter(interaction);
 
-                return await interaction.followUp({ embeds: [embed] });
+                return await interaction.reply({ embeds: [embed] });
             };
 
             if (allFoods && !auto_amount) {
@@ -439,8 +454,10 @@ module.exports = {
                     amount: total_need_coal - coal_amount,
                 }];
 
-                return await interaction.followUp({ embeds: [await notEnoughItemEmbed(item_list)] });
+                return await interaction.reply({ embeds: [await notEnoughItemEmbed(item_list)] });
             };
+
+            await interaction.deferReply();
 
             for (const [index, item] of items.entries()) {
                 const amount = amounts[index];
@@ -449,7 +466,10 @@ module.exports = {
                 await bake_bake(interaction, userId, item, amount, index === 0 ? 1 : 2);
             };
         } else if (subcommand === "info") {
-            const emoji_drumstick = await get_emoji("drumstick", interaction.client);
+            const [_, emoji_drumstick] = await Promise.all([
+                interaction.deferReply(),
+                get_emoji("drumstick", interaction.client),
+            ]);
 
             const used_slots = bake_data ? bake_data.length : 0;
             const current_time = Math.floor(Date.now() / 1000);
@@ -485,8 +505,10 @@ module.exports = {
 
             await interaction.editReply({ embeds: [embed] });
         } else if (subcommand === "get") {
-            const emoji_cross = await get_emoji("crosS", interaction.client);
-            const emoji_drumstick = await get_emoji("drumstick", interaction.client);
+            const [_, [emoji_cross, emoji_drumstick]] = await Promise.all([
+                interaction.deferReply(),
+                get_emojis(["crosS", "drumstick"], interaction.client),
+            ]);
 
             if (!bake_data || bake_data.length === 0) {
                 const embed = new EmbedBuilder()

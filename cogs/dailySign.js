@@ -32,14 +32,17 @@ module.exports = {
         const bonus = money_per_dt * daily_times;
 
         const amount = randint(150 + bonus, 500);
-
-        rpg_data.money = add_money({
-            rpg_data,
-            amount,
-            originalUser: "系統",
-            targetUser: user.toString(),
-            type: "每日簽到",
-        });
+        try {
+            rpg_data.money = add_money({
+                rpg_data,
+                amount,
+                originalUser: "系統",
+                targetUser: user.toString(),
+                type: "每日簽到",
+            });
+        } catch {
+            return; // 金額達到上限
+        };
 
         rpg_data.daily = now.getTime();
         rpg_data.daily_times += 1;

@@ -290,7 +290,7 @@ module.exports = {
                     return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
-                if (!userHaveEnoughItems(rpg_data, hoe, amount)) {
+                if (userHaveEnoughItems(rpg_data, hoe, amount)) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你沒有足夠的鋤頭`)

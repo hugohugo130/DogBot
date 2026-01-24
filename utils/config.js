@@ -29,6 +29,7 @@ const DEFAULT_VALUES = {
             "money": 1000,
             "hunger": 20,
             "daily": 0,
+            "daily_times": 0,
             "job": null,
             "fightjob": null,
             "badge": null,
@@ -108,6 +109,8 @@ const backend_channel_id = "1430868819206864978"
 const log_channel_id = "1430868778433904691"
 const warn_channel_id = "1430868778433904691"
 const error_channel_id = "1430868778433904691"
+const dc_send_ignore_keywords = ["金額超過上限"];
+const console_ignore_keywords = ["金額超過上限"];
 
 // Bot info
 const BotID = "1422212094274830470";
@@ -133,6 +136,11 @@ const musicSearchEngine = ["soundcloud"];
 const DOCS = "無";
 const STATUS_PAGE = "https://hugostatus.904037.xyz";
 
+// cook
+const cookBurntOverTime = 15000 // ms
+const cookBurntWeight = 0.25 // 25%
+const cookClickAmount = 10 // 10次
+
 // misc
 const daily_sign_guildIDs = ["1422545977226690683"];
 const admins = ["898836485397180426"];
@@ -156,6 +164,10 @@ const embed_error_color = 0xF04A47;
 const embed_fell_color = 0x966e33;
 const embed_job_color = 0x3498db;
 const embed_marry_color = 0x6bce99;
+
+// container colors
+// ## NO STRING
+const container_default_color = 0x00BBFF;
 
 /*
 農夫 和漁夫是差不多辛勤的職業，不過在這個世界，農夫的收益比漁夫還要高
@@ -287,12 +299,6 @@ const probabilities = {
         "ruby_ore": [5, 1, 3],
         "sapphire_ore": [6, 1, 3],
     },
-    "cook": {
-
-    },
-    "smelt": {
-
-    },
     "fell": {
         "mouse": [10, 1, 1],
         "acacia_wood": [8, 1, 1],
@@ -359,6 +365,8 @@ module.exports = {
     log_channel_id,
     warn_channel_id,
     error_channel_id,
+    dc_send_ignore_keywords,
+    console_ignore_keywords,
 
     BotID,
     BotName,
@@ -377,6 +385,10 @@ module.exports = {
     DOCS,
     STATUS_PAGE,
 
+    cookBurntOverTime,
+    cookBurntWeight,
+    cookClickAmount,
+
     daily_sign_guildIDs,
     admins,
     reserved_prefixes,
@@ -388,6 +400,8 @@ module.exports = {
     embed_fell_color,
     embed_job_color,
     embed_marry_color,
+
+    container_default_color,
 
     failed,
     probabilities,

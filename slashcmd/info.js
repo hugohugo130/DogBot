@@ -2,7 +2,7 @@ const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, Bu
 
 const { convertToSecondTimestamp } = require("../utils/timestamp.js");
 const { load_rpg_data } = require("../utils/file.js");
-const { get_emojis, jobs } = require("../utils/rpg.js");
+const { get_emojis, get_emoji, jobs } = require("../utils/rpg.js");
 const { get_lang_data } = require("../utils/language.js");
 const { max_hunger } = require("../cogs/rpg/msg_handler.js");
 const { embed_default_color } = require("../utils/config.js");
@@ -196,7 +196,7 @@ module.exports = {
 
                 const show_money = rpg_data.privacy.includes("money");
                 let money = show_money ? rpg_data.money ?? lang_no_data : lang_privacy;
-                if (typeof money === "number") money = `\`${money}$\``
+                if (typeof money === "number") money = `\`${money.toLocaleString(locale)}$\``
 
                 const hunger = rpg_data.hunger ?? lang_no_data;
                 const job = rpg_data.job || lang_none;
@@ -208,7 +208,7 @@ module.exports = {
                     : lang_single;
 
                 const createdAt = convertToSecondTimestamp(user.createdAt.getTime());
-                const emojiOfTheJob = jobs[job]?.emoji ? `${jobs[job]?.emoji} ` : "";
+                const emojiOfTheJob = jobs[job]?.emoji ? `${await get_emoji(jobs[job].emoji)} ` : "";
                 const nameOfTheJob = jobs[job]?.name ? jobs[job]?.name : job;
 
                 const user_data_embed = new EmbedBuilder()

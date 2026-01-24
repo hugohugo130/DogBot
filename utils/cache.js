@@ -3,8 +3,6 @@
  * 提供記憶體緩存功能以減少檔案系統讀取次數
  */
 
-const { get_logger } = require("./logger.js");
-const logger = get_logger();
 
 /**
  * 緩存項目結構
@@ -217,7 +215,6 @@ class CacheManager {
         };
 
         this.clear();
-        logger.info(`緩存管理器已銷毀`);
     };
 };
 

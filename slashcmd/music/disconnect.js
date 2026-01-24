@@ -41,7 +41,7 @@ module.exports = {
         if (vconnection) {
             if (!queue.connection) queue.connection = vconnection;
 
-            const vchannel = await get_channel(interaction.guild, vconnection.joinConfig.channelId)
+            const vchannel = await get_channel(vconnection.joinConfig.channelId, interaction.guild);
             if (!queue.voiceChannel && vchannel) queue.setConnection(vchannel);
         };
 

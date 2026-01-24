@@ -52,6 +52,20 @@ async function choices(array, amount = 1) {
 };
 
 /**
+ * Generates a random boolean with a specified weight (probability of being true).
+ *
+ * @param {number} weight - The probability of returning true, between 0.0 and 1.0.
+ * @returns {boolean}
+ */
+function getRandomBooleanWithWeight(weight) {
+    if (weight < 0 || weight > 1) {
+        throw new Error("Weight must be between 0 and 1.");
+    };
+
+    return Math.random() < weight;
+};
+
+/**
  *
  * @param {number} [length=32] - Defaults to 32
  * @returns {string}
@@ -79,6 +93,7 @@ module.exports = {
     choice,
     choices,
     choicesSync,
+    getRandomBooleanWithWeight,
     generateSessionId,
     generateSHA256,
     generateMD5,

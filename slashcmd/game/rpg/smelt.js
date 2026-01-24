@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction } = require("discord.js");
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
 
 const {
     divide,
@@ -94,14 +94,9 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     for (const need_item of item_need) {
         const current_item_id = need_item.item;
         const need_amount = need_item.amount;
-        const have_amount = (rpg_data.inventory[current_item_id] || 0);
 
-        if (!userHaveEnoughItems(rpg_data, current_item_id, need_amount)) {
-            item_missing.push({
-                item: get_name_of_id(current_item_id),
-                amount: need_amount - have_amount,
-            });
-        };
+        const not_enough_item = userHaveEnoughItems(rpg_data, current_item_id, need_amount)
+        if (not_enough_item) item_missing.push(not_enough_item);
     };
 
     if (item_missing.length > 0) {
@@ -252,6 +247,11 @@ module.exports = {
                     .setMinValue(1),
             ),
         ),
+    /**
+     *
+     * @param {ChatInputCommandInteraction} interaction
+     * @returns {Promise<any>}
+     */
     async execute(interaction) {
         await interaction.deferReply();
 
@@ -280,10 +280,20 @@ module.exports = {
                         .setTitle(`${emoji_cross} | 你的煉金爐已經滿了`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.followUp({ embeds: [embed] });
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 const item_id = interaction.options.getString("recipe");
+
+                if (item_id && !smeltable_recipe.find(e => e.input.item === item_id)) {
+                    const error_embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 這不是個礦石`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+                };
+
                 let items = item_id ? [item_id] : [];
                 let choosedAmount = Boolean(interaction.options.getInteger("amount"));
                 let amounts = [interaction.options.getInteger("amount") ?? 1];
@@ -296,7 +306,7 @@ module.exports = {
                         .setTitle(`${emoji_cross} | 蛤？ 🤔 你什麼也不選`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.followUp({ embeds: [embed] });
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 if (!item_id && amounts[0] && !allAmount && !auto_amount) {
@@ -305,7 +315,7 @@ module.exports = {
                         .setTitle(`${emoji_cross} | 蛤？ 🤔 你選了數量然後?`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.followUp({ embeds: [embed] });
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 if (item_id && auto_amount === "foods") {
@@ -314,7 +324,7 @@ module.exports = {
                         .setTitle(`${emoji_cross} | 什麼拉🤣 你選了礦物又選了自動選擇礦物 那我要選什麼阿`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.followUp({ embeds: [embed] });
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 if (allAmount && auto_amount) {
@@ -323,7 +333,7 @@ module.exports = {
                         .setTitle(`${emoji_cross} | 什麼拉🤣 你選了全部礦物又選了自動選擇礦物 那我要選什麼阿`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.followUp({ embeds: [embed] });
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 if (!item_id && auto_amount === "amount") {
@@ -332,7 +342,7 @@ module.exports = {
                         .setTitle(`${emoji_cross} | 你選了自動選擇數量但沒選礦物 蛤？`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.followUp({ embeds: [embed] });
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 if (allAmount && !auto_amount) {
@@ -352,16 +362,9 @@ module.exports = {
                 };
 
                 const total_need_coal = Math.ceil(amounts.reduce((sum, amount) => sum + amount, 0) / 2);
-                const coal_amount = rpg_data.inventory["coal"] || 0;
 
-                if (coal_amount < total_need_coal) {
-                    const item_list = [{
-                        name: "coal",
-                        amount: total_need_coal - coal_amount,
-                    }];
-
-                    return await interaction.followUp({ embeds: [await notEnoughItemEmbed(item_list)] });
-                };
+                const not_enough_items = userHaveEnoughItems(rpg_data, "coal", total_need_coal);
+                if (not_enough_items) return await interaction.reply({ embeds: [await notEnoughItemEmbed(not_enough_items, interaction, client)], flags: MessageFlags.Ephemeral });
 
                 for (const [index, item] of items.entries()) {
                     const amount = amounts[index];
