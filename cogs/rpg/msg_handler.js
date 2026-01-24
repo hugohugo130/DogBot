@@ -58,6 +58,7 @@ const {
     embed_job_color,
     embed_fell_color,
     embed_marry_color,
+    max_hunger,
     cannot_sell,
     probabilities,
     failed,
@@ -71,7 +72,6 @@ const {
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
-const max_hunger = 20;
 const logger = get_logger({ nodc: true });
 
 class MockMessage {
@@ -2242,7 +2242,6 @@ module.exports = {
         };
     },
 
-    max_hunger,
     rpg_cooldown,
     rpg_work,
     rpg_commands,

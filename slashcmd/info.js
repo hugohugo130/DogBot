@@ -4,8 +4,7 @@ const { convertToSecondTimestamp } = require("../utils/timestamp.js");
 const { load_rpg_data } = require("../utils/file.js");
 const { get_emojis, get_emoji, jobs } = require("../utils/rpg.js");
 const { get_lang_data } = require("../utils/language.js");
-const { max_hunger } = require("../cogs/rpg/msg_handler.js");
-const { embed_default_color } = require("../utils/config.js");
+const { embed_default_color, max_hunger } = require("../utils/config.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");
 const DogClient = require("../utils/customs/client.js");
 

@@ -124,6 +124,7 @@ const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
 const rpg_lvlUp_per = 50;
 const setJobDelay = 604800// 24 * 24 * 60 * 7 = 604800
 const item_amount_limit = 999999999;
+const max_hunger = 20;
 const cannot_sell = ["raw_hugo", "hugo"];
 
 // music
@@ -378,6 +379,7 @@ module.exports = {
     rpg_lvlUp_per,
     setJobDelay,
     item_amount_limit,
+    max_hunger,
     cannot_sell,
 
     musicSearchEngine,
