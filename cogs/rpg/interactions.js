@@ -443,6 +443,17 @@ const special_cancel = {
     },
 };
 
+function check_help_rpg_info() {
+    const { rpg_commands } = require("./msg_handler.js");
+
+    const commands = Object.keys(rpg_commands);
+    const commandsWithHelpInfo = Object.keys(help.group.rpg);
+
+    for (const cmd of commands.filter(c => !commandsWithHelpInfo.includes(c))) {
+        logger.warn(`rpg訊息指令 ${cmd} 缺少使用說明 (&help) 的數據`);
+    };
+};
+
 /**
  * 
  * @param {string} category 
@@ -1757,6 +1768,7 @@ module.exports = {
             } catch { };
         };
     },
+    check_help_rpg_info,
     get_help_embed,
     get_help_command,
 };

@@ -14,6 +14,7 @@ const { getQueues, clear_duplicate_temp } = require("./utils/music/music.js");
 const DogClient = require("./utils/customs/client.js");
 const util = require("util");
 const { check_language_keys } = require("./utils/language.js");
+const { check_help_rpg_info } = require("./cogs/rpg/interactions.js");
 require("dotenv").config();
 
 const args = process.argv.slice(2);
@@ -120,6 +121,7 @@ client.once(Events.ClientReady, async () => {
     // Promise.all也可以用於非async函數
     await Promise.all([
         checkDBFilesExists(),
+        check_help_rpg_info(),
         check_language_keys(),
         check_item_data(),
         clear_duplicate_temp(),
