@@ -258,16 +258,8 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        const voiceChannel = interaction.member.voice.channel;
         const guildId = interaction.guild.id;
         const queue = getQueue(guildId, false);
-
-        if (!voiceChannel) {
-            return await interaction.reply({
-                embeds: [await youHaveToJoinVC_Embed(interaction, client)],
-                flags: MessageFlags.Ephemeral,
-            });
-        };
 
         const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
         if (notPlayingEmbed) {
