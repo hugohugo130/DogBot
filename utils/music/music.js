@@ -891,7 +891,9 @@ async function getTrack({ track, id, url, source }) {
 
     if (existsSync(oggPath)) {
         if (existsSync(savePath)) {
-            unlinkSync(savePath);
+            try {
+                unlinkSync(savePath);
+            } catch { };
         };
 
         return oggPath;
