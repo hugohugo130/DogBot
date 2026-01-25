@@ -447,9 +447,9 @@ const special_cancel = {
 };
 
 function check_help_rpg_info() {
-    const { rpg_commands } = require("./msg_handler.js");
+    const { rpg_commands, redirect_data } = require("./msg_handler.js");
 
-    const commands = Object.keys(rpg_commands);
+    const commands = Object.keys(rpg_commands).filter(e => !Object.keys(redirect_data).includes(e));
     const commandsWithHelpInfo = Object.keys(help.group.rpg);
 
     for (const cmd of commands.filter(c => !commandsWithHelpInfo.includes(c))) {
