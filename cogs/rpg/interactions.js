@@ -450,11 +450,12 @@ const special_cancel = {
 function check_help_rpg_info() {
     const { rpg_commands, redirect_data } = require("./msg_handler.js");
 
-    const commands = Object.keys(rpg_commands).filter(e => !Object.keys(redirect_data).includes(e));
     const commandsWithHelpInfo = Object.keys(help.group.rpg);
+    const commands = Object.keys(rpg_commands)
+        .filter(e => !["help", ...Object.keys(redirect_data), ...commandsWithHelpInfo].includes(e))
 
-    for (const cmd of commands.filter(c => !commandsWithHelpInfo.includes(c))) {
-        logger.warn(`rpg訊息指令 ${cmd} 缺少使用說明 (&help) 的數據`);
+    for (const cmd of commands) {
+        logger.warn(`&${cmd} 缺少使用說明 (&help) 的數據`);
     };
 };
 
