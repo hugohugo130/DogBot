@@ -57,12 +57,15 @@ async function make_db_compatible(users, guilds) {
         const rpg_data = await load_rpg_data(user.id);
         let modified = false;
 
+        // #region [2025 12 02]
         /*
         2025 12 02:
         - 把db.count的mine, hew, herd, brew, fish, fell，合併成work，並刪除
         - 增加work鍵
         */
+        // #endregion
 
+        // #region [2025 12 02] [CODE]
         /*
         if (!rpg_data.count) {
             rpg_data.count = {};
@@ -93,12 +96,16 @@ async function make_db_compatible(users, guilds) {
             };
         };
         */
+        // #endregion
 
+        // #region [2026 01 21]
         /*
         2026 01 21:
         - feat: 每日簽到 (增加daily鍵)
         */
+        // #endregion
 
+        // #region [2026 01 21] [CODE]
         /*
         if (!rpg_data.daily && rpg_data.daily !== 0) {
             rpg_data.daily = 0;
@@ -110,6 +117,21 @@ async function make_db_compatible(users, guilds) {
             modified = true;
         };
         */
+        // #endregion
+
+        // #region [2026 01 25]
+        /*
+        2026 01 25:
+        - feat: daily設定 (是否私訊)
+        */
+        // #endregion
+
+        // #region [2026 01 25] [CODE]
+        // if (!rpg_data.daily_msg && rpg_data.daily_msg !== false) {
+        //     rpg_data.daily_msg = false;
+        //     modified = true;
+        // };
+        // #endregion
 
         // =================================================================
 

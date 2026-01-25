@@ -59,6 +59,7 @@ const {
     cookBurntWeight,
     container_default_color,
     cookClickAmount,
+    embed_sign_color,
 } = require("../../utils/config.js");
 const {
     getQueueListEmbedRow
@@ -579,6 +580,7 @@ module.exports = {
 
             const message = interaction.message;
             const user = interaction.user;
+            const guild = interaction.guild;
 
             if (message.author.id !== client.user.id) return;
 
@@ -1755,6 +1757,33 @@ module.exports = {
                     await interaction.followUp({ components: [textDisplay], flags: MessageFlags.IsComponentsV2 });
 
                     break;
+                };
+                case "daily": {
+                    const [emoji_calendar, rpg_data, prefix] = await Promise.all([
+                        get_emoji("calendar", client),
+                        load_rpg_data(user.id),
+                        firstPrefix(guild.id),
+                    ]);
+
+                    const enabled = rpg_data.daily_msg;
+                    const changeToStatusText = enabled ? "關閉" : "開啟"
+
+                    rpg_data.daily_msg = !enabled;
+
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_sign_color)
+                        .setTitle(`${emoji_calendar} | 成功${changeToStatusText}簽到訊息`)
+                        .setDescription(
+                            enabled
+                                ? `很抱歉這個私訊造成你的困擾，如果要再次打開這個訊息，請使用 \`${prefix}daily\``
+                                : `當你到我們伺服器聊天時候，將會收到這個簽到訊息，如果要關閉這個訊息，請使用 \`${prefix}daily\``
+                        )
+                        .setEmbedFooter(interaction);
+
+                    await Promise.all([
+                        save_rpg_data(user.id, rpg_data),
+                        interaction.reply({ embeds: [embed] }),
+                    ]);
                 };
             };
         } catch (err) {

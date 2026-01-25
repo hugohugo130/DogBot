@@ -62,6 +62,8 @@ const {
     cannot_sell,
     probabilities,
     failed,
+    embed_sign_color,
+    INVITE_LINK,
 } = require("../../utils/config.js");
 const {
     get_help_command,
@@ -71,6 +73,7 @@ const {
 } = require("../../utils/message.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
+const { hasSignedTodayOrBrokeSign } = require("../dailySign.js");
 
 const logger = get_logger({ nodc: true });
 
@@ -1892,6 +1895,47 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
             if (mode === 1) return { embeds: [embed], components: rows };
             return await message.reply({ embeds: [embed], components: rows });
         };
+    }, false],
+    daily: ["簽到", "簽到", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        const [[signed, _], [emoji_cross, emoji_calendar]] = await Promise.all([
+            hasSignedTodayOrBrokeSign(rpg_data.daily),
+            get_emojis(["crosS", "calendar"], client),
+        ]);
+
+        const DM_enabled = rpg_data.daily_msg;
+
+        const switch_config_button = new ButtonBuilder()
+            .setCustomId(`daily|any|${DM_enabled ? "disable" : "enable"}-dm`)
+            .setLabel(`${DM_enabled ? "不想" : "想"}收到機器犬的私訊ㄇ`)
+            .setStyle(ButtonStyle.Secondary);
+
+        let embed;
+        const row = new ActionRowBuilder();
+
+        if (signed) {
+            embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 你今天已經簽到過了ㄟ`)
+                .setEmbedFooter();
+        } else {
+            embed = new EmbedBuilder()
+                .setColor(embed_sign_color)
+                .setTitle(`${emoji_calendar} | 到我們ㄉ伺服器聊天就會自動簽到!`)
+                .setDescription("加入我們伺服器接收機器人最新訊息ㄅ")
+                .setEmbedFooter();
+
+            const invite_button = new ButtonBuilder()
+                .setLabel(`${client.name}群組`)
+                .setURL(INVITE_LINK)
+                .setStyle(ButtonStyle.Link);
+
+            row.addComponents(invite_button);
+        };
+
+        row.addComponents(switch_config_button);
+
+        if (mode === 1) return { embeds: [embed], components: [row] };
+        await message.reply({ embeds: [embed], components: [row] });
     }, false],
 };
 

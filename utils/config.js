@@ -30,6 +30,7 @@ const DEFAULT_VALUES = {
             "hunger": 20,
             "daily": 0,
             "daily_times": 0,
+            "daily_msg": false,
             "job": null,
             "fightjob": null,
             "badge": null,
@@ -134,6 +135,7 @@ const musicSearchEngine = ["soundcloud"];
 
 // link
 const DOCS = "無";
+const INVITE_LINK = "https://discord.gg/BfAbBSyUzf";
 const STATUS_PAGE = "https://hugostatus.904037.xyz";
 
 // cook
@@ -163,11 +165,12 @@ const embed_warn_color = 0xF0B90B;
 const embed_error_color = 0xF04A47;
 const embed_fell_color = 0x966e33;
 const embed_job_color = 0x3498db;
+const embed_sign_color = 0x3498db;
 const embed_marry_color = 0x6bce99;
 
 // container colors
-// ## NO STRING
-const container_default_color = 0x00BBFF;
+// No 'random'
+const container_default_color = Math.floor(Math.random() * 0xFFFFFF); // Random
 
 /*
 農夫 和漁夫是差不多辛勤的職業，不過在這個世界，農夫的收益比漁夫還要高
@@ -383,6 +386,7 @@ module.exports = {
     musicSearchEngine,
 
     DOCS,
+    INVITE_LINK,
     STATUS_PAGE,
 
     cookBurntOverTime,
@@ -399,6 +403,7 @@ module.exports = {
     embed_error_color,
     embed_fell_color,
     embed_job_color,
+    embed_sign_color,
     embed_marry_color,
 
     container_default_color,
