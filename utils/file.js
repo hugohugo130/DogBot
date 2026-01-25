@@ -800,13 +800,29 @@ async function save_farm_data(userid, farm_data) {
     await writeJson(rpg_farm_file, data);
 };
 
-async function load_bake_data() {
-
-    return await readJson(bake_data_file);
+/**
+ * Get the bake data from Json
+ * @param {string | null} [userId] null for whole json data
+ * @returns {Promise<Array<object> | null>} null if no data
+ */
+async function load_bake_data(userId = null) {
+    const whole_json_data = await readJson(bake_data_file);
+    return userId
+        ? whole_json_data?.[userId]
+        : whole_json_data;
 };
 
-async function save_bake_data(data) {
-    await writeJson(bake_data_file, data);
+/**
+ * Save the bake data to Json
+ * @param {string} userId - The ID of user
+ * @param {Array} bake_data - The bake data
+ */
+async function save_bake_data(userId, bake_data) {
+    const currentData = await load_bake_data();
+
+    currentData[userId] = [...currentData[userId], ...bake_data];
+
+    await writeJson(bake_data_file, currentData);
 };
 
 async function load_smelt_data() {

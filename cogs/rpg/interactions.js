@@ -1018,9 +1018,9 @@ module.exports = {
                     const parsedDuration = parseInt(duration);
 
                     let rpg_data = await load_rpg_data(userId)
-                    let bake_data = await load_bake_data();
+                    let bake_data = await load_bake_data(userId) ?? [];
 
-                    if (bake_data[userId] && bake_data[userId].length >= oven_slots) {
+                    if (bake_data?.length && bake_data.length >= oven_slots) {
                         const emoji_cross = await get_emoji("crosS", client);
 
                         const embed = new EmbedBuilder()
@@ -1069,16 +1069,12 @@ module.exports = {
                         rpg_data.inventory[need_item.item] -= need_item.amount;
                     };
 
-                    await save_rpg_data(userId, rpg_data)
-
-                    if (!bake_data[userId]) {
-                        bake_data[userId] = [];
-                    };
+                    await save_rpg_data(userId, rpg_data);
 
                     const output_item_id = bake[item_id];
                     const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
 
-                    bake_data[userId].push({
+                    bake_data.push({
                         userId,
                         item_id,
                         amount: parsedAmount,
@@ -1087,7 +1083,7 @@ module.exports = {
                         output_item_id,
                     });
 
-                    await save_bake_data(bake_data);
+                    await save_bake_data(userId, bake_data);
 
                     // 清理 session 資料
                     client.oven_sessions.delete(session_id);

@@ -53,7 +53,7 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const [emoji_cross, emoji_drumstick] = await get_emojis(["crosS", "drumstick"], interaction.client);
 
     let rpg_data = await load_rpg_data(userId);
-    const bake_data = await load_bake_data()[userId];
+    const bake_data = await load_bake_data(userId);
 
     const oven_remain_slots = oven_slots - (bake_data?.length || 0);
 
@@ -344,14 +344,12 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
 
         const rpg_data = await load_rpg_data(userId);
-        const [bake_data_all, [wrongJobEmbed, row]] = await Promise.all([
-            load_bake_data(),
+        const [bake_data, [wrongJobEmbed, row]] = await Promise.all([
+            load_bake_data(userId),
             wrong_job_embed(rpg_data, "/bake", userId, interaction, interaction.client),
         ]);
 
         if (wrongJobEmbed) return await interaction.reply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
-
-        const bake_data = bake_data_all[userId];
 
         if (subcommand === "bake") {
             const emoji_cross = await get_emoji("crosS", interaction.client);
@@ -553,7 +551,7 @@ module.exports = {
                 bake_data.splice(index, 1);
 
                 // 儲存資料
-                await save_bake_data(bake_data_all);
+                await save_bake_data(userId, bake_data);
                 await save_rpg_data(userId, rpg_data);
 
                 const embed = new EmbedBuilder()
