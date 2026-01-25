@@ -1728,7 +1728,7 @@ module.exports = {
                         return await interaction.reply({ embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
                     };
 
-                    const items = session
+                    const items = session.item_needed
                         .map(item => {
                             const name = get_id_of_name(item.item);
                             const amount = item.amount;
