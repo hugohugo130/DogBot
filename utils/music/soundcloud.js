@@ -6,6 +6,7 @@ const { get_logger } = require("../logger.js");
 const { join_temp_folder } = require("../file.js");
 const { convertToOgg } = require('./music.js');
 
+/** @type {Soundcloud} */
 const sc = global._sc ?? new Soundcloud();
 global._sc = sc;
 
@@ -61,6 +62,15 @@ async function get_track_info(url) {
     return await sc.tracks.get(url);
 };
 
+/**
+ * Get the tracks related to a track.
+ * @param {string | number} track_id - the ID of a track
+ * @returns {Promise<import("soundcloud.ts").SoundcloudTrack[]>}
+ */
+async function get_related_tracks(track_id) {
+    return await sc.tracks.related(track_id);
+};
+
 const Constants = {
     SOUNDCLOUD_URL_REGEX: /^https?:\/\/(soundcloud\.com|snd\.sc)\/(.*)$/,
     REGEX_TRACK: /^https?:\/\/(soundcloud\.com|snd\.sc)\/([A-Za-z0-9_-]+)\/([A-Za-z0-9_-]+)\/?$/,
@@ -87,6 +97,7 @@ module.exports = {
     NO_CACHE,
     search_tracks,
     download_track,
-    validateURL,
     get_track_info,
+    get_related_tracks,
+    validateURL,
 };
