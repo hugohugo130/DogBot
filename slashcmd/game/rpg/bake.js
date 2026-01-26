@@ -1,10 +1,11 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Collection } = require("discord.js");
 
-const { notEnoughItemEmbed, wrong_job_embed, get_emoji, bake, name, oven_slots, food_data, get_emojis } = require("../../../utils/rpg.js");
+const { notEnoughItemEmbed, wrong_job_embed, get_emojis, bake, name, oven_slots, food_data } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
 const { generateSessionId } = require("../../../utils/random.js");
 const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
+const DogClient = require("../../../utils/customs/client.js");
 
 function divide(amount, by) {
     // 檢查 amount 和 by 是否為整數（沒有小數點）
@@ -337,25 +338,26 @@ module.exports = {
     /**
      *
      * @param {ChatInputCommandInteraction} interaction
+     * @param {DogClient} client
      * @returns {Promise<any>}
      */
-    async execute(interaction) {
+    async execute(interaction, client) {
         const userId = interaction.user.id;
-        const subcommand = interaction.options.getSubcommand();
 
         const rpg_data = await load_rpg_data(userId);
-        const [bake_data, [wrongJobEmbed, row]] = await Promise.all([
+        const [bake_data, [wrongJobEmbed, row], [emoji_cross, emoji_drumstick], subcommand, first_food, auto_amount = false] = await Promise.all([
             load_bake_data(userId),
-            wrong_job_embed(rpg_data, "/bake", userId, interaction, interaction.client),
+            wrong_job_embed(rpg_data, "/bake", userId, interaction, client),
+            get_emojis(["crosS", "drumstick"], client),
+            interaction.options.getSubcommand(),
+            interaction.options.getString("food"),
+            interaction.options.getString("auto_dispense_food"),
         ]);
 
         if (wrongJobEmbed) return await interaction.reply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
 
         if (subcommand === "bake") {
-            const emoji_cross = await get_emoji("crosS", interaction.client);
-
             const oven_remain_slots = oven_slots - (bake_data?.length || 0);
-            const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
 
             if (oven_remain_slots < 1) {
                 const error_embed = new EmbedBuilder()
@@ -366,11 +368,7 @@ module.exports = {
                 return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
             };
 
-            const first_food = interaction.options.getString("food");
-
             if (first_food && !bake[first_food]) {
-                const emoji_cross = await get_emoji("crosS", interaction.client);
-
                 const error_embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 這不是個食材`)
@@ -465,10 +463,7 @@ module.exports = {
                 await bake_bake(interaction, userId, item, amount, index === 0 ? 1 : 2);
             };
         } else if (subcommand === "info") {
-            const [_, emoji_drumstick] = await Promise.all([
-                interaction.deferReply(),
-                get_emoji("drumstick", interaction.client),
-            ]);
+            await interaction.deferReply();
 
             const used_slots = bake_data ? bake_data.length : 0;
             const current_time = Math.floor(Date.now() / 1000);
@@ -504,10 +499,7 @@ module.exports = {
 
             await interaction.editReply({ embeds: [embed] });
         } else if (subcommand === "get") {
-            const [_, [emoji_cross, emoji_drumstick]] = await Promise.all([
-                interaction.deferReply(),
-                get_emojis(["crosS", "drumstick"], interaction.client),
-            ]);
+            await interaction.deferReply();
 
             if (!bake_data || bake_data.length === 0) {
                 const embed = new EmbedBuilder()
