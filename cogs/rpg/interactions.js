@@ -1370,10 +1370,6 @@ module.exports = {
                     // 下拉式選單
                     await interaction.deferUpdate();
 
-                    if (!global._sc) {
-                        global._sc = new Soundcloud();
-                    };
-
                     const queue = getQueue(interaction.guildId);
 
                     const vconnection = getVoiceConnection(interaction.guildId);

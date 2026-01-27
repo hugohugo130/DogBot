@@ -11,6 +11,7 @@ const { embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
+/** @type {Soundcloud} */
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
 

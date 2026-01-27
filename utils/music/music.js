@@ -21,6 +21,7 @@ const { generateSessionId } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
 
+/** @type {Soundcloud} */
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
 
