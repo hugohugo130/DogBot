@@ -1768,14 +1768,22 @@ module.exports = {
                         .setTitle(`${emoji_calendar} | 成功${changeToStatusText}簽到訊息`)
                         .setDescription(
                             enabled
-                                ? `很抱歉這個私訊造成你的困擾，如果要再次打開這個訊息，請使用 \`${prefix}daily\``
-                                : `當你到我們伺服器聊天時候，將會收到這個簽到訊息，如果要關閉這個訊息，請使用 \`${prefix}daily\``
+                                ? `很抱歉這個私訊造成你的困擾，如果要再次打開這個訊息，請使用 \`${prefix}daily\` 或是點擊下方按鈕`
+                                : `當你到我們伺服器聊天ㄉ時候，就會收到這個簽到訊息，如果要關閉這個訊息，請使用 \`${prefix}daily\` 或是點擊下方按鈕`
                         )
                         .setEmbedFooter(interaction);
 
+                    const row = new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId(`daily|any|${enabled ? "disable" : "enable"}-dm`)
+                                .setLabel(`${enabled ? "不想" : "想"}收到機器犬的私訊ㄇ`)
+                                .setStyle(ButtonStyle.Secondary),
+                        );
+
                     await Promise.all([
                         save_rpg_data(user.id, rpg_data),
-                        interaction.reply({ embeds: [embed] }),
+                        interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral }),
                     ]);
                 };
             };
