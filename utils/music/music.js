@@ -1,20 +1,13 @@
-const path = require("path");
 const util = require("util");
-const ffmpegInstaller = require('@ffmpeg-installer/ffmpeg');
-const mp3Duration = require("mp3-duration");
 const { createAudioResource, createAudioPlayer, joinVoiceChannel, getVoiceConnection, AudioPlayerStatus, VoiceConnection, AudioPlayer, StreamType, AudioResource, PlayerSubscription } = require("@discordjs/voice");
-const { default: _filenamify } = require("filenamify");
-const { fileTypeFromStream, fileTypeFromFile } = require("file-type");
-const { pipeline } = require("node:stream/promises");
-const { buffer } = require("node:stream/consumers");
-const { execSync } = require('child_process');
+const { fileTypeFromStream } = require("file-type");
 const { Readable } = require("node:stream");
 const { Collection, TextChannel, VoiceChannel, Guild, BaseInteraction } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
 
 const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
 const { get_logger } = require("../logger.js");
-const { existsSync, createWriteStream, createReadStream, get_temp_folder, join_temp_folder, basename, readdirSync, unlinkSync, join, dirname } = require("../file.js");
+const { existsSync, get_temp_folder, join_temp_folder, basename, readdirSync, unlinkSync } = require("../file.js");
 const { formatMinutesSeconds } = require("../timestamp.js");
 const { get_emoji } = require("../rpg.js");
 const { generateSessionId } = require("../random.js");
@@ -194,7 +187,7 @@ const fileStreamType = {
 };
 
 class MusicTrack {
-    constructor({ id, title, url = null, duration = 0, thumbnail = null, author = "unknown", source = "", stream = null }) {
+    constructor({ id, title, url = null, duration = 0, thumbnail = null, author = "unknown", source = "", stream = null, original_track = null }) {
         /** @type {string} */
         this.id = String(id);
 
@@ -218,11 +211,22 @@ class MusicTrack {
 
         /** @type {ReadableStream | Readable | null} */
         this.stream = stream;
+
+        /** @type {import("soundcloud.ts").SoundcloudTrack} */
+        this.original_track = original_track;
     };
 
-    async prepareStream() {
-        if (!this.stream) {
-            this.stream = await getAudioStream(url)[0];
+    /**
+     * Prepare a stream for playing
+     * @param {boolean} force - Must prepare?
+     * @returns {Readable}
+     */
+    async prepareStream(force = false) {
+        if (force || !this.stream || this.stream.closed) {
+            this.stream = (await getStream({
+                track: this,
+                source: this.source,
+            }))[0];
         };
 
         return this.stream;
@@ -299,7 +303,7 @@ class MusicQueue {
         });
 
         this.player.on("stateChange", async (oldState, newState) => {
-            if (DEBUG) logger.debug(`[${this.guildID}] 音樂播放器狀態改變: ${oldState.status} -> ${newState.status}: ${Boolean(getVoiceConnection(this.guildID))}`);
+            if (DEBUG) this.debug(`音樂播放器狀態改變: ${oldState.status} -> ${newState.status}: ${Boolean(getVoiceConnection(this.guildID))}`);
 
             if (this.destroying) return;
 
@@ -396,6 +400,10 @@ class MusicQueue {
         });
     };
 
+    debug(msg) {
+        return logger.debug(`[${this.guildID}] ${msg}`);
+    };
+
     /**
      * 將音樂加入佇列
      * @param {MusicTrack} track
@@ -406,6 +414,20 @@ class MusicQueue {
             this.tracks.splice(insert_at, 0, track);
         } else {
             this.tracks.push(track);
+        };
+    };
+
+    /**
+     * 如果正在播放音樂，將音樂加入佇列 否則播放音樂
+     * @param {MusicTrack} track
+     * @param {number | null} [insert_at] - [如果正在播放音樂] 要插入的位置，預設在結尾
+     * @returns {Promise<void>}
+     */
+    async addOrPlay(track, insert_at = null) {
+        if (!this.playing) {
+            await this.play(track);
+        } else {
+            this.addTrack(track, insert_at);
         };
     };
 
@@ -430,63 +452,48 @@ class MusicQueue {
      * @param {MusicTrack} track
      */
     async play(track) {
+        if (DEBUG) this.debug(`- triggered play() | going to play ${track.title}`);
         if (this.playing) {
             this.stopPlaying(true);
+            if (DEBUG) this.debug("stopped player");
         };
 
         if (!this.connection && this.voiceChannel) {
-            const connection = getVoiceConnection(this.guildID);
-            if (connection) {
-                this.connection = connection;
-            } else {
-                this.connection = joinVoiceChannel({
+            const connection = getVoiceConnection(this.guildID)
+                || joinVoiceChannel({
                     channelId: this.voiceChannel.id,
                     guildId: this.guildID,
                     selfDeaf: true,
                     selfMute: false,
                     adapterCreator: this.guild.voiceAdapterCreator,
                 });
-            };
+
+            this.connection = connection;
         };
 
-        if (!this.subscription) this.subscribe();
+        if (DEBUG) this.debug(`has connection: ${Boolean(this.connection)}`);
+        if (DEBUG) this.debug(`has voiceChannel: ${Boolean(this.voiceChannel)}`);
 
-        const id = track.id;
+        this.subscribe();
+
+        if (DEBUG) this.debug(`has subscription: ${Boolean(this.subscription)}`);
+
         const url = track.url;
         const source = track.source;
-        const useStream = Boolean(track.stream) || track.id.startsWith("audio_");
 
         let resource;
 
-        if (useStream) {
-            const [stream, fileType] = await getAudioStream(url);
+        const [originalAudioStream, fileType] = await getStream({ track, url, source });
 
-            const buf = await buffer(stream);
-            const duration = await mp3Duration(buf) * 1000;
-
-            if (duration) track.duration = duration;
-
-            resource = createAudioResource(stream, {
+        resource = createAudioResource(
+            originalAudioStream,
+            {
                 inputType: fileStreamType[fileType] || StreamType.Arbitrary,
-            });
-        } else {
-            const audioPath = await getTrack({ id, url, source });;
-
-            const fileType = (await fileTypeFromFile(audioPath))?.mime?.replace("video/", "audio/");
-            if (!fileType?.startsWith("audio/")) {
-                throw new Error(`File is not an audio file: ${audioPath}`);
-            };
-
-            resource = createAudioResource(
-                createReadStream(audioPath),
-                {
-                    inputType: fileStreamType[fileType] || StreamType.Arbitrary,
-                },
-            );
-        };
+            },
+        );
 
         this.player.play(resource);
-        this.player.unpause();
+        // this.player.unpause();
 
         this.playing = true;
         this.paused = false;
@@ -667,24 +674,6 @@ class MusicQueue {
 
 /**
  *
- * @param {string} string
- * @param {{ fileMode: boolean }} param1
- * @returns {string}
- */
-function filenamify(string, { fileMode = false } = {}) {
-    if (fileMode) {
-        const fileName = basename(string);
-        const correctedFileName = _filenamify(fileName);
-        const correctedFilePath = join(dirname(string), correctedFileName);
-
-        return correctedFilePath;
-    } else {
-        return _filenamify(string);
-    };
-};
-
-/**
- *
  * @param {string} [guildID]
  * @param {boolean} [create=true]
  * @returns {MusicQueue | null}
@@ -778,6 +767,7 @@ async function fixStructure(objects) {
 
     for (const object of objects) {
         let { id, title, url, duration = 0, thumbnail = null, author = "Unknown", source = "unknown", stream = null } = object;
+        const original_track = object;
 
         if (isSoundCloudTrack(object)) {
             // https://www.npmjs.com/package/soundcloud.ts
@@ -792,7 +782,7 @@ async function fixStructure(objects) {
             source = "soundcloud";
         };
 
-        const track = new MusicTrack({ id, title, url, duration, thumbnail, author, source, stream });
+        const track = new MusicTrack({ id, title, url, duration, thumbnail, author, source, stream, original_track });
         if (!stream && id?.startsWith?.("audio/")) await track.prepareStream();
 
         fixedObjects.push(track);
@@ -822,23 +812,10 @@ function getAudioFileData(url, stream = false) {
     };
 };
 
-async function downloadFile(url, outputPath) {
-    const response = await fetch(url);
-
-    if (!response.ok || !response.body) {
-        throw new Error(`Failed to fetch ${url}. Status: ${response.status}`);
-    };
-
-    await pipeline(response.body, createWriteStream(outputPath));
-    convertToOgg(outputPath);
-
-    return [outputPath, getAudioFileData(url, outputPath, await getAudioStream(url)[0])];
-};
-
 /**
  *
  * @param {string} url - 音檔網址
- * @returns {Promise<[ReadableStream, import("file-type").FileTypeResult]>}
+ * @returns {Promise<[Readable, import("file-type").FileTypeResult]>}
  */
 async function getAudioStream(url) {
     const response = await fetch(url, {
@@ -857,74 +834,45 @@ async function getAudioStream(url) {
     if (fileType) fileType.mime = fileType.mime?.replace("video/", "audio/");
     if (!fileType?.mime?.startsWith("audio/")) throw new Error("Not an audio stream");
 
-    return [response.body, fileType];
-};
+    const readable_stream = Readable.fromWeb(response.body);
 
-/**
- *
- * @param {Array<{track: any, id: string, url: string, source: string}>} tracks
- * @returns {Promise<{[key: string]: }[]>}
- */
-async function downloadTracks(tracks) {
-    const files = await Promise.all(tracks.map(async (track) => {
-        const file = await getTrack(track);
-
-        return { [track.id]: file };
-    }));
-
-    return files;
+    return [readable_stream, fileType];
 };
 
 /**
  * 
- * @param {{track: any, id: string, url: string, source: string}} param0 
- * @returns {Promise<string>} 保存路徑
+ * @param {{ track: MusicTrack, url: string, source: string }} param0
+ * @returns {Promise<[Readable,string] >} [Audio Stream - It must be an audio stream, fileType ([MediaType](https://en.wikipedia.org/wiki/Media_type))]
  */
-async function getTrack({ track, id, url, source }) {
+async function getStream({ track, url, source }) {
     let engine;
     try {
         engine = require(`./${source ?? "soundcloud"}.js`);
     } catch { };
 
-    let actualSavePath;
-    const savePath = filenamify(join_temp_folder(`${source}_${id}.mp3`), { fileMode: true });
-    const oggPath = filenamify(join_temp_folder(`${source}_${id}.ogg`), { fileMode: true });
-
-    if (existsSync(oggPath)) {
-        if (existsSync(savePath)) {
-            try {
-                unlinkSync(savePath);
-            } catch { };
-        };
-
-        return oggPath;
-    };
-
-    if (existsSync(savePath)) {
-        return savePath;
-    };
-
     if (!url && track) {
         url = track.url;
     } else if (!url && !track) throw new Error(`無效的參數`);
 
-    if (engine?.download_track && typeof engine.download_track === "function") {
-        actualSavePath = await engine.download_track(url, savePath);
+    let stream, fileType;
+
+    if (engine?.getAudioStream && typeof engine.getAudioStream === "function") {
+        [stream, fileType] = await engine.getAudioStream(track.original_track ?? track);
     } else {
-        [actualSavePath, _] = await downloadFile(url, savePath);
+        [stream, fileType] = await getAudioStream(url)
     };
 
-    return actualSavePath;
+    return [stream, fileType];
 };
 
 /**
  * 
  * @param {string} query
  * @param {number} amount
- * @param {boolean} IsdownloadFile
- * @returns {Promise<Array<MusicTrack | {id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean}>>}
+ * @param {boolean} customURL
+ * @returns {Promise<(MusicTrack | {id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean})[]>}
  */
-async function search_until(query, amount = 25, IsdownloadFile = false) {
+async function search_until(query, amount = 25, customURL = false) {
     let results = [];
 
     for (const engine of musicSearchEngine) {
@@ -959,7 +907,7 @@ async function search_until(query, amount = 25, IsdownloadFile = false) {
                 output = await file.search_tracks(query);
             };
 
-            if (IsdownloadFile && IsValidURL(query) && Array.isArray(output)) {
+            if (customURL && IsValidURL(query) && Array.isArray(output)) {
                 audioData = getAudioFileData(query, true);
 
                 output.push(audioData);
@@ -980,35 +928,6 @@ async function search_until(query, amount = 25, IsdownloadFile = false) {
         tracks = [...new Set(tracks)];
         tracks = await fixStructure(tracks);
 
-        if (!file.NO_CACHE) {
-            const downloadedFiles = await downloadTracks(tracks.map(track => {
-                return {
-                    track,
-                    id: track.id,
-                    url: track.url,
-                    source: engine,
-                };
-            }));
-
-            const failedDownloadSongID = downloadedFiles
-                .filter((info) => !Object.values(info)[0])
-                .map((info) => {
-                    const [file, success] = Object.entries(info)[0];
-
-                    const basename = path.basename(file);
-                    let fileExt = basename.split(".");
-                    fileExt = fileExt[fileExt.length - 1];
-
-                    const filename = basename.replace(`.${fileExt}`, "");
-                    let songID = filename.split("_");
-                    songID = songID[songID.length - 1];
-
-                    return songID;
-                });
-
-            tracks = tracks.filter(track => !failedDownloadSongID.includes(track.id));
-        };
-
         results.push(...tracks);
 
         if (results.length >= amount) {
@@ -1018,48 +937,6 @@ async function search_until(query, amount = 25, IsdownloadFile = false) {
     };
 
     return results;
-};
-
-function getFFmpegPath() {
-    const command = process.platform === 'win32' ? 'cmd /C where ffmpeg' : 'which ffmpeg';
-
-    const stdout = execSync(command).toString();
-
-    const ffmpegPath = stdout.trim() || ffmpegInstaller.path;
-
-    return ffmpegPath;
-};
-
-function convertToOgg(inputFile, outputFile = null) {
-    if (!existsSync(inputFile)) {
-        throw new Error(`輸入文件 ${inputFile} 不存在`);
-    };
-
-    if (!outputFile) {
-        const fileExt = path.extname(inputFile);
-
-        outputFile = inputFile.replace(fileExt, ".ogg");
-    };
-
-    if (existsSync(outputFile)) return;
-
-    const ffmpegPath = getFFmpegPath();
-
-    /*
-     * -c:a libopus: 使用 libopus 編碼器進行音頻編碼。
-     * -b:a 96k: 設定音頻比特率為 96 kbps。
-     * -vbr off: 禁用可變比特率（VBR）模式，使用固定比特率（CBR）。
-     * -compression_level 10: 設定壓縮級別為 10（範圍通常是 0-10，10 表示最高壓縮）。
-     *
-    */
-    const commandData = {
-        cmd: `${ffmpegPath} -i "${inputFile}" -c:a libopus -b:a 96k -vbr off -compression_level 10 "${outputFile}"`,
-        input: inputFile,
-        output: outputFile,
-    };
-
-    if (!global.convertToOggQueue) global.convertToOggQueue = [];
-    global.convertToOggQueue.push(commandData);
 };
 
 function clear_duplicate_temp() {
@@ -1131,10 +1008,9 @@ async function youHaveToJoinVC_Embed(interaction = null, client = global._client
 module.exports = {
     getQueue,
     getQueues,
-    getTrack,
+    getStream,
     fixStructure,
     search_until,
-    convertToOgg,
     getAudioStream,
     clear_duplicate_temp,
     IsValidURL,

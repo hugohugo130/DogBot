@@ -24,13 +24,6 @@ RUN apt remove python3 make g++ git -y
 # 複製剩下的程式碼
 COPY . .
 
-# 更新
-ARG update=false
-RUN if [ "$update" = "true" ]; then \
-    npm update --save && \
-    npm audit fix; \
-    fi
-
 RUN apt clean && rm -rf /var/lib/apt/lists/* \
     && npm cache clean --force
 

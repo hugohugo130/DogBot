@@ -181,13 +181,9 @@ module.exports = {
                 getNowPlayingEmbed(queue, track, interaction, client, true),
             ]);
 
-            if (queue.isPlaying()) {
-                queue.addTrack(track);
-            } else {
-                await queue.play(track);
-            };
+            await queue.addOrPlay(track);
 
-            return await interaction.editReply({ embeds: [embed], components: rows });
+            return await interaction.editReply({ content: "", embeds: [embed], components: rows });
         };
 
         const maxTrackIdLength = Math.max(...tracks.map(track => String(track.id).length));

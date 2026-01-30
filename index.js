@@ -113,7 +113,6 @@ client.once(Events.ClientReady, async () => {
 (async () => {
     global._client = null;
     global.perloadResponse = new Collection();
-    global.convertToOggQueue = [];
 
     await checkDBFilesCorrupted();
     if (!debug) await checkAllDatabaseFilesContent();

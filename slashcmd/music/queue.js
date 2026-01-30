@@ -40,7 +40,7 @@ async function getQueueListEmbedRow(queue, currentPage = 1, interaction = null, 
         get_lang_data(locale, "/queue", "list.prev_page"), // 上一頁
         get_lang_data(locale, "/queue", "list.next_page"), // 下一頁
         get_lang_data(locale, "/queue", "list.update"), // 更新
-        get_lang_data(locale, "/queue", "list.list_empty") // 清單是空的
+        get_lang_data(locale, "/queue", "list.empty") // 清單是空的
     ]);
 
     const embed = new EmbedBuilder()

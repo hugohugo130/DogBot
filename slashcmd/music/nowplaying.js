@@ -201,9 +201,9 @@ async function getNowPlayingRows(queue, client = global._client) {
  * 
  * @param {MusicQueue} queue - 音樂佇列
  * @param {MusicTrack} [currentTrack] - 當前播放的音樂曲目
- * @param {BaseInteraction} interaction - 互動
- * @param {DogClient} client - Discord 客戶端
- * @param {boolean} start - 是否剛開始播放
+ * @param {BaseInteraction} [interaction] - 互動
+ * @param {DogClient} [client] - Discord 客戶端
+ * @param {boolean} [start] - 是否剛開始播放
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder[]]>}
  */
 async function getNowPlayingEmbed(queue, currentTrack = null, interaction = null, client = global._client, start = false) {

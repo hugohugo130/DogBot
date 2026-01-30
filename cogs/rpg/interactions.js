@@ -1428,11 +1428,7 @@ module.exports = {
 
                     const [embed, rows] = await getNowPlayingEmbed(queue, track, interaction, client, true);
 
-                    if (queue.isPlaying()) {
-                        queue.addTrack(track, next ? 0 : null);
-                    } else {
-                        await queue.play(track);
-                    };
+                    await queue.addOrPlay(track, next ? 0 : null);
 
                     return await interaction.editReply({ content: "", embeds: [embed], components: rows });
                 };

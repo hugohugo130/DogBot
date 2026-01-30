@@ -1,23 +1,24 @@
-const util = require("util");
-const path = require("path");
+const { Readable } = require("stream");
 const { Soundcloud } = require("soundcloud.ts");
+const util = require("util");
 
 const { get_logger } = require("../logger.js");
-const { join_temp_folder } = require("../file.js");
-const { convertToOgg } = require('./music.js');
 
 /** @type {Soundcloud} */
 const sc = global._sc ?? new Soundcloud();
 global._sc = sc;
 
-const SOURCE = path.basename(__filename, path.extname(__filename));
-
 const logger = get_logger();
 
-const NO_CACHE = true;
+const Constants = {
+    SOUNDCLOUD_URL_REGEX: /^https?:\/\/(soundcloud\.com|snd\.sc)\/(.*)$/,
+    REGEX_TRACK: /^https?:\/\/(soundcloud\.com|snd\.sc)\/([A-Za-z0-9_-]+)\/([A-Za-z0-9_-]+)\/?$/,
+    REGEX_SET: /^https?:\/\/(soundcloud\.com|snd\.sc)\/([A-Za-z0-9_-]+)\/sets\/([A-Za-z0-9_-]+)\/?$/,
+    REGEX_ARTIST: /^https?:\/\/(soundcloud\.com|snd\.sc)\/([A-Za-z0-9_-]+)\/?$/,
+};
 
 /**
- * 
+ * Search for tracks on soundcloud.
  * @param {string} query
  * @returns {Promise<import("soundcloud.ts").SoundcloudTrack[]>}
  */
@@ -35,22 +36,12 @@ async function search_tracks(query) {
 };
 
 /**
- * 
- * @param {import("soundcloud.ts").SoundcloudTrack} track
- * @param {null | string} [savePath=null]
- * @returns {Promise<string | null>} 下載失敗時返回 null
+ * Get the audio stream of a soundcloud track
+ * @param {import("soundcloud.ts").SoundcloudTrack | string} track - The soundcloud track
+ * @returns {Promise<[Readable, string]>}
  */
-async function download_track(track, savePath = null) {
-    try {
-        if (!savePath) savePath = join_temp_folder(`${SOURCE}_${track.id}.mp3`);
-
-        const filePath = await sc.util.downloadTrack(track, savePath);
-        convertToOgg(filePath);
-
-        return filePath;
-    } catch (error) {
-        return null;
-    };
+async function getAudioStream(track) {
+    return [await sc.util.streamTrack(track), "audio/mpeg"];
 };
 
 /**
@@ -71,13 +62,6 @@ async function get_related_tracks(track_id) {
     return await sc.tracks.related(track_id);
 };
 
-const Constants = {
-    SOUNDCLOUD_URL_REGEX: /^https?:\/\/(soundcloud\.com|snd\.sc)\/(.*)$/,
-    REGEX_TRACK: /^https?:\/\/(soundcloud\.com|snd\.sc)\/([A-Za-z0-9_-]+)\/([A-Za-z0-9_-]+)\/?$/,
-    REGEX_SET: /^https?:\/\/(soundcloud\.com|snd\.sc)\/([A-Za-z0-9_-]+)\/sets\/([A-Za-z0-9_-]+)\/?$/,
-    REGEX_ARTIST: /^https?:\/\/(soundcloud\.com|snd\.sc)\/([A-Za-z0-9_-]+)\/?$/,
-};
-
 function validateURL(url = null, type = "all") {
     if (typeof url !== "string") return false;
 
@@ -94,9 +78,8 @@ function validateURL(url = null, type = "all") {
 };
 
 module.exports = {
-    NO_CACHE,
     search_tracks,
-    download_track,
+    getAudioStream,
     get_track_info,
     get_related_tracks,
     validateURL,

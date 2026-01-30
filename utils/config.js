@@ -110,8 +110,8 @@ const backend_channel_id = "1430868819206864978"
 const log_channel_id = "1430868778433904691"
 const warn_channel_id = "1430868778433904691"
 const error_channel_id = "1430868778433904691"
-const dc_send_ignore_keywords = ["金額超過上限"];
-const console_ignore_keywords = ["金額超過上限"];
+const dc_send_ignore_keywords = ["金額超過上限", "GuildMembersTimeout"];
+const console_ignore_keywords = ["金額超過上限", "GuildMembersTimeout"];
 
 // Bot info
 const BotID = "1422212094274830470";

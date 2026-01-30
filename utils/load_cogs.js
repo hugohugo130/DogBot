@@ -88,7 +88,7 @@ async function processDirectory(client, dirPath, quiet = false) {
  *
  * @param {DogClient} client
  * @param {boolean} [quiet]
- * @returns {Promise<number | undefined>}
+ * @returns {Promise<number>}
  */
 async function load_cogs(client, quiet = false) {
     try {
@@ -98,6 +98,7 @@ async function load_cogs(client, quiet = false) {
         const errorStack = util.inspect(error, { depth: null });
 
         logger.error(`加載程式碼(cogs)時出錯:\n${errorStack}`);
+        return 0;
     };
 };
 

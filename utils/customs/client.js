@@ -120,7 +120,7 @@ class DogClient extends Client {
                     members = await guild.members.fetch({ time: fetch_timeout * 1000 });
                 };
             } catch (err) {
-                if (!err.message.includes("GuildMembersTimeout")) throw err;
+                if (!err.stack.includes("GuildMembersTimeout")) throw err;
 
                 members = guild.members.cache;
             };
@@ -135,7 +135,7 @@ class DogClient extends Client {
 
     /**
      * Get all members from all guilds.
-     * @param {boolean | string} fetch - 是否fetch guild的member而不是使用cache
+     * @param {boolean | "necessary"} fetch - 是否fetch guild的member而不是使用cache
      * @param {number} [fetch_timeout=360] - fetch members的timeout
      * @returns {Promise<GuildMember[]>}
      */
