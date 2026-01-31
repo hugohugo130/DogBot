@@ -641,12 +641,15 @@ module.exports = {
                     break;
                 };
                 case "pay_confirm": {
-                    await interaction.deferUpdate();
-                    const emoji_cross = await get_emoji("crosS", client);
-                    const emoji_top = await get_emoji("top", client);
-                    const [_, userId, targetUserId, amount] = interaction.customId.split("|");
-                    const rpg_data = await load_rpg_data(userId);
-                    const target_user_rpg_data = await load_rpg_data(targetUserId);
+                    const [_, rpg_data, target_user_rpg_data, [emoji_cross, emoji_top]] = await Promise.all([
+                        interaction.deferUpdate(),
+                        load_rpg_data(userId),
+                        load_rpg_data(targetUserId),
+                        get_emojis(["crosS", "top"], client),
+                    ]);
+
+                    let [userId, targetUserId, amount] = otherCustomIDs;
+                    amount = parseInt(amount);
 
                     if (rpg_data.money < amount) {
                         const embed = new EmbedBuilder()
@@ -661,7 +664,7 @@ module.exports = {
 
                     rpg_data.money = remove_money({
                         rpg_data,
-                        amount: parseInt(amount),
+                        amount: amount,
                         originalUser: `<@${userId}>`,
                         targetUser: `<@${targetUserId}>`,
                         type: `付款給`,
@@ -669,7 +672,7 @@ module.exports = {
 
                     target_user_rpg_data.money = add_money({
                         rpg_data: target_user_rpg_data,
-                        amount: parseInt(amount),
+                        amount: amount,
                         originalUser: `<@${userId}>`,
                         targetUser: `<@${targetUserId}>`,
                         type: `付款給`,
@@ -681,7 +684,7 @@ module.exports = {
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
                         .setTitle(`${emoji_top} | 付款成功`)
-                        .setDescription(`你已成功付款 \`${parseInt(amount).toLocaleString()}$\` 給 <@${targetUserId}>`)
+                        .setDescription(`你已成功付款 \`${amount.toLocaleString()}$\` 給 <@${targetUserId}>`)
                         .setEmbedFooter(interaction);
 
                     await interaction.editReply({ embeds: [embed], components: [] });
