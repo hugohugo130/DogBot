@@ -525,7 +525,7 @@ class MusicQueue {
         let new_track = null;
 
         if (this.tracks.length > 0) {
-            new_track = await this.play(this.tracks[0]);
+            new_track = await this.play(this.tracks.shift());
         } else {
             this.stopPlaying(force);
         };
