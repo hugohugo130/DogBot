@@ -69,7 +69,7 @@ ${emoji_playGrad} ${lang_playing}
 [${currentTrack.title}](<${currentTrack.url}>) - ${formatMinutesSeconds(currentTrack.duration)}
 ${emoji_skip} ${lang_queue}
 ${queueString}`)
-            .setFooter({ text: get_lang_data(locale, "/queue", "list.page", [currentPage, pages]) }); // 第 {currentPage} / {pages} 頁
+            .setFooter({ text: get_lang_data(locale, "/queue", "list.page", currentPage, pages) }); // 第 {currentPage} / {pages} 頁
     } else {
         embed.setTitle(`${emoji_cross} | ${lang_list_empty}`);
     };

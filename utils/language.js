@@ -268,11 +268,13 @@ function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
  * @param {string | null} lang
  * @param {string} category
  * @param {string} key
- * @param {string[]} [replace] - 文字中需要的變量
+ * @param {string[]} [replace=[]] - 文字中需要的變量
  * @returns {string}
  */
 function get_lang_data(lang, category, key, ...replace) {
     const default_lang = Locale.ChineseTW;
+
+    replace = replace.flat();
 
     lang = (lang && lang in language)
         ? lang
