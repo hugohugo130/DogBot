@@ -1,4 +1,5 @@
 require("./utils/check.env.js") // check .env file
+require("node:process").loadEnvFile(); // loads .env file
 const { Events, Collection } = require("discord.js");
 const { checkDBFilesExists, checkDBFilesCorrupted } = require("./utils/check_db_files.js");
 const { checkAllDatabaseFilesContent } = require("./utils/onlineDB.js");
@@ -11,11 +12,10 @@ const { should_register_cmd } = require("./utils/auto_register.js");
 const { registcmd } = require("./register_commands.js");
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
 const { getQueues, clear_duplicate_temp } = require("./utils/music/music.js");
-const DogClient = require("./utils/customs/client.js");
-const util = require("util");
 const { check_language_keys } = require("./utils/language.js");
 const { check_help_rpg_info } = require("./cogs/rpg/interactions.js");
-require("dotenv").config();
+const DogClient = require("./utils/customs/client.js");
+const util = require("util");
 
 const args = process.argv.slice(2);
 const debug = args.includes("--debug");

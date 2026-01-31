@@ -19,7 +19,6 @@
     "diff": "^8.0.3",
     "discord-api-types": "^0.38.37",
     "discord.js": "^14.25.1",
-    "dotenv": "^17.2.3",
     "express": "^5.2.1",
     "file-type": "^21.3.0",
     "fluent-ffmpeg": "^2.1.3",

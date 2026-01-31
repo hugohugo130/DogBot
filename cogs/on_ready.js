@@ -5,7 +5,6 @@ const { get_logger } = require("../utils/logger.js");
 const { checkDBFilesDefault } = require("../utils/check_db_files.js");
 const { run_schedule } = require("../utils/run_schedule.js");
 const { safeshutdown } = require("../utils/safeshutdown.js");
-const { BotName } = require("../utils/config.js");
 const DogClient = require("../utils/customs/client.js");
 
 const logger = get_logger();
@@ -32,7 +31,6 @@ module.exports = {
      */
     execute: async function (client) {
         global._client = client;
-        client.name = BotName || client.user.tag;
 
         await client.on_ready();
 

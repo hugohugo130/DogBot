@@ -26,7 +26,7 @@ function _error(logger, message) {
  * @returns {Promise<Collection>}
  */
 async function registcmd(quiet = true, logger = false, updateHash = true) {
-    require("dotenv").config({ quiet: true });
+    require("node:process").loadEnvFile();
 
     if (logger === true) logger = get_logger();
 

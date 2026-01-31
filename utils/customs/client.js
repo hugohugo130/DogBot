@@ -2,7 +2,7 @@ const { Client, GatewayIntentBits, Options, Collection, Guild, GuildMember } = r
 
 const { loadslashcmd } = require("../loadslashcmd.js");
 const { loadDvoiceData } = require("../file.js");
-const { authorName } = require("../config.js");
+const { authorName, BotName } = require("../config.js");
 
 class DogClient extends Client {
     constructor() {
@@ -68,6 +68,9 @@ class DogClient extends Client {
         /** @type {Collection<string, object>} */
         this.gbmi_sessions = new Collection();
 
+        /** @type {string} */
+        this.name = BotName; // will be set when the client is ready if BotName is not set
+
         /**
          * @type {Object.<string, Object.<string, Object.<string, string>>>}
          * USERID: {
@@ -83,6 +86,7 @@ class DogClient extends Client {
 
     async on_ready() {
         this.dvoice = new Collection(Object.entries(await loadDvoiceData()));
+        if (!this.name && this.user?.id) this.name = this.user.id;
     };
 
     /**
