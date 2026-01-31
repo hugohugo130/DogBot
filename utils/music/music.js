@@ -453,10 +453,10 @@ class MusicQueue {
      */
     async play(track) {
         if (DEBUG) this.debug(`- triggered play() | going to play ${track.title}`);
-        if (this.playing) {
-            this.stopPlaying(true);
-            if (DEBUG) this.debug("stopped player");
-        };
+        // if (this.playing) {
+        //     this.stopPlaying(true);
+        //     if (DEBUG) this.debug("stopped player");
+        // };
 
         if (!this.connection && this.voiceChannel) {
             const connection = getVoiceConnection(this.guildID)
@@ -524,10 +524,10 @@ class MusicQueue {
         const old_track = this.currentTrack;
         let new_track = null;
 
-        this.stopPlaying(force);
-
         if (this.tracks.length > 0) {
             new_track = await this.play(this.tracks[0]);
+        } else {
+            this.stopPlaying(force);
         };
 
         return [old_track, new_track];

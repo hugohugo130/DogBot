@@ -27,8 +27,6 @@ module.exports = {
     async execute(interaction, client) {
         const voiceChannel = interaction.member.voice.channel;
 
-        const [emoji_cross, emoji_skip] = await get_emojis(["crosS", "skip"], client);
-
         if (!voiceChannel) {
             return await interaction.reply({
                 embeds: [await youHaveToJoinVC_Embed(interaction, client)],
@@ -36,12 +34,13 @@ module.exports = {
             });
         };
 
-        const [clientMember, queue] = await Promise.all([
-            get_me(interaction.guild),
-            getQueue(interaction.guildId, false),
-        ]);
+        const queue = getQueue(interaction.guildId, false);
 
-        const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
+        const [clientMember, notPlayingEmbed, [emoji_cross, emoji_skip]] = await Promise.all([
+            get_me(interaction.guild),
+            noMusicIsPlayingEmbed(queue, interaction, client),
+            get_emojis(["crosS", "skip"], client),
+        ]);
 
         if (clientMember?.voice?.channelId && clientMember.voice.channelId !== voiceChannel.id) {
             const embed = new EmbedBuilder()
@@ -65,7 +64,7 @@ module.exports = {
             .setEmbedFooter(interaction);
 
         await Promise.all([
-            queue.stopPlaying(),
+            queue.nextTrack(),
             interaction.reply({ embeds: [embed] }),
         ]);
     },
