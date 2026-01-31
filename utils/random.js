@@ -88,6 +88,8 @@ function generateMD5(input) {
     return MD5Hash.digest('hex');
 };
 
+const generateUUID = crypto.randomUUID;
+
 module.exports = {
     randint,
     choice,
@@ -97,4 +99,5 @@ module.exports = {
     generateSessionId,
     generateSHA256,
     generateMD5,
+    generateUUID,
 };

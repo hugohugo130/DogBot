@@ -143,4 +143,5 @@ temp/
 **/package-lock.json
 auto_register.cmd.data
 circular-dependencies-report.json
+error_reader.js
 test.js

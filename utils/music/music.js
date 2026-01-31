@@ -10,7 +10,7 @@ const { get_logger } = require("../logger.js");
 const { existsSync, get_temp_folder, join_temp_folder, basename, readdirSync, unlinkSync } = require("../file.js");
 const { formatMinutesSeconds } = require("../timestamp.js");
 const { get_emoji } = require("../rpg.js");
-const { generateSessionId } = require("../random.js");
+const { generateSessionId, generateUUID } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
 
@@ -207,6 +207,9 @@ class MusicTrack {
         this.author = author;
 
         /** @type {string} */
+        this.uuid = generateUUID();
+
+        /** @type {string} */
         this.source = source?.toLowerCase?.().trim?.() || "soundcloud";
 
         /** @type {ReadableStream | Readable | null} */
@@ -261,6 +264,9 @@ class MusicQueue {
         /** @type {MusicTrack | null} */
         this.currentTrack = null;
 
+        /** @type {MusicTrack | null} */
+        this.lastTrack = null;
+
         /** @type {AudioResource | null} */
         this.currentResource = null;
 
@@ -270,16 +276,16 @@ class MusicQueue {
         /** @type {boolean} */
         this.paused = false;
 
-        /** @type {TextChannel || null} */
+        /** @type {TextChannel | null} */
         this.textChannel = null;
 
-        /** @type {VoiceChannel || null} */
+        /** @type {VoiceChannel | null} */
         this.voiceChannel = null;
 
-        /** @type {VoiceConnection || null} */
+        /** @type {VoiceConnection | null} */
         this.connection = null;
 
-        /** @type {PlayerSubscription || null} */
+        /** @type {PlayerSubscription | null} */
         this.subscription = null;
 
         /** @type {boolean} */
@@ -344,7 +350,7 @@ class MusicQueue {
                 if (
                     [AudioPlayerStatus.Buffering, AudioPlayerStatus.Idle].includes(oldState.status)
                     && newState.status === AudioPlayerStatus.Playing
-                    && this.loopStatus !== loopStatus.TRACK
+                    && this.lastTrack.uuid !== this.currentTrack.uuid
                 ) {
                     const emoji_music = await get_emoji("music", client);
 
@@ -453,10 +459,6 @@ class MusicQueue {
      */
     async play(track) {
         if (DEBUG) this.debug(`- triggered play() | going to play ${track.title}`);
-        // if (this.playing) {
-        //     this.stopPlaying(true);
-        //     if (DEBUG) this.debug("stopped player");
-        // };
 
         if (!this.connection && this.voiceChannel) {
             const connection = getVoiceConnection(this.guildID)
@@ -493,7 +495,11 @@ class MusicQueue {
         );
 
         this.player.play(resource);
-        // this.player.unpause();
+        this.player.unpause();
+
+        if (this.currentTrack) {
+            this.lastTrack = this.currentTrack;
+        };
 
         this.playing = true;
         this.paused = false;
@@ -508,6 +514,10 @@ class MusicQueue {
      * @param {boolean} force - 是否強制停止播放器
      */
     stopPlaying(force = false) {
+        if (this.currentTrack) {
+            this.lastTrack = this.currentTrack;
+        };
+
         this.player.stop(force);
 
         this.playing = false;
