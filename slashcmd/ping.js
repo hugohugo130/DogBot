@@ -24,10 +24,9 @@ module.exports = {
     async execute(interaction, client) {
         const start = Date.now();
 
-        await interaction.deferReply({ withResponse: true });
+        await interaction.deferReply();
 
-        const end = Date.now();
-        const globalPing = end - start;
+        const globalPing = Date.now() - start;
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
