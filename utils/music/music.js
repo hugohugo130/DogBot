@@ -350,8 +350,9 @@ class MusicQueue {
                 if (
                     [AudioPlayerStatus.Buffering, AudioPlayerStatus.Idle].includes(oldState.status)
                     && newState.status === AudioPlayerStatus.Playing
-                    && this.lastTrack.uuid !== this.currentTrack.uuid
                 ) {
+                    if (this.lastTrack && this.currentTrack && this.lastTrack.uuid === this.currentTrack.uuid) return;
+
                     const emoji_music = await get_emoji("music", client);
 
                     // 正在播放
