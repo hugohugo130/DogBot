@@ -32,10 +32,8 @@ const {
     bake,
     smeltable_recipe,
     name,
-    jobs,
     smelter_slots,
     oven_slots,
-    PrivacySettings,
     get_emojis,
     get_id_of_name,
 } = require("../../utils/rpg.js");
@@ -57,9 +55,11 @@ const {
     embed_job_color,
     cookBurntOverTime,
     cookBurntWeight,
-    container_default_color,
+    jobs,
+    PrivacySettings,
     cookClickAmount,
     embed_sign_color,
+    fightjobs,
 } = require("../../utils/config.js");
 const {
     getQueueListEmbedRow
@@ -77,6 +77,9 @@ const {
 const {
     getBotInfoEmbed,
 } = require("../../slashcmd/info.js");
+const {
+    get_lang_data,
+} = require("../../utils/language.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -1783,6 +1786,30 @@ module.exports = {
                     await Promise.all([
                         save_rpg_data(user.id, rpg_data),
                         interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral }),
+                    ]);
+                };
+                case "fightjob": {
+                    let [_, jobId] = customIdParts;
+
+                    const lang_none = get_lang_data(locale, "rpg", "fightjob.none"); // None 無
+                    const lang_transfer_to = get_lang_data(locale, "rpg", "fightjob.transfer_to"); // Successfully changed fight job to | 成功轉職到
+
+                    if (!fightjobs[jobId]) jobId = null;
+                    const fight_job_name = jobId
+                        ? fightjobs[jobId].name ?? lang_none
+                        : lang_none;
+
+                    const rpg_data = await load_rpg_data(user.id);
+                    rpg_data.fightjob = jobId;
+
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_default_color)
+                        .setTitle(`${lang_transfer_to} ${fight_job_name}`)
+                        .setEmbedFooter(interaction);
+
+                    await Promise.all([
+                        save_rpg_data(user.id, rpg_data),
+                        interaction.update({ content: "", embeds: [embed], components: [] }),
                     ]);
                 };
             };

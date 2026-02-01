@@ -1,4 +1,4 @@
-const { Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User } = require("discord.js");
+const { Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User, StringSelectMenuOptionBuilder } = require("discord.js");
 const util = require("util");
 
 const {
@@ -41,8 +41,6 @@ const {
     animal_products,
     shop_lowest_price,
     sell_data,
-    jobs,
-    PrivacySettings,
 } = require("../../utils/rpg.js");
 const {
     load_rpg_data,
@@ -60,11 +58,14 @@ const {
     embed_marry_color,
     max_hunger,
     cannot_sell,
-    probabilities,
     failed,
+    probabilities,
+    jobs,
+    PrivacySettings,
     embed_sign_color,
     INVITE_LINK,
     daily_sign_guildIDs,
+    fightjobs,
 } = require("../../utils/config.js");
 const {
     get_help_command,
@@ -224,6 +225,7 @@ const redirect_data = {
     store: "shop",
     love: "marry",
     unmarry: "divorce",
+    fightjob: "fj",
 };
 
 // const rpg_work = [
@@ -1853,8 +1855,11 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         return !married;
     }],
     job: ["職業", "選擇職業", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const emoji_job = await get_emoji("job", client);
-        const emoji_nekoWave = await get_emoji("nekoWave", client);
+        const [emoji_job, emoji_nekoWave] = await get_emojis(["job", "nekoWave"], client);
+
+        if (args?.[0] === "fightjob") {
+            return await redirect({ client, message, command: "fj", mode });
+        };
 
         const userid = message.author.id;
         const job = rpg_data.job;
@@ -1939,6 +1944,53 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
 
         if (mode === 1) return { embeds: [embed], components: [row] };
         await message.reply({ embeds: [embed], components: [row] });
+    }, false],
+    fj: ["選擇冒險職業", "選擇冒險職業", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        /** @type {string | null} */
+        const current_fightjob = rpg_data.fightjob;
+
+        /** @type {{ command: string[], emoji: string, HP: number, ATK: number, name: string } | undefined} */
+        const current_fightjob_data = fightjobs[current_fightjob];
+
+        const current_fightjob_str = current_fightjob_data
+            ? `${await get_emoji(current_fightjob_data.emoji)} \`${current_fightjob_data.name}\``
+            : "無";
+
+        const emoji_adventure = await get_emoji("adventure", client);
+
+        const embed = new EmbedBuilder()
+            .setColor(embed_default_color)
+            .setTitle(`${emoji_adventure} | 選擇冒險職業`)
+            .setDescription(`你現在的冒險職業是: ${current_fightjob_str}\n冒險職業選擇之後可以進行更改`)
+            .setEmbedFooter();
+
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId(`fightjob|${message.author.id}`)
+            .addOptions(
+                ...Promise.all(
+                    Object.entries(fightjobs)
+                        .map(async ([fj_id, data]) => {
+                            const emoji = await get_emoji(data.emoji, client);
+
+                            return new StringSelectMenuOptionBuilder()
+                                .setEmoji(emoji)
+                                .setLabel(data.name)
+                                .setDescription(`血量: ${data.HP} | 攻擊力: ${data.ATK}`)
+                                .setValue(fj_id);
+                        }),
+                ),
+            );
+
+        const cancelButton = new ButtonBuilder()
+            .setCustomId(`cancel|${message.author.id}`)
+            .setLabel("取消選擇")
+            .setStyle(ButtonStyle.Danger);
+
+        const row = new ActionRowBuilder()
+            .addComponents(selectMenu, cancelButton)
+
+        if (mode === 1) return { embeds: [embed], components: [row] };
+        return await message.reply({ embeds: [embed], components: [row] });
     }, false],
 };
 

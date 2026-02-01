@@ -16,7 +16,8 @@ const language = {
             "footer": "DogBot · Made by hugo",
         },
         "rpg": {
-
+            "fightjob.none": "None",
+            "fightjob.transfer_to": "Successfully changed fight job to",
         },
         "/info": {
             "user.id": "ID",
@@ -71,7 +72,8 @@ Since <t:{1}:R>`,
             "footer": "狗狗機器犬 ∙ 由哈狗製作",
         },
         "rpg": {
-
+            "fightjob.none": "無",
+            "fightjob.transfer_to": "成功轉職到",
         },
         "/info": {
             "user.id": "ID",

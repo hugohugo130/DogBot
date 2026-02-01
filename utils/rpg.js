@@ -1,11 +1,31 @@
 const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, escapeMarkdown, BaseInteraction } = require("discord.js");
 const util = require("util");
 
-const { wait_until_ready } = require("./wait_until_ready.js");
-const { get_logger } = require("./logger.js");
-const { load_rpg_data, loadData, get_probability_of_id } = require("./file.js");
-const { convertToSecondTimestamp, DateNowSecond } = require("./timestamp.js");
-const { embed_default_color, embed_error_color, embed_fell_color, reserved_prefixes, setJobDelay } = require("./config.js");
+const {
+    wait_until_ready,
+} = require("./wait_until_ready.js");
+const {
+    get_logger,
+} = require("./logger.js");
+const {
+    load_rpg_data,
+    loadData,
+    get_probability_of_id,
+} = require("./file.js");
+const {
+    convertToSecondTimestamp,
+    DateNowSecond,
+} = require("./timestamp.js");
+const {
+    embed_default_color,
+    embed_error_color,
+    embed_fell_color,
+    reserved_prefixes,
+    setJobDelay,
+    jobs,
+    workCmdJobs,
+    PrivacySettings,
+} = require("./config.js");
 const EmbedBuilder = require("./customs/embedBuilder.js");
 const DogClient = require("./customs/client.js");
 
@@ -1660,65 +1680,6 @@ function all(iterable, defaultValue = true) {
     return true;
 };
 
-const jobs = {
-    "fisher": { // 漁夫
-        "command": ["fish"],
-        "emoji": "fisher",
-        "desc": "是個需要勞力的職業，你必須要努力勤奮的抓魚，才會獲得收益",
-        "name": "漁夫",
-    },
-    "pharmacist": { // 藥劑師
-        "command": ["brew"],
-        "emoji": "potion",
-        "desc": "這個世界神秘力量的來源，製作藥水以及科學實驗來幫助成長",
-        "name": "藥劑師",
-    },
-    "farmer": { // 農夫
-        "command": ["/farm"],
-        "emoji": "farmer",
-        "desc": "和漁夫是差不多辛勤的職業，只是會遇到颱風之類的災難",
-        "name": "農夫",
-    },
-    "cook": { // 廚師
-        "command": ["/bake", "/cook"],
-        "emoji": "cook",
-        "desc": "需購買食材，烘烤食物並轉賣來獲得收益 (新手不建議)",
-        "name": "廚師",
-    },
-    "miner": { // 礦工
-        "command": ["mine"],
-        "emoji": "ore",
-        "desc": "這個世界各類金屬的來源，挖取原礦並轉賣給鐵匠",
-        "name": "礦工",
-    },
-    "herder": { // 牧農
-        "command": ["herd"],
-        "emoji": "cow",
-        "desc": "肉類的來源，養殖各類動物",
-        "name": "牧農",
-    },
-    "blacksmith": { // 鐵匠
-        "command": ["/smelt"],
-        "emoji": "anvil",
-        "desc": "熔煉各類原礦轉換成有價值的礦物 (新手不建議)",
-        "name": "鐵匠",
-    },
-    "lumberjack": { // 伐木工
-        "command": ["fell"],
-        "emoji": "wood",
-        "desc": "在森林中砍伐木頭，是木頭的來源",
-        "name": "伐木工",
-    },
-};
-
-const PrivacySettings = Object.freeze({
-    Inventory: "backpack",
-    Money: "money",
-    Partner: "partner",
-});
-
-const workCmdJobs = Object.fromEntries(Object.entries(jobs).filter(([_, value]) => value.command).flatMap(([key, value]) => value.command.map(cmd => [cmd, [key, value]])));
-
 const oven_slots = 3;
 const farm_slots = 4;
 const smelter_slots = 3;
@@ -1747,7 +1708,9 @@ module.exports = {
     bake,
     cook,
     sell_data,
-    PrivacySettings,
+    oven_slots,
+    farm_slots,
+    smelter_slots,
     check_item_data,
     get_name_of_id,
     get_id_of_name,
@@ -1777,9 +1740,4 @@ module.exports = {
     startsWith_prefixes,
     all,
     any,
-    jobs,
-    workCmdJobs,
-    oven_slots,
-    farm_slots,
-    smelter_slots,
 };

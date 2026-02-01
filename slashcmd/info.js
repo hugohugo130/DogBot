@@ -1,10 +1,23 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown, Locale } = require("discord.js");
 
-const { convertToSecondTimestamp } = require("../utils/timestamp.js");
-const { load_rpg_data } = require("../utils/file.js");
-const { get_emojis, get_emoji, jobs } = require("../utils/rpg.js");
-const { get_lang_data } = require("../utils/language.js");
-const { embed_default_color, max_hunger } = require("../utils/config.js");
+const {
+    convertToSecondTimestamp
+} = require("../utils/timestamp.js");
+const {
+    load_rpg_data
+} = require("../utils/file.js");
+const {
+    get_emojis,
+    get_emoji
+} = require("../utils/rpg.js");
+const {
+    get_lang_data
+} = require("../utils/language.js");
+const {
+    embed_default_color,
+    max_hunger,
+    jobs,
+} = require("../utils/config.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");
 const DogClient = require("../utils/customs/client.js");
 
@@ -157,33 +170,18 @@ module.exports = {
 
         switch (subcommand) {
             case "user": {
-                const [
-                    lang_no_data, // 無資料
-                    lang_none, // 無
-                    lang_privacy, // 隱私設定關閉
-                    lang_single, // 單身
-                    lang_id, // ID
-                    lang_created_at, // 創建時間
-                    lang_money, // 金錢
-                    lang_hunger, // 飽食度
-                    lang_job, // 民生職業
-                    lang_fightjob, // 冒險職業
-                    lang_badge, // 稱號
-                    lang_relationship, // 感情狀態
-                ] = await Promise.all([
-                    get_lang_data(locale, "/info", "user.no_data"),
-                    get_lang_data(locale, "/info", "user.none"),
-                    get_lang_data(locale, "/info", "user.privacy"),
-                    get_lang_data(locale, "/info", "user.single"),
-                    get_lang_data(locale, "/info", "user.id"),
-                    get_lang_data(locale, "/info", "user.created_at"),
-                    get_lang_data(locale, "/info", "user.money"),
-                    get_lang_data(locale, "/info", "user.hunger"),
-                    get_lang_data(locale, "/info", "user.job"),
-                    get_lang_data(locale, "/info", "user.adventure_job"),
-                    get_lang_data(locale, "/info", "user.badge"),
-                    get_lang_data(locale, "/info", "user.relationship"),
-                ]);
+                const lang_no_data = get_lang_data(locale, "/info", "user.no_data"); // 無資料
+                const lang_none = get_lang_data(locale, "/info", "user.none"); // 無
+                const lang_privacy = get_lang_data(locale, "/info", "user.privacy"); // 隱私設定關閉
+                const lang_single = get_lang_data(locale, "/info", "user.single"); // 單身
+                const lang_id = get_lang_data(locale, "/info", "user.id"); // ID
+                const lang_created_at = get_lang_data(locale, "/info", "user.created_at"); // 創建時間
+                const lang_money = get_lang_data(locale, "/info", "user.money"); // 金錢
+                const lang_hunger = get_lang_data(locale, "/info", "user.hunger"); // 飽食度
+                const lang_job = get_lang_data(locale, "/info", "user.job"); // 民生職業
+                const lang_fightjob = get_lang_data(locale, "/info", "user.adventure_job"); // 冒險職業
+                const lang_badge = get_lang_data(locale, "/info", "user.badge"); // 稱號
+                const lang_relationship = get_lang_data(locale, "/info", "user.relationship"); // 感情狀態
 
                 const user = interaction.options.getUser("user") ?? interaction.user;
                 const userTag = user.tag;
@@ -267,25 +265,14 @@ module.exports = {
             };
 
             case "guild": {
-                const [
-                    lang_id, // ID
-                    lang_members, // Members 成員
-                    lang_boosts, // Boosts 加成狀態
-                    lang_owner, // Owner 擁有者
-                    lang_created_at, // Created At 創建時間
-                    lang_icon, // Icon 圖標
-                    lang_banner, // Banner 橫幅
-                    lang_splash, // Splash 邀請背景
-                ] = await Promise.all([
-                    get_lang_data(locale, "/info", "guild.id"),
-                    get_lang_data(locale, "/info", "guild.members"),
-                    get_lang_data(locale, "/info", "guild.boosts"),
-                    get_lang_data(locale, "/info", "guild.owner"),
-                    get_lang_data(locale, "/info", "guild.created_at"),
-                    get_lang_data(locale, "/info", "guild.icon"),
-                    get_lang_data(locale, "/info", "guild.banner"),
-                    get_lang_data(locale, "/info", "guild.splash"),
-                ]);
+                const lang_id = get_lang_data(locale, "/info", "guild.id"); // ID
+                const lang_members = get_lang_data(locale, "/info", "guild.members"); // Members 成員
+                const lang_boosts = get_lang_data(locale, "/info", "guild.boosts"); // Boosts 加成狀態
+                const lang_owner = get_lang_data(locale, "/info", "guild.owner"); // Owner 擁有者
+                const lang_created_at = get_lang_data(locale, "/info", "guild.created_at"); // Created At 創建時間
+                const lang_icon = get_lang_data(locale, "/info", "guild.icon"); // Icon 圖標
+                const lang_banner = get_lang_data(locale, "/info", "guild.banner"); // Banner 橫幅
+                const lang_splash = get_lang_data(locale, "/info", "guild.splash"); // Splash 邀請背景
 
                 const guild = interaction.guild;
                 const guildId = guild.id;
@@ -367,10 +354,8 @@ module.exports = {
             };
 
             case "bot": {
-                const [embed, lang_refresh] = await Promise.all([
-                    getBotInfoEmbed(locale, client),
-                    get_lang_data(locale, "/info", "bot.refresh"),
-                ]);
+                const embed = await getBotInfoEmbed(locale, client);
+                const lang_refresh = get_lang_data(locale, "/info", "bot.refresh");
 
                 const refreshButton = new ButtonBuilder()
                     .setCustomId(`refresh|any|/info bot`)
