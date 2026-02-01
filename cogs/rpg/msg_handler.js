@@ -64,6 +64,7 @@ const {
     failed,
     embed_sign_color,
     INVITE_LINK,
+    daily_sign_guildIDs,
 } = require("../../utils/config.js");
 const {
     get_help_command,
@@ -1918,6 +1919,8 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
                 .setTitle(`${emoji_cross} | 你今天已經簽到過了ㄟ`)
                 .setEmbedFooter();
         } else {
+            if (daily_sign_guildIDs.includes(message.guild.id)) return;
+
             embed = new EmbedBuilder()
                 .setColor(embed_sign_color)
                 .setTitle(`${emoji_calendar} | 到我們ㄉ伺服器聊天就會自動簽到!`)
