@@ -677,7 +677,7 @@ class MusicQueue {
         this.destroying = true;
 
         this.unsubscribe();
-        this.player.stop(true);
+        this.stopPlaying(true);
         this.connection.destroy();
         queues.delete(this.guildID);
     };
