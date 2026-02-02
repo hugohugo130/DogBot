@@ -218,8 +218,19 @@ class CacheManager {
     };
 };
 
-// 創建全域緩存管理器實例
-if (!global._cacheManager) global._cacheManager = new CacheManager(30 * 60 * 1000); // 30 分鐘 TTL
+/**
+ * Get the cache manager
+ * @param {boolean} [create=true] - Whether to create the cache manager if not exists.
+ * @returns {CacheManager | null}
+ */
+function getCacheManager(create = true) {
+    return global._cacheManager
+        ?? (
+            create
+                ? new CacheManager(30 * 60 * 1000) // 30 分鐘 TTL
+                : null
+        );
+};
 
 /**
  * 緩存類型常數
@@ -232,6 +243,7 @@ const CacheTypes = Object.freeze({
 });
 
 module.exports = {
+    getCacheManager,
     CacheManager,
     CacheTypes,
 };

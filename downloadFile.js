@@ -1,6 +1,12 @@
-(async () => {
-    const { downloadAllFiles } = require("./utils/onlineDB.js");
+const { getCacheManager } = require("./utils/cache.js");
+const { downloadAllFiles } = require("./utils/onlineDB.js");
 
-    await downloadAllFiles();
-    global._cacheManager?.destroy?.();
+(async () => {
+    try {
+        await downloadAllFiles();
+    } finally {
+        getCacheManager(false)?.destroy?.();
+    };
+
+    process.exit();
 })();

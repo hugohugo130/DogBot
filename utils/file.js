@@ -27,9 +27,9 @@ const {
 } = require("./config.js");
 const { get_logger, getCallerModuleName } = require("./logger.js");
 const { asleep } = require("./sleep.js");
-const { CacheTypes } = require("./cache.js");
+const { CacheTypes, getCacheManager } = require("./cache.js");
 
-const cacheManager = global._cacheManager;
+const cacheManager = getCacheManager();
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
