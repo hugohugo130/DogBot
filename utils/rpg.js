@@ -1042,7 +1042,7 @@ async function get_emoji_object(name, client = global._client) {
 
     if (!emoji) {
         emojis = await client.application?.emojis.fetch();
-        emoji = emojis.find(e => e.name === name);
+        emoji = emojis?.find(e => e.name === name);
     };
 
     return emoji;

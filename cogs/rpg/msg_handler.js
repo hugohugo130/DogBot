@@ -73,11 +73,13 @@ const {
 const {
     mentions_users,
 } = require("../../utils/message.js");
+const {
+    hasSignedTodayOrBrokeSign,
+} = require("../dailySign.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
-const { hasSignedTodayOrBrokeSign } = require("../dailySign.js");
 
-const logger = get_logger({ nodc: true });
+const logger = get_logger();
 
 class MockMessage {
     constructor(content = null, channel = null, author = null, guild = null, mention_user = null) {
@@ -216,9 +218,9 @@ const rpg_actions = {
 const redirect_data = {
     hew: "fell",
     wood: "fell",
-    ls: "items",
-    bag: "items",
     item: "items",
+    bag: "items",
+    ls: "items",
     food: "eat",
     mo: "money",
     m: "money",
@@ -960,7 +962,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
                 value += `\n上次執行時間: <t:${Math.floor(time / 1000)}:D> <t:${Math.floor(time / 1000)}:T>`;
                 value += `\n今天執行了 \`${rpg_data.count[command].toLocaleString()}\` 次`;
 
-                embed.addFields({ name: field_name, value: value, inline:true });
+                embed.addFields({ name: field_name, value: value, inline: true });
             };
         };
 
@@ -1064,25 +1066,27 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         return await message.reply({ embeds: [embed], components: [row] });
     }, true],
     help: ["查看指令", "查看指令", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
-        const specific_cmd = args[0];
+        let specific_cmd = args[0];
+
+        const [emoji_cross, emoji_slash] = await get_emojis(["crosS", "slash", client]);
+
         if (specific_cmd && specific_cmd !== "help") {
+            specific_cmd = redirect_data[specific_cmd] ?? specific_cmd;
             const embed = await get_help_command("rpg", specific_cmd, message.guild.id, null, client);
 
             if (!embed) {
-                const emoji_cross = await get_emoji("crosS", client);
-
                 const error_embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 我不認識 ${specific_cmd}`)
                     .setEmbedFooter();
 
+                if (mode === 1) return { embeds: [error_embed] };
                 return await message.reply({ embeds: [error_embed] });
             };
 
+            if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         };
-
-        const emoji_slash = await get_emoji("slash", client);
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`help|${message.author.id}`)
@@ -1125,7 +1129,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 我的目標是讓你快速建立優質的中文 Discord 伺服器!
 
 ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
--# 本機器犬是參考 YEE式機器龍 製作的，${client.author}不是機器龍的開發者owo`)
+-# 免責聲明：我是${client.author}參考 YEE式機器龍 製作的，${client.author}不是機器龍的開發者owob`)
             .setEmbedFooter()
             .setEmbedAuthor();
 
@@ -2329,7 +2333,6 @@ module.exports = {
                 rpg_handler({ client, message }),
                 timeoutPromise,
             ]);
-
         } catch (error) {
             const errorStack = util.inspect(error, { depth: null });
 
