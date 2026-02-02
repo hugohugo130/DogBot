@@ -220,12 +220,12 @@ const redirect_data = {
     bag: "items",
     item: "items",
     food: "eat",
-    money: "m",
-    mo: "m",
+    mo: "money",
+    m: "money",
     store: "shop",
     love: "marry",
     unmarry: "divorce",
-    fightjob: "fj",
+    fj: "fightjob",
 };
 
 // const rpg_work = [
@@ -914,7 +914,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         if (mode === 1) return { embeds: [embed], components: [row] };
         return await message.reply({ embeds: [embed], components: [row] });
     }, true],
-    m: ["查看餘額", "查看自己的餘額", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+    money: ["查看餘額", "查看自己的餘額", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const button = new ButtonBuilder()
             .setCustomId(`rpg_transaction|${message.author.id}`)
             .setLabel("查看交易紀錄")
@@ -949,8 +949,10 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         } else {
             for (const [command, time] of Object.entries(filtered_lastRunTimestamp)) {
                 if (!rpg_cooldown[command]) continue;
+
                 const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
                 const field_name = command === "work" ? "工作" : command;
+
                 let target_time = Math.floor(new Date() / 1000 + remaining_time / 1000);
                 target_time = `<t:${target_time}:R>`;
 
@@ -958,7 +960,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
                 value += `\n上次執行時間: <t:${Math.floor(time / 1000)}:D> <t:${Math.floor(time / 1000)}:T>`;
                 value += `\n今天執行了 \`${rpg_data.count[command].toLocaleString()}\` 次`;
 
-                embed.addFields({ name: field_name, value: value });
+                embed.addFields({ name: field_name, value: value, inline:true });
             };
         };
 
@@ -979,12 +981,15 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         } else {
             for (const [command, time] of Object.entries(filtered_lastRunTimestamp)) {
                 if (!rpg_cooldown[command]) continue;
+
                 const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
                 const field_name = command;
+
                 let target_time = Math.floor(new Date() / 1000 + remaining_time / 1000);
                 target_time = `<t:${target_time}:R>`;
                 let value = is_finished ? `冷卻完畢 (${target_time})` : target_time;
-                embed.addFields({ name: field_name, value: value });
+
+                embed.addFields({ name: field_name, value: value, inline: true });
             };
         };
 
@@ -1945,7 +1950,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
         if (mode === 1) return { embeds: [embed], components: [row] };
         await message.reply({ embeds: [embed], components: [row] });
     }, false],
-    fj: ["選擇冒險職業", "選擇冒險職業", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+    fightjob: ["選擇冒險職業", "選擇冒險職業", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         /** @type {string | null} */
         const current_fightjob = rpg_data.fightjob;
 
@@ -2154,7 +2159,7 @@ async function rpg_handler({ client, message, d, mode = 0 }) {
         };
     };
 
-    if (rpg_cooldown[command] || command === "cd") {
+    if (rpg_cooldown[command] || ["cd", "cdd"].includes(command)) {
         // 檢查上次執行時間是否為今天
         if (rpg_data.lastRunTimestamp && rpg_data.lastRunTimestamp[command]) {
             const lastRunDate = new Date(rpg_data.lastRunTimestamp[command]);

@@ -177,6 +177,39 @@ const help = {
                 ],
                 format: "{cmd} @使用者 商品ID 數量",
             },
+            "cd": {
+                emoji: "timer",
+                desc: "查看各工作的冷卻時間",
+                usage: [
+                    {
+                        name: "查看冷卻時間",
+                        value: "&cd"
+                    }
+                ],
+                format: "{cmd}",
+            },
+            "cdd": {
+                emoji: "timer",
+                desc: "查看各工作的冷卻時間 (更簡略)",
+                usage: [
+                    {
+                        name: "查看冷卻時間",
+                        value: "&cdd"
+                    }
+                ],
+                format: "{cmd}",
+            },
+            "daily": {
+                emoji: "calendar",
+                desc: "每日簽到",
+                usage: [
+                    {
+                        name: "每日簽到獲得金錢",
+                        value: "&daily"
+                    }
+                ],
+                format: "{cmd}",
+            },
             "divorce": {
                 emoji: "broken",
                 desc: "離婚指令",
@@ -206,18 +239,37 @@ const help = {
                 ],
                 format: "{cmd} [食物ID] [數量]",
             },
-            // "feed": {
-
-            // },
+            "feed": {
+                emoji: "food",
+                desc: "餵食寵物或是結婚的對象增加他的飽食度",
+                usage: [
+                    {
+                        name: "餵{author}吃 2 個牛肉",
+                        value: "&feed @{author} beef 2"
+                    },
+                    {
+                        name: "自己吃一個麵包",
+                        value: "&eat bread"
+                    },
+                    {
+                        name: "查看你還有多少食物",
+                        value: "&food"
+                    }
+                ],
+                format: "{cmd} <寵物標記> <食物ID> [數量]",
+            },
             "fell": {
                 emoji: "wood",
                 desc: "伐木工砍伐木頭使用",
                 usage: [],
                 format: "{cmd}",
             },
-            // "fightjob": {
-
-            // },
+            "fightjob": {
+                emoji: "job",
+                desc: "選擇冒險職業",
+                usage: [],
+                format: "{cmd}",
+            },
             "fish": {
                 emoji: "fisher",
                 desc: "漁夫捕魚使用",
@@ -229,6 +281,17 @@ const help = {
                 desc: "牧農放牧指令",
                 usage: [],
                 format: "{cmd}",
+            },
+            "id": {
+                emoji: "idCard",
+                desc: "獲取物品的ID(英文)",
+                usage: [
+                    {
+                        name: "獲取小麥的ID(wheat)",
+                        value: "&id 小麥"
+                    },
+                ],
+                format: "{cmd} <物品名稱>",
             },
             "items": {
                 emoji: "bag",
@@ -255,6 +318,17 @@ const help = {
                     }
                 ],
                 "format": "{cmd}"
+            },
+            "top": {
+                emoji: "top",
+                desc: "金錢排行榜",
+                usage: [
+                    {
+                        name: "顯示金錢排行榜",
+                        value: "&top"
+                    }
+                ],
+                format: "{cmd}",
             },
             "last": {
                 emoji: "decrease",
@@ -321,6 +395,17 @@ const help = {
                     }
                 ],
                 format: "{cmd}",
+            },
+            "name": {
+                emoji: "idCard",
+                desc: "獲取物品的名稱(中文)",
+                usage: [
+                    {
+                        name: "獲取wheat的中文(小麥)",
+                        value: "&name wheat"
+                    },
+                ],
+                format: "{cmd} <物品ID>",
             },
             "partner": {
                 emoji: "pet",
@@ -412,28 +497,6 @@ const help = {
                 ],
                 format: "&shop <list|add|remove|open|close|on|off>",
             },
-            "id": {
-                emoji: "idCard",
-                desc: "獲取物品的ID(英文)",
-                usage: [
-                    {
-                        name: "獲取小麥的ID(wheat)",
-                        value: "&id 小麥"
-                    },
-                ],
-                format: "{cmd} <物品名稱>",
-            },
-            "name": {
-                emoji: "idCard",
-                desc: "獲取物品的名稱(中文)",
-                usage: [
-                    {
-                        name: "獲取wheat的中文(小麥)",
-                        value: "&name wheat"
-                    },
-                ],
-                format: "{cmd} <物品ID>",
-            },
         },
         special: {
 
@@ -463,9 +526,9 @@ function check_help_rpg_info() {
 };
 
 /**
- * 
- * @param {string} category 
- * @param {User} user 
+ *
+ * @param {string} category
+ * @param {User} user
  * @param {BaseInteraction} [interaction]
  * @returns {[EmbedBuilder, ActionRowBuilder]}
  */
@@ -528,10 +591,16 @@ async function get_help_command(category, command_name, guildID, interaction = n
         value = `${client.author}很懶 他沒有留下任何使用方法owo`;
     value.trim()
     */
-    const usage = command_data.usage?.length > 0
+    const usage = command_data.usage?.length
         ? command_data.usage.map((info, i) => {
-            const value = info.value.replace(/{author}/g, client.author);
-            const name = info.name.replace(/{author}/g, client.author);
+            const value = info.value
+                .replace(/{author}/g, client.author)
+                .replace("&", prefix);
+
+            const name = info.name
+                .replace(/{author}/g, client.author)
+                .replace("&", prefix);
+
             return `${i + 1}. ${name}\n\`\`\`${value}\`\`\``;
         }).join("\n")
         : `\`${client.author}很懶 他沒有留下任何使用方法owo\``;
@@ -611,9 +680,7 @@ module.exports = {
                 return;
             };
 
-            setImmediate(() => {
-                logger.info(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`)
-            });
+            logger.info(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`)
 
             switch (interactionCategory) {
                 case "rpg_transaction": {
