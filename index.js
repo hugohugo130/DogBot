@@ -2,7 +2,7 @@ require("./utils/check.env.js") // check .env file
 require("node:process").loadEnvFile(); // loads .env file
 const { Events, Collection } = require("discord.js");
 const { checkDBFilesExists, checkDBFilesCorrupted } = require("./utils/check_db_files.js");
-const { checkAllDatabaseFilesContent } = require("./utils/onlineDB.js");
+const { checkAllDatabaseFilesContent, uploadAllDatabaseFiles } = require("./utils/onlineDB.js");
 const { load_cogs } = require("./utils/load_cogs.js");
 const { get_logger } = require("./utils/logger.js");
 const { safeshutdown } = require("./utils/safeshutdown.js");
@@ -82,24 +82,39 @@ const split_line = "=".repeat(10);
 logger.info(`${split_line}機器人正在啟動....${split_line}`);
 
 client.once(Events.ClientReady, async () => {
-    const rl = get_areadline();
+    get_areadline().on("line", async (input) => {
+        switch (input) {
+            case "stop": {
+                await safeshutdown(client);
+                break;
+            };
 
-    rl.on("line", async (input) => {
-        if (input === "stop") {
-            await safeshutdown(client);
-        } else if (input === "fstop") {
-            process.exit(0);
-        } else if (input === "music") {
-            const musicQueues = getQueues();
+            case "fstop": {
+                process.exit(0);
+            };
 
-            const playingPlayers = musicQueues.filter(queue => queue.isPlaying()).size;
-            const playersCount = musicQueues.size;
-            const totalTracks = musicQueues.reduce((acc, queue) => {
-                return acc + queue.isPlaying() ? 1 + queue.tracks.length : 0;
-            }, 0);
+            case "music": {
+                const musicQueues = getQueues();
 
-            logger.info(`\n- 連接用戶 (音樂播放器)：${playersCount}\n- 正在播放總人數: ${playingPlayers}\n- 正在播放 ${totalTracks} 首音樂。`);
-        } else if (input.startsWith("musicd ")) {
+                const playingPlayers = musicQueues.filter(queue => queue.isPlaying()).size;
+                const playersCount = musicQueues.size;
+                const totalTracks = musicQueues.reduce((acc, queue) => {
+                    return acc + queue.isPlaying() ? 1 + queue.tracks.length : 0;
+                }, 0);
+
+                logger.info(`\n- 連接用戶 (音樂播放器)：${playersCount}\n- 正在播放總人數: ${playingPlayers}\n- 正在播放 ${totalTracks} 首音樂。`);
+                break;
+            };
+
+            case "uploadall": {
+                await uploadAllDatabaseFiles();
+                logger.info(`done uploading all database files`)
+
+                break;
+            };
+        };
+
+        if (input.startsWith("musicd ")) {
             const [_, depth] = input.split(" ");
             const depthNum = parseInt(depth) || null;
 
