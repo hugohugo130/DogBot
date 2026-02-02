@@ -410,7 +410,7 @@ const fightjobs = {
     },
     "tank": { // 坦克
         "command": ["//TODO"],
-        "emoji": "tank",
+        "emoji": "shield",
         "HP": 175,
         "ATK": 7,
         "name": "坦克",

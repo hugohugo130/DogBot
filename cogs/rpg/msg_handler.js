@@ -1967,7 +1967,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`fightjob|${message.author.id}`)
             .addOptions(
-                ...Promise.all(
+                ...await Promise.all(
                     Object.entries(fightjobs)
                         .map(async ([fj_id, data]) => {
                             const emoji = await get_emoji(data.emoji, client);
