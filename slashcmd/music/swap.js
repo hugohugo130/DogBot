@@ -55,8 +55,6 @@ module.exports = {
     async execute(interaction, client) {
         const voiceChannel = interaction.member.voice.channel;
 
-        const [emoji_cross, emoji_loop] = await get_emojis(["crosS", "loop"], client);
-
         if (!voiceChannel) {
             return await interaction.reply({
                 embeds: [await youHaveToJoinVC_Embed(interaction, client)],
@@ -64,9 +62,11 @@ module.exports = {
             });
         };
 
-        const [clientMember, queue] = await Promise.all([
+        const queue = getQueue(interaction.guildId, false);
+        const [clientMember, notPlayingEmbed, [emoji_cross, emoji_loop]] = await Promise.all([
             get_me(interaction.guild),
-            getQueue(interaction.guildId, false),
+            noMusicIsPlayingEmbed(queue, interaction, client),
+            get_emojis(["crosS", "loop"], client),
         ]);
 
         if (clientMember.voice.channelId) {
@@ -81,8 +81,6 @@ module.exports = {
             };
         };
 
-
-        const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
         if (notPlayingEmbed) {
             return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };

@@ -28,14 +28,14 @@ module.exports = {
         const voiceChannel = interaction.member.voice.channel;
         const queue = getQueue(interaction.guildId);
 
-        const emoji_cross = await get_emoji("crosS", client);
-
         if (!voiceChannel) {
             return await interaction.reply({
                 embeds: [await youHaveToJoinVC_Embed(interaction, client)],
                 flags: MessageFlags.Ephemeral,
             });
         };
+
+        const emoji_cross = await get_emoji("crosS", client);
 
         const vconnection = getVoiceConnection(interaction.guildId);
         if (vconnection) {

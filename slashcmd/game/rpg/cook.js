@@ -212,14 +212,15 @@ module.exports = {
             rpg_data.inventory[item.item] -= item.amount;
         };
 
-        await Promise.all([
-            save_rpg_data(userId, rpg_data),
-            interaction.deferReply(),
-        ]);
-
         const buttonCustomIdLengthLimit = 100;
         const reservedLength = 5;
         const sessionId = generateSessionId(buttonCustomIdLengthLimit - `cook|${userId}|`.length - reservedLength);
+
+        const [container, _, __] = await Promise.all([
+            getCookingContainer(inputed_foods, item_needed, userId, sessionId, 0, client),
+            save_rpg_data(userId, rpg_data),
+            interaction.deferReply(),
+        ]);
 
         client.cook_sessions.set(sessionId, {
             userId,
@@ -230,8 +231,6 @@ module.exports = {
             cooked: 0,
             last_cook_time: Date.now(),
         });
-
-        const container = await getCookingContainer(inputed_foods, item_needed, userId, sessionId, 0, client);
 
         await interaction.editReply({
             content: null,

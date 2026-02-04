@@ -43,11 +43,10 @@ module.exports = {
                 .setRequired(false),
         ),
     async execute(interaction) {
-        await interaction.deferReply();
-
         const userid = interaction.user.id;
 
-        const [rpg_data, [emoji_toolbox, emoji_cross]] = await Promise.all([
+        const [_, rpg_data, [emoji_toolbox, emoji_cross]] = await Promise.all([
+            interaction.deferReply(),
             load_rpg_data(userid),
             get_emojis(["toolbox", "crosS"], interaction.client),
         ]);
@@ -81,7 +80,8 @@ module.exports = {
                 } else {
                     real_id = need_item[0];
                 };
-            }
+            };
+
             item_need[real_id] = (item_need[real_id] || 0) + count * amount;
         };
 

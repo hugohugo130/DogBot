@@ -207,17 +207,19 @@ async function getNowPlayingRows(queue, client = global._client) {
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder[]]>}
  */
 async function getNowPlayingEmbed(queue, currentTrack = null, interaction = null, client = global._client, start = false) {
-    const emoji = queue.isPaused()
-        ? await get_emoji("pauseGrad", client)
-        : await get_emoji("playGrad", client);
-
     if (!currentTrack) currentTrack = queue.currentTrack ?? queue.tracks[0];
     if (!currentTrack) throw new Error("No current track found.");
 
     const playingAt = start ? 0 : Math.floor(queue.currentResource.playbackDuration / 1000);
     const formattedPlayingAt = formatMinutesSeconds(playingAt, false);
 
-    const progressBar = await createProgressBar(0, playingAt, Math.floor(currentTrack.duration / 1000), false, client);
+    const [progressBar, rows, emoji] = await Promise.all([
+        createProgressBar(0, playingAt, Math.floor(currentTrack.duration / 1000), false, client),
+        getNowPlayingRows(queue, client),
+        queue.isPaused()
+            ? await get_emoji("pauseGrad", client)
+            : await get_emoji("playGrad", client),
+    ]);
 
     const formattedDuration = formatMinutesSeconds(currentTrack.duration);
 
@@ -234,8 +236,6 @@ ${emoji} ${formattedPlayingAt}${progressBar}${formattedDuration}
         .setTitle(currentTrack.title)
         .setDescription(description)
         .setEmbedFooter(interaction);
-
-    const rows = await getNowPlayingRows(queue, client);
 
     return [embed, rows];
 };
@@ -266,9 +266,10 @@ module.exports = {
             return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };
 
-        await interaction.deferReply();
-
-        const [embed, rows] = await getNowPlayingEmbed(queue, null, interaction, client);
+        const [_, [embed, rows]] = await Promise.all([
+            interaction.deferReply(),
+            getNowPlayingEmbed(queue, null, interaction, client),
+        ]);
 
         await interaction.editReply({ embeds: [embed], components: rows });
     },

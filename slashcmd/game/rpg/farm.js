@@ -301,9 +301,7 @@ module.exports = {
 
                 await interaction.deferReply();
 
-                if (!farm_data.farms) {
-                    farm_data.farms = [];
-                };
+                if (!farm_data.farms) farm_data.farms = [];
 
                 // loop {insert_amount} times
                 for (let i = 0; i < insert_amount; i++) {

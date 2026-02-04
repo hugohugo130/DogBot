@@ -138,8 +138,7 @@ module.exports = {
         try {
             await getAudioStream(query);
         } catch (error) {
-            const statusCode = error.message;
-            audioStatusCode = statusCode;
+            audioStatusCode = error.message;
         };
 
         if (will_play_audio_url && audioStatusCode) {

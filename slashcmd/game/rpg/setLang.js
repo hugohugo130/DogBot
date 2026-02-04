@@ -24,7 +24,7 @@ module.exports = {
         //     .setTitle(`${emoji} | 設定語言`)
         //     .setDescription(`請選擇要設定的語言`)
         //     .setEmbedFooter(interaction);
-        
+
         // const row = new ActionRowBuilder()
 
         // for (const [key, value] of Object.entries(client.available_languages)) {

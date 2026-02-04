@@ -102,7 +102,8 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
     if (item_missing.length > 0) {
         const embed = await notEnoughItemEmbed(item_missing, interaction, interaction.client);
 
-        return await interaction.editReply({ embeds: [embed] });
+        if (mode == 1) await interaction.editReply({ embeds: [embed] });
+        else await interaction.followUp({ embeds: [embed] });
     };
 
     const embed = new EmbedBuilder()
@@ -136,11 +137,8 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
 
     const replyOption = { embeds: [embed], components: [row] };
 
-    if (mode == 1) {
-        await interaction.editReply(replyOption);
-    } else {
-        await interaction.followUp(replyOption);
-    };
+    if (mode == 1) await interaction.editReply(replyOption);
+    else await interaction.followUp(replyOption);
 };
 
 module.exports = {
@@ -256,16 +254,15 @@ module.exports = {
         const subcommand = interaction.options.getSubcommand();
 
         const rpg_data = await load_rpg_data(userId);
-        const [smelt_data_all, [wrongJobEmbed, row]] = await Promise.all([
+        const [smelt_data_all, [wrongJobEmbed, row], [emoji_cross, emoji_furnace]] = await Promise.all([
             load_smelt_data(),
             wrong_job_embed(rpg_data, "/smelt", userId, interaction, interaction.client),
+            get_emojis(["crosS", "furnace"], interaction.client),
         ]);
 
         if (wrongJobEmbed) return await interaction.editReply({ embeds: [wrongJobEmbed], components: row ? [row] : [] });
 
         const smelt_data = smelt_data_all[userId];
-
-        const [emoji_cross, emoji_furnace] = await get_emojis(["crosS", "furnace"], interaction.client);
 
         switch (subcommand) {
             case "smelt": {

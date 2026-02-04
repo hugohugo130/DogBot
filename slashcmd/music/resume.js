@@ -36,12 +36,12 @@ module.exports = {
             });
         };
 
-        const [[emoji_cross, emoji_pause, emoji_play], queue] = await Promise.all([
+        const queue = getQueue(guildId, false);
+        const [[emoji_cross, emoji_pause, emoji_play], notPlayingEmbed] = await Promise.all([
             get_emojis(["crosS", "pause", "play"], client),
-            getQueue(guildId, false),
+            noMusicIsPlayingEmbed(queue, interaction, client),
         ]);
 
-        const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
         if (notPlayingEmbed) {
             return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };

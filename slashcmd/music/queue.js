@@ -33,15 +33,13 @@ async function getQueueListEmbedRow(queue, currentPage = 1, interaction = null, 
     const currentTrack = queue.currentTrack;
     const locale = interaction?.locale;
 
-    const [lang_no_track_in_queue, lang_playing, lang_queue, lang_prev_page, lang_next_page, lang_update, lang_list_empty] = await Promise.all([
-        get_lang_data(locale, "/queue", "list.no_track_in_queue"), // 沒有音樂在佇列裡
-        get_lang_data(locale, "/queue", "list.playing"), // 正在播放
-        get_lang_data(locale, "/queue", "list.queue"), // 播放佇列
-        get_lang_data(locale, "/queue", "list.prev_page"), // 上一頁
-        get_lang_data(locale, "/queue", "list.next_page"), // 下一頁
-        get_lang_data(locale, "/queue", "list.update"), // 更新
-        get_lang_data(locale, "/queue", "list.empty") // 清單是空的
-    ]);
+    const lang_no_track_in_queue = get_lang_data(locale, "/queue", "list.no_track_in_queue"); // 沒有音樂在佇列裡
+    const lang_playing = get_lang_data(locale, "/queue", "list.playing"); // 正在播放
+    const lang_queue = get_lang_data(locale, "/queue", "list.queue"); // 播放佇列
+    const lang_prev_page = get_lang_data(locale, "/queue", "list.prev_page"); // 上一頁
+    const lang_next_page = get_lang_data(locale, "/queue", "list.next_page"); // 下一頁
+    const lang_update = get_lang_data(locale, "/queue", "list.update"); // 更新
+    const lang_list_empty = get_lang_data(locale, "/queue", "list.empty"); // 清單是空的
 
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
@@ -152,15 +150,12 @@ module.exports = {
      * @param {DogClient} client
     */
     execute: async function (interaction, client) {
-        const [subcommand, queue, [emoji_cross, emoji_playlist]] = await Promise.all([
-            interaction.options.getSubcommand(false),
-            getQueue(interaction.guildId),
-            get_emojis(["crosS", "playlist"], client),
-        ]);
+        const queue = getQueue(interaction.guildId);
+        const [emoji_cross, emoji_playlist] = await get_emojis(["crosS", "playlist"], client);
 
         const locale = interaction.locale;
 
-        switch (subcommand) {
+        switch (interaction.options.getSubcommand()) {
             case "list": {
                 const [_, [embed, row]] = await Promise.all([
                     interaction.deferReply(),
@@ -171,11 +166,9 @@ module.exports = {
             };
 
             case "remove": {
-                const [lang_invalid_track, lang_success, index] = await Promise.all([
-                    get_lang_data(locale, "/queue", "remove.invalid_track"), // 沒有這首歌
-                    get_lang_data(locale, "/queue", "remove.success"), // 成功移除
-                    (interaction.options.getInteger("song", false) ?? 1) - 1,
-                ]);
+                const lang_invalid_track = get_lang_data(locale, "/queue", "remove.invalid_track"); // 沒有這首歌
+                const lang_success = get_lang_data(locale, "/queue", "remove.success"); // 成功移除
+                const index = (interaction.options.getInteger("song", false) ?? 1) - 1;
 
                 const track = queue.tracks[index];
                 if (!track) {
