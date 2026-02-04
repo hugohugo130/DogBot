@@ -17,7 +17,7 @@ const language = {
         },
         "rpg": {
             "fightjob.none": "None",
-            "fightjob.transfer_to": "Successfully changed fight job to",
+            "fightjob.transfer_to": "Successfully changed adventure job to",
         },
         "/info": {
             "user.id": "ID",
