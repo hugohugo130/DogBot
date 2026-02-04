@@ -1852,9 +1852,10 @@ module.exports = {
                         save_rpg_data(user.id, rpg_data),
                         interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral }),
                     ]);
+                    break;
                 };
                 case "fightjob": {
-                    const jobId = interaction.values[0];
+                    const jobId = interaction.values?.[0];
 
                     const lang_none = get_lang_data(locale, "rpg", "fightjob.none"); // None 無
                     const lang_transfer_to = get_lang_data(locale, "rpg", "fightjob.transfer_to"); // Successfully changed fight job to | 成功轉職到
