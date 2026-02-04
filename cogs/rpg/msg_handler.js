@@ -1963,7 +1963,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
 
         const current_fightjob_str = current_fightjob_data
             ? `${await get_emoji(current_fightjob_data.emoji)} \`${current_fightjob_data.name}\``
-            : "無";
+            : "\`無\`";
 
         const emoji_adventure = await get_emoji("adventure", client);
 
@@ -1975,6 +1975,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
 
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`fightjob|${message.author.id}`)
+            .setPlaceholder("選擇冒險職業")
             .addOptions(
                 ...await Promise.all(
                     Object.entries(fightjobs)
