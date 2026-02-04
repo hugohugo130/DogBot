@@ -1550,7 +1550,7 @@ module.exports = {
                     const queue = getQueue(guildId, true);
 
                     const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
-                    if (notPlayingEmbed) {
+                    if (notPlayingEmbed && !["loop", "trending", "disconnect"].includes(feature)) {
                         return await interaction.update({ content: "", embeds: [notPlayingEmbed] });
                     };
 
