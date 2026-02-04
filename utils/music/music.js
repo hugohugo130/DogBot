@@ -13,6 +13,8 @@ const { get_emoji } = require("../rpg.js");
 const { generateSessionId, generateUUID } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
+const { request } = require("undici");
+const cloneable = require("cloneable-readable");
 
 /** @type {Soundcloud} */
 let sc = global._sc ?? new Soundcloud();
@@ -829,23 +831,25 @@ function getAudioFileData(url, stream = false) {
  * @returns {Promise<[Readable, import("file-type").FileTypeResult]>}
  */
 async function getAudioStream(url) {
-    const response = await fetch(url, {
+    const { body: original_stream, statusCode, statusText } = await request(url, {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36'
         },
     });
 
-    if (!response.ok) {
-        throw new Error(String(response.status));
-    };
+    if (statusCode !== 200) throw new Error(statusText);
 
-    const clonedData = response.clone();
+    const cloneable_stream = cloneable(original_stream);
 
-    const fileType = await fileTypeFromStream(clonedData.body);
+    const stream = cloneable_stream.clone();
+    const clonedStream = cloneable_stream.clone();
+
+    const fileType = await fileTypeFromStream(clonedStream);
     if (fileType) fileType.mime = fileType.mime?.replace("video/", "audio/");
     if (!fileType?.mime?.startsWith("audio/")) throw new Error("Not an audio stream");
 
-    const readable_stream = Readable.fromWeb(response.body);
+    const readable_stream = Readable.fromWeb(stream);
+    original_stream.drop();
 
     return [readable_stream, fileType];
 };
@@ -853,7 +857,7 @@ async function getAudioStream(url) {
 /**
  * 
  * @param {{ track: MusicTrack, url: string, source: string }} param0
- * @returns {Promise<[Readable,string] >} [Audio Stream - It must be an audio stream, fileType ([MediaType](https://en.wikipedia.org/wiki/Media_type))]
+ * @returns {Promise<[Readable, string] >} [Audio Stream - It must be an audio stream, fileType ([MediaType](https://en.wikipedia.org/wiki/Media_type))]
  */
 async function getStream({ track, url, source }) {
     let engine;
@@ -870,7 +874,9 @@ async function getStream({ track, url, source }) {
     if (engine?.getAudioStream && typeof engine.getAudioStream === "function") {
         [stream, fileType] = await engine.getAudioStream(track.original_track ?? track);
     } else {
-        [stream, fileType] = await getAudioStream(url)
+        const [fetched_stream, fileTypes] = await getAudioStream(url)
+        stream = fetched_stream;
+        fileType = fileTypes.mime;
     };
 
     return [stream, fileType];

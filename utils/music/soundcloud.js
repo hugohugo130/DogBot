@@ -38,7 +38,7 @@ async function search_tracks(query) {
 /**
  * Get the audio stream of a soundcloud track
  * @param {import("soundcloud.ts").SoundcloudTrack | string} track - The soundcloud track
- * @returns {Promise<[Readable, string]>}
+ * @returns {Promise<[Readable, "audio/mpeg"]>}
  */
 async function getAudioStream(track) {
     return [await sc.util.streamTrack(track), "audio/mpeg"];
