@@ -1996,10 +1996,13 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
             .setStyle(ButtonStyle.Danger);
 
         const row = new ActionRowBuilder()
-            .addComponents(selectMenu, cancelButton)
+            .addComponents(selectMenu)
 
-        if (mode === 1) return { embeds: [embed], components: [row] };
-        return await message.reply({ embeds: [embed], components: [row] });
+        const row2 = new ActionRowBuilder()
+            .addComponents(cancelButton)
+
+        if (mode === 1) return { embeds: [embed], components: [row, row2] };
+        return await message.reply({ embeds: [embed], components: [row, row2] });
     }, false],
 };
 
