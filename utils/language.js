@@ -34,6 +34,7 @@ const language = {
             "user.single": "Single",
             "user.marry_info": `Married with <@{0}>
 Since <t:{1}:R>`,
+            "user.sign_count": "Signed in {0} times in a row",
 
             "guild.id": "ID",
             "guild.members": "Members",
@@ -90,6 +91,7 @@ Since <t:{1}:R>`,
             "user.single": "單身",
             "user.marry_info": `和 <@{0}>
 結婚紀念日 <t:{1}:R>`,
+            "user.sign_count": "連續每日簽到了 {0} 次",
 
             "guild.id": "ID",
             "guild.members": "成員",
