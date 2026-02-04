@@ -680,7 +680,9 @@ module.exports = {
                 return;
             };
 
-            logger.info(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`)
+            setImmediate(() => {
+                logger.info(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`)
+            });
 
             switch (interactionCategory) {
                 case "rpg_transaction": {
@@ -931,44 +933,40 @@ module.exports = {
                     break;
                 };
                 case "cancel": {
-                    await interaction.deferUpdate();
-
                     const emoji_cross = await get_emoji("crosS", client);
 
-                    const [_, __, special = null] = interaction.customId.split("|");
+                    const [_, special = null] = otherCustomIDs;
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 操作取消`)
                         .setEmbedFooter(interaction);
 
-                    if (special) {
-                        const data = special_cancel[special];
-                        if (data) {
-                            const title = data.title ?? null;
-                            const description = data.description ?? null;
+                    const data = special_cancel[special];
+                    if (data) {
+                        const title = data.title ?? null;
+                        const description = data.description ?? null;
 
-                            // 把title和description中的{xxx}改成await get_emoji(xxx, client)
-                            const regex = /\{([^}]+)\}/g;
-                            const replaceAsync = async (str, regex, replacer) => {
-                                const promises = [];
-                                str.replace(regex, (match, p1) => {
-                                    promises.push(replacer(match, p1));
-                                    return match;
-                                });
-                                const replacements = await Promise.all(promises);
-                                return str.replace(regex, () => replacements.shift());
-                            };
-
-                            title = await replaceAsync(title, regex, async (match, p1) => await get_emoji(p1, client));
-                            description = await replaceAsync(description, regex, async (match, p1) => await get_emoji(p1, client));
-
-                            embed.setTitle(title);
-                            embed.setDescription(description);
+                        // 把title和description中的{xxx}改成await get_emoji(xxx, client)
+                        const regex = /\{([^}]+)\}/g;
+                        const replaceAsync = async (str, regex, replacer) => {
+                            const promises = [];
+                            str.replace(regex, (match, p1) => {
+                                promises.push(replacer(match, p1));
+                                return match;
+                            });
+                            const replacements = await Promise.all(promises);
+                            return str.replace(regex, () => replacements.shift());
                         };
+
+                        title = await replaceAsync(title, regex, async (match, p1) => await get_emoji(p1, client));
+                        description = await replaceAsync(description, regex, async (match, p1) => await get_emoji(p1, client));
+
+                        embed.setTitle(title);
+                        embed.setDescription(description);
                     };
 
-                    await interaction.editReply({ embeds: [embed], components: [] });
+                    await interaction.update({ embeds: [embed], components: [] });
                     break;
                 };
                 case "buy":
