@@ -115,6 +115,8 @@ module.exports = {
             const command = args[0].substring(1); // 移除開頭的 "!"
             const commandArgs = args.slice(1); // 獲取所有參數
 
+            const rpg_data = await load_rpg_data(message.author.id);
+
             // 使用 switch 處理不同的指令
             switch (command) {
                 case "give":
@@ -146,7 +148,6 @@ module.exports = {
                     break;
 
                 case "resjob":
-                    const rpg_data = await load_rpg_data(message.author.id);
                     rpg_data.job = null;
                     if (rpg_data.lastRunTimestamp?.job) {
                         if (!rpg_data.lastRunTimestamp) rpg_data.lastRunTimestamp = {};
@@ -156,6 +157,14 @@ module.exports = {
                     await save_rpg_data(message.author.id, rpg_data);
 
                     await message.reply("e, ok.");
+                    break;
+
+                case "resfjob":
+                    rpg_data.fightjob = null;
+
+                    await save_rpg_data(message.author.id, rpg_data);
+
+                    await message.reply("e ok!");
                     break;
             };
 

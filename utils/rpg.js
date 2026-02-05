@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, escapeMarkdown, BaseInteraction } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, BaseInteraction, escapeMarkdown } = require("discord.js");
 const util = require("util");
 
 const {
@@ -28,6 +28,7 @@ const {
 } = require("./config.js");
 const EmbedBuilder = require("./customs/embedBuilder.js");
 const DogClient = require("./customs/client.js");
+const { get_lang_data } = require("./language.js");
 
 const mine_gets = [
     "coal",
@@ -711,6 +712,7 @@ const name = {
     potato: "烤馬鈴薯",
     tomato: "番茄",
     tomato_egg: "番茄炒蛋",
+    carrot_egg: "胡蘿蔔炒蛋",
     carrot: "紅蘿蔔",
     corn: "玉米",
     cooked_corn: "烤玉米",
@@ -1680,6 +1682,30 @@ function all(iterable, defaultValue = true) {
     return true;
 };
 
+/**
+ * Get the translation of adventure job by its ID
+ * @param {string} locale - the locale
+ * @param {string} fj_id - ID of the fight job
+ * @returns {string | undefined}
+ */
+function get_fightjob_name(locale, fj_id) {
+    const key = "fightjob_name";
+
+    return get_lang_data(locale, key, fj_id);
+};
+
+/**
+ * Get the translation of a job by its ID
+ * @param {string} locale - the locale
+ * @param {string} job_id - ID of the job
+ * @returns {string | undefined}
+ */
+function get_job_name(locale, job_id) {
+    const key = "job_name";
+
+    return get_lang_data(locale, key, job_id);
+};
+
 const oven_slots = 3;
 const farm_slots = 4;
 const smelter_slots = 3;
@@ -1738,6 +1764,8 @@ module.exports = {
     firstPrefix,
     InPrefix,
     startsWith_prefixes,
+    get_fightjob_name,
+    get_job_name,
     all,
     any,
 };

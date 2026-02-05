@@ -388,28 +388,24 @@ const jobs = {
 
 const fightjobs = {
     "soldier": { // 戰士
-        "command": ["//TODO"],
         "emoji": "soldier",
         "HP": 135,
         "ATK": 15,
         "name": "戰士",
     },
     "magician": { // 戰士
-        "command": ["//TODO"],
         "emoji": "mage",
         "HP": 100,
         "ATK": 10,
         "name": "魔法師",
     },
     "ninja": { // 刺客
-        "command": ["//TODO"],
         "emoji": "ninja",
         "HP": 85,
         "ATK": 20,
         "name": "刺客",
     },
     "tank": { // 坦克
-        "command": ["//TODO"],
         "emoji": "shield",
         "HP": 175,
         "ATK": 7,

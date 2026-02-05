@@ -36,6 +36,8 @@ const {
     oven_slots,
     get_emojis,
     get_id_of_name,
+    get_fightjob_name,
+    get_job_name,
 } = require("../../utils/rpg.js");
 const {
     get_farm_info_embed,
@@ -1373,15 +1375,17 @@ module.exports = {
                 case "job_choose": {
                     if (!interaction.isStringSelectMenu()) return;
 
-                    const emoji_job = await get_emoji("job", client);
-
                     const job = interaction.values[0];
-                    const job_name = jobs?.[job]?.name;
+                    const job_name = jobs?.[job]
+                        ? get_job_name(locale, job)
+                        : null;
 
-                    const delay_embed = await job_delay_embed(user.id, interaction, client);
-                    if (delay_embed) {
-                        return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
-                    };
+                    const [emoji_job, delay_embed] = await Promise.all([
+                        get_emoji("job", client),
+                        job_delay_embed(user.id, interaction, client),
+                    ]);
+
+                    if (delay_embed) return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_job_color)
@@ -1401,20 +1405,22 @@ module.exports = {
                 };
                 case "job_confirm": {
                     const [_, __, job] = interaction.customId.split("|");
-                    const job_name = jobs?.[job]?.name;
+
+                    const job_name = jobs?.[job]
+                        ? get_job_name(locale, job)
+                        : null;
 
                     const [emoji_job, delay_embed] = await Promise.all([
                         get_emoji("job", client),
                         job_delay_embed(user.id, interaction, client),
                     ]);
 
-                    if (delay_embed) {
-                        return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
-                    };
+                    if (delay_embed) return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
 
                     const rpg_data = await load_rpg_data(user.id);
 
                     rpg_data.job = job;
+
                     if (job === "farmer") {
                         if (!rpg_data.inventory) rpg_data.inventory = {};
                         if (!rpg_data.inventory.wooden_hoe) rpg_data.inventory.wooden_hoe = 0;
@@ -1423,7 +1429,6 @@ module.exports = {
 
                     if (!rpg_data.lastRunTimestamp) rpg_data.lastRunTimestamp = {};
                     rpg_data.lastRunTimestamp.job = Date.now();
-
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_job_color)
@@ -1858,11 +1863,11 @@ module.exports = {
                     const jobId = interaction.values?.[0];
 
                     const lang_none = get_lang_data(locale, "rpg", "fightjob.none"); // None 無
-                    const lang_transfer_to = get_lang_data(locale, "rpg", "fightjob.transfer_to"); // Successfully changed adventure job to | 成功轉職到
+                    const lang_transfer_to = get_lang_data(locale, "rpg", "fightjob.transfer_to"); // Successfully changed adventure job to | 成功轉職為
 
                     if (!fightjobs[jobId]) jobId = null;
                     const fight_job_name = jobId
-                        ? fightjobs[jobId].name ?? lang_none
+                        ? get_fightjob_name(locale, jobId) ?? lang_none
                         : lang_none;
 
                     const rpg_data = await load_rpg_data(user.id);

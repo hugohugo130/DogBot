@@ -15,6 +15,22 @@ const language = {
         "embed": {
             "footer": "DogBot · Made by hugo",
         },
+        "fightjob_name": {
+            "soldier": "soldier",
+            "magician": "magician",
+            "ninja": "ninja",
+            "tank": "tank",
+        },
+        "job_name": {
+            "fisher": "fisher",
+            "pharmacist": "pharmacist",
+            "farmer": "farmer",
+            "cook": "cook",
+            "miner": "miner",
+            "herder": "herder",
+            "blacksmith": "blacksmith",
+            "lumberjack": "lumberjack",
+        },
         "rpg": {
             "fightjob.none": "None",
             "fightjob.transfer_to": "Successfully changed adventure job to",
@@ -72,9 +88,25 @@ Since <t:{1}:R>`,
         "embed": {
             "footer": "狗狗機器犬 ∙ 由哈狗製作",
         },
+        "fightjob_name": {
+            "soldier": "戰士",
+            "magician": "魔法師",
+            "ninja": "刺客",
+            "tank": "坦克",
+        },
+        "job_name": {
+            "fisher": "漁夫",
+            "pharmacist": "藥劑師",
+            "farmer": "農夫",
+            "cook": "廚師",
+            "miner": "礦工",
+            "herder": "牧農",
+            "blacksmith": "鐵匠",
+            "lumberjack": "伐木工",
+        },
         "rpg": {
             "fightjob.none": "無",
-            "fightjob.transfer_to": "成功轉職到",
+            "fightjob.transfer_to": "成功轉職為",
         },
         "/info": {
             "user.id": "ID",
@@ -273,7 +305,7 @@ function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
  * @param {string} category
  * @param {string} key
  * @param {string[]} [replace=[]] - 文字中需要的變量
- * @returns {string}
+ * @returns {string | undefined}
  */
 function get_lang_data(lang, category, key, ...replace) {
     const default_lang = Locale.ChineseTW;
@@ -285,7 +317,7 @@ function get_lang_data(lang, category, key, ...replace) {
         : default_lang;
 
     const lang_category = get_lang_category(lang, category, default_lang);
-    let lang_value = lang_category[key] ?? language[default_lang][category][key];
+    let lang_value = lang_category[key] ?? language[default_lang]?.[category]?.[key];
 
     if (replace?.length > 0) {
         for (let i = 0; i < replace.length; i++) {

@@ -8,7 +8,8 @@ const {
 } = require("../utils/file.js");
 const {
     get_emojis,
-    get_emoji
+    get_emoji,
+    get_job_name
 } = require("../utils/rpg.js");
 const {
     get_lang_data
@@ -207,7 +208,9 @@ module.exports = {
 
                 const createdAt = convertToSecondTimestamp(user.createdAt.getTime());
                 const emojiOfTheJob = jobs[job]?.emoji ? `${await get_emoji(jobs[job].emoji)} ` : "";
-                const nameOfTheJob = jobs[job]?.name ? jobs[job]?.name : job;
+                const nameOfTheJob = jobs[job]
+                    ? get_job_name(locale, job)
+                    : job;
 
                 const user_data_embed = new EmbedBuilder()
                     .setColor(embed_default_color)
