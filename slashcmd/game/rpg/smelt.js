@@ -18,7 +18,7 @@ const {
     wrong_job_embed,
     get_loophole_embed,
     get_id_of_name,
-    userHaveEnoughItems,
+    userHaveNotEnoughItems,
     notEnoughItemEmbed,
     name,
     smelter_slots,
@@ -95,7 +95,7 @@ async function smelt_smelt(interaction, item_id, amount, mode = 1) {
         const current_item_id = need_item.item;
         const need_amount = need_item.amount;
 
-        const not_enough_item = userHaveEnoughItems(rpg_data, current_item_id, need_amount)
+        const not_enough_item = userHaveNotEnoughItems(rpg_data, current_item_id, need_amount)
         if (not_enough_item) item_missing.push(not_enough_item);
     };
 
@@ -357,7 +357,7 @@ module.exports = {
 
                 const total_need_coal = Math.ceil(amounts.reduce((sum, amount) => sum + amount, 0) / 2);
 
-                const not_enough_items = userHaveEnoughItems(rpg_data, "coal", total_need_coal);
+                const not_enough_items = userHaveNotEnoughItems(rpg_data, "coal", total_need_coal);
                 if (not_enough_items) return await interaction.reply({ embeds: [await notEnoughItemEmbed(not_enough_items, interaction, client)], flags: MessageFlags.Ephemeral });
 
                 for (const [index, item] of items.entries()) {

@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, User, BaseInteraction, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
 
-const { get_name_of_id, get_id_of_name, get_emojis, is_cooldown_finished, userHaveEnoughItems, wrong_job_embed, farm_slots } = require("../../../utils/rpg.js");
+const { get_name_of_id, get_id_of_name, get_emojis, is_cooldown_finished, userHaveNotEnoughItems, wrong_job_embed, farm_slots } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
 const { convertToSecondTimestamp, DateNow, DateNowSecond } = require("../../../utils/timestamp.js");
 const { randint } = require("../../../utils/random.js");
@@ -290,7 +290,7 @@ module.exports = {
                     return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
-                if (userHaveEnoughItems(rpg_data, hoe, amount)) {
+                if (userHaveNotEnoughItems(rpg_data, hoe, amount)) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你沒有足夠的鋤頭`)

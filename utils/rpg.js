@@ -918,7 +918,7 @@ async function get_number_of_items(name, userid) {
  * @param {number} amount_needed
  * @returns {null | {item: string, amount: number}} 如果玩家有足夠的物品，回傳null，否則返回物品id和數量
  */
-function userHaveEnoughItems(rpg_data, item, amount_needed) {
+function userHaveNotEnoughItems(rpg_data, item, amount_needed) {
     const items = rpg_data.inventory;
 
     const item_amount = items?.[item];
@@ -1752,7 +1752,7 @@ module.exports = {
     get_name_of_id,
     get_id_of_name,
     get_number_of_items,
-    userHaveEnoughItems,
+    userHaveNotEnoughItems,
     notEnoughItemEmbed,
     job_delay_embed,
     choose_job_row,

@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize } = require("discord.js");
 
-const { notEnoughItemEmbed, wrong_job_embed, userHaveEnoughItems, get_name_of_id, get_emojis, get_emoji, cook, food_data } = require("../../../utils/rpg.js");
+const { notEnoughItemEmbed, wrong_job_embed, userHaveNotEnoughItems, get_name_of_id, get_emojis, get_emoji, cook, food_data } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
 const { generateSessionId } = require("../../../utils/random.js");
 const { container_default_color, embed_error_color, cookClickAmount } = require("../../../utils/config.js");
@@ -201,7 +201,7 @@ module.exports = {
 
         const not_enough_items = (await Promise.all(
             item_needed.map(
-                item => userHaveEnoughItems(rpg_data, item.item, item.amount)
+                item => userHaveNotEnoughItems(rpg_data, item.item, item.amount)
             ),
         )).filter(Boolean);
 

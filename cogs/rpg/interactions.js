@@ -24,7 +24,7 @@ const {
     get_emoji,
     add_money,
     remove_money,
-    userHaveEnoughItems,
+    userHaveNotEnoughItems,
     notEnoughItemEmbed,
     firstPrefix,
     ls_function,
@@ -1204,7 +1204,7 @@ module.exports = {
                         const current_item_id = need_item.item;
                         const need_amount = need_item.amount;
 
-                        const not_enough_item = userHaveEnoughItems(rpg_data, current_item_id, need_amount);
+                        const not_enough_item = userHaveNotEnoughItems(rpg_data, current_item_id, need_amount);
                         if (not_enough_item) item_missing.push(not_enough_item);
                     };
 
