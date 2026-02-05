@@ -940,6 +940,7 @@ module.exports = {
     writeJson,
     readdir,
     mkdir,
+    exists,
     readSchedule,
     join,
     full_path,

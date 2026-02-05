@@ -1,7 +1,7 @@
 const { User, Guild } = require("discord.js");
 
-const { readJson, writeJson, existsSync, basename, join_db_folder, load_rpg_data, save_rpg_data, loadData, saveData } = require("./file.js");
 const { DATABASE_FILES, DEFAULT_VALUES, priorityUserIDs, priorityGuildIDs } = require("./config.js");
+const { readJson, writeJson, exists, basename, join_db_folder, load_rpg_data, save_rpg_data, loadData, saveData } = require("./file.js");
 const { get_logger } = require("./logger.js");
 const { wait_until_ready, client_ready } = require("./wait_until_ready.js");
 const DogClient = require("./customs/client.js");
@@ -15,7 +15,7 @@ async function checkDBFilesExists() {
         const defaultValue = DEFAULT_VALUES?.single?.[file] || {};
 
         const filePath = join_db_folder(file);
-        if (!existsSync(filePath) && defaultValue) {
+        if (!(exists(filePath)) && defaultValue) {
             const default_value = await writeJson(filePath, defaultValue);
             logger.warn(`資料庫檔案 ${file} 不存在，已建立 (預設值為: ${default_value})`);
         };
@@ -27,7 +27,7 @@ async function checkDBFilesCorrupted() {
 
     for (let file of DATABASE_FILES) {
         const filepath = join_db_folder(file);
-        if (!existsSync(filepath)) continue;
+        if (!(await exists(filepath))) continue;
 
         try {
             await readJson(filepath);
@@ -163,7 +163,7 @@ async function make_db_compatible(users, guilds) {
 
 /**
  * @warning run this before client.login may block forever
- * @param {DogClient} client 
+ * @param {DogClient} client - The Discord Client
  * @returns {Promise<void>}
  */
 async function checkDBFilesDefault(client) {
@@ -195,7 +195,7 @@ async function checkDBFilesDefault(client) {
     for (const [file, default_value] of Object.entries(user_files)) {
         let modified = false;
         const filePath = join_db_folder(file);
-        if (!existsSync(filePath)) continue;
+        if (!(exists(filePath))) continue;
 
         const data = await readJson(filePath);
         if (!default_value) {
@@ -216,7 +216,7 @@ async function checkDBFilesDefault(client) {
     for (const [file, default_value] of Object.entries(guild_files)) {
         let modified = false;
         const filePath = join_db_folder(file);
-        if (!existsSync(filePath)) continue;
+        if (!(exists(filePath))) continue;
 
         const data = await readJson(filePath);
         if (!default_value) {
