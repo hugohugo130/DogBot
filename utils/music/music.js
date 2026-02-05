@@ -831,7 +831,7 @@ function getAudioFileData(url, stream = false) {
  * @returns {Promise<[Readable, import("file-type").FileTypeResult]>}
  */
 async function getAudioStream(url) {
-    const { body: original_stream, statusCode, statusText } = await request(url, {
+    const { body, statusCode, statusText } = await request(url, {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36'
         },
@@ -839,7 +839,7 @@ async function getAudioStream(url) {
 
     if (statusCode !== 200) throw new Error(statusText);
 
-    const cloneable_stream = cloneable(original_stream);
+    const cloneable_stream = cloneable(body);
 
     const stream = cloneable_stream.clone();
     const clonedStream = cloneable_stream.clone();
@@ -849,7 +849,11 @@ async function getAudioStream(url) {
     if (!fileType?.mime?.startsWith("audio/")) throw new Error("Not an audio stream");
 
     const readable_stream = Readable.fromWeb(stream);
-    original_stream.drop();
+
+    body.drop();
+    stream.destroy();
+    clonedStream.destroy();
+    cloneable_stream.destroy();
 
     return [readable_stream, fileType];
 };
