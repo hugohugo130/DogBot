@@ -177,7 +177,7 @@ class CacheManager {
 
     /**
      * 獲取緩存統計資訊
-     * @returns {Object}
+     * @returns {{ hits: number, misses: number, sets: number, deletes: number, expired: number, size: number, hitRate: string, ttl: number }} ttl: milliseconds
      */
     getStats() {
         const hitRate = this.stats.hits + this.stats.misses > 0

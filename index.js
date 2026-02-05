@@ -14,6 +14,7 @@ const { getServerIPSync } = require("./utils/getSeverIPSync.js");
 const { getQueues, clear_duplicate_temp } = require("./utils/music/music.js");
 const { check_language_keys } = require("./utils/language.js");
 const { check_help_rpg_info } = require("./cogs/rpg/interactions.js");
+const { getCacheManager } = require("./utils/cache.js");
 const DogClient = require("./utils/customs/client.js");
 const util = require("util");
 
@@ -119,6 +120,25 @@ client.once(Events.ClientReady, async () => {
             const depthNum = parseInt(depth) || null;
 
             logger.info(util.inspect(getQueues(), { depth: depthNum }));
+        } else if (input.startsWith("cache ")) {
+            const [_, option] = input.split(" ");
+
+            switch (option) {
+                case "clear": {
+                    const cachemgr = getCacheManager();
+
+                    cachemgr.clear();
+                    logger.info(`[cacheManager] cleaned all caches successfully`);
+                    break;
+                }
+
+                case "stats": {
+                    const cachemgr = getCacheManager();
+
+                    logger.info(util.inspect(cachemgr.getStats(), { depth: null }));
+                    break;
+                }
+            };
         };
 
         logger.info("=".repeat(20));
