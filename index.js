@@ -152,14 +152,11 @@ client.once(Events.ClientReady, async () => {
     await checkDBFilesCorrupted();
     if (!debug) await checkAllDatabaseFilesContent();
 
-    // Promise.all也可以用於非async函數
-    await Promise.all([
-        checkDBFilesExists(),
-        check_help_rpg_info(),
-        check_language_keys(),
-        check_item_data(),
-        clear_duplicate_temp(),
-    ]);
+    check_help_rpg_info();
+    check_language_keys();
+    check_item_data();
+    clear_duplicate_temp();
+    await checkDBFilesExists();
 
     client.serverIP = getServerIPSync(client);
 
