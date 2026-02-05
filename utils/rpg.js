@@ -244,6 +244,7 @@ const foods_crops = [
     "raw_potato",
     "tomato",
     "tomato_egg",
+    "carrot_egg",
     "carrot",
     "corn",
     "cooked_corn",
@@ -383,6 +384,7 @@ const shop_lowest_price = {
     pork: 135,
     beef: 175,
     tomato_egg: 175,
+    carrot_egg: 175,
     duck: 150,
     chicken: 150,
     mutton: 150,
@@ -519,6 +521,7 @@ const food_data = {
     potato: 2,
     tomato: 1,
     tomato_egg: 3,
+    carrot_egg: 3,
     carrot: 1,
     corn: 1,
     cooked_corn: 3,
@@ -653,6 +656,14 @@ const cook = [
             { name: "egg", amount: 1 },
         ],
         output: "tomato_egg",
+        amount: 1,
+    },
+    {
+        input: [
+            { name: "carrot", amount: 1 },
+            { name: "egg", amount: 1 },
+        ],
+        output: "carrot_egg",
         amount: 1,
     },
 ];
