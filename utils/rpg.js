@@ -26,9 +26,11 @@ const {
     workCmdJobs,
     PrivacySettings,
 } = require("./config.js");
+const {
+    get_lang_data,
+} = require("./language.js");
 const EmbedBuilder = require("./customs/embedBuilder.js");
 const DogClient = require("./customs/client.js");
-const { get_lang_data } = require("./language.js");
 
 const mine_gets = [
     "coal",
@@ -650,7 +652,7 @@ for (const raw_food of Object.keys(foods_meat).filter(e => e.startsWith("raw_"))
 };
 
 const cook = [
-    {
+    { // tomato_egg
         input: [
             { name: "tomato", amount: 1 },
             { name: "egg", amount: 1 },
@@ -658,7 +660,7 @@ const cook = [
         output: "tomato_egg",
         amount: 1,
     },
-    {
+    { // carrot_egg
         input: [
             { name: "carrot", amount: 1 },
             { name: "egg", amount: 1 },
@@ -1430,8 +1432,6 @@ async function get_loophole_embed(text, interaction = null, client = global._cli
  * @returns {Promise<EmbedBuilder | null>}
  */
 async function job_delay_embed(userId, interaction = null, client = global._client) {
-
-
     const rpg_data = await load_rpg_data(userId);
     const lastRunTimestamp = rpg_data.lastRunTimestamp ?? {};
     const setJobTime = convertToSecondTimestamp(lastRunTimestamp.job ?? 0);
@@ -1717,9 +1717,9 @@ function get_job_name(locale, job_id) {
     return get_lang_data(locale, key, job_id);
 };
 
-const oven_slots = 3;
+const oven_slots = 6;
 const farm_slots = 4;
-const smelter_slots = 3;
+const smelter_slots = 6;
 
 module.exports = {
     mine_gets,
