@@ -6,6 +6,11 @@ const DogClient = require("../utils/customs/client.js");
 
 const logger = get_logger();
 
+const channels = [
+    ["1422545977226690683", "1456132424042807427"],
+    ["953638043846320158", "1365629151188484176"],
+];
+
 module.exports = {
     name: Events.ClientReady,
     once: true,
@@ -14,22 +19,24 @@ module.exports = {
      * @param {DogClient} client
      */
     execute: async function (client) {
-        const guild = client.guilds.cache.get("1422545977226690683");
-        if (!guild) return;
+        for (const [guildID, channelID] of channels) {
+            const guild = client.guilds.cache.get(guildID);
+            if (!guild) return;
 
-        const voiceChannel = guild.channels.cache.get("1456132424042807427");
-        if (!voiceChannel) return;
+            const voiceChannel = guild.channels.cache.get(channelID);
+            if (!voiceChannel) return;
 
-        if (!getVoiceConnection("1422545977226690683")) {
-            joinVoiceChannel({
-                channelId: voiceChannel.id,
-                guildId: guild.id,
-                selfDeaf: true,
-                selfMute: false,
-                adapterCreator: guild.voiceAdapterCreator,
-            });
+            if (!getVoiceConnection(guildID)) {
+                joinVoiceChannel({
+                    channelId: voiceChannel.id,
+                    guildId: guild.id,
+                    selfDeaf: true,
+                    selfMute: false,
+                    adapterCreator: guild.voiceAdapterCreator,
+                });
+            };
+
+            logger.info(`✅ Joined voice channel ${voiceChannel.name}`);
         };
-
-        logger.info(`✅ Joined voice channel ${voiceChannel.name}`);
     },
 };
