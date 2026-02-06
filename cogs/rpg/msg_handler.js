@@ -448,6 +448,7 @@ const rpg_commands = {
     shop: ["商店", "對你的商店進行任何操作", async function ({ client, message, rpg_data, data, args, mode, random_item }) {
         const subcommand = args[0];
         const userid = message.author.id;
+
         const [
             emoji_store,
             emoji_cross,
@@ -641,8 +642,10 @@ const rpg_commands = {
             case "list": {
                 const user = (await mentions_users(message)).first() || message.author;
 
-                const [emoji_cross, emoji_store, emoji_ore, emoji_bread] = await get_emojis(["crosS", "store", "ore", "bread"], client);
-                const shop_data = await load_shop_data(userid);
+                const [shop_data, [emoji_cross, emoji_store, emoji_ore, emoji_bread]] = await Promise.all([
+                    load_shop_data(user.id),
+                    get_emojis(["crosS", "store", "ore", "bread"], client),
+                ]);
 
                 if (!shop_data.status && user.id != message.author.id) {
                     const embed = new EmbedBuilder()
@@ -2381,7 +2384,10 @@ module.exports = {
 
         if (client.lock.rpg_handler.hasOwnProperty(userId)) {
             const emoji_cross = await get_emoji("crosS", client);
-            const running_cmd = client.lock.rpg_handler[userId] ?? "?";
+
+            const running_cmd = client.lock.rpg_handler[userId];
+
+            if (!running_cmd) delete client.lock.rpg_handler[userId];
 
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
