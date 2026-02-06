@@ -386,10 +386,10 @@ class MusicQueue {
                         };
 
                         case loopStatus.ALL: { // 全部歌曲
-                            if (!this.tracks.length || !this.currentTrack) return;
+                            if (!this.tracks.length && !this.currentTrack) return;
 
                             // currentTrack不會出現在this.tracks裡面
-                            this.addTrack(this.currentTrack);
+                            if (this.currentTrack) this.addTrack(this.currentTrack);
                             await this.play(this.tracks.shift());
                             break;
                         };
