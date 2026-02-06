@@ -1,6 +1,8 @@
 const util = require("util");
+const cloneable = require("cloneable-readable");
 const { createAudioResource, createAudioPlayer, joinVoiceChannel, getVoiceConnection, AudioPlayerStatus, VoiceConnection, AudioPlayer, StreamType, AudioResource, PlayerSubscription } = require("@discordjs/voice");
 const { fileTypeFromStream } = require("file-type");
+const { request } = require("undici");
 const { Readable } = require("node:stream");
 const { Collection, TextChannel, VoiceChannel, Guild, BaseInteraction } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
@@ -13,8 +15,6 @@ const { get_emoji } = require("../rpg.js");
 const { generateSessionId, generateUUID } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
-const { request } = require("undici");
-const cloneable = require("cloneable-readable");
 
 /** @type {Soundcloud} */
 let sc = global._sc ?? new Soundcloud();
@@ -830,7 +830,7 @@ function getAudioFileData(url, stream = false) {
  * @param {string} url - 音檔網址
  * @returns {Promise<[Readable, import("file-type").FileTypeResult]>}
  */
-async function getAudioStream(url) {
+async function fetchAudioStream(url) {
     const { body, statusCode, statusText } = await request(url, {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36'
@@ -844,7 +844,7 @@ async function getAudioStream(url) {
     const stream = cloneable_stream.clone();
     const clonedStream = cloneable_stream.clone();
 
-    const fileType = await fileTypeFromStream(clonedStream);
+    const fileType = await fileTypeFromStream(Readable.toWeb(clonedStream));
     if (fileType) fileType.mime = fileType.mime?.replace("video/", "audio/");
     if (!fileType?.mime?.startsWith("audio/")) throw new Error("Not an audio stream");
 
@@ -878,7 +878,7 @@ async function getStream({ track, url, source }) {
     if (engine?.getAudioStream && typeof engine.getAudioStream === "function") {
         [stream, fileType] = await engine.getAudioStream(track.original_track ?? track);
     } else {
-        const [fetched_stream, fileTypes] = await getAudioStream(url)
+        const [fetched_stream, fileTypes] = await fetchAudioStream(url)
         stream = fetched_stream;
         fileType = fileTypes.mime;
     };
@@ -1032,7 +1032,7 @@ module.exports = {
     getStream,
     fixStructure,
     search_until,
-    getAudioStream,
+    fetchAudioStream,
     clear_duplicate_temp,
     IsValidURL,
     noMusicIsPlayingEmbed,

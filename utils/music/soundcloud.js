@@ -1,8 +1,9 @@
+const util = require("util");
 const { Readable } = require("stream");
 const { Soundcloud } = require("soundcloud.ts");
-const util = require("util");
 
 const { get_logger } = require("../logger.js");
+const { fetchAudioStream } = require("./music.js");
 
 /** @type {Soundcloud} */
 const sc = global._sc ?? new Soundcloud();
@@ -38,10 +39,22 @@ async function search_tracks(query) {
 /**
  * Get the audio stream of a soundcloud track
  * @param {import("soundcloud.ts").SoundcloudTrack | string} track - The soundcloud track
- * @returns {Promise<[Readable, "audio/mpeg"]>}
+ * @returns {Promise<[Readable, import("file-type").FileTypeResult]>} - [Readable, FileTypeResult] FileTypeResult.mime is usually audio/mpeg
  */
 async function getAudioStream(track) {
-    return [await sc.util.streamTrack(track), "audio/mpeg"];
+    // const stream_url = await sc.util.streamLink(track);
+    const stream_url = false; // too bad so sad, this spend a loooooooooooooooot of time.
+    if (stream_url) {
+        // logger.debug(stream_url)
+        const [audio_stream, fileType] = await fetchAudioStream(stream_url);
+        // logger.debug("fetched")
+        return [audio_stream, fileType];
+    } else {
+        // logger.debug("else:")
+        const stream = await sc.util.streamTrack(track);
+
+        return [stream, "audio/mpeg"];
+    };
 };
 
 /**

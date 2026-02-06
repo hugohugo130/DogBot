@@ -27,7 +27,7 @@
     "opusscript": "^0.0.8",
     "prism-media": "^1.3.5",
     "soundcloud.ts": "^0.7.1",
-    "undici": "^7.20.0",
+    "undici": "^7.21.0",
     "winston": "^3.19.0"
   }
 }

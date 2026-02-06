@@ -5,7 +5,7 @@ const { Soundcloud } = require("soundcloud.ts");
 const { getNowPlayingEmbed } = require("./nowplaying.js");
 const { generateSessionId } = require("../../utils/random.js");
 const { get_emojis, get_emoji } = require("../../utils/rpg.js");
-const { search_until, IsValidURL, getAudioStream, getQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
+const { search_until, IsValidURL, getQueue, youHaveToJoinVC_Embed, fetchAudioStream } = require("../../utils/music/music.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 const { embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
@@ -134,17 +134,17 @@ module.exports = {
 
         const will_play_audio_url = play_audio_url && IsValidURL(query);
 
-        let audioStatusCode = null;
+        let audioerr = null;
         try {
-            await getAudioStream(query);
+            await fetchAudioStream(query);
         } catch (error) {
-            audioStatusCode = error.message;
+            audioerr = error.stack;
         };
 
-        if (will_play_audio_url && audioStatusCode) {
+        if (will_play_audio_url && audioerr) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setDescription(`${emoji_cross} | url無效: HTTP Error ${audioStatusCode}`)
+                .setDescription(`${emoji_cross} | 播放自定義url時遇到問題: \n${audioerr}`.slice(0, 4090))
                 .setEmbedFooter(interaction);
 
             return await interaction.editReply({ content: "", embeds: [embed] });
