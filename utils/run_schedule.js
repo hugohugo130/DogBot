@@ -36,7 +36,7 @@ async function interval(per_sec, execute, file, ...args) {
 // function setup_schedule(spec, execute, client = null, ...args) {
 async function setup_schedule(per_sec, execute, file, client = null, ...args) {
     if (!client) {
-        client = wait_until_ready();
+        client = await wait_until_ready();
     };
 
     setTimeout(async () => {

@@ -16,7 +16,7 @@ module.exports = {
      * @returns {Promise<void>}
     */
     async del_msg(userID, guild_id, limit = 100, channel_id = null, client = null) {
-        if (!client) client = wait_until_ready(client);
+        if (!client) client = await wait_until_ready(client);
         const user = await get_user(userID, client);
 
         if (!user) return logger.debug(`User ${userID} not found`);

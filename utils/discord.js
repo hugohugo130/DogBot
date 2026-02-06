@@ -10,7 +10,7 @@ const DogClient = require("../utils/customs/client.js");
  * @returns {Promise<GuildMember[]>}
  */
 async function get_members_of_guild(guildID, fetch = true, client = global._client) {
-    client = wait_until_ready(client);
+    client = await wait_until_ready(client);
 
     const guild = await get_guild(guildID, client);
     if (!guild) return [];

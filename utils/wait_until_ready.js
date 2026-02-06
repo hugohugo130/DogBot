@@ -1,5 +1,5 @@
-const { Client } = require("discord.js");
 const { asleep } = require("./sleep");
+const DogClient = require("./customs/client");
 
 function client_ready(client = global._client) {
     return client?.isReady?.();
@@ -22,6 +22,13 @@ async function wait_for_client(waitReady = true, timeout = 10000, wait = 500) {
     return client;
 };
 
+/**
+ * 
+ * @param {DogClient} client - Discord Client
+ * @param {*} timeout - Timeout (ms)
+ * @param {*} wait - check is ready per _ ms
+ * @returns {Promise<DogClient | null>}
+ */
 async function wait_until_ready(client = global._client, timeout = 10000, wait = 500) {
     if (!client instanceof Client) client = wait_for_client();
 

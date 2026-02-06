@@ -173,7 +173,7 @@ async function checkDBFilesDefault(client) {
     const user_files = DEFAULT_VALUES.user;
     const guild_files = DEFAULT_VALUES.guild;
 
-    if (!client_ready(client)) wait_until_ready(client);
+    if (!client_ready(client)) await wait_until_ready(client);
 
     const guilds = (await client.getAllGuilds())
         .sort((a, b) => {
