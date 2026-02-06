@@ -119,7 +119,11 @@ const consoleFormat = winston.format.combine(
                 typeof info.message === "object" &&
                 info.message.data
             ) || (
-                any(config.console_ignore_keywords.map((keyword) => (info.stack || info.message).includes(keyword)))
+                config.console_ignore_keywords.filter((keyword) => {
+                    const msg = info.stack || info.message;
+
+                    return msg?.includes && msg.includes(keyword);
+                }).length
             )
         ) {
             return false; // 返回 false 表示過濾掉此日誌
