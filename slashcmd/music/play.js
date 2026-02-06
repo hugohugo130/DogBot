@@ -175,12 +175,11 @@ module.exports = {
                 queue.setConnection(connection);
             };
 
-            const [_, [embed, rows]] = await Promise.all([
-                queue.subscribe(),
-                getNowPlayingEmbed(queue, track, interaction, client, true),
-            ]);
+            queue.subscribe();
 
-            await queue.addOrPlay(track);
+            const [embed, rows] = await getNowPlayingEmbed(queue, track, interaction, client, true);
+
+            await queue.addOrPlay(track, next ? 0 : null);
 
             return await interaction.editReply({ content: "", embeds: [embed], components: rows });
         };
