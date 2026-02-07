@@ -1,8 +1,6 @@
 const util = require("util");
-const cloneable = require("cloneable-readable");
 const { createAudioResource, createAudioPlayer, joinVoiceChannel, getVoiceConnection, AudioPlayerStatus, VoiceConnection, AudioPlayer, StreamType, AudioResource, PlayerSubscription } = require("@discordjs/voice");
 const { fileTypeFromStream } = require("file-type");
-const { request } = require("undici");
 const { Readable } = require("node:stream");
 const { Collection, TextChannel, VoiceChannel, Guild, BaseInteraction } = require("discord.js");
 const { Soundcloud } = require("soundcloud.ts");
@@ -831,31 +829,27 @@ function getAudioFileData(url, stream = false) {
  * @returns {Promise<[Readable, import("file-type").FileTypeResult]>}
  */
 async function fetchAudioStream(url) {
-    const { body, statusCode, statusText } = await request(url, {
+    const response = await fetch(url, {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36'
         },
     });
 
-    if (statusCode !== 200) throw new Error(statusText);
+    const statusCode = response.status;
+    const statusText = response.statusText;
 
-    const cloneable_stream = cloneable(body);
+    if (statusCode !== 200 || !response.body) throw new Error(statusText);
 
-    const stream = cloneable_stream.clone();
-    const clonedStream = cloneable_stream.clone();
+    const clonedStream = response.clone().body;
+    const clonedStream2 = response.clone().body;
 
-    const fileType = await fileTypeFromStream(Readable.toWeb(clonedStream));
+    const fileType = await fileTypeFromStream(clonedStream);
     if (fileType) fileType.mime = fileType.mime?.replace("video/", "audio/");
     if (!fileType?.mime?.startsWith("audio/")) throw new Error("Not an audio stream");
 
-    const readable_stream = Readable.fromWeb(stream);
+    response.body.cancel(); // no need to wait it resolved.
 
-    body.drop();
-    stream.destroy();
-    clonedStream.destroy();
-    cloneable_stream.destroy();
-
-    return [readable_stream, fileType];
+    return [clonedStream2, fileType];
 };
 
 /**
