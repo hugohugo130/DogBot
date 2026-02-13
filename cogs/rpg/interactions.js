@@ -657,13 +657,7 @@ module.exports = {
             const user = interaction.user;
             const guild = interaction.guild;
 
-            if (message.author.id !== client.user.id) return;
-
-            // 從 customId 提取 UserID
-            const customIdParts = interaction.customId.split("|");
-            const interactionCategory = customIdParts[0];
-            const originalUserId = customIdParts[1];
-            const otherCustomIDs = customIdParts.slice(1); // 移除 customId 的 Category 部分
+            const [interactionCategory, originalUserId, ...otherCustomIDs] = interaction.customId.split("|");
 
             const locale = interaction.locale;
 
@@ -693,7 +687,7 @@ module.exports = {
 
                     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
                     break;
-                };
+                }
                 case "help": {
                     const [_, __, category, cmd = null] = interaction.customId.split("|");
 
@@ -713,7 +707,7 @@ module.exports = {
                         flags: MessageFlags.Ephemeral,
                     });
                     break;
-                };
+                }
                 case "pay_confirm": {
                     const [_, rpg_data, target_user_rpg_data, [emoji_cross, emoji_top]] = await Promise.all([
                         interaction.deferUpdate(),
@@ -752,8 +746,10 @@ module.exports = {
                         type: `付款給`,
                     });
 
-                    await save_rpg_data(userId, rpg_data);
-                    await save_rpg_data(targetUserId, target_user_rpg_data);
+                    await Promise.all([
+                        save_rpg_data(userId, rpg_data),
+                        save_rpg_data(targetUserId, target_user_rpg_data),
+                    ]);
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
@@ -763,7 +759,7 @@ module.exports = {
 
                     await interaction.editReply({ embeds: [embed], components: [] });
                     break;
-                };
+                }
                 case "setLang": {
                     // await interaction.deferUpdate();
                     // const emoji_tick = await get_emoji("Tick", client);
@@ -787,18 +783,14 @@ module.exports = {
 
                     // await interaction.editReply({ embeds: [embed], components: [] });
                     break;
-                };
+                }
                 case "rpg_privacy_menu": {
-                    await interaction.deferUpdate();
+                    const [userId] = otherCustomIDs;
 
-                    const [_, userId] = interaction.customId.split("|");
-
-                    const rpg_data = await load_rpg_data(userId);
-
-                    const [emoji_shield, emoji_backpack, emoji_pet] = await Promise.all(
-                        ["shield", "bag", "pet"].map(async (name) => {
-                            return await get_emoji(name, client);
-                        }),
+                    const [_, rpg_data, [emoji_shield, emoji_backpack, emoji_pet]] = await Promise.all(
+                        interaction.deferUpdate(),
+                        load_rpg_data(userId),
+                        get_emojis(["shield", "bag", "pet"], client),
                     );
 
                     const privacy = interaction.values;
@@ -865,7 +857,7 @@ module.exports = {
                         .addComponents(selectMenu);
 
                     return await interaction.editReply({ embeds: [embed], components: [row] });
-                };
+                }
                 case "choose_command": {
                     const [_, prefix] = await Promise.all([
                         interaction.deferUpdate(),
@@ -882,19 +874,21 @@ module.exports = {
 
                     await interaction.editReply(response);
                     break;
-                };
+                }
                 case "ls": {
-                    const [_, prefix] = await Promise.all([
+                    const userId = otherCustomIDs[0];
+
+                    const [_, prefix, rpg_data] = await Promise.all([
                         interaction.deferReply({ flags: MessageFlags.Ephemeral }),
                         firstPrefix(interaction.guild.id),
+                        load_rpg_data(userId),
                     ]);
 
-                    const [__, userId] = interaction.customId.split("|");
                     const message = new MockMessage(`${prefix}ls`, interaction.message.channel, interaction.user, interaction.guild);
                     const res = await ls_function({
                         client: client,
                         message,
-                        rpg_data: await load_rpg_data(userId),
+                        rpg_data,
                         mode: 1,
                         PASS: true,
                         interaction: interaction
@@ -902,17 +896,18 @@ module.exports = {
 
                     await interaction.followUp(res);
                     break;
-                };
+                }
                 case "sell": {
-                    await interaction.deferUpdate();
+                    const [_, rpg_data] = await Promise.all([
+                        interaction.deferUpdate(),
+                        load_rpg_data(userId),
+                    ]);
 
-                    let [_, userId, item_id, price, amount, total_price] = customIdParts;
+                    let [userId, item_id, price, amount, total_price] = otherCustomIDs;
 
                     price = parseFloat(price);
                     amount = parseInt(amount);
                     total_price = Math.round(parseFloat(total_price));
-
-                    const rpg_data = await load_rpg_data(userId);
 
                     rpg_data.inventory[item_id] -= amount;
                     rpg_data.money = add_money({
@@ -933,7 +928,7 @@ module.exports = {
 
                     await interaction.editReply({ embeds: [embed], components: [] });
                     break;
-                };
+                }
                 case "cancel": {
                     const emoji_cross = await get_emoji("crosS", client);
 
@@ -970,7 +965,7 @@ module.exports = {
 
                     await interaction.update({ embeds: [embed], components: [] });
                     break;
-                };
+                }
                 case "buy":
                 case "buyc": {
                     let [_, buyerUserId, targetUserId, amount, price, item] = otherCustomIDs;
@@ -1034,9 +1029,11 @@ module.exports = {
                     if (!targetUserShopData.items[item].amount) targetUserShopData.items[item].amount = 0;
                     targetUserShopData.items[item].amount -= amount;
 
-                    await save_rpg_data(buyerUserId, buyerRPGData);
-                    await save_rpg_data(targetUserId, targetUserRPGData);
-                    await save_shop_data(targetUserId, targetUserShopData);
+                    await Promise.all([
+                        save_rpg_data(buyerUserId, buyerRPGData),
+                        save_rpg_data(targetUserId, targetUserRPGData),
+                        save_shop_data(targetUserId, targetUserShopData),
+                    ]);
 
                     if (isConfirm) await interaction.followUp({
                         content: `${emoji_store} | 你同意了 <@${buyerUserId}> 以 \`${total_price}$\` 購買 ${item_name} \`x${amount}\` 的交易`,
@@ -1051,12 +1048,11 @@ module.exports = {
 
                     await interaction.editReply({ embeds: [embed], components: [] });
                     break;
-                };
+                }
                 case "oven_bake": {
                     await interaction.deferUpdate();
 
-                    // oven_bake|${userId}|${item_id}|${amount}|${coal_amount}|${duration}|${session_id}
-                    const [_, userId, session_id] = interaction.customId.split("|");
+                    const [userId, session_id] = otherCustomIDs;;
 
                     // 從全域變數中取得 oven_bake 資料
                     const oven_bake = client.oven_sessions.get(session_id);
@@ -1090,8 +1086,12 @@ module.exports = {
                     const parsedCoalAmount = parseInt(coal_amount);
                     const parsedDuration = parseInt(duration);
 
-                    let rpg_data = await load_rpg_data(userId)
-                    let bake_data = await load_bake_data(userId) ?? [];
+                    let [rpg_data, bake_data] = await Promise.all([
+                        load_rpg_data(userId),
+                        load_bake_data(userId),
+                    ]);
+
+                    if (!bake_data) bake_data = [];
 
                     if (bake_data?.length && bake_data.length >= oven_slots) {
                         const emoji_cross = await get_emoji("crosS", client);
@@ -1142,7 +1142,6 @@ module.exports = {
                         rpg_data.inventory[need_item.item] -= need_item.amount;
                     };
 
-                    await save_rpg_data(userId, rpg_data);
 
                     const output_item_id = bake[item_id];
                     const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
@@ -1156,12 +1155,14 @@ module.exports = {
                         output_item_id,
                     });
 
-                    await save_bake_data(userId, bake_data);
+                    const [_, __, emoji_drumstick] = await Promise.all([
+                        save_rpg_data(userId, rpg_data),
+                        save_bake_data(userId, bake_data),
+                        get_emoji("drumstick", client),
+                    ]);
 
                     // 清理 session 資料
                     client.oven_sessions.delete(session_id);
-
-                    const emoji_drumstick = await get_emoji("drumstick", client);
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
@@ -1171,11 +1172,11 @@ module.exports = {
 
                     await interaction.editReply({ embeds: [embed], components: [] });
                     break;
-                };
+                }
                 case "smelter_smelt": {
                     await interaction.deferUpdate();
 
-                    const [_, userId, item_id, amount, coal_amount, duration, output_amount, session_id] = interaction.customId.split("|");
+                    const [userId, item_id, amount, coal_amount, duration, output_amount, session_id] = otherCustomIDs;
                     const emoji_cross = await get_emoji("crosS", client);
 
                     // 確保所有數值都被正確解析為整數
@@ -1219,16 +1220,15 @@ module.exports = {
                         rpg_data.inventory[need_item.item] -= need_item.amount;
                     };
 
-                    await save_rpg_data(userId, rpg_data)
+                    const [_, smelt_data] = await Promise.all([
+                        save_rpg_data(userId, rpg_data),
+                        load_smelt_data(),
+                    ]);
 
                     const output_item_id = smeltable_recipe.find(a => a.input.item === item_id).output;
                     const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
 
-                    let smelt_data = await load_smelt_data();
-
-                    if (!smelt_data[userId]) {
-                        smelt_data[userId] = [];
-                    };
+                    if (!smelt_data[userId]) smelt_data[userId] = [];
 
                     if (smelt_data[userId].length >= smelter_slots) {
                         const embed = new EmbedBuilder()
@@ -1263,17 +1263,18 @@ module.exports = {
 
                     await interaction.editReply({ embeds: [embed], components: [] });
                     break;
-                };
+                }
                 case "marry_accept": {
                     await interaction.deferUpdate();
 
-                    const emoji_cross = await get_emoji("crosS", client);
-                    const emoji_check = await get_emoji("check", client);
+                    const [targetUserId, userId] = otherCustomIDs;
 
-                    const [_, targetUserId, userId] = interaction.customId.split("|");
+                    const [rpg_data, t_rpg_data, [emoji_cross, emoji_check]] = await Promise.all([
+                        load_rpg_data(userId),
+                        load_rpg_data(targetUserId),
+                        get_emojis(["crosS", "check"], client),
+                    ]);
 
-                    const rpg_data = await load_rpg_data(userId);
-                    const t_rpg_data = await load_rpg_data(targetUserId);
                     const marry_data = rpg_data.marry ?? {};
                     const marry_with = marry_data.with ?? null;
                     const married = marry_data.married ?? false;
@@ -1302,8 +1303,10 @@ module.exports = {
                         time: Date.now(),
                     };
 
-                    await save_rpg_data(userId, rpg_data);
-                    await save_rpg_data(targetUserId, t_rpg_data);
+                    await Promise.all([
+                        save_rpg_data(userId, rpg_data),
+                        save_rpg_data(targetUserId, t_rpg_data),
+                    ]);
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
@@ -1312,18 +1315,18 @@ module.exports = {
                         .setEmbedFooter(interaction);
 
                     return await interaction.editReply({ content: "", embeds: [embed], components: [] });
-                };
+                }
                 case "divorce": {
-                    const [_, userId, with_UserId] = interaction.customId.split("|");
+                    const [userId, with_UserId] = otherCustomIDs;
 
                     const marry_default_value = find_default_value("rpg_database.json")?.["marry"] ?? {};
 
-                    await interaction.deferReply();
-
-                    const emoji_cross = await get_emoji("crosS", client);
-
-                    const rpg_data = await load_rpg_data(userId);
-                    const with_User_rpg_data = await load_rpg_data(with_UserId);
+                    const [_, emoji_cross, rpg_data, with_User_rpg_data] = await Promise.all([
+                        interaction.deferReply(),
+                        get_emoji("crosS", client),
+                        load_rpg_data(userId),
+                        load_rpg_data(with_UserId),
+                    ]);
 
                     const marry_data = rpg_data.marry ?? {};
                     const married = marry_data.married ?? false;
@@ -1346,16 +1349,20 @@ module.exports = {
                     rpg_data.marry = marry_default_value;
                     with_User_rpg_data.marry = marry_default_value;
 
-                    await save_rpg_data(userId, rpg_data);
-                    await save_rpg_data(with_UserId, with_User_rpg_data);
+                    await Promise.all([
+                        save_rpg_data(userId, rpg_data),
+                        save_rpg_data(with_UserId, with_User_rpg_data),
+                    ]);
 
                     if (mode === 1) return { embeds: [embed] };
                     return await interaction.editReply({ embeds: [embed] });
-                };
+                }
                 case "job_transfer": {
-                    const emoji_job = await get_emoji("job", client);
+                    const [emoji_job, job_delay_embed] = await Promise.all([
+                        get_emoji("job", client),
+                        job_delay_embed(user.id, interaction, client),
+                    ]);
 
-                    const delay_embed = await job_delay_embed(user.id, interaction, client);
                     if (delay_embed) {
                         if (!interaction.deferred) await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
@@ -1371,7 +1378,7 @@ module.exports = {
 
                         return await interaction.update({ embeds: [embed], components: rows });
                     };
-                };
+                }
                 case "job_choose": {
                     if (!interaction.isStringSelectMenu()) return;
 
@@ -1402,7 +1409,7 @@ module.exports = {
                         .addComponents(confirm_button);
 
                     return await interaction.update({ embeds: [embed], components: [row] });
-                };
+                }
                 case "job_confirm": {
                     const [_, __, job] = interaction.customId.split("|");
 
@@ -1441,13 +1448,12 @@ module.exports = {
                     ]);
 
                     break;
-                };
+                }
                 case "play-s": {
                     // 下拉式選單
                     await interaction.deferUpdate();
 
                     const queue = getQueue(interaction.guildId);
-
                     const vconnection = getVoiceConnection(interaction.guildId);
 
                     // 連接到語音頻道
@@ -1502,12 +1508,13 @@ module.exports = {
 
                     const { track, next } = trackSession;
 
-                    const [embed, rows] = await getNowPlayingEmbed(queue, track, interaction, client, true);
-
-                    await queue.addOrPlay(track, next ? 0 : null);
+                    const [_, [embed, rows]] = await Promise.all([
+                        queue.addOrPlay(track, next ? 0 : null),
+                        getNowPlayingEmbed(queue, track, interaction, client, true),
+                    ]);
 
                     return await interaction.editReply({ content: "", embeds: [embed], components: rows });
-                };
+                }
                 case "refresh": {
                     const [_, feature] = otherCustomIDs;
 
@@ -1545,7 +1552,7 @@ module.exports = {
                     };
 
                     break;
-                };
+                }
                 case "music": {
                     const [_, feature, options = null] = otherCustomIDs;
 
@@ -1676,7 +1683,7 @@ module.exports = {
                     };
 
                     break;
-                };
+                }
                 case "cook": {
                     const [_, sessionId] = otherCustomIDs;
 
@@ -1767,8 +1774,8 @@ module.exports = {
                     });
 
                     break;
-                };
-                case "gbmi": { // get back my items!
+                }
+                case "gbmi": {
                     const [_, session_id] = otherCustomIDs;
 
                     const session = client.gbmi_sessions.get(session_id);
@@ -1822,7 +1829,7 @@ module.exports = {
                     await interaction.followUp({ components: [textDisplay], flags: MessageFlags.IsComponentsV2 });
 
                     break;
-                };
+                }
                 case "daily": {
                     const [emoji_calendar, rpg_data, prefix] = await Promise.all([
                         get_emoji("calendar", client),
@@ -1858,7 +1865,7 @@ module.exports = {
                         interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral }),
                     ]);
                     break;
-                };
+                }
                 case "fightjob": {
                     const jobId = interaction.values?.[0];
 
@@ -1882,7 +1889,7 @@ module.exports = {
                         save_rpg_data(user.id, rpg_data),
                         interaction.update({ content: "", embeds: [embed], components: [] }),
                     ]);
-                };
+                }
             };
         } catch (err) {
             const errorStack = util.inspect(err, { depth: null });
