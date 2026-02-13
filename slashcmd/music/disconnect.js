@@ -52,7 +52,7 @@ module.exports = {
                 .setEmbedFooter(interaction);
 
             return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-        } else if (queue.voiceChannel.id !== voiceChannel.id) {
+        } else if (queue.voiceChannel?.id && queue.voiceChannel?.id !== voiceChannel.id) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
