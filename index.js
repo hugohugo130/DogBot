@@ -1,20 +1,20 @@
 require("./utils/check.env.js") // check .env file
 require("node:process").loadEnvFile(); // loads .env file
 const { Events, Collection } = require("discord.js");
+const { get_logger } = require("./utils/logger.js");
+const { load_cogs } = require("./utils/load_cogs.js");
+const { check_item_data } = require("./utils/rpg.js");
+const { registcmd } = require("./register_commands.js");
+const { getQueues } = require("./utils/music/music.js");
+const { getCacheManager } = require("./utils/cache.js");
+const { get_areadline } = require("./utils/readline.js");
+const { safeshutdown } = require("./utils/safeshutdown.js");
+const { check_language_keys } = require("./utils/language.js");
+const { getServerIPSync } = require("./utils/getSeverIPSync.js");
+const { should_register_cmd } = require("./utils/auto_register.js");
+const { check_help_rpg_info } = require("./cogs/rpg/interactions.js");
 const { checkDBFilesExists, checkDBFilesCorrupted } = require("./utils/check_db_files.js");
 const { checkAllDatabaseFilesContent, uploadAllDatabaseFiles } = require("./utils/onlineDB.js");
-const { load_cogs } = require("./utils/load_cogs.js");
-const { get_logger } = require("./utils/logger.js");
-const { safeshutdown } = require("./utils/safeshutdown.js");
-const { get_areadline } = require("./utils/readline.js");
-const { check_item_data } = require("./utils/rpg.js");
-const { should_register_cmd } = require("./utils/auto_register.js");
-const { registcmd } = require("./register_commands.js");
-const { getServerIPSync } = require("./utils/getSeverIPSync.js");
-const { getQueues, clear_duplicate_temp } = require("./utils/music/music.js");
-const { check_language_keys } = require("./utils/language.js");
-const { check_help_rpg_info } = require("./cogs/rpg/interactions.js");
-const { getCacheManager } = require("./utils/cache.js");
 const DogClient = require("./utils/customs/client.js");
 const util = require("util");
 
@@ -155,7 +155,6 @@ client.once(Events.ClientReady, async () => {
     check_help_rpg_info();
     check_language_keys();
     check_item_data();
-    clear_duplicate_temp();
     await checkDBFilesExists();
 
     client.serverIP = getServerIPSync(client);

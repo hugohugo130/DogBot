@@ -120,15 +120,16 @@ module.exports = {
             return await interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
-        await interaction.deferReply();
-
-        const [
+        const [_, [
             emoji_cross,
             emoji_search,
-        ] = await get_emojis([
-            "crosS",
-            "search",
-        ], client);
+        ]] = await Promise.all([
+            interaction.deferReply(),
+            get_emojis([
+                "crosS",
+                "search",
+            ], client),
+        ]);
 
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
@@ -152,9 +153,7 @@ module.exports = {
 
         const tracks = await search_until(query, 25, will_play_audio_url);
 
-        if (tracks.length === 0) {
-            return await interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
-        };
+        if (tracks.length === 0) return await interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
 
         if (tracks.length === 1) {
             const track = tracks[0];
@@ -203,16 +202,16 @@ module.exports = {
                     ),
             );
 
-        client.musicTrackSession.set(trackSessionID, Object.fromEntries(await Promise.all(
-            tracks.map(async (track) => {
+        client.musicTrackSession.set(trackSessionID, Object.fromEntries(
+            tracks.map((track) => {
                 const id = track.id;
 
                 return [[id], [{
                     track,
                     next,
                 }]];
-            })),
-        ));
+            }))
+        );
 
         await interaction.editReply({ content: "選擇要播放的音樂", components: [selectMenu] });
     },

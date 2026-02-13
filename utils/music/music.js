@@ -581,10 +581,11 @@ class MusicQueue {
 
     /**
      * Pause the player.
+     * @param {boolean} force - 是否強制暫停播放器
      * @returns {void}
      */
-    pause() {
-        if (!this.paused) {
+    pause(force = false) {
+        if (!this.paused || force) {
             this.player.pause();
             this.paused = true;
         };
@@ -592,10 +593,11 @@ class MusicQueue {
 
     /**
      * Unpause the player.
+     * @param {boolean} force - 是否強制取消暫停播放器
      * @returns {void}
      */
-    unpause() {
-        if (this.paused) {
+    unpause(force = false) {
+        if (this.paused || force) {
             this.player.unpause();
             this.paused = false;
         };
@@ -678,7 +680,7 @@ class MusicQueue {
 
         this.unsubscribe();
         this.stopPlaying(true);
-        this.connection.destroy();
+        this.connection?.destroy();
         queues.delete(this.guildID);
     };
 };
@@ -707,7 +709,7 @@ function getQueue(guildID, create = true) {
 
 /**
  *
- * @returns {Collection<any, MusicQueue>}
+ * @returns {Collection<string, MusicQueue>}
  */
 function getQueues() {
     return queues;
@@ -803,10 +805,10 @@ async function fixStructure(objects) {
 };
 
 /**
- * 
+ * Get the data of an audio stream for creating MusicTracks
  * @param {string} url
  * @param {boolean} [stream=false]
- * @returns {{id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean}}
+ * @returns {{ id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean }}
  */
 function getAudioFileData(url, stream = false) {
     const uri = url.split("/").pop().split("?")[0];
@@ -954,33 +956,56 @@ async function search_until(query, amount = 25, customURL = false) {
     return results;
 };
 
-function clear_duplicate_temp() {
-    const temp_dir = get_temp_folder();
-
-    const files = readdirSync(temp_dir)
-        .filter(file => file.endsWith(".ogg"));
-
-    for (const oggfile of files) {
-        const filename = basename(oggfile, ".ogg");
-        const oggFilePath = join_temp_folder(oggfile);
-        const mp3FilePath = join_temp_folder(`${filename}.mp3`);
-
-        if (existsSync(oggFilePath)) {
-            try {
-                unlinkSync(mp3FilePath);
-            } catch { };
-        };
-    };
-};
-
+/**
+ * Check whether a string is a valid URL
+ * @param {string} str
+ * @returns {boolean}
+ */
 function IsValidURL(str) {
     const pattern = new RegExp(
-        '^(https?:\\/\\/)?' + // protocol
-        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|' + // domain name
-        '((\\d{1,3}\\.){3}\\d{1,3}))' + // OR ip (v4) address
-        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*' + // port and path
-        '(\\?[;&a-z\\d%_.~+=-]*)?' + // query string
-        '(\\#[-a-z\\d_]*)?$', 'i'); // fragment locator
+        '^(?:' + // 開頭，非捕獲組開始
+        // 方案 URI
+        '[a-zA-Z][a-zA-Z0-9+.-]*:(?:\\/\\/[^\\n\\r]+|[^\\n\\r]+)' + // 通訊協定 scheme:，後可接 // 或直接內容
+        '|' + // 或
+        // 協議相對 URL
+        '\\/\\/[^\\n\\r]+' + // 以 // 開頭（省略通訊協定）
+        '|' + // 或
+        // 絕對路徑
+        '\\/[^\\n\\r]*' + // 以 / 開頭的絕對路徑
+        '|' + // 或
+        // 相對路徑
+        '\\.{1,2}\\/[^\\n\\r]*' + // 以 ./ 或 ../ 開頭的相對路徑
+        '|' + // 或
+        // 僅查詢字串
+        '\\?[^\\n\\r]*' + // 僅查詢字串（? 開頭）
+        '|' + // 或
+        // 僅片段識別碼
+        '\\#[^\\n\\r]*' + // 僅片段識別碼（# 開頭）
+        '|' + // 或
+        // IPv6、IPv4 或 localhost
+        '(?:' + // 非捕獲組
+        '(?:\\[[0-9a-fA-F:]+\\]|\\d{1,3}(?:\\.\\d{1,3}){3}|localhost)' + // IPv6 位址、IPv4 位址、localhost
+        '(?::\\d+)?' + // 可選連接埠
+        '(?:(?:\\/|\\?|\\#)[^\\n\\r]*)?' + // 可選路徑 / 查詢 / 片段
+        ')' +
+        '|' + // 或
+        // 完整網域名稱
+        '(?:' +
+        '(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+' + // 子域名（至少一層）
+        '[a-zA-Z]{2,}\\.?' + // 頂級域名（至少兩個字母），可選結尾點
+        '(?::\\d+)?' + // 可選連接埠
+        '(?:(?:\\/|\\?|\\#)[^\\n\\r]*)?' + // 可選路徑 / 查詢 / 片段
+        ')' +
+        '|' + // 或
+        // 主機名稱（不含點）
+        '(?:' +
+        '[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?' + // 主機名稱（字母開頭，可含連字號）
+        '(?::\\d+)?' + // 可選連接埠
+        '(?:(?:\\/|\\?|\\#)[^\\n\\r]*)?' + // 可選路徑 / 查詢 / 片段
+        ')' +
+        ')$', // 結尾
+        'i', // 不區分大小寫
+    );
 
     return !!pattern.test(str);
 };
@@ -1027,7 +1052,6 @@ module.exports = {
     fixStructure,
     search_until,
     fetchAudioStream,
-    clear_duplicate_temp,
     IsValidURL,
     noMusicIsPlayingEmbed,
     youHaveToJoinVC_Embed,

@@ -88,8 +88,15 @@ const onlineDB_Files = [
 const priorityUserIDs = ["898836485397180426", "1245902419750289538"];
 const priorityGuildIDs = ["1422545977226690683", "1218367644307034112"];
 
-// files
-const database_file = join(database_folder, "database.json")
+// Folders & Files
+const cogsFolder = `${cwd()}/cogs`;
+const musicFileFolder = `${cwd()}/music`;
+const scheduleEverysec = `${cwd()}/schedule/everysec`;
+const scheduleEverymin = `${cwd()}/schedule/everymin`;
+const scheduleEvery5min = `${cwd()}/schedule/every5min`;
+const temp_folder = join(cwd(), "temp");
+
+const database_file = join(database_folder, "database.json");
 const rpg_database_file = join(database_folder, "rpg_database.json");
 const rpg_shop_file = join(database_folder, "rpg_shop.json");
 const rpg_farm_file = join(database_folder, "rpg_farm.json");
@@ -97,20 +104,14 @@ const bake_data_file = join(database_folder, "bake_db.json");
 const smelt_data_file = join(database_folder, "smelt_db.json");
 const dvoice_data_file = join(database_folder, "dvoice_db.json");
 const serverIPFile = join(database_folder, "serverIP.json");
-
-// Folders
-const cogsFolder = `${cwd()}/cogs`
-const musicFileFolder = `${cwd()}/music`
-const scheduleEverysec = `${cwd()}/schedule/everysec`
-const scheduleEverymin = `${cwd()}/schedule/everymin`
-const scheduleEvery5min = `${cwd()}/schedule/every5min`
+const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
 
 // Logger
-const backend_channel_id = "1430868819206864978"
-const log_channel_id = "1430868778433904691"
-const warn_channel_id = "1430868778433904691"
-const error_channel_id = "1430868778433904691"
-const dc_send_ignore_keywords = ["金額超過上限", "GuildMembersTimeout"];
+const backend_channel_id = "1430868819206864978";
+const log_channel_id = "1430868778433904691";
+const warn_channel_id = "1430868778433904691";
+const error_channel_id = "1430868778433904691";
+const dc_send_ignore_keywords = ["金額超過上限", "GuildMembersTimeout", "Missing Access", "Missing Permissions", "Unknown interaction"];
 const console_ignore_keywords = ["金額超過上限", "GuildMembersTimeout"];
 
 // Bot info
@@ -118,8 +119,6 @@ const BotID = "1422212094274830470";
 const BotName = "狗狗機器犬"; // 預設為 client.user.tag
 const authorName = "哈狗";
 
-const enable_auto_register_cmd = true;
-const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
 
 // RPG
 const rpg_lvlUp_per = 50;
@@ -147,7 +146,7 @@ const cookClickAmount = 10 // 10次
 const daily_sign_guildIDs = ["1422545977226690683"];
 const admins = ["898836485397180426"];
 const reserved_prefixes = [`<@${BotID}>`];
-const temp_folder = join(cwd(), "temp");
+const enable_auto_register_cmd = true;
 
 /*
 https://discord.js.org/docs/packages/discord.js/14.25.1/ColorResolvable:TypeAlias
@@ -159,7 +158,7 @@ https://discord.js.org/docs/packages/discord.js/14.25.1/ColorResolvable:TypeAlia
 5. HexColorString
 */
 
-// embed colors
+// Embed colors
 const embed_default_color = "Random";
 const embed_warn_color = 0xF0B90B;
 const embed_error_color = 0xF04A47;
@@ -168,7 +167,7 @@ const embed_job_color = 0x3498db;
 const embed_sign_color = 0x3498db;
 const embed_marry_color = 0x6bce99;
 
-// container colors
+// Container colors
 // No 'random'
 const container_default_color = Math.floor(Math.random() * 0xFFFFFF); // Random
 
