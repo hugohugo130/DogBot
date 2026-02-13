@@ -9,7 +9,8 @@ const {
 const {
     get_emojis,
     get_emoji,
-    get_job_name
+    get_job_name,
+    get_fightjob_name
 } = require("../utils/rpg.js");
 const {
     get_lang_data
@@ -18,6 +19,7 @@ const {
     embed_default_color,
     max_hunger,
     jobs,
+    fightjobs,
 } = require("../utils/config.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");
 const DogClient = require("../utils/customs/client.js");
@@ -141,11 +143,9 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        await interaction.deferReply();
-
         const subcommand = interaction.options.getSubcommand();
 
-        const [
+        const [_, [
             emoji_idCard,
             emoji_timer,
             emoji_job,
@@ -155,17 +155,20 @@ module.exports = {
             emoji_user,
             emoji_boost2,
             emoji_robot,
-        ] = await get_emojis([
-            "idCard",
-            "timer",
-            "job",
-            "adventure",
-            "drumstick",
-            "badge",
-            "user",
-            "boost2",
-            "robot",
-        ], client);
+        ]] = await Promise.all([
+            interaction.deferReply(),
+            get_emojis([
+                "idCard",
+                "timer",
+                "job",
+                "adventure",
+                "drumstick",
+                "badge",
+                "user",
+                "boost2",
+                "robot",
+            ], client),
+        ]);
 
         const locale = interaction.locale;
 
@@ -207,10 +210,24 @@ module.exports = {
                     : lang_single;
 
                 const createdAt = convertToSecondTimestamp(user.createdAt.getTime());
-                const emojiOfTheJob = jobs[job]?.emoji ? `${await get_emoji(jobs[job].emoji)} ` : "";
+
+                const [emojiOfTheJob, emojiOfTheFightJob] = await Promise.all([
+                    jobs[job]?.emoji
+                        ? `${await get_emoji(jobs[job].emoji)} `
+                        : "",
+
+                    fightjobs[fightjob]?.emoji
+                        ? `${await get_emoji(fightjobs[fightjob].emoji)} `
+                        : "",
+                ]);
+
                 const nameOfTheJob = jobs[job]
                     ? get_job_name(locale, job)
                     : job;
+
+                const nameOfTheFightJob = fightjobs[fightjob]
+                    ? get_fightjob_name(locale, fightjob)
+                    : fightjob;
 
                 const user_data_embed = new EmbedBuilder()
                     .setColor(embed_default_color)
@@ -238,7 +255,7 @@ module.exports = {
                         },
                         {
                             name: `${emoji_adventure} ${lang_fightjob}`,
-                            value: fightjob,
+                            value: `${emojiOfTheFightJob}${nameOfTheFightJob}`,
                             inline: true,
                         },
                         {
