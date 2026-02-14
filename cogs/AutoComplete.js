@@ -1,6 +1,6 @@
 const { Events, AutocompleteInteraction } = require("discord.js");
 
-const { wrong_job_embed, get_name_of_id, bake, smeltable_recipe, cook, all } = require("../utils/rpg.js");
+const { wrong_job_embed, get_name_of_id, bake, smeltable_recipe, cook } = require("../utils/rpg.js");
 const { load_rpg_data } = require("../utils/file.js");
 const DogClient = require("../utils/customs/client.js");
 
@@ -12,8 +12,12 @@ const smeltable_items = smeltable_recipe.reduce((acc, item) => {
         O_item_id: item.output,
         O_amount: item.amount
     };
+
     return acc;
-}, {});
+},
+    /** @type {Object<string, {I_amount: number, O_item_id: string, O_amount: number}>} */
+    ({})
+);
 
 const cookable_items = cook.reduce((acc, item) => {
     const key = item.output;
@@ -23,8 +27,12 @@ const cookable_items = cook.reduce((acc, item) => {
         input_items: item.input.map(data => data.name),
         output_amount: item.amount
     };
+
     return acc;
-}, {});
+},
+    /** @type {Object<string, {input: {name: string, amount: number}[], input_items: string[], output_amount: number}>} */
+    ({})
+);
 
 module.exports = {
     name: Events.InteractionCreate,

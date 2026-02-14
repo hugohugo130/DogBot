@@ -9,7 +9,7 @@ class EmbedBuilder extends djsEmbedBuilder {
 
     /**
      * 
-     * @param {import("discord.js").Interaction | string} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
+     * @param {import("discord.js").Interaction | string | null} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
      * @param {{text?: string, rpg_data?: object | string | null, force?: boolean, client?: DogClient}} [param1]
      * @remark 不建議給予user id給rpg_data函數，因為讀取檔案會阻塞主執行緒
      * @remark rpg_data 為 rpg_data 或 user id (顯示剩餘飽食度)

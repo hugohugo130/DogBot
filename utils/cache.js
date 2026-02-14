@@ -37,6 +37,7 @@ class CacheManager {
         };
 
         // 啟動定期清理過期緩存的任務（每 5 分鐘）
+        /** @type {NodeJS.Timeout | null} */
         this.cleanupInterval = setInterval(() => {
             this.cleanupExpired();
         }, 5 * 60 * 1000);
@@ -211,6 +212,7 @@ class CacheManager {
     destroy() {
         if (this.cleanupInterval) {
             clearInterval(this.cleanupInterval);
+
             this.cleanupInterval = null;
         };
 
@@ -224,7 +226,14 @@ class CacheManager {
  * @returns {CacheManager | null}
  */
 function getCacheManager(create = true) {
-    return global._cacheManager
+    /** @type {CacheManager | null} */ // @ts-ignore
+    const global_cacheManager = global._cacheManager;
+
+    return (
+        global_cacheManager instanceof CacheManager
+            ? global_cacheManager
+            : null
+    )
         ?? (
             create
                 ? new CacheManager(30 * 60 * 1000) // 30 分鐘 TTL

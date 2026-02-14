@@ -25,9 +25,10 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        const voiceChannel = interaction.member.voice.channel;
-        const guildId = interaction.guild.id;
-
+        const voiceChannel = interaction.member && 'voice' in interaction.member
+            ? interaction.member.voice?.channel
+            : null;
+        const guildId = interaction.guild?.id;
 
         if (!voiceChannel) {
             return await interaction.reply({

@@ -7,49 +7,54 @@ const path = require('path');
  */
 
 const analyzed = new Map(); // 已分析的檔案
+
+/** @type {Map<string, string[]>} */
 const dependencies = new Map(); // 檔案依賴圖
+
+/** @type {string[][]} */
 const circularDeps = []; // 循環依賴列表
 
 /**
  * 提取檔案中的所有**頂層** require 語句（排除函數內的 require）
+ * @param {string} filePath
  */
 function extractRequires(filePath) {
     try {
         const content = fs.readFileSync(filePath, 'utf-8');
-        
+
         // 移除所有註解
         let cleanContent = content
             .replace(/\/\*[\s\S]*?\*\//g, '') // 移除多行註解
             .replace(/\/\/.*/g, ''); // 移除單行註解
-        
+
         // 移除所有字串字面量（避免誤判）
         cleanContent = cleanContent.replace(/["'`](?:[^"'`\\]|\\.)*["'`]/g, '""');
-        
+
         const requires = [];
         const lines = content.split('\n');
-        
+
         let braceDepth = 0; // 追蹤大括號深度
         let parenDepth = 0; // 追蹤小括號深度
         let inFunction = false;
-        
+
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const trimmed = line.trim();
-            
+
             // 跳過註解
             if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
                 continue;
-            }
-            
+            };
+
             // 檢測函數定義
-            if (/\bfunction\s+\w+\s*\(/.test(line) || 
+            if (/\bfunction\s+\w+\s*\(/.test(line) ||
                 /\w+\s*:\s*function\s*\(/.test(line) ||
                 /\w+\s*=\s*function\s*\(/.test(line) ||
                 /\w+\s*=>\s*{/.test(line) ||
                 /\basync\s+function\s+\w+\s*\(/.test(line)) {
                 inFunction = true;
-            }
-            
+            };
+
             // 計算大括號深度
             for (const char of line) {
                 if (char === '{') braceDepth++;
@@ -59,28 +64,30 @@ function extractRequires(filePath) {
                 }
                 if (char === '(') parenDepth++;
                 if (char === ')') parenDepth--;
-            }
-            
+            };
+
             // 只在頂層（不在函數內）時才提取 require
             if (!inFunction && braceDepth === 0) {
                 const requirePattern = /require\s*\(\s*['"](\.\.?\/[^'"]+)['"]\s*\)/g;
                 let match;
-                
+
                 while ((match = requirePattern.exec(line)) !== null) {
                     requires.push(match[1]);
-                }
-            }
-        }
+                };
+            };
+        };
 
         return requires;
     } catch (error) {
-        console.error(`無法讀取檔案 ${filePath}:`, error.message);
+        if (error instanceof Error) console.error(`無法讀取檔案 ${filePath}:`, error.message);
         return [];
-    }
-}
+    };
+};
 
 /**
  * 解析相對路徑為絕對路徑
+ * @param {string} fromFile
+ * @param {string} requirePath
  */
 function resolvePath(fromFile, requirePath) {
     const dir = path.dirname(fromFile);
@@ -92,14 +99,16 @@ function resolvePath(fromFile, requirePath) {
             resolved += '.js';
         } else if (fs.existsSync(resolved + '/index.js')) {
             resolved = path.join(resolved, 'index.js');
-        }
-    }
+        };
+    };
 
     return resolved.replace(/\\/g, '/');
-}
+};
 
 /**
  * 遞迴掃描所有 JS 檔案
+ * @param {string} dir
+ * @param {string[]} fileList
  */
 function scanDirectory(dir, fileList = []) {
     const files = fs.readdirSync(dir);
@@ -119,29 +128,36 @@ function scanDirectory(dir, fileList = []) {
     });
 
     return fileList;
-}
+};
 
 /**
  * 建立依賴圖
+ * @param {string[]} files
  */
 function buildDependencyGraph(files) {
     files.forEach(file => {
         const requires = extractRequires(file);
+
+        /** @type {string[]} */
         const deps = [];
 
         requires.forEach(req => {
             const resolved = resolvePath(file, req);
             if (fs.existsSync(resolved)) {
                 deps.push(resolved);
-            }
+            };
         });
 
         dependencies.set(file, deps);
     });
-}
+};
 
 /**
  * 檢測循環依賴 (DFS)
+ * @param {string} file
+ * @param {Set<string>} [visiting]
+ * @param {Set<string>} [visited]
+ * @param {string[]} [path]
  */
 function detectCircular(file, visiting = new Set(), visited = new Set(), path = []) {
     if (visited.has(file)) return;
@@ -151,7 +167,7 @@ function detectCircular(file, visiting = new Set(), visited = new Set(), path = 
         const circle = path.slice(circleStart).concat(file);
         circularDeps.push(circle);
         return;
-    }
+    };
 
     visiting.add(file);
     path.push(file);
@@ -163,14 +179,15 @@ function detectCircular(file, visiting = new Set(), visited = new Set(), path = 
 
     visiting.delete(file);
     visited.add(file);
-}
+};
 
 /**
  * 格式化輸出路徑
+ * @param {string} fullPath
  */
 function formatPath(fullPath) {
     return fullPath.replace(process.cwd().replace(/\\/g, '/'), '.');
-}
+};
 
 /**
  * 主函數
@@ -192,6 +209,7 @@ function main() {
     });
 
     // 去重循環依賴
+    /** @type {string[][]} */
     const uniqueCircles = [];
     const circleSignatures = new Set();
 
@@ -206,7 +224,7 @@ function main() {
     // 輸出結果
     console.log('\n⚠️  注意：此工具只檢測**頂層的循環依賴**');
     console.log('函數內部的 require() 不會被視為循環依賴（因為是延遲載入）\n');
-    
+
     if (uniqueCircles.length === 0) {
         console.log('✅ 沒有發現頂層循環依賴！');
     } else {

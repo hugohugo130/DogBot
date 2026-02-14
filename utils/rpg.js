@@ -44,7 +44,7 @@ const mine_gets = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, {});
+}, /** @type {Object<string, string>} */ ({}));
 
 const ingots = [
     "diamond",
@@ -57,7 +57,7 @@ const ingots = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, {});
+}, /** @type {Object<string, string>} */ ({}));
 
 const logs = [
     "acacia_wood",
@@ -73,7 +73,7 @@ const logs = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, {});
+}, /** @type {Object<string, string>} */ ({}));
 
 const planks = [
     "acacia_planks",
@@ -89,7 +89,7 @@ const planks = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, {});
+}, /** @type {Object<string, string>} */ ({}));
 
 const wood_productions = {
     stick: "stick",
@@ -255,7 +255,7 @@ const foods_crops = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, {});
+}, /** @type {Object<string, string>} */ ({}));
 
 const foods_meat = [
     "anglerfish",
@@ -313,7 +313,7 @@ const foods_meat = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, {});
+}, /** @type {Object<string, string>} */ ({}));
 
 const animals = [
     "a_chicken",
@@ -325,7 +325,7 @@ const animals = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, {});
+}, /** @type {Object<string, string>} */ ({}));
 
 const animal_products = {
     a_chicken: "raw_chicken",
@@ -574,7 +574,7 @@ let foods = { ...foods_crops, ...foods_meat };
 foods = Object.keys(foods).sort((a, b) => food_data[b] - food_data[a]).reduce((obj, key) => {
     obj[key] = foods[key];
     return obj;
-}, {});
+}, /** @type {Object<string, string>} */ ({}));
 
 const brew = {
     cough_potion: "cough_potion",
@@ -892,10 +892,22 @@ function check_item_data() {
     };
 };
 
+/**
+ * Get the item name of the item ID
+ * @param {string} id
+ * @param {any} default_value
+ * @returns {string | any} id or default_value
+ */
 function get_name_of_id(id, default_value = id) {
     return name[id] || default_value;
 };
 
+/**
+ * Get the item ID of the item name
+ * @param {string} id
+ * @param {string} default_value
+ * @returns {string} id or default_value
+ */
 function get_id_of_name(id, default_value = id) {
     return name_reverse[id] || default_value;
 };
@@ -915,7 +927,7 @@ async function get_number_of_items(name, userid) {
 
 /**
  *
- * @param {object} rpg_data
+ * @param {import("./config.js").RpgDatabase} rpg_data
  * @param {string} item
  * @param {number} amount_needed
  * @returns {null | {item: string, amount: number}} 如果玩家有足夠的物品，回傳null，否則返回物品id和數量
@@ -991,6 +1003,12 @@ function BetterEval(obj) {
     return Function(`"use strict";return ${obj}`)();
 };
 
+/**
+ * Chunk an array
+ * @param {Array<any>} array - the array to chunk
+ * @param {number} chunkSize - the size of each chunk
+ * @returns {Array<any>}
+ */
 function chunkArray(array, chunkSize) {
     const chunks = [];
     for (let i = 0; i < array.length; i += chunkSize) {
@@ -1002,7 +1020,7 @@ function chunkArray(array, chunkSize) {
 
 /**
  * 
- * @param {Object} rpg_data
+ * @param {import("./config.js").RpgDatabase} rpg_data
  * @param {string} command
  * @param {string} userId
  * @param {BaseInteraction} [interaction]
@@ -1151,7 +1169,7 @@ function get_cooldown_time(command_name, rpg_data) {
 /**
  * 檢查指令是否已經冷卻完畢
  * @param {string} command_name - 指令名稱
- * @param {Object} rpg_data - 用戶的RPG數據
+ * @param {import("./config.js").RpgDatabase} rpg_data - 用戶的RPG數據
  * @returns {{is_finished: boolean, remaining_time: number}} - is_finished:如果已冷卻完畢返回true，否則返回false - remaining_time: 剩餘時間
  */
 function is_cooldown_finished(command_name, rpg_data) {
@@ -1174,7 +1192,7 @@ function is_cooldown_finished(command_name, rpg_data) {
 /**
  * 
  * @param {string} failed_reason
- * @param {object} rpg_data
+ * @param {import("./config.js").RpgDatabase} rpg_data
  * @param {BaseInteraction} [interaction]
  * @param {DogClient} [client]
  * @returns {Promise<EmbedBuilder>}
@@ -1236,11 +1254,12 @@ async function get_failed_embed(failed_reason, rpg_data, interaction = null, cli
 
 /**
  * 增加錢
- * @param {Object} rpg_data 
- * @param {number} amount 
- * @param {string} originalUser 來源用戶 (系統 或者 "<@id>")
- * @param {string} targetUser 目標用戶 (只能是 "<@id>")
- * @param {string} type 交易類型
+ * @param {Object} options - 選項
+ * @param {import("./config.js").RpgDatabase} options.rpg_data
+ * @param {number} options.amount
+ * @param {string} options.originalUser 來源用戶 (系統 或者 "<@id>")
+ * @param {string} options.targetUser 目標用戶 (只能是 "<@id>")
+ * @param {string} options.type 交易類型
  * @returns {number}
  */
 function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
@@ -1260,11 +1279,12 @@ function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
 
 /**
  * 扣除錢
- * @param {Object} rpg_data 
- * @param {number} amount 
- * @param {string} originalUser 來源用戶 (系統 或者 "<@id>")
- * @param {string} targetUser 目標用戶 (只能是 "<@id>")
- * @param {string} type 交易類型
+ * @param {Object} options - 選項
+ * @param {import("./config.js").RpgDatabase} options.rpg_data
+ * @param {number} options.amount
+ * @param {string} options.originalUser 來源用戶 (系統 或者 "<@id>")
+ * @param {string} options.targetUser 目標用戶 (只能是 "<@id>")
+ * @param {string} options.type 交易類型
  * @returns {number}
  */
 function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
@@ -1282,6 +1302,12 @@ function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
     return rpg_data.money;
 };
 
+/**
+ * Generate analyze template
+ * @param {string} title
+ * @param {string} description
+ * @returns {object}
+ */
 function generate_analyze_data(title, description) {
     return {
         title,
@@ -1290,8 +1316,8 @@ function generate_analyze_data(title, description) {
 };
 
 /**
- * 
- * @param {string} errorStack 
+ * Analyze an error stack
+ * @param {string} errorStack
  * @returns {Array<Object>}
  */
 function error_analyze(errorStack) {
@@ -1375,7 +1401,7 @@ function error_analyze(errorStack) {
 /**
  * 
  * @param {string} text
- * @param {BaseInteraction} [interaction=null]
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient} [client=global._client]
  * @returns {Promise<EmbedBuilder[]>}
  */
@@ -1427,7 +1453,7 @@ async function get_loophole_embed(text, interaction = null, client = global._cli
 /**
  * 
  * @param {string} userId
- * @param {BaseInteraction} [interaction]
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
@@ -1601,10 +1627,15 @@ async function ls_function({ client, message, rpg_data, mode, PASS, interaction 
     return await message.reply({ embeds: [embed] });
 };
 
+/**
+ * Get the first prefix of a guild
+ * @param {string} guildID
+ * @returns {Promise<string>}
+ */
 async function firstPrefix(guildID) {
     const guildData = await loadData(guildID);
 
-    const prefix = guildData.prefix?.[0] ?? reserved_prefixes[0];
+    const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
 
     return prefix;
 };

@@ -1,23 +1,28 @@
-const { Events, ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits, PermissionsBitField, GuildChannel } = require("discord.js");
+const { Events, ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } = require("discord.js");
 const util = require("util");
 
 const { get_logger } = require("../utils/logger.js");
 const { get_loophole_embed } = require("../utils/rpg.js");
+const { get_me } = require("../utils/discord.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");
 const DogClient = require("../utils/customs/client.js");
-const { get_me, get_channel } = require("../utils/discord.js");
 
-function parseOptions(options) {
-    if (!options || options.length === 0) return "";
-    return options.map(option => {
-        if (option.type === 1 || option.type === 2) { // 1: SUB_COMMAND, 2: SUB_COMMAND_GROUP
-            return `${option.name}${option.options && option.options.length > 0 ? `(${parseOptions(option.options)})` : ""}`;
-        } else {
-            return `${option.name}: ${option.value}`;
-        }
-    }).join(", ");
-};
+// function parseOptions(options) {
+//     if (!options || options.length === 0) return "";
+//     return options.map(option => {
+//         if (option.type === 1 || option.type === 2) { // 1: SUB_COMMAND, 2: SUB_COMMAND_GROUP
+//             return `${option.name}${option.options && option.options.length > 0 ? `(${parseOptions(option.options)})` : ""}`;
+//         } else {
+//             return `${option.name}: ${option.value}`;
+//         }
+//     }).join(", ");
+// };
 
+/**
+ * 
+ * @param {Array} options
+ * @returns {}
+ */
 function getFullCommandPath(options) {
     let path = [];
     let current = options;
@@ -84,7 +89,6 @@ module.exports = {
             backend_logger.info(embed);
 
             // interaction的reply 需要 read message history 權限
-
             /** @type {bigint[]} */
             const permissionNeeded = [PermissionFlagsBits.ReadMessageHistory];
 

@@ -6,6 +6,7 @@ const { randint } = require("../utils/random.js");
 const { daily_sign_guildIDs, embed_default_color } = require("../utils/config.js");
 const DogClient = require("../utils/customs/client.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");
+const { wait_for_client } = require("../utils/wait_until_ready.js");
 
 /**
  * 判斷用戶今天是否已簽到和斷簽
@@ -41,13 +42,14 @@ function hasSignedTodayOrBrokeSign(lastSignTime) {
 
 /**
  * Sign Function
- * @param {object} rpg_data - RPG data
+ * @param {import("../utils/config.js").RpgDatabase} rpg_data - RPG data
  * @param {Message} message - Discord Message
- * @param {DogClient} client - Discord Client
- * @returns {Promise<object> | null} Modified rpg_data or null (signed today)
+ * @param {DogClient | null} [client] - Discord Client
+ * @returns {Promise<true | null>} success or null (signed today)
  */
-async function sign(rpg_data, message, client = global._client) {
+async function sign(rpg_data, message, client = null) {
     const user = message.author;
+    if (!client) client = await wait_for_client();
 
     if (!rpg_data.daily || typeof rpg_data.daily !== "number") rpg_data.daily = 0;
     if (!rpg_data.daily_times || typeof rpg_data.daily_times !== "number") rpg_data.daily_times = 0;
@@ -55,7 +57,7 @@ async function sign(rpg_data, message, client = global._client) {
     let daily_times = rpg_data.daily_times;
 
     const [signedToday, brokeSign] = hasSignedTodayOrBrokeSign(rpg_data.daily);
-    if (signedToday) return;
+    if (signedToday) return null;
 
     if (brokeSign) daily_times = 0;
 
@@ -74,7 +76,7 @@ async function sign(rpg_data, message, client = global._client) {
             type: "每日簽到",
         });
     } catch (err) {
-        if (err.stack.includes("金額超過上限")) return;
+        if (err instanceof Error && err.stack?.includes && err.stack?.includes("金額超過上限")) return true;
         throw err;
     };
 
@@ -102,7 +104,7 @@ async function sign(rpg_data, message, client = global._client) {
         save_rpg_data(user.id, rpg_data),
     ]);
 
-    return rpg_data;
+    return true;
 };
 
 module.exports = {

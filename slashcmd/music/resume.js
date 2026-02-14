@@ -25,11 +25,13 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        const voiceChannel = interaction.member.voice.channel;
-        const guildId = interaction.guild.id;
+        const voiceChannel = interaction.member && 'voice' in interaction.member
+            ? interaction.member.voice?.channel
+            : null;
 
+        const guildId = interaction.guild?.id;
 
-        if (!voiceChannel) {
+        if (!voiceChannel || !guildId) {
             return await interaction.reply({
                 embeds: [await youHaveToJoinVC_Embed(interaction, client)],
                 flags: MessageFlags.Ephemeral,

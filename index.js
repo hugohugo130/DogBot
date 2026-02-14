@@ -27,8 +27,7 @@ const logger = get_logger();
 
 // 未捕獲的 Promise Rejection 處理
 process.on("unhandledRejection", (reason, promise) => {
-    let errorStack = reason;
-    if (reason?.stack) errorStack = reason.stack;
+    let errorStack = reason?.stack || reason;
     if (reason instanceof Error) {
         errorStack = util.inspect(reason, { depth: null });
     };

@@ -9,7 +9,7 @@ const DEBUG = false;
 /**
  * 
  * @param {Array<string>} file_datas 
- * @returns {string}
+ * @returns {[string, number]}
  */
 function get_hash_of_datas(file_datas) {
     let length = 0;

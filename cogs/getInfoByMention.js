@@ -18,7 +18,7 @@ module.exports = {
      */
     execute: async function (client, message) {
         try {
-            if (message.content.trim().toLowerCase() !== `<@${client.user.id}>`) return;
+            if (message.content.trim().toLowerCase() !== `<@${client.user?.id}>`) return;
 
             const InfoEmbed = new EmbedBuilder()
                 .setColor(embed_default_color)
@@ -29,13 +29,15 @@ module.exports = {
 ————————————
 
 作者: happyhugoe
-我又在 <t:${Math.floor(client.readyTimestamp / 1000)}:R> 的時候復活了！
+我又在 <t:${Math.floor((client.readyTimestamp || 0) / 1000)}:R> 的時候復活了！
 哈狗使用discord.js做出這個機器人，但如果變熱門的話記憶體應該會炸掉吧
 `)
                 .setFooter({ text: `在 ${(await client.getAllGuilds()).length} 個伺服器裡為大家服務 :D` })
                 .setEmbedAuthor();
 
-            await message.channel.send({ embeds: [InfoEmbed] });
+            const responseData = { embeds: [InfoEmbed] };
+            if ('send' in message.channel) await message.channel.send(responseData);
+            else if (message.reply) await message.reply(responseData);
         } catch (err) {
             const errorStack = util.inspect(err, { depth: null });
             if (errorStack.includes("Missing Access")) return;

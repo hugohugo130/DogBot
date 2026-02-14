@@ -3,20 +3,14 @@ const { createAudioResource, createAudioPlayer, joinVoiceChannel, getVoiceConnec
 const { fileTypeFromStream } = require("file-type");
 const { Readable } = require("node:stream");
 const { Collection, TextChannel, VoiceChannel, Guild, BaseInteraction } = require("discord.js");
-const { Soundcloud } = require("soundcloud.ts");
 
 const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
 const { get_logger } = require("../logger.js");
-const { existsSync, get_temp_folder, join_temp_folder, basename, readdirSync, unlinkSync } = require("../file.js");
 const { formatMinutesSeconds } = require("../timestamp.js");
 const { get_emoji } = require("../rpg.js");
 const { generateSessionId, generateUUID } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
-
-/** @type {Soundcloud} */
-let sc = global._sc ?? new Soundcloud();
-global._sc = sc;
 
 const logger = get_logger();
 
@@ -692,6 +686,8 @@ class MusicQueue {
  * @returns {MusicQueue | null}
  */
 function getQueue(guildID, create = true) {
+    if (typeof guildID !== "string") throw new Error("guildID is not a string");
+
     const queueExists = queues.get(guildID);
     if (queueExists) {
         return queueExists;

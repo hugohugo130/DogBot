@@ -10,7 +10,53 @@ const DEFAULT_PORT = 3003
 
 // Database
 const INDENT = 4;
-const database_folder = `${cwd()}/db`
+const database_folder = `${cwd()}/db`;
+
+/**
+ * @typedef {Object} MarryInfo
+ * @property {boolean} status   - 是否已結婚
+ * @property {string | null} with - 和誰結婚
+ * @property {number} time       - 結婚時間戳
+ */
+
+/**
+ * @typedef {Object} RpgDatabase
+ * @property {number} money
+ * @property {number} hunger
+ * @property {number} daily
+ * @property {number} daily_times
+ * @property {boolean} daily_msg
+ * @property {string | null} job
+ * @property {string | null} fightjob
+ * @property {string | null} badge
+ * @property {MarryInfo} marry
+ * @property {Object.<string, number>} lastRunTimestamp - 最後一次運行一些操作的時間戳
+ * @property {Object.<string, number>} inventory        - 背包；item_id: amount
+ * @property {Array<Object>} transactions                - 交易記錄
+ * @property {Object.<string, number>} count            - 工作次數
+ * @property {Array<string>} privacy                     - 隱私設定
+ */
+
+/**
+ * @typedef {Object} RpgShop
+ * @property {boolean} status
+ * @property {Object.<string, any>} items
+ */
+
+/**
+ * @typedef {Object} RpgFarm
+ * @property {number} exp
+ * @property {number} lvl
+ * @property {number} waterAt
+ * @property {Array<any>} farms
+ */
+
+/**
+ * @typedef {Object} GuildDatabase
+ * @property {boolean} rpg
+ * @property {string | null} dynamicVoice
+ * @property {string[]} prefix
+ */
 
 const DATABASE_FILES = [
     "database.json",
@@ -23,6 +69,24 @@ const DATABASE_FILES = [
     "rpg_farm.json",
 ];
 
+/**
+ * @type {{
+ *   "user": {
+ *     "rpg_database.json": RpgDatabase,
+ *     "rpg_shop.json": RpgShop,
+ *     "rpg_farm.json": RpgFarm,
+ *     "bake_db.json": Array<any>,
+ *     "smelt_db.json": Array<any>
+ *   },
+ *   "single": {
+ *     "serverIP.json": { IP: string, PORT: number },
+ *     "dvoice_db.json": Object
+ *   },
+ *   "guild": {
+ *     "database.json": GuildDatabase
+ *   }
+ * }}
+ */
 const DEFAULT_VALUES = {
     "user": {
         "rpg_database.json": {
@@ -68,7 +132,7 @@ const DEFAULT_VALUES = {
     "guild": {
         "database.json": {
             "rpg": false,
-            "dynamicVoice": false,
+            "dynamicVoice": null,
             "prefix": ["&"],
         },
     },
@@ -168,7 +232,7 @@ const embed_sign_color = 0x3498db;
 const embed_marry_color = 0x6bce99;
 
 // Container colors
-// No 'random'
+// No "random"
 const container_default_color = Math.floor(Math.random() * 0xFFFFFF); // Random
 
 /*

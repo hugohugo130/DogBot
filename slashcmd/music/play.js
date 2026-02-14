@@ -95,8 +95,10 @@ module.exports = {
         const play_audio_url = interaction.options.getBoolean("play_audio_url") ?? false;
         // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
 
+        const voiceChannel = interaction.member && 'voice' in interaction.member
+            ? interaction.member.voice?.channel
+            : null;
         const guildId = interaction.guildId;
-        const voiceChannel = interaction.member.voice.channel;
 
         if (!voiceChannel?.joinable || !voiceChannel?.speakable) {
             return await interaction.reply({

@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Options, Collection, Guild, GuildMember } = require("discord.js");
+const { Client, GatewayIntentBits, Options, Collection, Guild, GuildMember, VoiceChannel } = require("discord.js");
 
 const { loadslashcmd } = require("../loadslashcmd.js");
 const { loadDvoiceData } = require("../file.js");
@@ -47,7 +47,7 @@ class DogClient extends Client {
         /** @type {string} */
         this.author = authorName || "哈狗";
 
-        /** @type {Collection<string, object} */
+        /** @type {Collection<string, {owner: string, channel: VoiceChannel}} */
         this.dvoice = new Collection();
 
         /** @type {Collection<string, any>} */

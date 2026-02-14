@@ -645,7 +645,7 @@ module.exports = {
      * 
      * @param {DogClient} client 
      * @param {ButtonInteraction | StringSelectMenuInteraction} interaction 
-     * @returns {Promise<void>}
+     * @returns {Promise<any>}
      */
     execute: async function (client, interaction) {
         try {
@@ -653,10 +653,7 @@ module.exports = {
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
-            const message = interaction.message;
-            const user = interaction.user;
-            const guild = interaction.guild;
-
+            const { message, user, guild } = interaction;
             const [interactionCategory, originalUserId, ...otherCustomIDs] = interaction.customId.split("|");
 
             const locale = interaction.locale;
@@ -709,6 +706,8 @@ module.exports = {
                     break;
                 }
                 case "pay_confirm": {
+                    let [userId, targetUserId, amount_str] = otherCustomIDs;
+
                     const [_, rpg_data, target_user_rpg_data, [emoji_cross, emoji_top]] = await Promise.all([
                         interaction.deferUpdate(),
                         load_rpg_data(userId),
@@ -716,8 +715,8 @@ module.exports = {
                         get_emojis(["crosS", "top"], client),
                     ]);
 
-                    let [userId, targetUserId, amount] = otherCustomIDs;
-                    amount = parseInt(amount);
+                    /** @type {number}*/
+                    const amount = parseInt(amount_str);
 
                     if (rpg_data.money < amount) {
                         const embed = new EmbedBuilder()
@@ -1458,7 +1457,9 @@ module.exports = {
 
                     // 連接到語音頻道
                     if (!vconnection) {
-                        const voiceChannel = interaction.member.voice.channel;
+                        const voiceChannel = interaction.member && 'voice' in interaction.member
+                            ? interaction.member.voice?.channel
+                            : null;
 
                         if (!voiceChannel) return await interaction.followUp({
                             embeds: [await youHaveToJoinVC_Embed(interaction, client)],

@@ -91,7 +91,7 @@ module.exports = {
                                     ],
                                 },
                                 {
-                                    id: client.user.id,
+                                    id: client.user?.id || "",
                                     allow: [
                                         PermissionFlagsBits.Connect,
                                         PermissionFlagsBits.Speak,
@@ -104,9 +104,9 @@ module.exports = {
                         });
                     };
 
-                    await newState.setChannel(channel);
+                    if (channel) await newState.setChannel(channel);
 
-                    if (createChannel) client.dvoice.set(channel.id, {
+                    if (createChannel && channel) client.dvoice.set(channel.id, {
                         owner: member.id,
                         channel: channel,
                     });

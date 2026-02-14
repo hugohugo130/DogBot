@@ -1,4 +1,4 @@
-const { Events } = require("discord.js");
+const { Events, Message } = require("discord.js");
 const { exec } = require("child_process");
 const util = require("util");
 
@@ -6,11 +6,19 @@ const { get_logger } = require("../utils/logger.js");
 const { get_id_of_name, get_name_of_id, get_loophole_embed } = require("../utils/rpg.js");
 const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
 const { mentions_users } = require("../utils/message.js");
+const DogClient = require("../utils/customs/client.js");
 
 const execPromise = util.promisify(exec);
 
 const logger = get_logger();
 
+/**
+ * Add item
+ * @param {import("../utils/config.js").RpgDatabase} rpg_data
+ * @param {string} item
+ * @param {number} amount
+ * @returns {import("../utils/config.js").RpgDatabase}
+ */
 function add_item(rpg_data, item, amount) {
     item = get_id_of_name(item);
 
@@ -25,25 +33,41 @@ function add_item(rpg_data, item, amount) {
     return rpg_data;
 };
 
+/**
+ * 
+ * @param {Message} message
+ * @param {(string | number)[]} args
+ * @returns {Promise<Message>}
+ */
 async function handleMoneyCommand(message, args) {
     const user = (await mentions_users(message)).first();
-    const amount = parseInt(args[1]);
+    const amount = typeof args[1] === "number"
+        ? args[1]
+        : parseInt(args[1]);
 
-    if (!user) return message.reply("請標記一個用戶！");
-    if (!amount) return message.reply("amount must be a number");
+    if (!user) return await message.reply("請標記一個用戶！");
+    if (!amount) return await message.reply("amount must be a number");
 
     const rpg_data = await load_rpg_data(user.id);
 
     rpg_data.money += amount;
     await save_rpg_data(user.id, rpg_data);
 
-    return message.reply(`done adding ${user.toString()}'s money. +${amount}`);
+    return await message.reply(`done adding ${user.toString()}'s money. +${amount}`);
 };
 
+/**
+ * 
+ * @param {Message} message
+ * @param {(string | number)[]} args
+ * @returns {Promise<Message>}
+ */
 async function handleInvCommand(message, args) {
     const user = (await mentions_users(message)).first();
     const item = args[1];
-    const amount = parseInt(args[2]);
+    const amount = typeof args[1] === "number"
+        ? args[1]
+        : parseInt(args[1]);
 
     if (!item) return message.reply("請輸入物品名稱！");
     if (isNaN(amount)) return message.reply("amount must be a number");
@@ -57,6 +81,12 @@ async function handleInvCommand(message, args) {
     return message.reply(`done setting ${user.toString()}'s ${item} to ${amount}`);
 };
 
+/**
+ * 
+ * @param {Message} message
+ * @param {Array<any>} args
+ * @returns {Promise<Message>}
+ */
 async function handleGive2Command(message, args) {
     if (args.length !== 2) {
         return message.reply("用法: !give @user OBJECT");
@@ -90,7 +120,7 @@ async function handleGive2Command(message, args) {
             add_item(rpg_data, item, parseInt(amount));
             log += `added ${get_name_of_id(item)}\\*${amount} to user ${user.toString()}'s inventory\n`;
         } catch (err) {
-            await message.reply(`error adding item ${item} to user ${user.toString()}'s inventory: ${err.message}`);
+            if (err instanceof Error) await message.reply(`error adding item ${item} to user ${user.toString()}'s inventory: ${err.message}`);
             continue;
         };
     };
@@ -102,6 +132,12 @@ async function handleGive2Command(message, args) {
 
 module.exports = {
     name: Events.MessageCreate,
+    /**
+     *
+     * @param {DogClient} client
+     * @param {Message} message
+     * @returns {Promise<any>}
+     */
     execute: async function (client, message) {
         try {
             if (message.author.id !== "898836485397180426") return;
@@ -168,6 +204,11 @@ module.exports = {
                     break;
             };
 
+            /**
+            * @param {Message} message
+            * @param {(any)[]} args
+            * @returns {Promise<Message>}
+            */
             async function handleGiveCommand(message, args) {
                 if (args.length < 3) {
                     return message.reply("用法: !give @user item amount");
@@ -188,10 +229,16 @@ module.exports = {
                 return message.reply(`done adding user ${user.toString()} 's inventory: ${item}*${amount}`);
             };
 
+            /**
+             * 
+             * @param {Message} message
+             * @param {(string | number)[]} args
+             * @returns {Promise<any>}
+             */
             async function handleRunCommand(message, args) {
                 if (args.length === 0) {
                     return message.reply("用法: !run COMMAND");
-                }
+                };
 
                 const cmd = args.join(" ");
 
@@ -208,18 +255,19 @@ module.exports = {
 
                         if (stdout) {
                             response += `\`\`\`\n${stdout.substring(0, 1800)}\`\`\``;
-                        }
+                        };
 
                         if (stderr) {
                             response += `\n**錯誤輸出:**\n\`\`\`\n${stderr.substring(0, 1800)}\`\`\``;
-                        }
+                        };
 
                         return message.reply(response);
                     } else {
                         return message.reply("不支援的操作系統。");
-                    }
+                    };
                 } catch (error) {
-                    return message.reply(`**執行失敗:**\n\`\`\`\n${error.message}\`\`\``);
+                    if (error instanceof Error) await message.reply(`**執行失敗:**\n\`\`\`\n${error.message}\`\`\``);
+                    return;
                 };
             };
         } catch (err) {

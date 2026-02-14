@@ -12,7 +12,11 @@ const { existsSync, compareLocalRemote, join_db_folder, readFile, stringify } = 
 const { get_areadline } = require("./readline.js");
 const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
 
+// @ts-ignore
 const { IP: serverIP, PORT } = global._client?.serverIP ?? getServerIPSync();
+// @ts-ignore
+if (global._client && !global._client?.serverIP) global._client.serverIP = { IP: serverIP, PORT };
+
 const SERVER_URL = `http://${serverIP}:${PORT}`;
 
 const logger = get_logger();
@@ -29,7 +33,12 @@ async function onlineDB_listFiles() {
     };
 };
 
-// 下載檔案
+/**
+ * 下載 onlineDB 的檔案
+ * @param {string} filename
+ * @param {string | null} [savePath]
+ * @returns {Promise<string | [unknown, string]>}
+ */
 async function onlineDB_downloadFile(filename, savePath = null) {
     try {
         const res = await axios.get(`${SERVER_URL}/files/${filename}`, { responseType: "stream" });
@@ -56,7 +65,11 @@ async function onlineDB_downloadFile(filename, savePath = null) {
     };
 };
 
-// 上載檔案
+/**
+ * 上載檔案
+ * @param {string} filepath
+ * @returns {Promise<any | null>}
+ */
 async function onlineDB_uploadFile(filepath) {
     try {
         // === 備份遠端檔案 ===
@@ -99,7 +112,11 @@ async function onlineDB_uploadFile(filepath) {
     };
 };
 
-// 刪除檔案
+/**
+ * 刪除檔案
+ * @param {string} filename
+ * @returns {Promise<any | [unknown, string]>}
+ */
 async function onlineDB_deleteFile(filename) {
     try {
         const res = await axios.delete(`${SERVER_URL}/files/${filename}`);
@@ -117,6 +134,12 @@ async function onlineDB_deleteFile(filename) {
     };
 };
 
+/**
+ * get the different of two strings
+ * @param {string} localContent
+ * @param {string} remoteContent
+ * @returns {jsdiff.ChangeObject<string>[]}
+ */
 function diff(localContent, remoteContent) {
     const diffResult = jsdiff.diffLines(localContent, remoteContent);
     return diffResult;

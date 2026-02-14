@@ -60,19 +60,24 @@ async function exists(path) {
 };
 
 /**
- * 
- * @param {fs.PathOrFileDescriptor} file_path
- * @param {{encoding?: null | undefined, flag?: string | undefined, return?: any | undefined} | null} [options]
+ * Read the contect of a file
+ * @param {string} file_path
+ * @param {{encoding?: string | null | undefined, flag?: string | undefined, return?: object | string | undefined} | null} [options]
  * @returns {NonSharedBuffer}
  */
 function readFileSync(file_path, options = { encoding: "utf-8" }) {
     const filename = path.basename(file_path);
 
-    if (!existsSync(file_path) && DATABASE_FILES.includes(filename)) {
-        if (typeof options === "object" && options?.return) return stringify(options.return);
+    const { return: returnWhat = null, ...readFileOption } = options ?? {};
 
-        const default_value = DEFAULT_VALUES.single[filename]
+    if (!existsSync(file_path) && DATABASE_FILES.includes(filename)) {
+        if (returnWhat) return stringify(returnWhat);
+
+        /** @type {object | null} */ // @ts-ignore
+        const default_value = DEFAULT_VALUES.single[filename];
+
         const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
+            // @ts-ignore
             return acc || category[filename];
         }, undefined);
 
@@ -85,22 +90,26 @@ function readFileSync(file_path, options = { encoding: "utf-8" }) {
         };
     };
 
-    return fs.readFileSync(file_path, options);
+    return fs.readFileSync(file_path, options ? readFileOption : null);
 };
 
 /**
- * 
- * @param {fs.PathOrFileDescriptor} file_path
- * @param {{encoding?: null | undefined, flag?: import("node:fs").OpenMode | undefined, return?: any | undefined} | null} [options]
+ * Read the contect of a file
+ * @param {string} file_path
+ * @param {{encoding?: string | null | undefined, flag?: import("node:fs").OpenMode | undefined, return?: object | string | undefined} | null} [options]
  * @returns {Promise<NonSharedBuffer>}
  */
 async function readFile(file_path, options = { encoding: "utf-8" }) {
     const filename = path.basename(file_path);
 
-    if (!(await exists(file_path)) && DATABASE_FILES.includes(filename)) {
-        if (typeof options === "object" && options?.return) return stringify(options.return);
+    const { return: returnWhat = null, ...readFileOption } = options ?? {};
 
-        const default_value = DEFAULT_VALUES.single[filename]
+    if (!(await exists(file_path)) && DATABASE_FILES.includes(filename)) {
+        if (returnWhat) return stringify(returnWhat);
+
+        /** @type {object | null} */
+        const default_value = DEFAULT_VALUES.single[filename];
+
         const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
             return acc || category[filename];
         }, undefined);
@@ -114,13 +123,13 @@ async function readFile(file_path, options = { encoding: "utf-8" }) {
         };
     };
 
-    return await fsp.readFile(file_path, options);
+    return await fsp.readFile(file_path, readFileOption);
 };
 
 /**
  * 轉換 JSON 字串到物件
  * @argument {string} jsonString - 要解析的 JSON 字串
- * @returns {object} 解析後的物件
+ * @returns {{[x: string]: any}} 解析後的物件
  */
 function safeJSONParse(jsonString) {
     return JSON.parse(jsonString)
@@ -248,7 +257,7 @@ function join_db_folder(filename) {
  * @param {string} filename 
  * @param {Logger | Console} log 
  * @param {number} maxRetries 
- * @returns {Promise<{same: boolean, localContent: string, remoteContent: string}>}
+ * @returns {Promise<[same: boolean, localContent: string, remoteContent: string]>}
  */
 async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
     const { getServerIPSync } = require("./getSeverIPSync.js");
@@ -391,9 +400,9 @@ function order_data(data, follow) {
 
 /**
  * 讀取伺服器資料庫
- * @param {string} guildID - 伺服器ID
+ * @param {string | null} guildID - 伺服器ID
  * @param {number} mode - 0: 取得伺服器資料, 1: 取得所有資料
- * @returns {Promise<object>}
+ * @returns {Promise<import("./config.js").GuildDatabase>}
  * @throws {TypeError} - 如果mode不是0或1
  */
 async function loadData(guildID = null, mode = 0) {
@@ -575,7 +584,7 @@ async function getPrefixes(guildID) {
 /**
  *
  * @param {string} userid
- * @returns {Promise<object>}
+ * @returns {Promise<import("../utils/config.js").RpgDatabase>}
  */
 async function load_rpg_data(userid) {
     logger.debug(`load_rpg_data(${userid}) - ${getCallerModuleName("list")}`);
@@ -635,7 +644,7 @@ function load_rpg_dataSync(userid) {
 /**
  * 
  * @param {string} userid
- * @param {object} rpg_data
+ * @param {import("./config.js").RpgDatabase} rpg_data
  * @returns {Promise<void>}
  */
 async function save_rpg_data(userid, rpg_data) {
@@ -673,11 +682,12 @@ async function save_rpg_data(userid, rpg_data) {
 /**
  * 
  * @param {string} userid
- * @param {object} rpg_data
+ * @param {import("./config.js").RpgDatabase} rpg_data
  * @returns {void}
  */
 function save_rpg_dataSync(userid, rpg_data) {
     logger.debug(`save_rpg_dataSync(${userid}) - ${getCallerModuleName("list")}`);
+
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
     let data = {};

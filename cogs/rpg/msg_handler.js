@@ -164,11 +164,12 @@ async function redirect({ client, message, command, mode = 0 }) {
 };
 
 /**
- * 
- * @param {Object} rpg_data 
+ * Show 
+ * @param {import("../../utils/config.js").RpgDatabase} rpg_data 
+ * @param {DogClient} [client]
  * @returns {Promise<EmbedBuilder>}
  */
-async function show_marry_info(client, rpg_data) {
+async function show_marry_info(rpg_data, client = global._client) {
     const marry_info = rpg_data?.marry ?? {};
     const married = marry_info.status ?? false;
     if (!married) throw new Error("not married but triggered show_marry_info");
@@ -1813,7 +1814,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 if (mode === 1) return { embeds: [embed] };
                 return await message.reply({ embeds: [embed] });
             } else {
-                const embed = await show_marry_info(client, rpg_data);
+                const embed = await show_marry_info(rpg_data, client);
 
                 if (mode === 1) return { embeds: [embed] };
                 return await message.reply({ embeds: [embed] });
