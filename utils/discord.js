@@ -81,9 +81,9 @@ async function get_channels(guild, fetch_first = false) {
 
 /**
  * 
- * @param {Guild} guild
  * @param {string} channelId
- * @param {boolean} fetch_first
+ * @param {Guild | null} [guild=null]
+ * @param {boolean} [fetch_first=false]
  * @returns {Promise<GuildChannel | null>}
  */
 async function get_channel(channelId, guild = null, fetch_first = false) {

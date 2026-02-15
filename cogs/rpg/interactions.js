@@ -1449,11 +1449,15 @@ module.exports = {
                     break;
                 }
                 case "play-s": {
+                    if (!guild || !interaction instanceof StringSelectMenuInteraction) break;
+
                     // 下拉式選單
                     await interaction.deferUpdate();
 
-                    const queue = getQueue(interaction.guildId);
-                    const vconnection = getVoiceConnection(interaction.guildId);
+                    const queue = getQueue(guild.id);
+                    if (!queue) return;
+
+                    const vconnection = getVoiceConnection(guild.id);
 
                     // 連接到語音頻道
                     if (!vconnection) {
@@ -1468,10 +1472,10 @@ module.exports = {
 
                         const voiceConnection = joinVoiceChannel({
                             channelId: voiceChannel.id,
-                            guildId: interaction.guildId,
+                            guildId: guild.id,
                             selfDeaf: true,
                             selfMute: false,
-                            adapterCreator: interaction.guild.voiceAdapterCreator,
+                            adapterCreator: guild.voiceAdapterCreator,
                         });
 
                         queue.setConnection(voiceConnection);
@@ -1509,12 +1513,14 @@ module.exports = {
 
                     const { track, next } = trackSession;
 
-                    const [_, [embed, rows]] = await Promise.all([
+                    const [embed, rows] = await getNowPlayingEmbed(queue, track, interaction, client, true);
+
+                    await Promise.all([
                         queue.addOrPlay(track, next ? 0 : null),
-                        getNowPlayingEmbed(queue, track, interaction, client, true),
+                        interaction.editReply({ content: "", embeds: [embed], components: rows }),
                     ]);
 
-                    return await interaction.editReply({ content: "", embeds: [embed], components: rows });
+                    break;
                 }
                 case "refresh": {
                     const [_, feature] = otherCustomIDs;
