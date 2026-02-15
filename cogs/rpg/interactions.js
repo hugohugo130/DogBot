@@ -827,7 +827,7 @@ module.exports = {
                 case "rpg_privacy_menu": {
                     const [_, rpg_data, [emoji_shield, emoji_backpack, emoji_pet]] = await Promise.all([
                         interaction.deferUpdate(),
-                        load_rpg_data(userId),
+                        load_rpg_data(user.id),
                         get_emojis(["shield", "bag", "pet"], client),
                     ]);
 
@@ -842,7 +842,7 @@ module.exports = {
                         return order[a] - order[b];
                     });
 
-                    await save_rpg_data(userId, rpg_data);
+                    await save_rpg_data(user.id, rpg_data);
 
                     let text = "無";
                     if (rpg_data.privacy.length > 0) {
