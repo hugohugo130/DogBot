@@ -827,11 +827,11 @@ module.exports = {
                 case "rpg_privacy_menu": {
                     const [userId] = otherCustomIDs;
 
-                    const [_, rpg_data, [emoji_shield, emoji_backpack, emoji_pet]] = await Promise.all(
+                    const [_, rpg_data, [emoji_shield, emoji_backpack, emoji_pet]] = await Promise.all([
                         interaction.deferUpdate(),
                         load_rpg_data(userId),
                         get_emojis(["shield", "bag", "pet"], client),
-                    );
+                    ]);
 
                     const privacy = interaction.values;
                     rpg_data.privacy = privacy;
