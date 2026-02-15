@@ -84,6 +84,7 @@ const {
 } = require("../../utils/language.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
+const { wait_for_client } = require("../../utils/wait_until_ready.js");
 
 const logger = get_logger();
 
@@ -122,7 +123,7 @@ async function get_transaction_embed(interaction) {
         .setColor(embed_default_color)
         .setAuthor({
             name: `${username} 的交易紀錄`,
-            iconURL: interaction.user.displayAvatarURL({ dynamic: true }),
+            iconURL: interaction.user.displayAvatarURL(),
         })
         .setDescription(transactions || "- 沒有交易紀錄")
         .setTimestamp();
@@ -132,8 +133,8 @@ async function get_transaction_embed(interaction) {
 
 /**
  *
- * @param {BaseInteraction} [interaction]
- * @param {DogClient} [client]
+ * @param {BaseInteraction | null} [interaction=null]
+ * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
 async function get_failed_embed(interaction = null, client = global._client) {
@@ -515,6 +516,29 @@ const special_cancel = {
     },
 };
 
+/**
+ * @typedef GuideCommandData
+ * @property {string | null} emoji
+ * @property {string} desc
+ * @property {{ name: string, value: string }[]} usage
+ * @property {string} format
+ */
+
+const VALID_GUIDE_CATEGORIES = /** @type {const} */ (["general", "music", "rpg", "special", "dev"]);
+
+/**
+ * @typedef {typeof VALID_GUIDE_CATEGORIES[number]} ValidGuideCategory
+ */
+
+/**
+ * 檢查字串是否為有效的 guide category
+ * @param {string} value
+ * @returns {value is ValidGuideCategory}
+ */
+function isValidGuideCategory(value) {
+    return value in VALID_GUIDE_CATEGORIES;
+};
+
 function check_help_rpg_info() {
     const { rpg_commands, redirect_data } = require("./msg_handler.js");
 
@@ -528,13 +552,15 @@ function check_help_rpg_info() {
 };
 
 /**
- *
- * @param {string} category
+ * Get the embed of guile information of a category
+ * @param {ValidGuideCategory} category
  * @param {User} user
- * @param {BaseInteraction} [interaction]
+ * @param {BaseInteraction | null} [interaction=null]
  * @returns {[EmbedBuilder, ActionRowBuilder]}
  */
 function get_help_embed(category, user, interaction = null) {
+    if (!(category in help.group)) throw new Error(`${category} is not a valid category`);
+
     const options = Object.entries(help.group[category])
         .flatMap(([name, data]) => {
             return [{
@@ -544,7 +570,7 @@ function get_help_embed(category, user, interaction = null) {
             }];
         });
 
-    let row;
+    const row = new ActionRowBuilder();
 
     if (options.length > 0) {
         const selectMenu = new StringSelectMenuBuilder()
@@ -552,8 +578,7 @@ function get_help_embed(category, user, interaction = null) {
             .setPlaceholder(`指令教學`)
             .addOptions(...options);
 
-        row = new ActionRowBuilder()
-            .addComponents(selectMenu);
+        row.addComponents(selectMenu);
     };
 
     const embed = new EmbedBuilder()
@@ -566,20 +591,28 @@ function get_help_embed(category, user, interaction = null) {
 };
 
 /**
- * 
- * @param {string} category
+ * Get the embed of guile information of command
+ * @param {ValidGuideCategory} category
  * @param {string} command_name
  * @param {string} guildID
- * @param {BaseInteraction} [interaction]
- * @param {DogClient} [client]
+ * @param {BaseInteraction | null} [interaction=null]
+ * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
 async function get_help_command(category, command_name, guildID, interaction = null, client = global._client) {
     const { find_redirect_targets_from_id } = require("./msg_handler.js");
 
-    const command_data = help.group[category][command_name];
+    if (!(category in help.group)) throw new Error(`${category} is not a valid category`);
+
+    /** @type {GuideCommandData | null} */
+    const command_data = command_name in help.group[category]
+        // @ts-ignore
+        ? help.group[category][command_name]
+        : null;
+
     if (!command_data) return null;
 
+    if (!client) client = await wait_for_client();
     const prefix = await firstPrefix(guildID);
 
     /*
@@ -688,14 +721,23 @@ module.exports = {
                 case "help": {
                     const [_, __, category, cmd = null] = interaction.customId.split("|");
 
+                    if (!(interaction instanceof StringSelectMenuInteraction) || !guild) return;
+
                     await interaction.deferUpdate();
-                    let embed;
-                    let row;
+
+                    const choseValue = interaction.values[0];
+
+                    let embed = null;
+                    let row = null;
 
                     if (category) {
-                        embed = await get_help_command(category, interaction?.values?.[0] || cmd || "buy", client);
+                        if (!isValidGuideCategory(category)) throw new Error(`${category} is not a valid guide category`);
+
+                        embed = await get_help_command(category, choseValue || cmd || "buy", guild.id);
                     } else {
-                        [embed, row] = get_help_embed(interaction.values[0], user, interaction);
+                        if (!isValidGuideCategory(choseValue)) throw new Error(`${category} is not a valid guide category`);
+
+                        [embed, row] = get_help_embed(choseValue, user, interaction);
                     };
 
                     await interaction.followUp({
@@ -725,7 +767,6 @@ module.exports = {
                             .setDescription(`你還差 \`${(amount - rpg_data.money).toLocaleString()}$\``)
                             .setEmbedFooter(interaction);
 
-                        if (mode === 1) return { embeds: [embed] };
                         return await message.reply({ embeds: [embed] });
                     };
 
@@ -1276,7 +1317,7 @@ module.exports = {
 
                     const marry_data = rpg_data.marry ?? {};
                     const marry_with = marry_data.with ?? null;
-                    const married = marry_data.married ?? false;
+                    const married = marry_data.status ?? false;
 
                     if (married) {
                         if (marry_with === targetUserId) {
@@ -1328,7 +1369,7 @@ module.exports = {
                     ]);
 
                     const marry_data = rpg_data.marry ?? {};
-                    const married = marry_data.married ?? false;
+                    const married = marry_data.status ?? false;
 
                     if (!married) {
                         const embed = new EmbedBuilder()
@@ -1353,7 +1394,6 @@ module.exports = {
                         save_rpg_data(with_UserId, with_User_rpg_data),
                     ]);
 
-                    if (mode === 1) return { embeds: [embed] };
                     return await interaction.editReply({ embeds: [embed] });
                 }
                 case "job_transfer": {
@@ -1449,7 +1489,7 @@ module.exports = {
                     break;
                 }
                 case "play-s": {
-                    if (!guild || !interaction instanceof StringSelectMenuInteraction) break;
+                    if (!guild || !(interaction instanceof StringSelectMenuInteraction)) break;
 
                     // 下拉式選單
                     await interaction.deferUpdate();
@@ -1564,7 +1604,9 @@ module.exports = {
                     const [_, feature, options = null] = otherCustomIDs;
 
                     const guildId = interaction.guildId;
-                    const queue = getQueue(guildId, true);
+                    if (!guildId) return;
+
+                    const queue = getQueue(guildId, false);
 
                     const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
                     if (notPlayingEmbed && !["loop", "trending", "disconnect"].includes(feature)) {

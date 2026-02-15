@@ -19,7 +19,7 @@ const DogClient = require("../../utils/customs/client.js");
  * @param {DogClient} client - Discord 客戶端
  * @returns {Promise<string>} Discord 進度條字串
  */
-async function createProgressBar(start, played, end, debug = false, client = global.client) {
+async function createProgressBar(start, played, end, debug = false, client = global._client) {
     let emoji_progressStart;
     let emoji_progressDot;
     let emoji_progressFill;
@@ -94,7 +94,7 @@ async function createProgressBar(start, played, end, debug = false, client = glo
 /**
  * 獲取音樂控制面板按鈕
  * @param {MusicQueue} queue - 音樂佇列
- * @param {DogClient} [client] - Discord 客戶端
+ * @param {DogClient | null} [client] - Discord 客戶端
  * @returns {Promise<ActionRowBuilder[]>}
  */
 async function getNowPlayingRows(queue, client = global._client) {
@@ -202,7 +202,7 @@ async function getNowPlayingRows(queue, client = global._client) {
  * @param {MusicQueue} queue - 音樂佇列
  * @param {MusicTrack} [currentTrack] - 當前播放的音樂曲目
  * @param {BaseInteraction} [interaction] - 互動
- * @param {DogClient} [client] - Discord 客戶端
+ * @param {DogClient | null} [client] - Discord 客戶端
  * @param {boolean} [start] - 是否剛開始播放
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder[]]>}
  */

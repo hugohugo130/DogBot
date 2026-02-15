@@ -30,7 +30,7 @@ const DogClient = require("../utils/customs/client.js");
  * @param {DogClient} client
  * @returns {Promise<EmbedBuilder>}
  */
-async function getBotInfoEmbed(locale = null, client = global.client) {
+async function getBotInfoEmbed(locale = null, client = global._client) {
     const fix = (num) => {
         num = num / 1024 / 1024;
         return Math.floor(num);

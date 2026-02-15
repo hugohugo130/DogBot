@@ -14,7 +14,7 @@ const { get_lang_data } = require("../../utils/language.js");
  * @param {MusicQueue} queue
  * @param {number} [currentPage=1]
  * @param {BaseInteraction} [interaction]
- * @param {DogClient} [client]
+ * @param {DogClient | null} [client]
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>]>}
  */
 async function getQueueListEmbedRow(queue, currentPage = 1, interaction = null, client = global._client) {

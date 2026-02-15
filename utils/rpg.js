@@ -951,7 +951,7 @@ function userHaveNotEnoughItems(rpg_data, item, amount_needed) {
  *
  * @param {Array<{item: string, amount: number}> | Array<string> | string} item_datas
  * @param {Interaction} [interaction]
- * @param {DogClient} [client]
+ * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
 async function notEnoughItemEmbed(item_datas, interaction = null, client = global._client) {
@@ -1024,7 +1024,7 @@ function chunkArray(array, chunkSize) {
  * @param {string} command
  * @param {string} userId
  * @param {BaseInteraction} [interaction]
- * @param {DogClient} [client]
+ * @param {DogClient | null} [client]
  * @returns {Promise<[EmbedBuilder | null, ActionRowBuilder<ButtonBuilder> | null]>}
  */
 async function wrong_job_embed(rpg_data, command, userId, interaction = null, client = global._client) {
@@ -1064,7 +1064,7 @@ async function wrong_job_embed(rpg_data, command, userId, interaction = null, cl
 /**
  *
  * @param {string} name
- * @param {DogClient} [client]
+ * @param {DogClient | null} [client]
  * @returns {Promise<Emoji>}
  */
 async function get_emoji_object(name, client = global._client) {
@@ -1084,7 +1084,7 @@ async function get_emoji_object(name, client = global._client) {
 /**
  *
  * @param {string} names
- * @param {DogClient} [client]
+ * @param {DogClient | null} [client]
  * @returns {Promise<Emoji[]>}
  */
 async function get_emoji_objects(names, client = global._client) {
@@ -1100,7 +1100,7 @@ async function get_emoji_objects(names, client = global._client) {
 /**
  *
  * @param {string} name
- * @param {DogClient} [client]
+ * @param {DogClient | null} [client]
  * @returns {Promise<string>}
  */
 async function get_emoji(name, client = global._client) {
@@ -1117,11 +1117,11 @@ async function get_emoji(name, client = global._client) {
 /**
  *
  * @param {string[]} names
- * @param {DogClient} [client]
+ * @param {DogClient | null} [client]
  * @returns {Promise<string[]>}
  */
-async function get_emojis(names, client = global.client) {
-    if (!client) client = await wait_until_ready(client);
+async function get_emojis(names, client = global._client) {
+    if (!client) client = await wait_until_ready();
 
     const emojis = await Promise.all(
         names.map(name => get_emoji(name, client)),
@@ -1136,7 +1136,7 @@ async function get_emojis(names, client = global.client) {
  * @param {string} action
  * @param {number | string} count
  * @param {BaseInteraction} [interaction]
- * @param {DogClient} [client]
+ * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
 async function get_cooldown_embed(remaining_time, action, count, interaction = null, client = global._client) {
@@ -1194,7 +1194,7 @@ function is_cooldown_finished(command_name, rpg_data) {
  * @param {string} failed_reason
  * @param {import("./config.js").RpgDatabase} rpg_data
  * @param {BaseInteraction} [interaction]
- * @param {DogClient} [client]
+ * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
 async function get_failed_embed(failed_reason, rpg_data, interaction = null, client = global._client) {
@@ -1402,7 +1402,7 @@ function error_analyze(errorStack) {
  * 
  * @param {string} text
  * @param {BaseInteraction | null} [interaction=null]
- * @param {DogClient} [client=global._client]
+ * @param {DogClient | null} [client=global._client]
  * @returns {Promise<EmbedBuilder[]>}
  */
 async function get_loophole_embed(text, interaction = null, client = global._client) {
@@ -1454,7 +1454,7 @@ async function get_loophole_embed(text, interaction = null, client = global._cli
  * 
  * @param {string} userId
  * @param {BaseInteraction | null} [interaction=null]
- * @param {DogClient} [client]
+ * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
 async function job_delay_embed(userId, interaction = null, client = global._client) {

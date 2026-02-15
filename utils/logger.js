@@ -247,7 +247,7 @@ function getCallerModuleName(depth = 4) {
 
 /**
  * 
- * @param {{name: string, backend: boolean, nodc: boolean}} options
+ * @param {{ name?: string, backend?: boolean, nodc?: boolean }} [options={}]
  * @returns {winston.Logger}
  */
 function get_logger(options = {}) {
@@ -255,7 +255,6 @@ function get_logger(options = {}) {
         name = getCallerModuleName(4),
         backend = false,
         nodc = false,
-        client = undefined,
     } = options;
 
     // 返回已存在的 logger (backend 和非 backend 的 logger 分開管理)
@@ -266,8 +265,6 @@ function get_logger(options = {}) {
     } else {
         if (loggerManager.has(name)) return loggerManager.get(name);
     };
-
-    if (client) console.warn(`[get_logger] [DEPRECATED] get logger from module ${name} gave client args, that's not needed`);
 
     if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger with backend=${backend}, nodc=${nodc}, name=${name}, call from ${getCallerModuleName(4)}`);
 

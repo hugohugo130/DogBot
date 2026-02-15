@@ -14,7 +14,7 @@ const DogClient = require("../../../utils/customs/client.js");
  * @param {string} userId - User ID
  * @param {string} sessionId - Cooking session ID
  * @param {number} [progress=0] progress
- * @param {DogClient} [client] - Discord Client
+ * @param {DogClient | null} [client] - Discord Client
  * @returns {Promise<ContainerBuilder>}
  */
 async function getCookingContainer(inputed_foods, item_needed, userId, sessionId, progress = 0, client = global._client) {
@@ -61,7 +61,7 @@ async function getCookingContainer(inputed_foods, item_needed, userId, sessionId
  * Get Cooking Result Container
  * @param {string} output_food - Output food ID
  * @param {number} amount - Amount produced
- * @param {DogClient} [client] - Discord Client
+ * @param {DogClient | null} [client] - Discord Client
  * @returns {Promise<ContainerBuilder>}
  */
 async function getCookingResultContainer(output_food, amount, client = global._client) {

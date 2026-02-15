@@ -214,7 +214,7 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
  * @param {string} file 
  */
 async function preloadDBfilesResponse(file) {
-    if (!global.perloadResponse) global.perloadResponse = new Collection();
+    if (!global.preloadResponse) global.preloadResponse = new Collection();
 
     const basename_filename = path.basename(file);
 
@@ -223,7 +223,7 @@ async function preloadDBfilesResponse(file) {
 
         const response = await axios.get(url)
 
-        global.perloadResponse.set(url, response);
+        global.preloadResponse.set(url, response);
     } catch (error) {
         const errorStack = util.inspect(error, { depth: null });
 
@@ -265,8 +265,8 @@ async function checkAllDatabaseFilesContent() {
         onlineDB_checkAllFileContent(),
     ]);
 
-    // 不需要 global.perloadResponse 了，刪除它
-    delete global.perloadResponse;
+    // 不需要 global.preloadResponse 了
+    global.preloadResponse = null;
 
     if (executed) console.log("=".repeat(30));
 };

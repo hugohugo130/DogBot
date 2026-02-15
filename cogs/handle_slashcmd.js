@@ -20,24 +20,35 @@ const DogClient = require("../utils/customs/client.js");
 
 /**
  * 
- * @param {Array} options
- * @returns {}
+ * @param {any} options
+ * @returns {string[]}
  */
 function getFullCommandPath(options) {
     let path = [];
+
     let current = options;
+
     while (current && current.length > 0 && (current[0].type === 1 || current[0].type === 2)) {
         path.push(current[0].name);
         current = current[0].options;
-    }
+    };
+
     return path;
 };
 
+/**
+ * 
+ * @param {any} options
+ * @returns {readonly import("discord.js").CommandInteractionOption<import("discord.js").CacheType>[]}
+ */
 function getFinalOptions(options) {
+    /** @type {readonly import("discord.js").CommandInteractionOption<import("discord.js").CacheType>[] | undefined}*/
     let current = options;
+
     while (current && current.length > 0 && (current[0].type === 1 || current[0].type === 2)) {
         current = current[0].options;
-    }
+    };
+
     return current || [];
 };
 
@@ -53,11 +64,11 @@ module.exports = {
      * @returns {Promise<any>}
      */
     async execute(client, interaction) {
-        if (!interaction.isChatInputCommand()) return;
+        if (!interaction.isChatInputCommand() || !interaction.guild || !interaction.channel) return;
 
         const user = interaction.user;
         const username = user.globalName || user.username;
-        const command = interaction.client.commands.get(interaction.commandName);
+        const command = client.commands.get(interaction.commandName);
 
         if (!command) {
             logger.error(`找不到名為 ${interaction.commandName} 的指令`);
@@ -72,6 +83,8 @@ module.exports = {
         try {
             const guild = interaction.guild;
             const channel = interaction.channel;
+
+            if (!("permissionsFor" in channel)) return;
 
             const botMember = await get_me(guild);
             const channelPermission = channel.permissionsFor(botMember);
@@ -102,7 +115,7 @@ module.exports = {
                 try {
                     if (!interaction.replied || !interaction.deferred) await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-                    return await interaction.followUp({
+                    return await interaction.followUp({ // @ts-ignore
                         content: `機器人缺少以下權限:\n${missingPerms.map(perm => `\`${permKeys.find(key => PermissionFlagsBits[key] === perm) ?? perm}\``).join("\n")}`.slice(0, 2000),
                         flags: MessageFlags.Ephemeral,
                     });

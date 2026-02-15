@@ -8,5 +8,5 @@ const { downloadAllFiles } = require("./utils/onlineDB.js");
         getCacheManager(false)?.destroy?.();
     };
 
-    process.exit();
+    process.exit(0);
 })();

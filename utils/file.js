@@ -301,7 +301,7 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
 
             let response;
 
-            const resp = global.perloadResponse.get(url);
+            const resp = global.preloadResponse.get(url);
             if (resp) {
                 response = resp;
             };

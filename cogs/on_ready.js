@@ -9,6 +9,12 @@ const DogClient = require("../utils/customs/client.js");
 
 const logger = get_logger();
 
+/**
+ * Handle shutdown event(s)
+ * @param {string} sign - signal string
+ * @param {DogClient} client - Discord Client
+ * @returns {Promise<void>}
+ */
 async function handle_shutdown(sign, client) {
     logger.info(`收到 ${sign} 信號，準備安全關閉...`);
 
@@ -49,7 +55,7 @@ module.exports = {
         });
 
         await Promise.all([
-            client.user.setPresence({
+            client.user?.setPresence({
                 activities: [
                     {
                         name: `啟動時間: ${new Date().toLocaleString()}`,

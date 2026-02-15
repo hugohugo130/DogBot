@@ -82,7 +82,7 @@ const split_line = "=".repeat(10);
 logger.info(`${split_line}機器人正在啟動....${split_line}`);
 
 client.once(Events.ClientReady, async () => {
-    get_areadline().on("line", async (input) => {
+    get_areadline(true)?.on("line", async (input) => {
         switch (input) {
             case "stop": {
                 await safeshutdown(client);
@@ -146,7 +146,9 @@ client.once(Events.ClientReady, async () => {
 
 (async () => {
     global._client = null;
-    global.perloadResponse = new Collection();
+    global._areadline = null;
+    global.sendQueue = [];
+    global.preloadResponse = new Collection();
 
     await checkDBFilesCorrupted();
     if (!debug) await checkAllDatabaseFilesContent();

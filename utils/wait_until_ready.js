@@ -3,9 +3,7 @@ const { Client } = require("discord.js");
 const { asleep } = require("./sleep.js");
 const DogClient = require("./customs/client.js");
 
-function client_ready(client = global._client) {
-    return client?.isReady?.();
-};
+const client_ready = (client = global._client) => client?.isReady?.();
 
 /**
  * Wait for the Client object
@@ -28,18 +26,19 @@ async function wait_for_client(waitReady = true, timeout = 10000, wait = 500) {
         await asleep(wait);
     };
 
+    // @ts-ignore
     return client;
 };
 
 /**
  * 
- * @param {DogClient} client - Discord Client
- * @param {*} timeout - Timeout (ms)
- * @param {*} wait - check is ready per _ ms
+ * @param {DogClient | null} [client] - Discord Client
+ * @param {number} [timeout=10000] - Timeout (ms)
+ * @param {number} [wait=500] - check is ready per _ ms
  * @returns {Promise<DogClient | null>}
  */
 async function wait_until_ready(client = global._client, timeout = 10000, wait = 500) {
-    if (!client instanceof Client) client = wait_for_client(true, timeout, wait);
+    if (!(client instanceof Client)) client = await wait_for_client(true, timeout, wait);
 
     if (!client) client = global._client;
     const start = Date.now();

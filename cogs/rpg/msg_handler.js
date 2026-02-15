@@ -166,7 +166,7 @@ async function redirect({ client, message, command, mode = 0 }) {
 /**
  * Show 
  * @param {import("../../utils/config.js").RpgDatabase} rpg_data 
- * @param {DogClient} [client]
+ * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
 async function show_marry_info(rpg_data, client = global._client) {

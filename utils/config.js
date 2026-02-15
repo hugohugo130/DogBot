@@ -20,6 +20,15 @@ const database_folder = `${cwd()}/db`;
  */
 
 /**
+ * @typedef {Object} TransactionsInfo
+ * @property {string} timestamp
+ * @property {string} originalUser
+ * @property {string} targetUser
+ * @property {string} type
+ * @property {number} amount
+ */
+
+/**
  * @typedef {Object} RpgDatabase
  * @property {number} money
  * @property {number} hunger
@@ -32,7 +41,7 @@ const database_folder = `${cwd()}/db`;
  * @property {MarryInfo} marry
  * @property {Object.<string, number>} lastRunTimestamp - 最後一次運行一些操作的時間戳
  * @property {Object.<string, number>} inventory        - 背包；item_id: amount
- * @property {Array<Object>} transactions                - 交易記錄
+ * @property {Array<TransactionsInfo>} transactions                - 交易記錄
  * @property {Object.<string, number>} count            - 工作次數
  * @property {Array<string>} privacy                     - 隱私設定
  */

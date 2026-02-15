@@ -234,7 +234,7 @@ class MusicQueue {
     /**
      *
      * @param {string} guildID - 伺服器ID
-     * @param {DogClient} [client=null] - Discord Client
+     * @param {DogClient | null} [client=null] - Discord Client
      */
     constructor(guildID, client = global._client) {
         /** @type {string} */
@@ -1008,9 +1008,9 @@ function IsValidURL(str) {
 
 /**
  *
- * @param {MusicQueue} queue
- * @param {BaseInteraction} [interaction]
- * @param {DogClient} [client]
+ * @param {MusicQueue | null} queue
+ * @param {BaseInteraction| null} [interaction=null]
+ * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
 async function noMusicIsPlayingEmbed(queue, interaction = null, client = global._client) {
@@ -1027,8 +1027,8 @@ async function noMusicIsPlayingEmbed(queue, interaction = null, client = global.
 
 /**
  * 
- * @param {BaseInteraction} [interaction]
- * @param {DogClient} client - Discord Client
+ * @param {BaseInteraction | null} [interaction=null]
+ * @param {DogClient | null} [client] - Discord Client
  * @returns {Promise<EmbedBuilder>}
  */
 async function youHaveToJoinVC_Embed(interaction = null, client = global._client) {
