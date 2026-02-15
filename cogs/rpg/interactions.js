@@ -825,8 +825,6 @@ module.exports = {
                     break;
                 }
                 case "rpg_privacy_menu": {
-                    const [userId] = otherCustomIDs;
-
                     const [_, rpg_data, [emoji_shield, emoji_backpack, emoji_pet]] = await Promise.all([
                         interaction.deferUpdate(),
                         load_rpg_data(userId),
@@ -865,7 +863,7 @@ module.exports = {
                         .setEmbedFooter(interaction);
 
                     const selectMenu = new StringSelectMenuBuilder()
-                        .setCustomId(`rpg_privacy_menu|${userId}`)
+                        .setCustomId(`rpg_privacy_menu|${user.id}`)
                         .setPlaceholder("選擇要允許的項目")
                         .setMinValues(0)
                         .setMaxValues(3)
