@@ -4,7 +4,8 @@ const util = require("util");
 const { get_logger } = require("../../utils/logger.js");
 const { get_emojis, get_emoji } = require("../../utils/rpg.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
-const { MusicQueue, MusicTrack, getQueue, noMusicIsPlayingEmbed, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
+const { wait_for_client } = require("../../utils/wait_until_ready.js");
+const { MusicQueue, MusicTrack, getQueue, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
 const { loopStatus } = require("../../utils/music/music.js");
 const { embed_default_color, DOCS, STATUS_PAGE } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
@@ -15,8 +16,8 @@ const DogClient = require("../../utils/customs/client.js");
  * @param {number} start - 開始時間（秒）
  * @param {number} played - 已播放時間（秒）
  * @param {number} end - 結束時間（秒）
- * @param {number} DEBUG - 是否啟用 DEBUG
- * @param {DogClient} client - Discord 客戶端
+ * @param {boolean} [debug=false] - 是否啟用 debug
+ * @param {DogClient | null} [client] - Discord 客戶端
  * @returns {Promise<string>} Discord 進度條字串
  */
 async function createProgressBar(start, played, end, debug = false, client = global._client) {
@@ -95,7 +96,7 @@ async function createProgressBar(start, played, end, debug = false, client = glo
  * 獲取音樂控制面板按鈕
  * @param {MusicQueue} queue - 音樂佇列
  * @param {DogClient | null} [client] - Discord 客戶端
- * @returns {Promise<ActionRowBuilder[]>}
+ * @returns {Promise<ActionRowBuilder<ButtonBuilder>[]>}
  */
 async function getNowPlayingRows(queue, client = global._client) {
     const [
@@ -149,50 +150,54 @@ async function getNowPlayingRows(queue, client = global._client) {
 
     const IsTrendingOn = queue.loopStatus === loopStatus.AUTO;
 
-    const row1 = new ActionRowBuilder() // all [ButtonStyle.Secondary]
-        .addComponents(
-            new ButtonBuilder()
-                .setCustomId("music|any|pause")
-                .setEmoji(queue.isPaused() ? emoji_pauseGrad : emoji_playGrad)
-                .setStyle(ButtonStyle.Secondary),
+    const row1 =// all [ButtonStyle.Secondary]
+        /** @type {ActionRowBuilder<ButtonBuilder>} */
+        (new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId("music|any|pause")
+                    .setEmoji(queue.isPaused() ? emoji_pauseGrad : emoji_playGrad)
+                    .setStyle(ButtonStyle.Secondary),
 
-            new ButtonBuilder()
-                .setCustomId("music|any|skip")
-                .setEmoji(emoji_skip)
-                .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                    .setCustomId("music|any|skip")
+                    .setEmoji(emoji_skip)
+                    .setStyle(ButtonStyle.Secondary),
 
-            new ButtonBuilder()
-                .setCustomId("music|any|shuffle")
-                .setEmoji(emoji_shuffle)
-                .setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder()
+                    .setCustomId("music|any|shuffle")
+                    .setEmoji(emoji_shuffle)
+                    .setStyle(ButtonStyle.Secondary),
 
-            new ButtonBuilder()
-                .setCustomId("music|any|loop")
-                .setEmoji(emoji_refresh)
-                .setLabel(loopMode)
-                .setStyle(ButtonStyle.Secondary),
-        );
+                new ButtonBuilder()
+                    .setCustomId("music|any|loop")
+                    .setEmoji(emoji_refresh)
+                    .setLabel(loopMode)
+                    .setStyle(ButtonStyle.Secondary),
+            ));
 
-    const row2 = new ActionRowBuilder()
-        .addComponents(
-            new ButtonBuilder()
-                .setCustomId(`music|any|trending|${IsTrendingOn ? "off" : "on"}`) // option: off/on
-                .setEmoji(emoji_trending)
-                .setLabel("自動推薦")
-                .setStyle(IsTrendingOn ? ButtonStyle.Success : ButtonStyle.Secondary), // Success按下去後關閉，Secondary按下去後啟用
+    const row2 =
+        /** @type {ActionRowBuilder<ButtonBuilder>} */
+        (new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`music|any|trending|${IsTrendingOn ? "off" : "on"}`) // option: off/on
+                    .setEmoji(emoji_trending)
+                    .setLabel("自動推薦")
+                    .setStyle(IsTrendingOn ? ButtonStyle.Success : ButtonStyle.Secondary), // Success按下去後關閉，Secondary按下去後啟用
 
-            new ButtonBuilder()
-                .setCustomId("refresh|any|nowplaying")
-                .setEmoji(emoji_loop)
-                .setLabel("更新")
-                .setStyle(ButtonStyle.Success),
+                new ButtonBuilder()
+                    .setCustomId("refresh|any|nowplaying")
+                    .setEmoji(emoji_loop)
+                    .setLabel("更新")
+                    .setStyle(ButtonStyle.Success),
 
-            new ButtonBuilder()
-                .setCustomId("music|any|disconnect")
-                .setEmoji(emoji_goodbye)
-                .setLabel("中斷連線")
-                .setStyle(ButtonStyle.Danger)
-        );
+                new ButtonBuilder()
+                    .setCustomId("music|any|disconnect")
+                    .setEmoji(emoji_goodbye)
+                    .setLabel("中斷連線")
+                    .setStyle(ButtonStyle.Danger)
+            ));
 
     return [row1, row2];
 };
@@ -200,17 +205,18 @@ async function getNowPlayingRows(queue, client = global._client) {
 /**
  * 
  * @param {MusicQueue} queue - 音樂佇列
- * @param {MusicTrack} [currentTrack] - 當前播放的音樂曲目
- * @param {BaseInteraction} [interaction] - 互動
+ * @param {MusicTrack | null} [currentTrack=null] - 當前播放的音樂曲目
+ * @param {BaseInteraction | null} [interaction=null] - 互動
  * @param {DogClient | null} [client] - Discord 客戶端
- * @param {boolean} [start] - 是否剛開始播放
- * @returns {Promise<[EmbedBuilder, ActionRowBuilder[]]>}
+ * @param {boolean} [start = false] - 是否剛開始播放
+ * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>[]]>}
  */
 async function getNowPlayingEmbed(queue, currentTrack = null, interaction = null, client = global._client, start = false) {
     if (!currentTrack) currentTrack = queue.currentTrack ?? queue.tracks[0];
     if (!currentTrack) throw new Error("No current track found.");
+    if (!client) client = await wait_for_client();
 
-    const playingAt = start ? 0 : Math.floor(queue.currentResource.playbackDuration / 1000);
+    const playingAt = start || !queue.currentResource ? 0 : Math.floor(queue.currentResource.playbackDuration / 1000);
     const formattedPlayingAt = formatMinutesSeconds(playingAt, false);
 
     const [progressBar, rows, emoji] = await Promise.all([
@@ -258,8 +264,10 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        const guildId = interaction.guild.id;
-        const queue = getQueue(guildId, false);
+        const guildId = interaction.guild?.id;
+        if (!guildId) return;
+
+        const queue = getQueue(guildId);
 
         const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
         if (notPlayingEmbed) {

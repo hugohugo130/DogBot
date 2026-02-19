@@ -38,8 +38,8 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const enable = interaction.options.getBoolean("enable");
-        const guildID = interaction.guildId;
+        const enable = interaction.options.getBoolean("enable") ?? false;
+        const guildID = interaction.guild.id;
 
         await setRPG(guildID, enable);
 

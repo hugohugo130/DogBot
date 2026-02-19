@@ -1,11 +1,11 @@
 const { Logger } = require("winston");
 const { VoiceChannel } = require("discord.js");
-const { finished } = require('stream/promises');
 const fs = require("fs");
 const fsp = fs.promises;
 const path = require("path");
 const util = require("util");
 const axios = require("axios");
+const { AxiosError } = require("axios");
 
 const {
     INDENT,
@@ -43,6 +43,7 @@ const basename = path.basename;
 const dirname = path.dirname;
 const mkdir = fsp.mkdir;
 const readdir = fsp.readdir;
+
 const logger = get_logger();
 
 /**
@@ -60,10 +61,21 @@ async function exists(path) {
 };
 
 /**
+ * @overload
+ * @param {string} file_path
+ * @param {{ encoding: BufferEncoding, flag?: import("node:fs").OpenMode | undefined, return?: object | string | null } | null} [options]
+ * @returns {string}
+ */
+/**
+ * @overload
+ * @param {string} file_path
+ * @param {{ encoding?: BufferEncoding | null | undefined, flag?: import("node:fs").OpenMode | undefined, return?: object | string | null } | null} [options]
+ * @returns {string | NonSharedBuffer}
+ */
+/**
  * Read the contect of a file
  * @param {string} file_path
- * @param {{encoding?: string | null | undefined, flag?: string | undefined, return?: object | string | undefined} | null} [options]
- * @returns {NonSharedBuffer}
+ * @param {{ encoding?: BufferEncoding | null, flag?: string, return?: object | string | undefined } | null} [options]
  */
 function readFileSync(file_path, options = { encoding: "utf-8" }) {
     const filename = path.basename(file_path);
@@ -73,7 +85,7 @@ function readFileSync(file_path, options = { encoding: "utf-8" }) {
     if (!existsSync(file_path) && DATABASE_FILES.includes(filename)) {
         if (returnWhat) return stringify(returnWhat);
 
-        /** @type {object | null} */ // @ts-ignore
+        /** @type {object | null} */
         const default_value = DEFAULT_VALUES.single[filename];
 
         const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
@@ -85,7 +97,7 @@ function readFileSync(file_path, options = { encoding: "utf-8" }) {
             if (!other_category_default_value) logger.warn(`警告：資料庫檔案 ${filename} 缺失預設值，請及時補充。`);
             return stringify({});
         } else {
-            writeJsonSync(file_path, default_value);
+            writeJsonSync(file_path, stringify(default_value));
             return stringify((default_value));
         };
     };
@@ -94,10 +106,21 @@ function readFileSync(file_path, options = { encoding: "utf-8" }) {
 };
 
 /**
+ * @overload
+ * @param {string} file_path
+ * @param {{ encoding: BufferEncoding, flag?: import("node:fs").OpenMode | undefined, return?: object | string | null } | null} [options]
+ * @returns {Promise<string>}
+ */
+/**
+ * @overload
+ * @param {string} file_path
+ * @param {{ encoding?: BufferEncoding | null | undefined, flag?: import("node:fs").OpenMode | undefined, return?: object | string | null } | null} [options]
+ * @returns {Promise<string | NonSharedBuffer>}
+ */
+/**
  * Read the contect of a file
  * @param {string} file_path
- * @param {{encoding?: string | null | undefined, flag?: import("node:fs").OpenMode | undefined, return?: object | string | undefined} | null} [options]
- * @returns {Promise<NonSharedBuffer>}
+ * @param {{ encoding?: BufferEncoding | null | undefined, flag?: import("node:fs").OpenMode | undefined, return?: object | string | null } | null} [options]
  */
 async function readFile(file_path, options = { encoding: "utf-8" }) {
     const filename = path.basename(file_path);
@@ -110,16 +133,16 @@ async function readFile(file_path, options = { encoding: "utf-8" }) {
         /** @type {object | null} */
         const default_value = DEFAULT_VALUES.single[filename];
 
-        const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
-            return acc || category[filename];
-        }, undefined);
+        const other_category_default_value = find_default_value(filename);
 
         if (!default_value) {
             if (!other_category_default_value) logger.warn(`警告：資料庫檔案 ${filename} 缺失預設值，請及時補充。`);
             return stringify({});
         } else {
-            await writeJson(file_path, default_value);
-            return stringify(default_value);
+            const stringified_default_value = stringify(default_value);
+            await writeJson(file_path, stringified_default_value);
+
+            return stringified_default_value;
         };
     };
 
@@ -129,29 +152,35 @@ async function readFile(file_path, options = { encoding: "utf-8" }) {
 /**
  * 轉換 JSON 字串到物件
  * @argument {string} jsonString - 要解析的 JSON 字串
- * @returns {{[x: string]: any}} 解析後的物件
+ * @returns {any} 解析後的物件
  */
-function safeJSONParse(jsonString) {
-    return JSON.parse(jsonString)
-};
+const safeJSONParse = (jsonString) => JSON.parse(jsonString);
 
-function needsStringify(obj) {
-    if (typeof obj === "string") {
-        return false;
-    };
+/**
+ * Check whether an object needs to be stringified
+ * @param {any} obj
+ * @returns {boolean}
+ */
+const needsStringify = (obj) => !(typeof obj === "string" || (typeof obj !== "object" || obj === null));
 
-    if (typeof obj !== "object" || obj === null) {
-        return false;
-    };
-
-    return true;
-};
-
-function stringify(data, replacer = "") {
+/**
+ * Stringify an object
+ * @param {any} data
+ * @param {((this: any, key: string, value: any) => any)} [replacer]
+ * @returns {string}
+ */
+function stringify(data, replacer = undefined) {
     if (!needsStringify(data)) return data;
+
     return JSON.stringify(data, replacer, INDENT);
 };
 
+/**
+ * Write a file synchronously
+ * @param {string} path
+ * @param {string} data
+ * @returns {void}
+ */
 function writeSync(path, data, p = false) {
     if (path.endsWith(".json") && !p) return writeJsonSync(path, data);
 
@@ -165,17 +194,34 @@ function writeSync(path, data, p = false) {
     fs.writeFileSync(path, data);
 };
 
+/**
+ * Read a json file synchronously
+ * @param {string} path
+ * @returns {any}
+ */
 function readJsonSync(path) {
     return safeJSONParse(readFileSync(path));
 };
 
-function writeJsonSync(path, data, replacer = "") {
+/**
+ * Write a json file synchronously
+ * @param {string} path
+ * @param {string | object} data
+ * @param {((this: any, key: string, value: any) => any)} [replacer]
+ * @returns {void}
+ */
+function writeJsonSync(path, data, replacer) {
     data = stringify(data, replacer);
 
     writeSync(path, data, true);
-    return data;
 };
 
+/**
+ * Write a file asynchronously
+ * @param {string} path
+ * @param {string} data
+ * @returns {Promise<void>}
+ */
 async function writeFile(path, data, p = false) {
     if (path.endsWith(".json") && !p) return await writeJson(path, data);
 
@@ -187,31 +233,51 @@ async function writeFile(path, data, p = false) {
     await fsp.writeFile(path, data);
 };
 
+/**
+ * Read a json file asynchronously
+ * @param {string} path
+ * @returns {Promise<any>}
+ */
 async function readJson(path) {
     return safeJSONParse(await readFile(path));
 };
 
-async function writeJson(path, data, replacer = "") {
+/**
+ * Write a json file asynchronously
+ * @param {string} path
+ * @param {string | object} data
+ * @param {((this: any, key: string, value: any) => any)} [replacer]
+ * @returns {Promise<void>}
+ */
+async function writeJson(path, data, replacer) {
     data = stringify(data, replacer);
 
     await writeFile(path, data, true);
-    return data;
 };
 
 /**
  * Read schedule files from the schedule directory.
- * @returns {Promise<string[][]>}
+ * @returns {Promise<[string[], string[], string[]]>}
  */
 async function readSchedule() {
-    const everysec = await exists(scheduleEverysec) ? (await readdir(scheduleEverysec, { recursive: true }))
+    const everysec = await exists(scheduleEverysec) ? (await readdir(scheduleEverysec, {
+        recursive: true,
+        encoding: "utf-8",
+    }))
         .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEverysec}/${file}`) : [];
 
-    const everymin = await exists(scheduleEverymin) ? (await readdir(scheduleEverymin, { recursive: true }))
+    const everymin = await exists(scheduleEverymin) ? (await readdir(scheduleEverymin, {
+        recursive: true,
+        encoding: "utf-8",
+    }))
         .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEverymin}/${file}`) : [];
 
-    const every5min = await exists(scheduleEvery5min) ? (await readdir(scheduleEvery5min, { recursive: true }))
+    const every5min = await exists(scheduleEvery5min) ? (await readdir(scheduleEvery5min, {
+        recursive: true,
+        encoding: "utf-8",
+    }))
         .filter(file => file.endsWith(".js"))
         .map(file => `${scheduleEvery5min}/${file}`) : [];
 
@@ -220,15 +286,6 @@ async function readSchedule() {
         everymin,
         every5min,
     ];
-};
-
-/**
- *
- * @param {fs.WriteStream} writer
- * @returns {Promise<void>}
- */
-async function waitForWriterFinish(writer) {
-    return await finished(writer);
 };
 
 /**
@@ -254,16 +311,16 @@ function join_db_folder(filename) {
 
 /**
  * 
- * @param {string} filename 
- * @param {Logger | Console} log 
- * @param {number} maxRetries 
- * @returns {Promise<[same: boolean, localContent: string, remoteContent: string]>}
+ * @param {string} filename
+ * @param {Logger | Console} log
+ * @param {number} maxRetries
+ * @returns {Promise<[same: boolean, localContent: string | null, remoteContent: string | null]>}
  */
 async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
     const { getServerIPSync } = require("./getSeverIPSync.js");
 
-    let localContent;
-    let remoteContent;
+    let localContent = null;
+    let remoteContent = null;
 
     const basename_filename = path.basename(filename);
     const local_filepath = join_db_folder(basename_filename);
@@ -291,7 +348,7 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
                 localContent = null;
             }
         } catch (err) {
-            log.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
+            if (err instanceof Error) log.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
             localContent = null;
         };
 
@@ -312,20 +369,20 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
 
             remoteContent = stringify(response.data);
         } catch (err) {
-            if (err.response?.status === 404) {
+            if (err instanceof AxiosError && err.response?.status === 404) {
                 log.warn(`遠端檔案不存在: ${basename_filename}`);
                 remoteContent = null;
-            } else if (err.code === "ECONNRESET" || err.message?.includes("socket hang up")) {
+            } else if (err instanceof AxiosError && (err.code === "ECONNRESET" || err.message?.includes("socket hang up"))) {
                 if (attempt < maxRetries) {
                     log.warn(`連接遠端伺服器時中斷，正在重試 (${attempt}/${maxRetries})...`);
                     await asleep(1000);
                     continue;
                 } else {
-                    log.error(`獲取遠端檔案內容時遇到錯誤: ${err.message}`);
+                    if (err instanceof Error) log.error(`獲取遠端檔案內容時遇到錯誤: ${err.message}`);
                     remoteContent = null;
                 };
             } else {
-                log.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
+                if (err instanceof Error) log.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
                 remoteContent = null;
             };
         };
@@ -334,7 +391,7 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
     };
 
     // 比較內容
-    const same = localContent && remoteContent && util.isDeepStrictEqual(localContent, remoteContent);
+    const same = !!(localContent && remoteContent && util.isDeepStrictEqual(localContent, remoteContent));
 
     return [same, localContent, remoteContent];
 };
@@ -343,12 +400,15 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
  *
  * @param {string} filename
  * @param {any} default_return
- * @returns {object | any}
+ * @returns {any}
  */
 function find_default_value(filename, default_return = undefined) {
     const basename = path.basename(filename);
 
-    for (const categoryData of Object.values(DEFAULT_VALUES)) {
+    for (const categoryData of
+        /** @type {{ [k: string]: any }[]} */
+        (Object.values(DEFAULT_VALUES))
+    ) {
         if (categoryData.hasOwnProperty(basename)) return categoryData[basename];
     };
 
@@ -371,9 +431,9 @@ function get_probability_of_id(item, default_return = undefined) {
 
 /**
  * 
- * @param {object} data 
- * @param {object} follow 
- * @returns {object}
+ * @param {any} data
+ * @param {any} follow
+ * @returns {any}
  */
 function order_data(data, follow) {
     if (data instanceof Array) {
@@ -381,6 +441,7 @@ function order_data(data, follow) {
         return data;
     };
 
+    /** @type {{ [k: string]: any }} */
     const orderedData = {};
     for (const key of Object.keys(follow)) {
         orderedData[key] = data[key] ?? follow[key];
@@ -399,11 +460,23 @@ function order_data(data, follow) {
 */
 
 /**
- * 讀取伺服器資料庫
- * @param {string | null} guildID - 伺服器ID
- * @param {number} mode - 0: 取得伺服器資料, 1: 取得所有資料
+ * @overload
+ * @param {null} [guildID=null] - 伺服器ID
+ * @param {0 | 1} [mode=0] - 0: 取得伺服器資料, 1: 取得所有資料
+ * @returns {Promise<{ [k: string]: import("./config.js").GuildDatabase }>}
+ * @throws {TypeError} - 如果mode不是0或1
+ */
+/**
+ * @overload
+ * @param {string} guildID - 伺服器ID
+ * @param {0 | 1} [mode=0] - 0: 取得伺服器資料, 1: 取得所有資料
  * @returns {Promise<import("./config.js").GuildDatabase>}
  * @throws {TypeError} - 如果mode不是0或1
+ */
+/**
+ * 讀取伺服器資料庫
+ * @param {string | null} [guildID=null] - 伺服器ID
+ * @param {0 | 1} [mode=0] - 0: 取得伺服器資料, 1: 取得所有資料
  */
 async function loadData(guildID = null, mode = 0) {
     /*
@@ -452,13 +525,14 @@ async function loadData(guildID = null, mode = 0) {
 async function saveData(guildID, guildData) {
     const database_emptyeg = find_default_value("database.json", {});
 
+    /** @type {{ [k: string]: import("./config.js").GuildDatabase}} */
     let data = {};
 
     if (await exists(database_file)) {
         data = await readJson(database_file);
     };
 
-    if (!data[guildID]) {
+    if (!(guildID in data)) {
         data[guildID] = database_emptyeg;
     };
 
@@ -518,11 +592,9 @@ async function setRPG(guildID, enable) {
  *
  * @param {string} guildID
  * @param {string} prefix
- * @returns {Promise<string | null>}
+ * @returns {Promise<string | null>} null if the prefix is already exists
  */
 async function addPrefix(guildID, prefix) {
-    if (!typeof prefix === "string") throw new Error(`Invalid prefix: ${enable}`)
-
     const data = await loadData(guildID);
 
     // 舊兼容
@@ -546,8 +618,6 @@ async function addPrefix(guildID, prefix) {
  * @returns {Promise<string | null>}
  */
 async function rmPrefix(guildID, prefix) {
-    if (!typeof prefix === "string") throw new Error(`Invalid prefix: ${enable}`)
-
     const data = await loadData(guildID);
 
     // 舊兼容
@@ -651,6 +721,7 @@ async function save_rpg_data(userid, rpg_data) {
     logger.debug(`save_rpg_data(${userid}) - ${getCallerModuleName("list")}`);
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
+    /** @type {{ [k: string]: import("./config.js").RpgDatabase}} */
     let data = {};
     if (await exists(rpg_database_file)) {
         data = await readJson(rpg_database_file);
@@ -690,6 +761,7 @@ function save_rpg_dataSync(userid, rpg_data) {
 
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
+    /** @type {{ [k: string]: import("./config.js").RpgDatabase}} */
     let data = {};
     if (existsSync(rpg_database_file)) {
         data = readJsonSync(rpg_database_file);
@@ -715,6 +787,11 @@ function save_rpg_dataSync(userid, rpg_data) {
     writeJsonSync(rpg_database_file, data);
 };
 
+/**
+ * Load shop data of a user
+ * @param {string} userid
+ * @returns {Promise<import("./config.js").RpgShop>}
+ */
 async function load_shop_data(userid) {
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
 
@@ -733,9 +810,15 @@ async function load_shop_data(userid) {
     };
 };
 
+/**
+ * Save shop data of a user
+ * @param {string} userid
+ * @param {import("./config.js").RpgShop} shop_data
+ */
 async function save_shop_data(userid, shop_data) {
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
 
+    /** @type {{ [k: string]: import("./config.js").RpgShop}} */
     let data = {};
     if (await exists(rpg_shop_file)) {
         data = await readJson(rpg_shop_file);
@@ -764,7 +847,7 @@ async function save_shop_data(userid, shop_data) {
 /**
  *
  * @param {string} userid
- * @returns {Promies<{lvl: number, exp: number, waterAt: number, farms: Object[]}>}
+ * @returns {Promise<{lvl: number, exp: number, waterAt: number, farms: import("../slashcmd/game/rpg/farm.js").FarmData[]}>}
  */
 async function load_farm_data(userid) {
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
@@ -782,11 +865,12 @@ async function load_farm_data(userid) {
 /**
  *
  * @param {string} userid
- * @param {Array} farm_data
+ * @param {{ lvl: number, exp: number, waterAt: number, farms: import("../slashcmd/game/rpg/farm.js").FarmData[] }} farm_data
  */
 async function save_farm_data(userid, farm_data) {
     const farm_emptyeg = find_default_value("rpg_farm.json", {});
 
+    /** @type {{ [k: string]: {lvl: number, exp: number, waterAt: number, farms: import("../slashcmd/game/rpg/farm.js").FarmData[]}}} */
     let data = {};
     if (await exists(rpg_farm_file)) {
         data = await readJson(rpg_farm_file);
@@ -798,49 +882,58 @@ async function save_farm_data(userid, farm_data) {
 
     data[userid] = { ...data[userid], ...farm_data };
 
-    // 清除數量為0的物品
-    if (data[userid].items) {
-        for (const [item, itemData] of Object.entries(data[userid].items)) {
-            if (itemData.amount <= 0) {
-                delete data[userid].items[item];
-            };
-        };
-    };
-
     await writeJson(rpg_farm_file, data);
 };
 
 /**
  * Get the bake data from Json
- * @param {string | null} [userId] null for whole json data
- * @returns {Promise<Array<object> | null>} null if no data
+ * @param {string} userId
+ * @returns {Promise<import("../slashcmd/game/rpg/bake.js").BakeItemData[]>}
  */
-async function load_bake_data(userId = null) {
+async function load_bake_data(userId) {
+    /** @type {{ [k: string]: import("../slashcmd/game/rpg/bake.js").BakeItemData[] }} */
     const whole_json_data = await readJson(bake_data_file);
-    return userId
-        ? whole_json_data?.[userId]
-        : whole_json_data;
+
+    return whole_json_data?.[userId] || [];
 };
 
 /**
  * Save the bake data to Json
  * @param {string} userId - The ID of user
- * @param {Array} bake_data - The bake data
+ * @param {import("../slashcmd/game/rpg/bake.js").BakeItemData[]} bake_data - The bake data
  */
 async function save_bake_data(userId, bake_data) {
-    const currentData = await load_bake_data();
+    /** @type {{ [k: string]: import("../slashcmd/game/rpg/bake.js").BakeItemData[] }} */
+    const currentData = await readJson(bake_data_file);
 
-    currentData[userId] = [...currentData[userId], ...bake_data];
+    currentData[userId] = bake_data;
 
     await writeJson(bake_data_file, currentData);
 };
 
-async function load_smelt_data() {
-    return await readJson(smelt_data_file);
+/**
+ * Load smelt data of a user
+ * @param {string} userId
+ * @returns {Promise<import("../slashcmd/game/rpg/smelt.js").SmeltData[]>}
+ */
+async function load_smelt_data(userId) {
+    const data = await readJson(smelt_data_file);
+
+    return data[userId] || [];
 };
 
-async function save_smelt_data(data) {
-    await writeJson(smelt_data_file, data);
+/**
+ * Save smelt data of a user
+ * @param {string} userId
+ * @param {import("../slashcmd/game/rpg/smelt.js").SmeltData[]} data
+ * @returns {Promise<void>}
+ */
+async function save_smelt_data(userId, data) {
+    const currentData = await readJson(smelt_data_file);
+
+    currentData[userId] = data;
+
+    await writeJson(smelt_data_file, currentData);
 };
 
 /*
@@ -854,7 +947,7 @@ async function save_smelt_data(data) {
 
 /**
  * Load dynamic voice data
- * @returns {Promise<object>}
+ * @returns {Promise<[string, import("./config.js").DvoiceData][]>}
  */
 async function loadDvoiceData() {
     return await readJson(dvoice_data_file);
@@ -862,7 +955,7 @@ async function loadDvoiceData() {
 
 /**
  * Save dynamic voice data
- * @param {object} data - The data to save
+ * @param {[string, import("./config.js").DvoiceData][]} data - The data to save
  * @returns {Promise<void>}
  */
 async function saveDvoiceData(data) {
@@ -881,21 +974,21 @@ async function saveDvoiceData(data) {
 /**
  * Set dynamic voice channel
  * @param {string} guildID - The ID of the guild
- * @param {VoiceChannel} channel - The voice channel to set as dynamic voice channel
+ * @param {VoiceChannel | null} [channel] - The voice channel to set as dynamic voice channel
  * @returns {Promise<void>}
  */
-async function setDynamicVoice(guildID, channel) {
+async function setDynamicVoice(guildID, channel = null) {
     const data = await loadData(guildID);
-    data["dynamicVoice"] = channel.id;
+    data["dynamicVoice"] = channel?.id || null;
 
     await saveData(guildID, data);
 };
 
 
 /**
- * 
- * @param {string} guildID 
- * @returns {Promise<string | undefined>}
+ * Get the dynamic voice channel of a guild
+ * @param {string} guildID - The ID of the guild
+ * @returns {Promise<string | null>}
  */
 async function getDynamicVoice(guildID) {
     const data = await loadData(guildID);
@@ -958,7 +1051,6 @@ module.exports = {
     dirname,
 
     // tools
-    waitForWriterFinish,
     join_folder,
     join_db_folder,
     compareLocalRemote,

@@ -221,9 +221,18 @@ class CacheManager {
 };
 
 /**
- * Get the cache manager
+ * @overload
  * @param {boolean} [create=true] - Whether to create the cache manager if not exists.
  * @returns {CacheManager | null}
+ */
+/**
+ * @overload
+ * @param {true} [create=true] - Whether to create the cache manager if not exists.
+ * @returns {CacheManager}
+ */
+/**
+ * Get the cache manager
+ * @param {boolean} [create=true] - Whether to create the cache manager if not exists.
  */
 function getCacheManager(create = true) {
     /** @type {CacheManager | null} */ // @ts-ignore

@@ -7,9 +7,9 @@ const { enable_auto_register_cmd, auto_register_cmd_file } = require("./config.j
 const DEBUG = false;
 
 /**
- * 
- * @param {Array<string>} file_datas 
- * @returns {[string, number]}
+ * Get SHA256 of an array<string>
+ * @param {Array<string>} file_datas
+ * @returns {[number, string]}
  */
 function get_hash_of_datas(file_datas) {
     let length = 0;
@@ -26,16 +26,25 @@ function get_hash_of_datas(file_datas) {
     return [length, hash];
 };
 
+/**
+ *
+ * @param {string} dir
+ * @returns {Promise<string[]>}
+ */
 async function read_all_files_in_dir(dir) {
     const files = (await readdir(dir, {
         recursive: true,
+        encoding: "utf-8",
     })).filter(file => file.endsWith(".js")).sort(); // 排序確保順序一致
 
     const file_datas = [];
 
     for (const file of files) {
         const file_path = path.join(dir, file);
-        const file_data = await readFile(file_path);
+        const file_data = await readFile(file_path, {
+            encoding: "utf-8",
+        });
+
         file_datas.push(file_data);
     };
 
@@ -50,8 +59,8 @@ async function should_register_cmd() {
     if (!enable_auto_register_cmd) return false;
 
     if (existsSync(auto_register_cmd_file)) {
-        let [length, hash] = (await readFile(auto_register_cmd_file)).split("|");
-        length = parseInt(length);
+        const [length_str, hash] = (await readFile(auto_register_cmd_file)).split("|");
+        const length = parseInt(length_str);
 
         const file_datas_new = await read_all_files_in_dir("slashcmd");
         const [length_new, hash_new] = get_hash_of_datas(file_datas_new);

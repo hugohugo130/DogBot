@@ -11,7 +11,7 @@ const { getCacheManager } = require("./cache.js");
  */
 async function safeshutdown(client) {
     try {
-        await saveDvoiceData(client.dvoice.toJSON() || {});
+        await saveDvoiceData(client.dvoice.entries().toArray() || []);
         console.log("成功保存dvoice資料！");
 
         const [success, _] = await Promise.allSettled([

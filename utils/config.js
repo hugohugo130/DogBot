@@ -1,4 +1,4 @@
-const { Colors } = require("discord.js");
+const { Colors, VoiceChannel } = require("discord.js");
 
 // functions for config
 const cwd = process.cwd;
@@ -21,7 +21,7 @@ const database_folder = `${cwd()}/db`;
 
 /**
  * @typedef {Object} TransactionsInfo
- * @property {string} timestamp
+ * @property {number} timestamp
  * @property {string} originalUser
  * @property {string} targetUser
  * @property {string} type
@@ -49,7 +49,7 @@ const database_folder = `${cwd()}/db`;
 /**
  * @typedef {Object} RpgShop
  * @property {boolean} status
- * @property {Object.<string, any>} items
+ * @property {{ [k: string]: any }} items
  */
 
 /**
@@ -65,6 +65,12 @@ const database_folder = `${cwd()}/db`;
  * @property {boolean} rpg
  * @property {string | null} dynamicVoice
  * @property {string[]} prefix
+ */
+
+/**
+ * @typedef {Object} DvoiceData
+ * @property {string} owner
+ * @property {VoiceChannel} channel
  */
 
 const DATABASE_FILES = [
@@ -85,15 +91,19 @@ const DATABASE_FILES = [
  *     "rpg_shop.json": RpgShop,
  *     "rpg_farm.json": RpgFarm,
  *     "bake_db.json": Array<any>,
- *     "smelt_db.json": Array<any>
+ *     "smelt_db.json": Array<any>,
+ *     [k: string]: object,
  *   },
  *   "single": {
  *     "serverIP.json": { IP: string, PORT: number },
- *     "dvoice_db.json": Object
+ *     "dvoice_db.json": [[string], DvoiceData][],
+ *     [k: string]: object,
  *   },
  *   "guild": {
- *     "database.json": GuildDatabase
- *   }
+ *     "database.json": GuildDatabase,
+ *     [k: string]: object,
+ *   },
+ *   [k: string]: object,
  * }}
  */
 const DEFAULT_VALUES = {
@@ -136,7 +146,7 @@ const DEFAULT_VALUES = {
             IP: DEFAULT_IP,
             PORT: DEFAULT_PORT,
         },
-        "dvoice_db.json": {},
+        "dvoice_db.json": [],
     },
     "guild": {
         "database.json": {
@@ -316,8 +326,15 @@ const failed = [
     // "acid_rain",
     "escape",
     "epidemic",
-]
+];
 
+/**
+ * Probabilities
+ * the first number is weight
+ * the second number is minimum gain amount
+ * the third number is maximum gain amount
+ * @type {{ [k: string]: { [k: string]: [number, number, number] } }}
+ */
 const probabilities = {
     "farm": {
         // "acid_rain": [2, 1, 1],
@@ -407,6 +424,7 @@ const probabilities = {
     },
 };
 
+/** @type {Object.<string, { command: string[], emoji: string, desc: string, name: string }>} */
 const jobs = {
     "fisher": { // 漁夫
         "command": ["fish"],
@@ -458,6 +476,7 @@ const jobs = {
     },
 };
 
+/** @type {{ [k: string]: { emoji: string, HP: number, ATK: number, name: string } }} */
 const fightjobs = {
     "soldier": { // 戰士
         "emoji": "soldier",
@@ -485,7 +504,12 @@ const fightjobs = {
     },
 };
 
-const workCmdJobs = Object.fromEntries(Object.entries(jobs).filter(([_, value]) => value.command).flatMap(([key, value]) => value.command.map(cmd => [cmd, [key, value]])));
+/** @type {{ [k: string]: [string, { command: string[], emoji: string, desc: string, name: string }] }} */
+const workCmdJobs = Object.fromEntries(
+    Object.entries(jobs)
+        .filter(([_, value]) => value.command?.length)
+        .flatMap(([key, value]) => value.command.map(cmd => [cmd, [key, value]]))
+);
 
 const PrivacySettings = Object.freeze({
     Inventory: "backpack",

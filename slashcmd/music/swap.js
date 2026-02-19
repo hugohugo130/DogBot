@@ -57,14 +57,14 @@ module.exports = {
             ? interaction.member.voice?.channel
             : null;
 
-        if (!voiceChannel) {
+        if (!voiceChannel || !interaction.guild) {
             return await interaction.reply({
                 embeds: [await youHaveToJoinVC_Embed(interaction, client)],
                 flags: MessageFlags.Ephemeral,
             });
         };
 
-        const queue = getQueue(interaction.guildId, false);
+        const queue = getQueue(interaction.guild.id);
         const [clientMember, notPlayingEmbed, [emoji_cross, emoji_loop]] = await Promise.all([
             get_me(interaction.guild),
             noMusicIsPlayingEmbed(queue, interaction, client),
@@ -76,7 +76,7 @@ module.exports = {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
-                    .setDescription(`你必須待在 <#${queue.connection?.channel?.id || clientMember.voice.channelId}> 裡面`)
+                    .setDescription(`你必須待在 <#${queue?.connection?.joinConfig.channelId || clientMember.voice.channelId}> 裡面`)
                     .setEmbedFooter(interaction);
 
                 return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
@@ -87,8 +87,8 @@ module.exports = {
             return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };
 
-        const first = interaction.options.getInteger("first");
-        const second = interaction.options.getInteger("second");
+        const first = interaction.options.getInteger("first", true);
+        const second = interaction.options.getInteger("second", true);
 
         if (first === second) {
             const embed = new EmbedBuilder()

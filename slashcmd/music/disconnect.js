@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
+const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags, VoiceChannel } = require("discord.js");
 const { getVoiceConnection } = require("@discordjs/voice");
 const { getQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
 const { get_emoji } = require("../../utils/rpg.js");
@@ -43,11 +43,14 @@ module.exports = {
         const emoji_cross = await get_emoji("crosS", client);
 
         const vconnection = getVoiceConnection(interaction.guildId);
-        if (vconnection) {
+        if (vconnection?.joinConfig.channelId) {
             if (!queue.connection) queue.connection = vconnection;
 
-            const vchannel = await get_channel(vconnection.joinConfig.channelId, interaction.guild);
-            if (!queue.voiceChannel && vchannel) queue.setConnection(vchannel);
+            if (!queue.voiceChannel) {
+                const vchannel = await get_channel(vconnection.joinConfig.channelId, interaction.guild);
+
+                if (vchannel instanceof VoiceChannel) queue.setVoiceChannel(vchannel);
+            };
         };
 
         if (!queue.connection) {

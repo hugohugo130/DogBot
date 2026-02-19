@@ -1,4 +1,4 @@
-const { Guild, GuildChannel, GuildMember, DMChannel, User, CategoryChannel, NewsChannel, StageChannel } = require("discord.js");
+const { Guild, GuildMember, DMChannel, User } = require("discord.js");
 const { wait_until_ready, wait_for_client } = require("./wait_until_ready.js")
 const DogClient = require("../utils/customs/client.js");
 
@@ -77,7 +77,7 @@ async function get_guild(guildID, client = global._client) {
  * 
  * @param {Guild} guild
  * @param {boolean} fetch_first
- * @returns {Promise<(import("discord.js").GuildBasedChannel | DMChannel | null)[]>}
+ * @returns {Promise<import("discord.js").Channel[]>}
 */
 async function get_channels(guild, fetch_first = false) {
     if (!guild) return [];
@@ -89,7 +89,9 @@ async function get_channels(guild, fetch_first = false) {
     if (!channels && !fetch_first) channels = await guild.channels.fetch();
 
     // @ts-ignore
-    return Array.from(channels.values());
+    return Array
+        .from(channels.values())
+        .filter(e => e !== null);
 };
 
 /**
@@ -97,7 +99,7 @@ async function get_channels(guild, fetch_first = false) {
  * @param {string} channelId
  * @param {Guild | null} [guild=null]
  * @param {boolean} [fetch_first=false]
- * @returns {Promise<import("discord.js").Channel | null | undefined>}
+ * @returns {Promise<import("discord.js").Channel | import("discord.js").VoiceBasedChannel |null | undefined>}
  */
 async function get_channel(channelId, guild = null, fetch_first = false) {
     try {

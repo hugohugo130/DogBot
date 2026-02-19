@@ -96,7 +96,7 @@ module.exports = {
         if (subcommand === "add") {
             if (!prefix) return;
 
-            const guildID = interaction.guildId;
+            const guildID = interaction.guild.id;
 
             const res = await addPrefix(guildID, prefix);
 
@@ -106,7 +106,7 @@ module.exports = {
         } else if (subcommand === "remove") {
             if (!prefix) return;
 
-            const guildID = interaction.guildId;
+            const guildID = interaction.guild.id;
 
             if (reserved_prefixes.includes(prefix)) {
                 return await interaction.reply({ content: "這是一個已保留的前綴，無法移除。", flags: MessageFlags.Ephemeral });
@@ -120,7 +120,7 @@ module.exports = {
         } else if (subcommand === "list") {
             await interaction.deferReply();
 
-            const guildID = interaction.guildId;
+            const guildID = interaction.guild.id;
             const prefixes = reserved_prefixes
                 .concat(await getPrefixes(guildID))
                 .map((prefix, index) => `${index + 1}. ${prefix}`);

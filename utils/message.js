@@ -1,18 +1,25 @@
 const { Collection, Message, User } = require("discord.js");
 
+/**
+ * Check whether a string is digit
+ * @param {string} char
+ * @returns {boolean}
+ */
 function isDigit(char) {
     return /^[0-9]+$/.test(char);
 };
 
 /**
- * 
- * @param {Message} message 
- * @returns {Promise<Collection<import("discord.js").Snowflake, User>>}
+ * Get the users mentioned in a message
+ * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} message
+ * @returns {Promise<Collection<string, User>>}
  */
 async function mentions_users(message) {
     const { get_user } = require("./discord.js");
 
-    const UserIDs = message.content.split(" ")
+    if (!message.content) return new Collection();
+
+    const userIDs = message.content.split(" ")
         .flatMap(e => {
             e = e.trim();
 
@@ -20,18 +27,20 @@ async function mentions_users(message) {
                 e = e.slice(2, -1);
             };
 
-            return e
+            return e;
         })
         .filter(isDigit)
-        .filter(e => e !== "");
+        .filter(e => Boolean(e.trim()));
 
-    const userids = await Promise.all(
-        UserIDs
-            .map(async e => [e, await get_user(e)])
-            .filter(e => e[1] !== null),
+    return new Collection(
+        // @ts-ignore
+        await Promise.all(
+            userIDs.map(
+                /** @param {string} userid */
+                async (userid) => [userid, await get_user(userid)]
+            ),
+        )
     );
-
-    return new Collection(userids);
 };
 
 module.exports = {

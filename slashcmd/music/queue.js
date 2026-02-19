@@ -1,19 +1,18 @@
-const { SlashCommandBuilder } = require("@discordjs/builders");
-const { ChatInputCommandInteraction, SlashCommandSubcommandBuilder, ButtonStyle, BaseInteraction, ActionRowBuilder, ButtonBuilder, MessageFlags } = require("discord.js");
+const { ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandSubcommandBuilder, ButtonStyle, BaseInteraction, ActionRowBuilder, ButtonBuilder, MessageFlags } = require("discord.js");
 
 const { get_emojis } = require("../../utils/rpg.js");
-const { getQueue, MusicQueue, queueListTrackPerPage } = require("../../utils/music/music.js");
+const { getQueue, MusicQueue, queueListTrackPerPage, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
+const { get_lang_data } = require("../../utils/language.js");
 const { embed_default_color, embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder");
 const DogClient = require("../../utils/customs/client");
-const { get_lang_data } = require("../../utils/language.js");
 
 /**
  * Get queue list embed
  * @param {MusicQueue} queue
  * @param {number} [currentPage=1]
- * @param {BaseInteraction} [interaction]
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>]>}
  */
@@ -72,28 +71,30 @@ ${queueString}`)
         embed.setTitle(`${emoji_cross} | ${lang_list_empty}`);
     };
 
-    const row = new ActionRowBuilder()
-        .addComponents(
-            new ButtonBuilder()
-                .setCustomId(`music|any|page|${currentPage - 1}`)
-                .setEmoji("◀️")
-                .setLabel(lang_prev_page)
-                .setDisabled(currentPage <= 1)
-                .setStyle(ButtonStyle.Primary),
+    const row =
+        /** @type {ActionRowBuilder<ButtonBuilder>} */
+        (new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId(`music|any|page|${currentPage - 1}`)
+                    .setEmoji("◀️")
+                    .setLabel(lang_prev_page)
+                    .setDisabled(currentPage <= 1)
+                    .setStyle(ButtonStyle.Primary),
 
-            new ButtonBuilder()
-                .setCustomId(`music|any|page|${currentPage + 1}`)
-                .setEmoji("▶️")
-                .setLabel(lang_next_page)
-                .setDisabled(currentPage >= pages)
-                .setStyle(ButtonStyle.Primary),
+                new ButtonBuilder()
+                    .setCustomId(`music|any|page|${currentPage + 1}`)
+                    .setEmoji("▶️")
+                    .setLabel(lang_next_page)
+                    .setDisabled(currentPage >= pages)
+                    .setStyle(ButtonStyle.Primary),
 
-            new ButtonBuilder()
-                .setCustomId(`music|any|page|${currentPage}`)
-                .setEmoji(emoji_update)
-                .setLabel(lang_update)
-                .setStyle(ButtonStyle.Success),
-        );
+                new ButtonBuilder()
+                    .setCustomId(`music|any|page|${currentPage}`)
+                    .setEmoji(emoji_update)
+                    .setLabel(lang_update)
+                    .setStyle(ButtonStyle.Success),
+            ));
 
     return [embed, row];
 };
@@ -150,6 +151,11 @@ module.exports = {
      * @param {DogClient} client
     */
     execute: async function (interaction, client) {
+        if (!interaction.guildId) return await interaction.reply({
+            embeds: [await youHaveToJoinVC_Embed(interaction, client)],
+            flags: MessageFlags.Ephemeral,
+        });
+
         const queue = getQueue(interaction.guildId);
         const [emoji_cross, emoji_playlist] = await get_emojis(["crosS", "playlist"], client);
 

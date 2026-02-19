@@ -1,9 +1,11 @@
 const { EmbedBuilder: djsEmbedBuilder, MessageFlags, Embed, escapeMarkdown } = require("discord.js");
+const Transport = require("winston-transport")
 const winston = require("winston");
 const path = require("path");
 
 const { time2 } = require("./time.js");
 const config = require("./config.js");
+const DogClient = require("./customs/client.js");
 
 // 全局管理器
 const loggerManager = new Map();
@@ -14,6 +16,7 @@ global.sendQueue = [];
 const DEBUG = false;
 
 // 顏色映射
+/** @type {{ [k: string]: number }} */
 const LEVEL_COLORS = {
     error: 0xEC0C25,
     warn: 0xFFCC00,
@@ -23,6 +26,7 @@ const LEVEL_COLORS = {
 };
 
 // 頻道映射
+/** @type {{ [k: string]: string }} */
 const CHANNEL_MAPPING = {
     error: config.error_channel_id,
     warn: config.warn_channel_id,
@@ -31,20 +35,19 @@ const CHANNEL_MAPPING = {
     verbose: config.log_channel_id
 };
 
-function any(iterable) {
-    if (iterable == null) {
-        throw new TypeError("any() argument must be an iterable");
-    };
+/**
+ *
+ * @param {any[]} array
+ * @returns {boolean}
+ */
+const any = (array) => array.some(e => !!e);
 
-    for (const element of iterable) {
-        if (element) {
-            return true;
-        };
-    };
-
-    return false;
-};
-
+/**
+ * Split string by length
+ * @param {string} text
+ * @param {number} maxLength
+ * @returns {string[]}
+ */
 function splitStringByLength(text, maxLength = 3900) {
     const result = [];
     for (let i = 0; i < text.length; i += maxLength) {
@@ -55,14 +58,22 @@ function splitStringByLength(text, maxLength = 3900) {
 };
 
 // 自定義 Discord Transport
-class DiscordTransport extends winston.Transport {
+class DiscordTransport extends Transport {
+    /**
+     * @param {import("winston-transport").TransportStreamOptions} [opts]
+     */
     constructor(opts) {
         super(opts);
         this.name = "discord";
-        this.level = opts.level || "info";
+        this.level = opts?.level || "info";
         this.levels = winston.config.npm.levels;
     };
 
+    /**
+     * @param {any} info
+     * @param {() => void} [callback]
+     * @returns {any}
+     */
     log(info, callback) {
         setImmediate(() => {
             this.emit("logged", info);
@@ -83,15 +94,23 @@ class DiscordTransport extends winston.Transport {
 };
 
 // 自定義 Backend Transport
-class BackendTransport extends winston.Transport {
+class BackendTransport extends Transport {
+    /**
+     * @param {import("winston-transport").TransportStreamOptions} [opts]
+     */
     constructor(opts) {
         super(opts);
         this.name = "backend";
-        this.level = opts.level || "info";
+        this.level = opts?.level || "info";
         this.levels = winston.config.npm.levels;
         this.channel_id = config.backend_channel_id;
     };
 
+    /**
+     * @param {any} info
+     * @param {() => void} [callback]
+     * @returns {any}
+     */
     log(info, callback) {
         setImmediate(() => {
             this.emit("logged", info);
@@ -117,12 +136,12 @@ const consoleFormat = winston.format.combine(
             (
                 info.message &&
                 typeof info.message === "object" &&
-                info.message.data
+                "data" in info.message
             ) || (
                 config.console_ignore_keywords.filter((keyword) => {
-                    const msg = info.stack || info.message;
+                    let msg = String(info.stack || info.message);
 
-                    return msg?.includes && msg.includes(keyword);
+                    return msg.includes(keyword);
                 }).length
             )
         ) {
@@ -132,14 +151,24 @@ const consoleFormat = winston.format.combine(
         return info;
     })(),
     winston.format.printf(({ timestamp, level, message, module }) => {
-        return `${time2()} [${path.basename(module, ".js")}] - ${level.toUpperCase()} - ${message}`;
+        return `${time2()} [${path.basename(String(module), ".js")}] - ${level.toUpperCase()} - ${message}`;
     }),
 );
 
+/**
+ * 
+ * @param {any} channel
+ * @param {string} level
+ * @param {import("discord.js").ColorResolvable} color
+ * @param {string} logger_name
+ * @param {string} message
+ * @param {number | null} [timestamp=null]
+ * @returns {Promise<void>}
+ */
 async function send_msg(channel, level, color, logger_name, message, timestamp = null) {
     const EmbedBuilder = require("./customs/embedBuilder.js");
 
-    if (message) message = message.replace("```", "");
+    message = message.replace("```", "");
     message = escapeMarkdown(message, {
         codeBlockContent: false,
         codeBlock: true,
@@ -152,21 +181,17 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
         const embed = new EmbedBuilder()
             .setColor(color)
             .setTitle(`${level.toUpperCase()} - ${path.basename(logger_name, ".js")}`)
-            .setDescription(`\`\`\`\n${msg}\n\`\`\``);
+            .setDescription(`\`\`\`\n${msg}\n\`\`\``)
+            .setTimestamp(timestamp);
 
         embeds.push(embed);
     };
 
-    if (timestamp) {
-        for (const embed of embeds) {
-            embed.setTimestamp(timestamp);
-        };
-    };
-
-    return await channel.send({
+    await channel.send({
         embeds,
         flags: MessageFlags.SuppressNotifications,
     });
+    return;
 };
 
 /**
@@ -175,23 +200,27 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
  * @returns {string | string[]}
  */
 function getCallerModuleName(depth = 4) {
+    const unknown_word = "unknown";
+
     if (!depth) {
         const err = new Error();
 
-        return err.stack || err;
+        return err.stack || unknown_word;
     };
 
     if (depth === "list") {
         const err = new Error();
 
         const callers = [];
-        const stackLines = err.stack.split("\n");
+        const stackLines = err.stack?.split("\n");
+        if (!stackLines) return unknown_word;
+
         for (let i = 1; i < stackLines.length; i++) {
             const callerLine = stackLines[i];
             const match = callerLine.match(/\((.*):(\d+):(\d+)\)$/) || callerLine.match(/(.*):(\d+):(\d+)$/);
             if (match) {
                 const fullPath = match[1];
-                const fileName = fullPath.split(/[\\/]/).pop();
+                const fileName = fullPath.split(/[\\/]/).pop() || unknown_word;
                 const lineNumber = match[2];
                 const columnNumber = match[3];
                 callers.push(`${fileName.replace(".js", "")}:${lineNumber}:${columnNumber}`);
@@ -201,11 +230,13 @@ function getCallerModuleName(depth = 4) {
         return callers;
     };
 
-    let res = "unknown";
+    let res = unknown_word;
     try {
         const err = new Error();
 
-        const stackLines = err.stack.split("\n");
+        const stackLines = err.stack?.split("\n");
+        if (!stackLines) return unknown_word;
+
         const callerLine = stackLines[depth] || stackLines[stackLines.length - 1];
 
         const match = callerLine.match(/\((.*):\d+:\d+\)$/) ||
@@ -213,40 +244,48 @@ function getCallerModuleName(depth = 4) {
 
         if (match) {
             const fullPath = match[1];
-            const fileName = fullPath.split(/[\\/]/).pop();
+            const fileName = fullPath.split(/[\\/]/).pop() || unknown_word;
             res = fileName.replace(".js", "");
-        }
+        };
     } catch {
-        res = "unknown"
+        res = unknown_word;
     };
 
-    if (res !== "unknown") {
+    if (res !== unknown_word) {
         const originalPrepareStackTrace = Error.prepareStackTrace;
         let callerFile;
 
         try {
             const err = new Error();
+            if (!err.stack) return unknown_word;
+
             Error.prepareStackTrace = (err, stack) => stack; // Override to get stack frames
-            const currentFile = err.stack.shift().getFileName(); // File where getCallerFile is defined
+
+            // @ts-ignore
+            const currentFile = err.stack.shift().getFileName();
 
             while (err.stack.length) {
+                // @ts-ignore
                 callerFile = err.stack.shift().getFileName();
+
                 if (currentFile !== callerFile) { // Find the first different file in the stack
                     break;
-                }
+                };
             }
         } catch (e) {
-            callerFile = "unknown"
+            callerFile = unknown_word;
         } finally {
             Error.prepareStackTrace = originalPrepareStackTrace; // Restore original
         };
+
         return callerFile;
     };
+
     return res;
-}
+};
 
 /**
- * 
+ * Get the logger instance for a file
  * @param {{ name?: string, backend?: boolean, nodc?: boolean }} [options={}]
  * @returns {winston.Logger}
  */
@@ -269,6 +308,7 @@ function get_logger(options = {}) {
     if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger with backend=${backend}, nodc=${nodc}, name=${name}, call from ${getCallerModuleName(4)}`);
 
     // 創建 transports
+    /** @type {winston.transport[]} */
     const transports = [
         new winston.transports.Console({
             format: consoleFormat,
@@ -309,7 +349,10 @@ function get_logger(options = {}) {
     return logger;
 };
 
-// 處理發送佇列
+/**
+ * 處理發送佇列
+ * @param {DogClient} client
+ */
 async function process_send_queue(client) {
     const EmbedBuilder = require("./customs/embedBuilder.js");
 
@@ -326,7 +369,7 @@ async function process_send_queue(client) {
             const timestamp = Date.parse(info.timestamp);
 
             const channel = await client.channels.fetch(channel_id);
-            if (!channel) {
+            if (!channel || !("send" in channel)) {
                 global.sendQueue.shift();
                 continue;
             };

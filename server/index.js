@@ -1,7 +1,8 @@
 const express = require("express");
+const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
-const multer = require("multer");
+const util = require("util");
 const app = express();
 
 const PORT = 3001;
@@ -18,9 +19,14 @@ const upload = multer({ storage });
 
 function time() {
     const now = new Date();
-    const pad = n => n.toString().padStart(2, "0");
+    const pad =
+        /**
+         * @param {number} n
+         */
+        (n) => n.toString().padStart(2, "0");
+
     return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-}
+};
 
 app.get("/verify", (req, res) => {
     return res.status(200).json({});
@@ -34,7 +40,10 @@ app.get("/files/:filename/last-modified", (req, res) => {
     const filePath = path.join(FILES_DIR, req.params.filename);
     if (!fs.existsSync(filePath)) return res.status(404).json({ error: "File not found" });
     fs.stat(filePath, (err, stats) => {
-        if (err) return res.status(500).json({ error: errorStack });
+        if (err) {
+            const errorStack = util.inspect(err, { depth: null });
+            return res.status(500).json({ error: errorStack });
+        };
         res.json({ lastModified: stats.mtime.getTime() });
     });
 });
@@ -45,7 +54,10 @@ app.get("/files", (req, res) => {
 
     console.log(`[${time()}] ${action}：GET /files - by ${req.ip}`);
     fs.readdir(FILES_DIR, (err, files) => {
-        if (err) return res.status(500).json({ error: errorStack });
+        if (err) {
+            const errorStack = util.inspect(err, { depth: null });
+            return res.status(500).json({ error: errorStack });
+        };
         res.json({ files });
     });
 });
@@ -80,8 +92,11 @@ app.delete("/files/:filename", (req, res) => {
     console.log(`[${time()}] ${action}：DELETE /files/${req.params.filename} - by ${req.ip}`);
     const filePath = path.join(FILES_DIR, req.params.filename);
     if (!fs.existsSync(filePath)) return res.status(404).json({ error: "File not found" });
-    fs.unlink(filePath, err => {
-        if (err) return res.status(500).json({ error: errorStack });
+    fs.unlink(filePath, (err) => {
+        if (err) {
+            const errorStack = util.inspect(err, { depth: null });
+            return res.status(500).json({ error: errorStack });
+        };
         res.json({ message: "File deleted" });
     });
 });
@@ -98,7 +113,10 @@ app.post("/mkdir", (req, res) => {
         fs.mkdirSync(fullPath, { recursive: true });
         res.json({ message: `Directory created: ${fullPath}` });
     } catch (err) {
-        res.status(500).json({ error: errorStack });
+        if (err) {
+            const errorStack = util.inspect(err, { depth: null });
+            return res.status(500).json({ error: errorStack });
+        };
     }
 });
 
@@ -117,8 +135,11 @@ app.post("/copy", (req, res) => {
         fs.copyFileSync(srcPath, dstPath);
         res.json({ message: `File copied from ${srcPath} to ${dstPath}` });
     } catch (err) {
-        res.status(500).json({ error: errorStack });
-    }
+        if (err) {
+            const errorStack = util.inspect(err, { depth: null });
+            return res.status(500).json({ error: errorStack });
+        };
+    };
 });
 
 // 伺服器 啟動！

@@ -20,8 +20,8 @@ module.exports = {
             "zh-CN": "暂停音乐播放"
         }),
     /**
-     * 
-     * @param {ChatInputCommandInteraction} interaction 
+     *
+     * @param {ChatInputCommandInteraction} interaction
      * @param {DogClient} client
      */
     async execute(interaction, client) {
@@ -29,6 +29,8 @@ module.exports = {
             ? interaction.member.voice?.channel
             : null;
         const guildId = interaction.guild?.id;
+
+        if (!guildId) return;
 
         if (!voiceChannel) {
             return await interaction.reply({
@@ -53,20 +55,20 @@ module.exports = {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
-                .setDescription(`你必須待在 <#${queue.connection?.joinConfig.channelId || queue.voiceChannel.id}> 裡面`)
+                .setDescription(`你必須待在 <#${queue?.connection?.joinConfig.channelId || queue?.voiceChannel?.id}> 裡面`)
                 .setEmbedFooter(interaction);
 
             return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
-        if (queue.isPaused()) {
+        if (queue?.isPaused()) {
             await Promise.all([
                 queue.unpause(),
                 interaction.reply(`${emoji_play} | 繼續播放`),
             ]);
         } else {
             await Promise.all([
-                queue.pause(),
+                queue?.pause(),
                 interaction.reply(`${emoji_pause} | 暫停!`),
             ]);
         };

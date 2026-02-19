@@ -9,15 +9,25 @@ const DogClient = require("../../../utils/customs/client.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
 /**
+ * @typedef FarmData
+ * @property {number} amount
+ * @property {string} hoe - Item ID of the hoe
+ * @property {number} start
+ * @property {number} endsAt
+ */
+
+/**
  *
  * @param {User} user
- * @param {BaseInteraction} interaction
- * @param {DogClient} client
- * @returns {Promise<EmbedBuilder>}
+ * @param {BaseInteraction | null} [interaction=null]
+ * @param {DogClient | null} [client]
+ * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>]>}
  */
 async function get_farm_info_embed(user, interaction = null, client = global._client) {
-    const [emoji_farmer, emoji_hoe, emoji_update] = await get_emojis(["farmer", "hoe", "update"], client);
-    const farm_data = await load_farm_data(user.id);
+    const [farm_data, [emoji_farmer, emoji_hoe, emoji_update]] = await Promise.all([
+        load_farm_data(user.id),
+        get_emojis(["farmer", "hoe", "update"], client),
+    ]);
 
     let waterAt = farm_data.waterAt;
 
@@ -53,8 +63,10 @@ async function get_farm_info_embed(user, interaction = null, client = global._cl
         .setLabel("更新")
         .setStyle(ButtonStyle.Primary);
 
-    const row = new ActionRowBuilder()
-        .addComponents(updateButton);
+    const row =
+        /** @type {ActionRowBuilder<ButtonBuilder>} */
+        (new ActionRowBuilder()
+            .addComponents(updateButton));
 
     return [embed, row];
 };
@@ -78,6 +90,7 @@ function get_harvest_items(amount) {
         throw new Error('amount must be an integer');
     };
 
+    /** @type {{ [k: string]: number }} */
     const result = {};
 
     // 預先計算加權選擇的數據
@@ -229,10 +242,10 @@ module.exports = {
     /**
      *
      * @param {ChatInputCommandInteraction} interaction
+     * @param {DogClient} client
      * @returns {Promise<any>}
      */
-    async execute(interaction) {
-        const client = interaction.client;
+    async execute(interaction, client) {
         const user = interaction.user;
         const userId = user.id;
         const subcommand = interaction.options.getSubcommand();
@@ -242,7 +255,7 @@ module.exports = {
         const rpg_data = await load_rpg_data(userId);
         const [farm_data, [wrongJobEmbed, row]] = await Promise.all([
             load_farm_data(userId),
-            wrong_job_embed(rpg_data, "/farm", userId, interaction, interaction.client),
+            wrong_job_embed(rpg_data, "/farm", userId, interaction, client),
         ]);
 
         if (wrongJobEmbed) return await interaction.reply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
@@ -260,7 +273,7 @@ module.exports = {
         switch (subcommand) {
             case "plant": {
                 const amount = interaction.options.getInteger("amount") ?? 1;
-                const hoe = interaction.options.getString("hoe");
+                const hoe = interaction.options.getString("hoe", true);
 
                 const iron_hoe = hoe === get_id_of_name("鐵鋤", "iron_hoe");
                 const need_hunger = iron_hoe ? 5 * amount : 0;

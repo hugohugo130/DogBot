@@ -3,21 +3,26 @@ const { EmbedBuilder: djsEmbedBuilder, BaseInteraction, Locale } = require("disc
 const DogClient = require("./client.js");
 
 class EmbedBuilder extends djsEmbedBuilder {
+    /**
+     *
+     * @param {import("discord.js").EmbedData | import("discord.js").APIEmbed} [data]
+     */
     constructor(data) {
         super(data);
     };
 
     /**
      * 
-     * @param {BaseInteraction | string | null} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
-     * @param {{text?: string, rpg_data?: object | string | null, force?: boolean, client?: DogClient}} [param1]
-     * @remark 不建議給予user id給rpg_data函數，因為讀取檔案會阻塞主執行緒
-     * @remark rpg_data 為 rpg_data 或 user id (顯示剩餘飽食度)
+     * @param {BaseInteraction | string | null | { text?: string, rpg_data?: import("../config.js").RpgDatabase | null, force?: boolean, client?: DogClient }} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
+     * @param {Object} options
+     * @param {string} [options.text=""]
+     * @param {import("../config.js").RpgDatabase | null} [options.rpg_data=null]
+     * @param {boolean} [options.force=false]
+     * @param {DogClient | null} [options.client]
      * @remark force: text參數是否不會增加飽食度或機器犬文字
      * @returns {EmbedBuilder}
      */
     setEmbedFooter(interaction = null, { text = "", rpg_data = null, force = false, client = global._client } = {}) {
-        const { load_rpg_dataSync } = require("../file.js");
         const { get_lang_data } = require("../language.js");
 
         if (interaction && typeof interaction === "object" && !(interaction instanceof BaseInteraction)) { // interaction應為config
@@ -38,19 +43,10 @@ class EmbedBuilder extends djsEmbedBuilder {
             logger.warn(`[DEPRECATED] give rpg_data or user id instead add to the text\ncalled from ${getCallerModuleName(null)}`);
         };
 
-        let data;
-        if (rpg_data) {
-            if (rpg_data instanceof String) { // userid
-                data = load_rpg_dataSync(rpg_data);
-            } else if (rpg_data instanceof Object) { // rpg_data
-                data = rpg_data;
-            };
-        };
+        const data = rpg_data;
 
-        let locale;
-        if (interaction instanceof String) locale = interaction;
-        else if (interaction?.locale) locale = interaction.locale;
-        else locale = "zh-TW"; // default
+        let locale = "zh-TW";
+        if (interaction instanceof BaseInteraction) locale = interaction.locale;
 
         if (!force && data) text += `飽食度剩餘 ${data.hunger}`;
         if (!force) text += `\n${get_lang_data(locale, "embed", "footer")}`;
@@ -58,7 +54,7 @@ class EmbedBuilder extends djsEmbedBuilder {
 
         this.setFooter({
             text,
-            iconURL: client?.user?.displayAvatarURL({ dynamic: true }),
+            iconURL: client?.user?.displayAvatarURL(),
         });
 
         return this;
@@ -66,16 +62,16 @@ class EmbedBuilder extends djsEmbedBuilder {
 
     /**
      *
-     * @param {string} author - defaults to "", and convert to client.name
      * @param {DogClient} client
+     * @param {string} [author=""] - defaults to "", and convert to client.name
      * @returns {EmbedBuilder}
      */
-    setEmbedAuthor(author = "", client = global._client) {
+    setEmbedAuthor(client, author = "") {
         if (!author) author = client.name;
 
         this.setAuthor({
             name: author,
-            iconURL: client?.user?.displayAvatarURL({ dynamic: true }),
+            iconURL: client?.user?.displayAvatarURL(),
         });
 
         return this;

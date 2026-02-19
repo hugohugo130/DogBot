@@ -1,14 +1,24 @@
 const path = require("path");
 const util = require("util");
 
-const { wait_until_ready } = require("./wait_until_ready.js");
+const { wait_until_ready, wait_for_client } = require("./wait_until_ready.js");
 const { asleep } = require("./sleep.js");
 const { get_logger } = require("./logger.js");
 const { readSchedule } = require("./file.js");
+const DogClient = require("./customs/client.js");
 
 const logger = get_logger({ nodc: true });
+
+/** @type {{ [k: string]: boolean }} */
 let run_lock = {};
 
+/**
+ * Run a function intervally
+ * @param {number} per_sec
+ * @param {Function} execute
+ * @param {string} file
+ * @param  {...any} args
+ */
 async function interval(per_sec, execute, file, ...args) {
     while (true) {
         const start = Date.now();
@@ -33,16 +43,22 @@ async function interval(per_sec, execute, file, ...args) {
     };
 };
 
-// function setup_schedule(spec, execute, client = null, ...args) {
+/**
+ * Set up a schedule
+ * @param {number} per_sec
+ * @param {Function} execute
+ * @param {string} file
+ * @param {DogClient | null} [client]
+ * @param  {...any} args
+ */
 async function setup_schedule(per_sec, execute, file, client = null, ...args) {
-    if (!client) {
-        client = await wait_until_ready();
-    };
+    if (!client) client = await wait_for_client();
 
     setTimeout(async () => {
         await interval(per_sec, execute, file, client, ...args)
     }, 0);
 
+    // #region [worker]
     // const workerScript = `
     //     parentPort.once("message", async ({ per_sec, args }) => {
     //         await interval(per_sec, require("${__filename}").scheduleFunc, ...args);
@@ -51,14 +67,23 @@ async function setup_schedule(per_sec, execute, file, client = null, ...args) {
 
     // const worker = new Worker(workerScript, { eval: true });
     // worker.postMessage({ per_sec, args: [client, ...args] });
+    // #endregion
 
 
-
+    // #region [scheduleJob]
     // schedule.scheduleJob(spec, async function () {
     //     await execute(client, ...args);
     // });
+    // #endregion
 };
 
+/**
+ *
+ * @param {string} basename
+ * @param {number} timeout
+ * @param {number} check_per
+ * @returns {Promise<boolean>}
+ */
 async function wait_for_lock(basename, timeout = 5000, check_per = 100) {
     const start = Date.now();
 
@@ -67,12 +92,20 @@ async function wait_for_lock(basename, timeout = 5000, check_per = 100) {
             logger.warn(`等待鎖 ${basename} 超時`);
             return false;
         };
+
         await asleep(check_per);
     };
 
     return true;
 };
 
+/**
+ * A function to run schedule with lock (run once)
+ * @param {DogClient} client - Discord Client
+ * @param {string} file - schedule file path
+ * @param {string} per - unit of interval of the schedule
+ * @returns {Promise<void>}
+ */
 async function scheduleFunc(client, file, per) {
     const basename = path.basename(file, ".js");
 
@@ -99,7 +132,12 @@ async function scheduleFunc(client, file, per) {
     };
 };
 
-async function run_schedule(client) {
+/**
+ * Run all schedules
+ * @param {DogClient | null} [client]
+ * @returns {Promise<number>} Number of schedule set up
+ */
+async function run_schedule(client=global._client) {
     const [everysec, everymin, every5min] = await readSchedule();
 
     for (const file of everysec) {

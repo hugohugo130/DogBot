@@ -1,33 +1,7 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, AttachmentBuilder, FileBuilder, MessageFlags, TextDisplayBuilder, ContainerBuilder } = require("discord.js");
 
 const { load_rpg_data, writeJson, join_temp_folder } = require("../../../../utils/file.js");
-const { embed_default_color, admins } = require("../../../../utils/config.js");
-const EmbedBuilder = require("../../../../utils/customs/embedBuilder.js");
-
-// function split_msg(content, split = 2000) {
-//     let messages = [];
-//     for (let i = 0; i < content.length; i += split) {
-//         messages.push(content.slice(i, i + split));
-//     };
-
-//     return messages;
-// };
-
-// async function show_transactions(userid) {
-//     const { transactions = [] } = await load_rpg_data(userid);
-
-//     /* transactions 列表中的每個字典應該包含:
-//     timestamp: 時間戳記 (Unix timestamp) 單位: 秒
-//     detail: 交易詳情 (字串)
-//     amount: 金額 (數字)
-//     type: 交易類型 (字串，例如: "出售物品所得"、"購買物品付款" 等)
-//     */
-//     return transactions
-//         .slice(-10)
-//         .map(({ timestamp, originalUser, targetUser, amount, type }) =>
-//             `- <t:${timestamp}:R> ${originalUser} \`>\` ${targetUser} \`${amount.toLocaleString()}$\` (${type})`
-//         ).join("\n");
-// };
+const { admins } = require("../../../../utils/config.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -65,6 +39,8 @@ module.exports = {
         await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
         const user = interaction.options.getUser("user");
+        if (!user) return;
+
         const rpg_data = await load_rpg_data(user.id);
 
         /*
@@ -104,7 +80,6 @@ module.exports = {
 
         await interaction.editReply({
             content: null,
-            embeds: null,
             files: [attachment],
             components: [container],
             flags: MessageFlags.IsComponentsV2,

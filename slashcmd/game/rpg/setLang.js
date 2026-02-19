@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction } = require("discord.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 
 module.exports = {
@@ -15,6 +15,11 @@ module.exports = {
             "zh-CN": "设置机器人显示语言",
             "en-US": "set bot display language",
         }),
+    /**
+     *
+     * @param {ChatInputCommandInteraction} interaction
+     * @returns {Promise<any>}
+     */
     async execute(interaction) {
         // const { get_emoji } = require("../../../utils/rpg.js");
 

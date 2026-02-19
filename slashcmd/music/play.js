@@ -1,11 +1,11 @@
-const { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits } = require("discord.js");
+const { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits, TextChannel, ThreadChannel } = require("discord.js");
 const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
 const { Soundcloud } = require("soundcloud.ts");
 
 const { getNowPlayingEmbed } = require("./nowplaying.js");
 const { generateSessionId } = require("../../utils/random.js");
 const { get_emojis, get_emoji } = require("../../utils/rpg.js");
-const { search_until, IsValidURL, getQueue, youHaveToJoinVC_Embed, fetchAudioStream } = require("../../utils/music/music.js");
+const { search_until, IsValidURL, getQueue, youHaveToJoinVC_Embed, fetchAudioStream, fixStructure } = require("../../utils/music/music.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 const { embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
@@ -95,12 +95,18 @@ module.exports = {
         const play_audio_url = interaction.options.getBoolean("play_audio_url") ?? false;
         // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
 
-        const voiceChannel = interaction.member && 'voice' in interaction.member
+        const voiceChannel = (
+            interaction.member
+            && "voice" in interaction.member
+            && interaction.member.voice?.channel
+            && "speakable" in interaction.member.voice?.channel
+        )
             ? interaction.member.voice?.channel
             : null;
+
         const guildId = interaction.guildId;
 
-        if (!voiceChannel?.joinable || !voiceChannel?.speakable) {
+        if (!voiceChannel?.joinable || !voiceChannel?.speakable || !guildId) {
             return await interaction.reply({
                 embeds: [await youHaveToJoinVC_Embed(interaction, client)],
                 flags: MessageFlags.Ephemeral,
@@ -141,7 +147,7 @@ module.exports = {
         try {
             await fetchAudioStream(query);
         } catch (error) {
-            audioerr = error.stack;
+            audioerr = error instanceof Error ? error.stack : null;
         };
 
         if (will_play_audio_url && audioerr) {
@@ -158,13 +164,20 @@ module.exports = {
         if (tracks.length === 0) return await interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
 
         if (tracks.length === 1) {
-            const track = tracks[0];
+            const track = (await fixStructure(tracks))[0];
 
             const queue = getQueue(guildId);
 
             if (!queue.voiceChannel) queue.setVoiceChannel(voiceChannel);
-            if (!queue.textChannel && interaction.channel) queue.setTextChannel(interaction.channel);
-            if (!queue.connection) {
+            if (
+                !queue.textChannel
+                && interaction.channel
+                && (
+                    interaction.channel instanceof TextChannel
+                    || interaction.channel instanceof ThreadChannel
+                )
+            ) queue.setTextChannel(interaction.channel);
+            if (!queue.connection && interaction.guild) {
                 const connection = getVoiceConnection(guildId) || joinVoiceChannel({
                     channelId: voiceChannel.id,
                     guildId: guildId,
@@ -190,19 +203,21 @@ module.exports = {
         const reserved_length = 10;
         const trackSessionID = generateSessionId(optionValueLengthLimit - 1 - maxTrackIdLength - reserved_length);
 
-        const selectMenu = new ActionRowBuilder()
-            .addComponents(
-                new StringSelectMenuBuilder()
-                    .setCustomId(`play-s|${interaction.user.id}`)
-                    .setPlaceholder("選擇音樂")
-                    .addOptions(
-                        ...tracks.map((track) => ({
-                            label: track.title.slice(0, 100),
-                            description: `${track.author} · ${formatMinutesSeconds(track.duration)}`.slice(0, 100),
-                            value: `${trackSessionID}|${track.id}`
-                        }))
-                    ),
-            );
+        const selectMenu =
+            /** @type {ActionRowBuilder<StringSelectMenuBuilder>} */
+            (new ActionRowBuilder()
+                .addComponents(
+                    new StringSelectMenuBuilder()
+                        .setCustomId(`play-s|${interaction.user.id}`)
+                        .setPlaceholder("選擇音樂")
+                        .addOptions(
+                            ...tracks.map((track) => ({
+                                label: track.title.slice(0, 100),
+                                description: `${track.author} · ${formatMinutesSeconds(track.duration)}`.slice(0, 100),
+                                value: `${trackSessionID}|${track.id}`
+                            }))
+                        ),
+                ));
 
         client.musicTrackSession.set(trackSessionID, Object.fromEntries(
             tracks.map((track) => {

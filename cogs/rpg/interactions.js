@@ -1,6 +1,5 @@
 const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
-const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, ButtonStyle, ButtonBuilder, ButtonInteraction, StringSelectMenuInteraction, BaseInteraction, ContainerBuilder, SectionBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize } = require("discord.js");
-const { Soundcloud } = require("soundcloud.ts");
+const { Events, MessageFlags, ActionRowBuilder, StringSelectMenuBuilder, ActionRow, User, ButtonStyle, ButtonBuilder, ButtonInteraction, StringSelectMenuInteraction, BaseInteraction, ContainerBuilder, SectionBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize, DMChannel, Message, PartialGroupDMChannel, StageChannel, VoiceChannel, TextChannel, ThreadChannel } = require("discord.js");
 const util = require("util");
 
 const {
@@ -74,7 +73,7 @@ const {
 } = require("../../utils/random.js");
 const {
     getCookingContainer,
-    getCookingResultContainer
+    getCookingResultContainer,
 } = require("../../slashcmd/game/rpg/cook.js");
 const {
     getBotInfoEmbed,
@@ -82,9 +81,11 @@ const {
 const {
     get_lang_data,
 } = require("../../utils/language.js");
+const {
+    wait_for_client,
+} = require("../../utils/wait_until_ready.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
-const { wait_for_client } = require("../../utils/wait_until_ready.js");
 
 const logger = get_logger();
 
@@ -510,6 +511,7 @@ const help = {
     },
 };
 
+/** @type {{ [key: string]: {title?: string, description?: string}}} */
 const special_cancel = {
     marry: {
         title: "{crosS} 求婚被拒絕了",
@@ -555,10 +557,11 @@ function check_help_rpg_info() {
  * Get the embed of guile information of a category
  * @param {ValidGuideCategory} category
  * @param {User} user
+ * @param {DogClient} client
  * @param {BaseInteraction | null} [interaction=null]
- * @returns {[EmbedBuilder, ActionRowBuilder]}
+ * @returns {[EmbedBuilder, ActionRowBuilder<StringSelectMenuBuilder> | null]}
  */
-function get_help_embed(category, user, interaction = null) {
+function get_help_embed(category, user, client, interaction = null) {
     if (!(category in help.group)) throw new Error(`${category} is not a valid category`);
 
     const options = Object.entries(help.group[category])
@@ -570,7 +573,11 @@ function get_help_embed(category, user, interaction = null) {
             }];
         });
 
-    const row = new ActionRowBuilder();
+    const embed = new EmbedBuilder()
+        .setColor(embed_default_color)
+        .setTitle(help.name[category])
+        .setEmbedFooter(interaction)
+        .setEmbedAuthor(client);
 
     if (options.length > 0) {
         const selectMenu = new StringSelectMenuBuilder()
@@ -578,16 +585,15 @@ function get_help_embed(category, user, interaction = null) {
             .setPlaceholder(`指令教學`)
             .addOptions(...options);
 
-        row.addComponents(selectMenu);
+        const row =
+            /** @type {ActionRowBuilder<StringSelectMenuBuilder>} */
+            (new ActionRowBuilder()
+                .setComponents(selectMenu));
+
+        return [embed, row];
     };
 
-    const embed = new EmbedBuilder()
-        .setColor(embed_default_color)
-        .setTitle(help.name[category])
-        .setEmbedFooter(interaction)
-        .setEmbedAuthor();
-
-    return [embed, row];
+    return [embed, null];
 };
 
 /**
@@ -675,9 +681,9 @@ async function get_help_command(category, command_name, guildID, interaction = n
 module.exports = {
     name: Events.InteractionCreate,
     /**
-     * 
-     * @param {DogClient} client 
-     * @param {ButtonInteraction | StringSelectMenuInteraction} interaction 
+     *
+     * @param {DogClient} client
+     * @param {ButtonInteraction | StringSelectMenuInteraction} interaction
      * @returns {Promise<any>}
      */
     execute: async function (client, interaction) {
@@ -686,7 +692,7 @@ module.exports = {
 
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
-            const { message, user, guild } = interaction;
+            const { message, user, guild, channel } = interaction;
             const [interactionCategory, originalUserId, ...otherCustomIDs] = interaction.customId.split("|");
 
             const locale = interaction.locale;
@@ -712,14 +718,16 @@ module.exports = {
 
             switch (interactionCategory) {
                 case "rpg_transaction": {
-                    await interaction.deferUpdate();
-                    const embed = await get_transaction_embed(interaction);
+                    const [_, embed] = await Promise.all([
+                        interaction.deferUpdate(),
+                        get_transaction_embed(interaction),
+                    ]);
 
                     await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
                     break;
                 }
                 case "help": {
-                    const [_, __, category, cmd = null] = interaction.customId.split("|");
+                    const [category, cmd = null] = otherCustomIDs;
 
                     if (!(interaction instanceof StringSelectMenuInteraction) || !guild) return;
 
@@ -728,6 +736,7 @@ module.exports = {
                     const choseValue = interaction.values[0];
 
                     let embed = null;
+
                     let row = null;
 
                     if (category) {
@@ -737,7 +746,7 @@ module.exports = {
                     } else {
                         if (!isValidGuideCategory(choseValue)) throw new Error(`${category} is not a valid guide category`);
 
-                        [embed, row] = get_help_embed(choseValue, user, interaction);
+                        [embed, row] = get_help_embed(choseValue, user, client, interaction);
                     };
 
                     await interaction.followUp({
@@ -748,11 +757,11 @@ module.exports = {
                     break;
                 }
                 case "pay_confirm": {
-                    let [userId, targetUserId, amount_str] = otherCustomIDs;
+                    const [targetUserId, amount_str] = otherCustomIDs;
 
                     const [_, rpg_data, target_user_rpg_data, [emoji_cross, emoji_top]] = await Promise.all([
                         interaction.deferUpdate(),
-                        load_rpg_data(userId),
+                        load_rpg_data(user.id),
                         load_rpg_data(targetUserId),
                         get_emojis(["crosS", "top"], client),
                     ]);
@@ -773,7 +782,7 @@ module.exports = {
                     rpg_data.money = remove_money({
                         rpg_data,
                         amount: amount,
-                        originalUser: `<@${userId}>`,
+                        originalUser: `<@${user.id}>`,
                         targetUser: `<@${targetUserId}>`,
                         type: `付款給`,
                     });
@@ -781,13 +790,13 @@ module.exports = {
                     target_user_rpg_data.money = add_money({
                         rpg_data: target_user_rpg_data,
                         amount: amount,
-                        originalUser: `<@${userId}>`,
+                        originalUser: `<@${user.id}>`,
                         targetUser: `<@${targetUserId}>`,
                         type: `付款給`,
                     });
 
                     await Promise.all([
-                        save_rpg_data(userId, rpg_data),
+                        save_rpg_data(user.id, rpg_data),
                         save_rpg_data(targetUserId, target_user_rpg_data),
                     ]);
 
@@ -825,6 +834,8 @@ module.exports = {
                     break;
                 }
                 case "rpg_privacy_menu": {
+                    if (!(interaction instanceof StringSelectMenuInteraction)) return;
+
                     const [_, rpg_data, [emoji_shield, emoji_backpack, emoji_pet]] = await Promise.all([
                         interaction.deferUpdate(),
                         load_rpg_data(user.id),
@@ -832,13 +843,16 @@ module.exports = {
                     ]);
 
                     const privacy = interaction.values;
+
                     rpg_data.privacy = privacy;
                     rpg_data.privacy.sort((a, b) => {
+                        /** @type {{[key: string]: number}} */
                         const order = {
                             [PrivacySettings.Money]: 0,
                             [PrivacySettings.Inventory]: 1,
                             [PrivacySettings.Partner]: 2
                         };
+
                         return order[a] - order[b];
                     });
 
@@ -891,22 +905,25 @@ module.exports = {
                             }
                         ]);
 
-                    const row = new ActionRowBuilder()
-                        .addComponents(selectMenu);
+                    const row = /** @type {ActionRowBuilder<StringSelectMenuBuilder>} */
+                        (new ActionRowBuilder()
+                            .addComponents(selectMenu));
 
                     return await interaction.editReply({ embeds: [embed], components: [row] });
                 }
                 case "choose_command": {
+                    const [command] = otherCustomIDs;
+
+                    if (!guild || channel instanceof DMChannel) return;
+
                     const [_, prefix] = await Promise.all([
                         interaction.deferUpdate(),
-                        firstPrefix(interaction.guild.id),
+                        firstPrefix(guild.id),
                     ]);
 
-                    const [__, command] = otherCustomIDs;
-
-                    const message = new MockMessage(`${prefix}${command}`, interaction.channel, interaction.user, interaction.guild);
+                    const message = new MockMessage(`${prefix}${command}`, channel, user, guild);
                     let response = await rpg_handler({ client: client, message, d: true, mode: 1 });
-                    if (!response) return;
+                    if (!response || response instanceof Message) return;
 
                     response.components ??= [];
 
@@ -914,23 +931,25 @@ module.exports = {
                     break;
                 }
                 case "ls": {
-                    const userId = otherCustomIDs[0];
+                    if (!guild) return;
 
                     const [_, prefix, rpg_data] = await Promise.all([
                         interaction.deferReply({ flags: MessageFlags.Ephemeral }),
-                        firstPrefix(interaction.guild.id),
-                        load_rpg_data(userId),
+                        firstPrefix(guild.id),
+                        load_rpg_data(user.id),
                     ]);
 
-                    const message = new MockMessage(`${prefix}ls`, interaction.message.channel, interaction.user, interaction.guild);
+                    const message = new MockMessage(`${prefix}ls`, channel, interaction.user, interaction.guild);
                     const res = await ls_function({
                         client: client,
                         message,
                         rpg_data,
                         mode: 1,
                         PASS: true,
-                        interaction: interaction
+                        interaction,
                     });
+
+                    if (res instanceof Message) return;
 
                     await interaction.followUp(res);
                     break;
@@ -938,64 +957,79 @@ module.exports = {
                 case "sell": {
                     const [_, rpg_data] = await Promise.all([
                         interaction.deferUpdate(),
-                        load_rpg_data(userId),
+                        load_rpg_data(user.id),
                     ]);
 
-                    let [userId, item_id, price, amount, total_price] = otherCustomIDs;
+                    const [item_id, amount_str, total_price_str] = otherCustomIDs;
 
-                    price = parseFloat(price);
-                    amount = parseInt(amount);
-                    total_price = Math.round(parseFloat(total_price));
+                    const amount = parseInt(amount_str);
+                    const total_price = Math.round(parseFloat(total_price_str));
 
                     rpg_data.inventory[item_id] -= amount;
                     rpg_data.money = add_money({
                         rpg_data,
                         amount: total_price,
                         originalUser: "系統",
-                        targetUser: `<@${userId}>`,
+                        targetUser: `<@${user.id}>`,
                         type: "出售物品所得",
                     })
 
-                    await save_rpg_data(userId, rpg_data);
+                    const emoji_trade = await Promise.all([
+                        get_emoji("trade", client),
+                        save_rpg_data(user.id, rpg_data),
+                    ]);
 
-                    const emoji_trade = await get_emoji("trade", client);
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
                         .setTitle(`${emoji_trade} | 成功售出了 ${amount} 個 ${get_name_of_id(item_id)}`)
                         .setEmbedFooter(interaction);
 
-                    await interaction.editReply({ embeds: [embed], components: [] });
+                    await interaction.editReply({ content: "", embeds: [embed], components: [] });
                     break;
                 }
                 case "cancel": {
                     const emoji_cross = await get_emoji("crosS", client);
 
-                    const [_, special = null] = otherCustomIDs;
+                    const [special = null] = otherCustomIDs;
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 操作取消`)
                         .setEmbedFooter(interaction);
 
-                    const data = special_cancel[special];
+                    const data = special
+                        ? special_cancel[special]
+                        : null;
+
                     if (data) {
-                        const title = data.title ?? null;
-                        const description = data.description ?? null;
+                        let title = data.title ?? null;
+                        let description = data.description ?? null;
 
                         // 把title和description中的{xxx}改成await get_emoji(xxx, client)
                         const regex = /\{([^}]+)\}/g;
+
+                        /**
+                         *
+                         * @param {string} str
+                         * @param {RegExp | string} regex
+                         * @param {(substring: string, ...args: any[]) => string | Promise<string>} replacer
+                         * @returns {Promise<string>}
+                         */
                         const replaceAsync = async (str, regex, replacer) => {
+                            /** @type {(Promise<any> | any)[]} */
                             const promises = [];
+
                             str.replace(regex, (match, p1) => {
                                 promises.push(replacer(match, p1));
                                 return match;
                             });
+
                             const replacements = await Promise.all(promises);
                             return str.replace(regex, () => replacements.shift());
                         };
 
-                        title = await replaceAsync(title, regex, async (match, p1) => await get_emoji(p1, client));
-                        description = await replaceAsync(description, regex, async (match, p1) => await get_emoji(p1, client));
+                        if (title) title = await replaceAsync(title, regex, async (match, p1) => await get_emoji(p1, client));
+                        if (description) description = await replaceAsync(description, regex, async (match, p1) => await get_emoji(p1, client));
 
                         embed.setTitle(title);
                         embed.setDescription(description);
@@ -1006,14 +1040,14 @@ module.exports = {
                 }
                 case "buy":
                 case "buyc": {
-                    let [_, buyerUserId, targetUserId, amount, price, item] = otherCustomIDs;
+                    let [buyerUserId, targetUserId, amount_str, price_str, item] = otherCustomIDs;
 
                     await interaction.deferUpdate();
 
                     const isConfirm = interactionCategory === "buyc";
 
-                    amount = parseInt(amount);
-                    price = parseInt(price);
+                    const amount = parseInt(amount_str);
+                    const price = parseInt(price_str);
 
                     const [[emoji_cross, emoji_store], buyerRPGData, targetUserRPGData, targetUserShopData] = await Promise.all([
                         get_emojis(["crosS", "store"], client),
@@ -1090,7 +1124,7 @@ module.exports = {
                 case "oven_bake": {
                     await interaction.deferUpdate();
 
-                    const [userId, session_id] = otherCustomIDs;;
+                    const [session_id] = otherCustomIDs;;
 
                     // 從全域變數中取得 oven_bake 資料
                     const oven_bake = client.oven_sessions.get(session_id);
@@ -1108,7 +1142,7 @@ module.exports = {
 
                     const { item_id, amount, coal_amount, duration, item_need, userId: _userId } = oven_bake;
 
-                    if (userId !== _userId) {
+                    if (user.id !== _userId) {
                         const emoji_cross = await get_emoji("crosS", client);
 
                         const error_embed = new EmbedBuilder()
@@ -1119,14 +1153,9 @@ module.exports = {
                         return await interaction.editReply({ content: "", embeds: [error_embed], components: [] });
                     };
 
-                    // 確保所有數值都被正確解析為整數
-                    const parsedAmount = parseInt(amount);
-                    const parsedCoalAmount = parseInt(coal_amount);
-                    const parsedDuration = parseInt(duration);
-
                     let [rpg_data, bake_data] = await Promise.all([
-                        load_rpg_data(userId),
-                        load_bake_data(userId),
+                        load_rpg_data(user.id),
+                        load_bake_data(user.id),
                     ]);
 
                     if (!bake_data) bake_data = [];
@@ -1180,22 +1209,21 @@ module.exports = {
                         rpg_data.inventory[need_item.item] -= need_item.amount;
                     };
 
-
                     const output_item_id = bake[item_id];
-                    const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
+                    const end_time = Math.floor(Date.now() / 1000) + duration;
 
                     bake_data.push({
-                        userId,
+                        userId: user.id,
                         item_id,
-                        amount: parsedAmount,
-                        coal_amount: parsedCoalAmount,
+                        amount,
+                        coal_amount,
                         end_time,
                         output_item_id,
                     });
 
                     const [_, __, emoji_drumstick] = await Promise.all([
-                        save_rpg_data(userId, rpg_data),
-                        save_bake_data(userId, bake_data),
+                        save_rpg_data(user.id, rpg_data),
+                        save_bake_data(user.id, bake_data),
                         get_emoji("drumstick", client),
                     ]);
 
@@ -1204,7 +1232,7 @@ module.exports = {
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
-                        .setTitle(`${emoji_drumstick} | 成功放進烤箱烘烤 ${parsedAmount} 個 ${name[item_id]}`)
+                        .setTitle(`${emoji_drumstick} | 成功放進烤箱烘烤 ${amount} 個 ${name[item_id]}`)
                         .setDescription(`等待至 <t:${end_time}:R>`)
                         .setEmbedFooter(interaction);
 
@@ -1212,10 +1240,13 @@ module.exports = {
                     break;
                 }
                 case "smelter_smelt": {
-                    await interaction.deferUpdate();
-
-                    const [userId, item_id, amount, coal_amount, duration, output_amount, session_id] = otherCustomIDs;
-                    const emoji_cross = await get_emoji("crosS", client);
+                    const [item_id, amount, coal_amount, duration, output_amount, session_id] = otherCustomIDs;
+                    const [_, rpg_data, smelt_data, emoji_cross] = await Promise.all([
+                        interaction.deferUpdate(),
+                        load_rpg_data(user.id),
+                        load_smelt_data(user.id),
+                        get_emoji("crosS", client),
+                    ]);
 
                     // 確保所有數值都被正確解析為整數
                     const parsedAmount = parseInt(amount);
@@ -1233,8 +1264,6 @@ module.exports = {
 
                         return await interaction.editReply({ embeds: [embed], components: [] });
                     };
-
-                    let rpg_data = await load_rpg_data(userId)
 
                     // ==================檢查物品==================
                     let item_missing = [];
@@ -1258,17 +1287,22 @@ module.exports = {
                         rpg_data.inventory[need_item.item] -= need_item.amount;
                     };
 
-                    const [_, smelt_data] = await Promise.all([
-                        save_rpg_data(userId, rpg_data),
-                        load_smelt_data(),
-                    ]);
+                    await save_rpg_data(user.id, rpg_data);
 
-                    const output_item_id = smeltable_recipe.find(a => a.input.item === item_id).output;
+                    const smelt_recipe = smeltable_recipe.find(a => a.input.item === item_id);
+                    if (!smelt_recipe) {
+                        const error_embed = new EmbedBuilder()
+                            .setColor(embed_error_color)
+                            .setTitle(`${emoji_cross} | 找不到這個熔煉配方`)
+                            .setEmbedFooter(interaction);
+
+                        return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+                    };
+
+                    const output_item_id = smelt_recipe.output;
                     const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
 
-                    if (!smelt_data[userId]) smelt_data[userId] = [];
-
-                    if (smelt_data[userId].length >= smelter_slots) {
+                    if (smelt_data.length >= smelter_slots) {
                         const embed = new EmbedBuilder()
                             .setColor(embed_error_color)
                             .setTitle(`${emoji_cross} | 你的煉金爐已經滿了`)
@@ -1277,8 +1311,8 @@ module.exports = {
                         return await interaction.followUp({ embeds: [embed] });
                     };
 
-                    smelt_data[userId].push({
-                        userId,
+                    smelt_data.push({
+                        userId: user.id,
                         item_id,
                         amount: parsedAmount,
                         coal_amount: parsedCoalAmount,
@@ -1287,7 +1321,7 @@ module.exports = {
                         output_amount: parseInt(output_amount),
                     });
 
-                    await save_smelt_data(smelt_data);
+                    await save_smelt_data(user.id, smelt_data);
 
                     // 清理 session 資料
                     client.smelter_sessions.delete(session_id);
@@ -1305,7 +1339,8 @@ module.exports = {
                 case "marry_accept": {
                     await interaction.deferUpdate();
 
-                    const [targetUserId, userId] = otherCustomIDs;
+                    const [userId] = otherCustomIDs;
+                    const targetUserId = user.id;
 
                     const [rpg_data, t_rpg_data, [emoji_cross, emoji_check]] = await Promise.all([
                         load_rpg_data(userId),
@@ -1355,14 +1390,14 @@ module.exports = {
                     return await interaction.editReply({ content: "", embeds: [embed], components: [] });
                 }
                 case "divorce": {
-                    const [userId, with_UserId] = otherCustomIDs;
+                    const [with_UserId] = otherCustomIDs;
 
                     const marry_default_value = find_default_value("rpg_database.json")?.["marry"] ?? {};
 
                     const [_, emoji_cross, rpg_data, with_User_rpg_data] = await Promise.all([
                         interaction.deferReply(),
                         get_emoji("crosS", client),
-                        load_rpg_data(userId),
+                        load_rpg_data(user.id),
                         load_rpg_data(with_UserId),
                     ]);
 
@@ -1381,21 +1416,21 @@ module.exports = {
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
                         .setTitle(`${emoji_cross} | 歐不`)
-                        .setDescription(`<@${userId}> 和 <@${with_UserId}> 的婚姻關係已經結束了 :((`)
+                        .setDescription(`<@${user.id}> 和 <@${with_UserId}> 的婚姻關係已經結束了 :((`)
                         .setEmbedFooter(interaction);
 
                     rpg_data.marry = marry_default_value;
                     with_User_rpg_data.marry = marry_default_value;
 
                     await Promise.all([
-                        save_rpg_data(userId, rpg_data),
+                        save_rpg_data(user.id, rpg_data),
                         save_rpg_data(with_UserId, with_User_rpg_data),
                     ]);
 
                     return await interaction.editReply({ embeds: [embed] });
                 }
                 case "job_transfer": {
-                    const [emoji_job, job_delay_embed] = await Promise.all([
+                    const [emoji_job, delay_embed] = await Promise.all([
                         get_emoji("job", client),
                         job_delay_embed(user.id, interaction, client),
                     ]);
@@ -1442,8 +1477,10 @@ module.exports = {
                         .setLabel("我確定")
                         .setStyle(ButtonStyle.Danger);
 
-                    const row = new ActionRowBuilder()
-                        .addComponents(confirm_button);
+                    const row =
+                        /** @type {ActionRowBuilder<ButtonBuilder>} */
+                        (new ActionRowBuilder()
+                            .addComponents(confirm_button));
 
                     return await interaction.update({ embeds: [embed], components: [row] });
                 }
@@ -1487,13 +1524,15 @@ module.exports = {
                     break;
                 }
                 case "play-s": {
-                    if (!guild || !(interaction instanceof StringSelectMenuInteraction)) break;
+                    if (
+                        !guild
+                        || !(interaction instanceof StringSelectMenuInteraction)
+                    ) break;
 
                     // 下拉式選單
                     await interaction.deferUpdate();
 
                     const queue = getQueue(guild.id);
-                    if (!queue) return;
 
                     const vconnection = getVoiceConnection(guild.id);
 
@@ -1517,20 +1556,28 @@ module.exports = {
                         });
 
                         queue.setConnection(voiceConnection);
-                        queue.setVoiceChannel(voiceChannel);
-                        queue.setTextChannel(interaction.channel);
+                        if (!(voiceChannel instanceof StageChannel)) queue.setVoiceChannel(voiceChannel);
+                        if (channel && (
+                            channel instanceof TextChannel
+                            || channel instanceof ThreadChannel
+                        )) queue.setTextChannel(channel);
                     } else if (!queue.connection) { // 強制把機器犬拉進來可能會這樣
                         queue.setConnection(vconnection);
 
-                        if (vconnection.joinConfig.channelId) {
+                        if (!queue.voiceChannel && vconnection.joinConfig.channelId) {
                             const vchannel = await get_channel(vconnection.joinConfig.channelId, interaction.guild);
-                            if (vchannel) {
+                            if (vchannel && vchannel instanceof VoiceChannel) {
                                 queue.setVoiceChannel(vchannel);
                             };
                         };
                     };
 
-                    if (!queue.textChannel && interaction.channel) queue.setTextChannel(interaction.channel);
+                    if (!queue.textChannel
+                        && channel
+                        && (
+                            channel instanceof TextChannel
+                            || channel instanceof ThreadChannel
+                        )) queue.setTextChannel(channel);
                     queue.subscribe();
 
                     const [trackSessionID, trackID] = interaction.values[0].split("|");
@@ -1561,7 +1608,7 @@ module.exports = {
                     break;
                 }
                 case "refresh": {
-                    const [_, feature] = otherCustomIDs;
+                    const [feature] = otherCustomIDs;
 
                     switch (feature) {
                         case "/info bot": {
@@ -1579,6 +1626,7 @@ module.exports = {
                         };
 
                         case "nowplaying": {
+                            if (!interaction.guildId) break;
                             const queue = getQueue(interaction.guildId, true);
 
                             const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
@@ -1599,12 +1647,12 @@ module.exports = {
                     break;
                 }
                 case "music": {
-                    const [_, feature, options = null] = otherCustomIDs;
+                    const [feature, options = null] = otherCustomIDs;
 
-                    const guildId = interaction.guildId;
+                    const guildId = guild?.id;
                     if (!guildId) return;
 
-                    const queue = getQueue(guildId, false);
+                    const queue = getQueue(guildId);
 
                     const notPlayingEmbed = await noMusicIsPlayingEmbed(queue, interaction, client);
                     if (notPlayingEmbed && !["loop", "trending", "disconnect"].includes(feature)) {
@@ -1663,6 +1711,7 @@ module.exports = {
                             const currentLoopStatus = queue.loopStatus;
                             const emoji_loop = await get_emoji("loop", client);
 
+                            /** @type {{ [k: number]: string }} */
                             const translate = {
                                 [loopStatus.DISABLED]: "關閉",
                                 [loopStatus.TRACK]: "單曲",
@@ -1720,7 +1769,7 @@ module.exports = {
                         };
 
                         case "page": {
-                            const queue = getQueue(interaction.guildId, true);
+                            if (typeof options !== "string") break;
 
                             const [embed, row] = await getQueueListEmbedRow(queue, parseInt(options) ?? 1, interaction, client);
 
@@ -1732,9 +1781,8 @@ module.exports = {
                     break;
                 }
                 case "cook": {
-                    const [_, sessionId] = otherCustomIDs;
+                    const [sessionId] = otherCustomIDs;
 
-                    /** @type {{food: string, item_needed: object[], amount: number, cooked: number, last_cook_time: number} | undefined} */
                     const session = client.cook_sessions.get(sessionId);
                     if (!session) {
                         const emoji_cross = await get_emoji("crosS", client);
@@ -1800,7 +1848,7 @@ module.exports = {
                     if (session.cooked >= cookClickAmount) {
                         container = await getCookingResultContainer(recipe.output, amount, client);
 
-                        const rpg_data = await load_rpg_data(user.id, client);
+                        const rpg_data = await load_rpg_data(user.id);
                         const output_item = recipe.output;
 
                         if (!rpg_data.inventory[output_item]) rpg_data.inventory[output_item] = 0;
@@ -1808,7 +1856,7 @@ module.exports = {
 
                         await Promise.all([
                             client.cook_sessions.delete(sessionId),
-                            save_rpg_data(user.id, rpg_data, client),
+                            save_rpg_data(user.id, rpg_data),
                         ]);
                     } else {
                         container = await getCookingContainer(inputed_foods, item_needed, user.id, sessionId, session.cooked, client);
@@ -1816,14 +1864,13 @@ module.exports = {
 
                     await interaction.update({
                         content: null,
-                        embeds: null,
                         components: [container],
                     });
 
                     break;
                 }
                 case "gbmi": {
-                    const [_, session_id] = otherCustomIDs;
+                    const [session_id] = otherCustomIDs;
 
                     const session = client.gbmi_sessions.get(session_id);
                     if (!session) {
@@ -1878,6 +1925,8 @@ module.exports = {
                     break;
                 }
                 case "daily": {
+                    if (!guild) break;
+
                     const [emoji_calendar, rpg_data, prefix] = await Promise.all([
                         get_emoji("calendar", client),
                         load_rpg_data(user.id),
@@ -1899,13 +1948,15 @@ module.exports = {
                         )
                         .setEmbedFooter(interaction);
 
-                    const row = new ActionRowBuilder()
-                        .addComponents(
-                            new ButtonBuilder()
-                                .setCustomId(`daily|any|${enabled ? "disable" : "enable"}-dm`)
-                                .setLabel(`${enabled ? "不想" : "想"}收到機器犬的私訊ㄇ`)
-                                .setStyle(ButtonStyle.Secondary),
-                        );
+                    const row =
+                        /** @type {ActionRowBuilder<ButtonBuilder>} */
+                        (new ActionRowBuilder()
+                            .addComponents(
+                                new ButtonBuilder()
+                                    .setCustomId(`daily|any|${enabled ? "disable" : "enable"}-dm`)
+                                    .setLabel(`${enabled ? "不想" : "想"}收到機器犬的私訊ㄇ`)
+                                    .setStyle(ButtonStyle.Secondary),
+                            ));
 
                     await Promise.all([
                         save_rpg_data(user.id, rpg_data),
@@ -1914,7 +1965,10 @@ module.exports = {
                     break;
                 }
                 case "fightjob": {
-                    const jobId = interaction.values?.[0];
+                    if (!(interaction instanceof StringSelectMenuInteraction)) return;
+
+                    /** @type {string | null} */
+                    let jobId = interaction.values?.[0];
 
                     const lang_none = get_lang_data(locale, "rpg", "fightjob.none"); // None 無
                     const lang_transfer_to = get_lang_data(locale, "rpg", "fightjob.transfer_to"); // Successfully changed adventure job to | 成功轉職為

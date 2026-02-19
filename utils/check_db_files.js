@@ -33,7 +33,7 @@ async function checkDBFilesCorrupted() {
             await readJson(filepath);
         } catch (err) {
             // 如果含有 "SyntaxError: Expected property name"，則警告並且退出程式
-            if (err.message.includes("SyntaxError: Expected property name")) {
+            if (err instanceof Error && err.message.includes("SyntaxError: Expected property name")) {
                 logger_nodc.error(`資料庫檔案 ${file} 已損毀，請檢查檔案內容！`);
                 err = true;
             } else throw err;
@@ -52,7 +52,7 @@ async function checkDBFilesCorrupted() {
 async function make_db_compatible(users, guilds) {
     for (const user of users) {
         continue;
-        if (!user instanceof User) continue;
+        if (!(user instanceof User)) continue;
 
         const rpg_data = await load_rpg_data(user.id);
         let modified = false;
@@ -140,7 +140,7 @@ async function make_db_compatible(users, guilds) {
 
     for (const guild of guilds) {
         continue;
-        if (!guild instanceof Guild) continue;
+        if (!(guild instanceof Guild)) continue;
 
         /*
         2025 12 05:
@@ -177,8 +177,8 @@ async function checkDBFilesDefault(client) {
 
     const guilds = (await client.getAllGuilds())
         .sort((a, b) => {
-            if (a.id.includes(priorityGuildIDs)) return -1;
-            if (b.id.includes(priorityGuildIDs)) return 1;
+            if (priorityGuildIDs.filter(e => a.id.includes(e))) return -1;
+            if (priorityGuildIDs.filter(e => b.id.includes(e))) return 1;
             if (a.id.length !== b.id.length) return a.id.length - b.id.length;
             return a.id.localeCompare(b.id);
         });
@@ -186,8 +186,8 @@ async function checkDBFilesDefault(client) {
     const users = (await client.getAllGuildMembers(true))
         .map(member => member.user)
         .sort((a, b) => {
-            if (a.id.includes(priorityUserIDs)) return -1;
-            if (b.id.includes(priorityUserIDs)) return 1;
+            if (priorityGuildIDs.filter(e => a.id.includes(e))) return -1;
+            if (priorityGuildIDs.filter(e => b.id.includes(e))) return 1;
             if (a.id.length !== b.id.length) return a.id.length - b.id.length;
             return a.id.localeCompare(b.id);
         });
@@ -197,6 +197,7 @@ async function checkDBFilesDefault(client) {
         const filePath = join_db_folder(file);
         if (!(exists(filePath))) continue;
 
+        /** @type {{ [k: string]: any }} */
         const data = await readJson(filePath);
         if (!default_value) {
             logger.warn(`警告：資料庫檔案 ${file} 缺失預設值，請及時補充。`);
@@ -218,6 +219,7 @@ async function checkDBFilesDefault(client) {
         const filePath = join_db_folder(file);
         if (!(exists(filePath))) continue;
 
+        /** @type {{ [k: string]: any }} */
         const data = await readJson(filePath);
         if (!default_value) {
             logger.warn(`警告：資料庫檔案 ${file} 缺失預設值，請及時補充。`);

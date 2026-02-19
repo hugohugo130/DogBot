@@ -20,7 +20,9 @@ const circularDeps = []; // 循環依賴列表
  */
 function extractRequires(filePath) {
     try {
-        const content = fs.readFileSync(filePath, 'utf-8');
+        const content = fs.readFileSync(filePath, {
+            encoding: "utf-8",
+        });
 
         // 移除所有註解
         let cleanContent = content
@@ -111,7 +113,9 @@ function resolvePath(fromFile, requirePath) {
  * @param {string[]} fileList
  */
 function scanDirectory(dir, fileList = []) {
-    const files = fs.readdirSync(dir);
+    const files = fs.readdirSync(dir, {
+        encoding: "utf-8",
+    });
 
     files.forEach(file => {
         const filePath = path.join(dir, file);

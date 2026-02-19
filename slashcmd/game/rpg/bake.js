@@ -7,6 +7,12 @@ const { embed_error_color, embed_default_color } = require("../../../utils/confi
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 const DogClient = require("../../../utils/customs/client.js");
 
+/**
+ * Divide an amount by a number
+ * @param {number} amount
+ * @param {number} by
+ * @returns {number[]}
+ */
 function divide(amount, by) {
     // 檢查 amount 和 by 是否為整數（沒有小數點）
     if (!Number.isInteger(amount) || !Number.isInteger(by)) {
@@ -40,18 +46,19 @@ function divide(amount, by) {
 };
 
 /**
- * 
+ * Handle /bake bake
  * @param {ChatInputCommandInteraction} interaction
  * @param {string} userId
  * @param {string} item_id
  * @param {number} amount
+ * @param {DogClient} client
  * @param {number} mode 1 = interaction.editReply, 2 = interaction.followUp
- * @returns {Promise<number>}
+ * @returns {Promise<any>}
  */
-async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
+async function bake_bake(interaction, userId, item_id, amount, client, mode = 1) {
     if (![1, 2].includes(mode)) throw new Error("mode must be 1 or 2");
 
-    const [emoji_cross, emoji_drumstick] = await get_emojis(["crosS", "drumstick"], interaction.client);
+    const [emoji_cross, emoji_drumstick] = await get_emojis(["crosS", "drumstick"], client);
 
     let rpg_data = await load_rpg_data(userId);
     const bake_data = await load_bake_data(userId);
@@ -135,9 +142,9 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
     const session_id = `${userId}_${generateSessionId(16)}`;
 
     // 將 item_need 資料儲存在全域變數或快取中
-    if (!interaction.client.oven_sessions) interaction.client.oven_sessions = new Collection();
+    if (!client.oven_sessions) client.oven_sessions = new Collection();
 
-    interaction.client.oven_sessions.set(session_id, {
+    client.oven_sessions.set(session_id, {
         userId,
         item_id,
         amount,
@@ -161,10 +168,12 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
         .setLabel("購買煤炭？")
         .setStyle(ButtonStyle.Secondary);
 
-    const row = new ActionRowBuilder()
-        .addComponents(confirm_button, cancel_button, help_buy_coal_button);
+    const row =
+        /** @type {ActionRowBuilder<ButtonBuilder>} */
+        (new ActionRowBuilder()
+            .addComponents(confirm_button, cancel_button, help_buy_coal_button));
 
-    const replyOption = { embeds: [embed], components: [row] }
+    const replyOption = { embeds: [embed], components: [row] };
 
     if (mode == 1) {
         await interaction.editReply(replyOption);
@@ -174,6 +183,16 @@ async function bake_bake(interaction, userId, item_id, amount, mode = 1) {
 
     return 0;
 };
+
+/**
+ * @typedef BakeItemData
+ * @property {string} userId
+ * @property {number} coal_amount
+ * @property {string} item_id
+ * @property {string} output_item_id
+ * @property {number} amount - output amount
+ * @property {number} end_time
+ */
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -372,7 +391,7 @@ module.exports = {
                 if (first_food && !bake[first_food]) {
                     const error_embed = new EmbedBuilder()
                         .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 這不是個食材`)
+                        .setTitle(`${emoji_cross} | 找不到這個烘培配方`)
                         .setEmbedFooter(interaction);
 
                     return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
@@ -427,10 +446,10 @@ module.exports = {
                     return await interaction.reply({ embeds: [embed] });
                 };
 
-                if (allFoods && !auto_amount) {
+                if (allFoods && !auto_amount && first_food) {
                     amounts = [rpg_data.inventory[first_food] || 1];
                 } else if (auto_amount) {
-                    if (auto_amount === "amount") {
+                    if (auto_amount === "amount" && first_food) {
                         amounts = divide(rpg_data.inventory[first_food], oven_remain_slots);
                     } else { // auto_amount === "foods"
                         const entries = Object.entries(rpg_data.inventory)
@@ -461,7 +480,7 @@ module.exports = {
                     const amount = amounts[index];
                     if (!amount) continue;
 
-                    await bake_bake(interaction, userId, item, amount, index === 0 ? 1 : 2);
+                    await bake_bake(interaction, userId, item, amount, client, index === 0 ? 1 : 2);
                 };
 
                 break;

@@ -6,11 +6,12 @@ const { generateSessionId } = require("../../../utils/random.js");
 const { container_default_color, embed_error_color, cookClickAmount } = require("../../../utils/config.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 const DogClient = require("../../../utils/customs/client.js");
+const { wait_for_client } = require("../../../utils/wait_until_ready.js");
 
 /**
  * Get Cooking Container
- * @param {object} inputed_foods - inputed foods data
- * @param {{item: string, amount: number}[]}} item_needed - item needed data
+ * @param {{ item: string, amount: number }[]} inputed_foods - inputed foods data
+ * @param {{ item: string, amount: number }[]} item_needed - item needed data
  * @param {string} userId - User ID
  * @param {string} sessionId - Cooking session ID
  * @param {number} [progress=0] progress
@@ -18,6 +19,8 @@ const DogClient = require("../../../utils/customs/client.js");
  * @returns {Promise<ContainerBuilder>}
  */
 async function getCookingContainer(inputed_foods, item_needed, userId, sessionId, progress = 0, client = global._client) {
+    if (!client) client = await wait_for_client();
+
     const [emoji_cooking, emoji_drumstick] = await get_emojis(["cooking", "drumstick"], client);
 
     const item_input_string = inputed_foods
@@ -28,7 +31,7 @@ async function getCookingContainer(inputed_foods, item_needed, userId, sessionId
     const gbmi_session_id = generateSessionId(100 - 5 - `gbmi|${userId}|`.length);
     client.gbmi_sessions.set(gbmi_session_id, {
         userId,
-        item_needed
+        item_needed,
     });
 
     const cookButton = new ButtonBuilder()
@@ -42,8 +45,10 @@ async function getCookingContainer(inputed_foods, item_needed, userId, sessionId
         .setLabel("取消")
         .setStyle(ButtonStyle.Danger);
 
-    const ButtonRow = new ActionRowBuilder()
-        .addComponents(cookButton, cancelButton);
+    const ButtonRow =
+        /** @type {ActionRowBuilder<ButtonBuilder>} */
+        (new ActionRowBuilder()
+            .addComponents(cookButton, cancelButton));
 
     const container = new ContainerBuilder()
         .setAccentColor(container_default_color)
@@ -155,12 +160,11 @@ module.exports = {
         const rpg_data = await load_rpg_data(userId);
         const [emoji_cross, [wrongJobEmbed, row]] = await Promise.all([
             get_emoji("crosS", client),
-            wrong_job_embed(rpg_data, "/cook", userId, interaction, interaction.client),
+            wrong_job_embed(rpg_data, "/cook", userId, interaction, client),
         ]);
 
         if (wrongJobEmbed) return await interaction.reply({ embeds: [wrongJobEmbed], components: row ? [row] : [], flags: MessageFlags.Ephemeral });
 
-        /** @type {string} */
         const output_food = interaction.options.getString("food");
         let amount = interaction.options.getInteger("amount") ?? 1;
         const allFoods = interaction.options.getBoolean("all") ?? false;
@@ -170,7 +174,7 @@ module.exports = {
         if (!recipe) {
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 這不是個食材`)
+                .setTitle(`${emoji_cross} | 找不到這個烹飪配方`)
                 .setEmbedFooter(interaction);
 
             return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
@@ -199,11 +203,9 @@ module.exports = {
             },
         ];
 
-        const not_enough_items = (await Promise.all(
-            item_needed.map(
-                item => userHaveNotEnoughItems(rpg_data, item.item, item.amount)
-            ),
-        )).filter(Boolean);
+        const not_enough_items = item_needed
+            .map(item => userHaveNotEnoughItems(rpg_data, item.item, item.amount))
+            .filter(e => e !== null);
 
         if (not_enough_items.length) return await interaction.reply({ embeds: [await notEnoughItemEmbed(not_enough_items, interaction, client)], flags: MessageFlags.Ephemeral });
 
@@ -234,7 +236,6 @@ module.exports = {
 
         await interaction.editReply({
             content: null,
-            embeds: null,
             components: [container],
             flags: MessageFlags.IsComponentsV2,
         });

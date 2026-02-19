@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, ChannelType, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
+const { SlashCommandBuilder, ChannelType, MessageFlags, ChatInputCommandInteraction, VoiceChannel } = require("discord.js");
 
 const { setDynamicVoice } = require("../../../utils/file.js");
 
@@ -39,10 +39,10 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const channel = interaction.options.getChannel("vchannel") ?? false;
-        const guildID = interaction.guildId;
+        const channel = interaction.options.getChannel("vchannel") ?? null;
+        const guildID = interaction.guild.id;
 
-        await setDynamicVoice(guildID, channel);
+        if (channel instanceof VoiceChannel) await setDynamicVoice(guildID, channel);
 
         await interaction.editReply({ content: `已成功設定動態語音頻道${channel ? `為 ${channel}` : "：關閉"}` });
     },

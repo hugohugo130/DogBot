@@ -2,7 +2,7 @@ const util = require("util");
 const { createAudioResource, createAudioPlayer, joinVoiceChannel, getVoiceConnection, AudioPlayerStatus, VoiceConnection, AudioPlayer, StreamType, AudioResource, PlayerSubscription } = require("@discordjs/voice");
 const { fileTypeFromStream } = require("file-type");
 const { Readable } = require("node:stream");
-const { Collection, TextChannel, VoiceChannel, Guild, BaseInteraction } = require("discord.js");
+const { Collection, TextChannel, VoiceChannel, Guild, BaseInteraction, ThreadChannel } = require("discord.js");
 
 const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
 const { get_logger } = require("../logger.js");
@@ -11,6 +11,7 @@ const { get_emoji } = require("../rpg.js");
 const { generateSessionId, generateUUID } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
+const { get_guild } = require("../discord.js");
 
 const logger = get_logger();
 
@@ -173,7 +174,7 @@ const DEBUG = false;
 /**
  * key: [MediaType](https://en.wikipedia.org/wiki/Media_type)
  * value: [StreamType](https://discord.js.org/docs/packages/voice/0.19.0/StreamType:Enum)
- * @typedef {Object.<string, string>} fileStreamType
+ * @type {Object.<string, StreamType>}
  */
 const fileStreamType = {
     "audio/ogg": StreamType.OggOpus,
@@ -181,6 +182,19 @@ const fileStreamType = {
 };
 
 class MusicTrack {
+    /**
+     * 
+      * @param {Object} datas
+        * @param {string} datas.id
+        * @param {string} datas.title
+        * @param {string | null} [datas.url=null]
+        * @param {number} [datas.duration=0]
+        * @param {string | null} [datas.thumbnail=null]
+        * @param {string} [datas.author="unknown"]
+        * @param {string} [datas.source=""]
+        * @param {Readable | null} [datas.stream=null]
+        * @param {any} [datas.original_track=null]
+     */
     constructor({ id, title, url = null, duration = 0, thumbnail = null, author = "unknown", source = "", stream = null, original_track = null }) {
         /** @type {string} */
         this.id = String(id);
@@ -206,17 +220,17 @@ class MusicTrack {
         /** @type {string} */
         this.source = source?.toLowerCase?.().trim?.() || "soundcloud";
 
-        /** @type {ReadableStream | Readable | null} */
+        /** @type {Readable | null} */
         this.stream = stream;
 
-        /** @type {import("soundcloud.ts").SoundcloudTrack} */
+        /** @type {any} */
         this.original_track = original_track;
     };
 
     /**
      * Prepare a stream for playing
      * @param {boolean} force - Must prepare?
-     * @returns {Readable}
+     * @returns {Promise<Readable>}
      */
     async prepareStream(force = false) {
         if (force || !this.stream || this.stream.closed) {
@@ -240,11 +254,11 @@ class MusicQueue {
         /** @type {string} */
         this.guildID = guildID;
 
-        /** @type {DogClient} */
+        /** @type {DogClient | null} */
         this.client = client;
 
-        /** @type {Guild} */
-        this.guild = client.guilds.cache.get(guildID);
+        /** @type {Guild | null} */
+        this.guild = client?.guilds.cache.get(guildID) || null;
 
         /** @type {MusicTrack[]} */
         this.tracks = [];
@@ -270,10 +284,10 @@ class MusicQueue {
         /** @type {boolean} */
         this.paused = false;
 
-        /** @type {TextChannel | null} */
+        /** @type {TextChannel | ThreadChannel | null} */
         this.textChannel = null;
 
-        /** @type {VoiceChannel | null} */
+        /** @type {VoiceChannel | import("discord.js").VoiceBasedChannel | null} */
         this.voiceChannel = null;
 
         /** @type {VoiceConnection | null} */
@@ -345,7 +359,7 @@ class MusicQueue {
                     [AudioPlayerStatus.Buffering, AudioPlayerStatus.Idle].includes(oldState.status)
                     && newState.status === AudioPlayerStatus.Playing
                 ) {
-                    if (this.lastTrack && this.currentTrack && this.lastTrack.uuid === this.currentTrack.uuid) return;
+                    if (!this.currentTrack || (this.lastTrack && this.currentTrack && this.lastTrack.uuid === this.currentTrack.uuid)) return;
 
                     const emoji_music = await get_emoji("music", client);
 
@@ -357,9 +371,7 @@ class MusicQueue {
                         .setThumbnail(this.currentTrack.thumbnail)
                         .setFooter({ text: `時長: ${formatMinutesSeconds(this.currentTrack.duration)}` })
 
-                    if (this.textChannel?.send) {
-                        await this.textChannel.send({ embeds: [embed] });
-                    };
+                    if (this.textChannel?.send) await this.textChannel.send({ embeds: [embed] });
                 }
 
                 else if (
@@ -382,7 +394,9 @@ class MusicQueue {
 
                             // currentTrack不會出現在this.tracks裡面
                             if (this.currentTrack) this.addTrack(this.currentTrack);
-                            await this.play(this.tracks.shift());
+
+                            const firstTrackInQueue = this.tracks.shift();
+                            if (firstTrackInQueue) await this.play(firstTrackInQueue);
                             break;
                         };
 
@@ -393,16 +407,23 @@ class MusicQueue {
                     };
                 };
             } catch (err) {
-                if (err.stack.includes("Missing Access")) return;
-                if (err.stack.includes("Missing Permissions")) return;
+                if (err instanceof Error && err.stack) {
+                    if (err.stack.includes("Missing Access")) return;
+                    if (err.stack.includes("Missing Permissions")) return;
+                };
 
                 throw err;
             };
         });
     };
 
+    /**
+     *
+     * @param {any} msg
+     * @returns {void}
+     */
     debug(msg) {
-        return logger.debug(`[${this.guildID}] ${msg}`);
+        logger.debug(`[${this.guildID}] ${msg}`);
     };
 
     /**
@@ -456,6 +477,8 @@ class MusicQueue {
         if (DEBUG) this.debug(`- triggered play() | going to play ${track.title}`);
 
         if (!this.connection && this.voiceChannel) {
+            if (!this.guild) this.guild = await get_guild(this.guildID);
+
             const connection = getVoiceConnection(this.guildID)
                 || joinVoiceChannel({
                     channelId: this.voiceChannel.id,
@@ -523,14 +546,16 @@ class MusicQueue {
     /**
      * 播放下一首歌
      * @param {boolean} force - 是否強制停止播放器
-     * @returns {Promise<[MusicTrack, MusicTrack]>} [old_track, new_track]
+     * @returns {Promise<[MusicTrack | null, MusicTrack | null]>} [old_track, new_track]
      */
     async nextTrack(force = false) {
         const old_track = this.currentTrack;
         let new_track = null;
 
         if (this.tracks.length > 0) {
-            new_track = await this.play(this.tracks.shift());
+            const firstTrackInQueue = this.tracks.shift();
+
+            if (firstTrackInQueue) new_track = await this.play(firstTrackInQueue);
         } else {
             this.stopPlaying(force);
         };
@@ -544,12 +569,14 @@ class MusicQueue {
      */
     subscribe() {
         if (
-            this.subscription?.connection.state.subscription
+            this.subscription?.connection.state
+            && "subscription" in this.subscription?.connection.state
+            && this.subscription?.connection.state.subscription
             && this.subscription.connection.state.subscription === this.subscription
         ) return this.subscription;
 
         if (this.connection && this.player) {
-            this.subscription = this.connection.subscribe(this.player)
+            this.subscription = this.connection.subscribe(this.player) || null;
             return this.subscription;
         };
 
@@ -631,7 +658,7 @@ class MusicQueue {
 
     /**
      * Set the loop status of the queue.
-     * @param {loopStatus} status
+     * @param {number} status
      * @returns {void}
      */
     setLoopStatus(status) {
@@ -649,7 +676,7 @@ class MusicQueue {
 
     /**
      * Set the voice channel of the queue.
-     * @param {VoiceChannel} voiceChannel
+     * @param {VoiceChannel | import("discord.js").VoiceBasedChannel | null} voiceChannel
      * @returns {void}
      */
     setVoiceChannel(voiceChannel) {
@@ -658,10 +685,10 @@ class MusicQueue {
 
     /**
      * Set the text channel of the queue.
-     * @param {TextChannel} textChannel
+     * @param {TextChannel | ThreadChannel | null} [textChannel=null]
      * @returns {void}
      */
-    setTextChannel(textChannel) {
+    setTextChannel(textChannel = null) {
         this.textChannel = textChannel;
     };
 
@@ -680,10 +707,21 @@ class MusicQueue {
 };
 
 /**
- *
- * @param {string} [guildID]
+ * @overload
+ * @param {string} guildID
  * @param {boolean} [create=true]
  * @returns {MusicQueue | null}
+ */
+/**
+ * @overload
+ * @param {string} guildID
+ * @param {true} [create=true]
+ * @returns {MusicQueue}
+ */
+/**
+ *
+ * @param {string} guildID
+ * @param {boolean} [create=true]
  */
 function getQueue(guildID, create = true) {
     if (typeof guildID !== "string") throw new Error("guildID is not a string");
@@ -714,7 +752,7 @@ function getQueues() {
 /**
  * 
  * @param {any} object
- * @returns {boolean}
+ * @returns {object is import("soundcloud.ts").SoundcloudTrack}
  */
 function isSoundCloudTrack(object) {
     return (
@@ -768,13 +806,19 @@ function isSoundCloudTrack(object) {
 
 /**
  *
- * @param {Array<import("soundcloud.ts").SoundcloudTrack | {id: string, title: string, url: string, duration?: number, thumbnail?: string, author?: string | null, source?: string}>} objects
+ * @param {Array<import("soundcloud.ts").SoundcloudTrack | MusicTrack | { id: string, title: string, url: string, duration?: number, thumbnail?: string | null, author?: string | null, source?: string }>} objects
  * @returns {Promise<MusicTrack[]>}
  */
 async function fixStructure(objects) {
     let fixedObjects = []
 
     for (const object of objects) {
+        if (object instanceof MusicTrack) {
+            fixedObjects.push(object);
+            continue;
+        };
+
+        // @ts-ignore
         let { id, title, url, duration = 0, thumbnail = null, author = "Unknown", source = "unknown", stream = null } = object;
         const original_track = object;
 
@@ -790,6 +834,8 @@ async function fixStructure(objects) {
             author = object.publisher_metadata?.artist || object.user?.full_name || object.user?.username || "Unknown";
             source = "soundcloud";
         };
+
+        id = String(id);
 
         const track = new MusicTrack({ id, title, url, duration, thumbnail, author, source, stream, original_track });
         if (!stream && id?.startsWith?.("audio/")) await track.prepareStream();
@@ -807,11 +853,11 @@ async function fixStructure(objects) {
  * @returns {{ id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean }}
  */
 function getAudioFileData(url, stream = false) {
-    const uri = url.split("/").pop().split("?")[0];
+    const uri = url.split("/").pop()?.split("?")[0];
 
     return {
         id: `audio_${generateSessionId(8)}`,
-        title: uri,
+        title: uri || "unknown",
         url,
         duration: 0,
         thumbnail: null,
@@ -824,7 +870,7 @@ function getAudioFileData(url, stream = false) {
 /**
  *
  * @param {string} url - 音檔網址
- * @returns {Promise<[Readable, import("file-type").FileTypeResult]>}
+ * @returns {Promise<[Readable, {ext: string | null, mime: string | null}]>}
  */
 async function fetchAudioStream(url) {
     const response = await fetch(url, {
@@ -841,18 +887,22 @@ async function fetchAudioStream(url) {
     const clonedStream = response.clone().body;
     const clonedStream2 = response.clone().body;
 
-    const fileType = await fileTypeFromStream(clonedStream);
-    if (fileType) fileType.mime = fileType.mime?.replace("video/", "audio/");
-    if (!fileType?.mime?.startsWith("audio/")) throw new Error("Not an audio stream");
+    if (!clonedStream2) throw new Error("Received no stream")
+
+    const fileType = clonedStream ? await fileTypeFromStream(clonedStream) : null;
+    const ext = fileType?.ext || null;
+    const mime = fileType?.mime?.replace("video/", "audio/") || null;
+
+    if (!mime?.startsWith("audio/")) throw new Error("Not an audio stream");
 
     response.body.cancel(); // no need to wait it resolved.
 
-    return [clonedStream2, fileType];
+    return [Readable.fromWeb(clonedStream2), { ext, mime }];
 };
 
 /**
  * 
- * @param {{ track: MusicTrack, url: string, source: string }} param0
+ * @param {{ track: MusicTrack, url?: string | null, source: string }} param0
  * @returns {Promise<[Readable, string] >} [Audio Stream - It must be an audio stream, fileType ([MediaType](https://en.wikipedia.org/wiki/Media_type))]
  */
 async function getStream({ track, url, source }) {
@@ -869,8 +919,9 @@ async function getStream({ track, url, source }) {
 
     if (engine?.getAudioStream && typeof engine.getAudioStream === "function") {
         [stream, fileType] = await engine.getAudioStream(track.original_track ?? track);
-    } else {
-        const [fetched_stream, fileTypes] = await fetchAudioStream(url)
+    } else if (url) {
+        const [fetched_stream, fileTypes] = await fetchAudioStream(url);
+
         stream = fetched_stream;
         fileType = fileTypes.mime;
     };
@@ -921,7 +972,7 @@ async function search_until(query, amount = 25, customURL = false) {
             };
 
             if (customURL && IsValidURL(query) && Array.isArray(output)) {
-                audioData = getAudioFileData(query, true);
+                const audioData = getAudioFileData(query, true);
 
                 output.push(audioData);
             };

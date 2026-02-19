@@ -1,8 +1,9 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, BaseInteraction, escapeMarkdown } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, BaseInteraction, escapeMarkdown, Message, ApplicationEmoji } = require("discord.js");
 const util = require("util");
 
 const {
     wait_until_ready,
+    wait_for_client,
 } = require("./wait_until_ready.js");
 const {
     get_logger,
@@ -32,6 +33,8 @@ const {
 const EmbedBuilder = require("./customs/embedBuilder.js");
 const DogClient = require("./customs/client.js");
 
+const logger = get_logger();
+
 const mine_gets = [
     "coal",
     "diamond_ore",
@@ -44,7 +47,7 @@ const mine_gets = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, /** @type {Object<string, string>} */ ({}));
+}, /** @type {Object<string, string>} */({}));
 
 const ingots = [
     "diamond",
@@ -57,7 +60,7 @@ const ingots = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, /** @type {Object<string, string>} */ ({}));
+}, /** @type {Object<string, string>} */({}));
 
 const logs = [
     "acacia_wood",
@@ -73,7 +76,7 @@ const logs = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, /** @type {Object<string, string>} */ ({}));
+}, /** @type {Object<string, string>} */({}));
 
 const planks = [
     "acacia_planks",
@@ -89,12 +92,13 @@ const planks = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, /** @type {Object<string, string>} */ ({}));
+}, /** @type {Object<string, string>} */({}));
 
 const wood_productions = {
     stick: "stick",
-}
+};
 
+/** @type {{ [k: string]: { input: { item: string, amount: number }[], output: string, amount: number } }} */
 const recipes = {
     iron_armor: {
         input: [
@@ -236,6 +240,7 @@ const smeltable_recipe = [
     },
 ];
 
+/** @type {{ [k: string]: string[] }} */
 const tags = {
     "planks": Object.keys(planks),
 };
@@ -255,7 +260,7 @@ const foods_crops = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, /** @type {Object<string, string>} */ ({}));
+}, /** @type {Object<string, string>} */({}));
 
 const foods_meat = [
     "anglerfish",
@@ -313,7 +318,7 @@ const foods_meat = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, /** @type {Object<string, string>} */ ({}));
+}, /** @type {Object<string, string>} */({}));
 
 const animals = [
     "a_chicken",
@@ -325,8 +330,9 @@ const animals = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, /** @type {Object<string, string>} */ ({}));
+}, /** @type {Object<string, string>} */({}));
 
+/** @type {{ [k: string]: string }} */
 const animal_products = {
     a_chicken: "raw_chicken",
     a_duck: "raw_duck",
@@ -337,6 +343,7 @@ const animal_products = {
     pig: "raw_pork",
 };
 
+/** @type {{ [k: string]: number }} */
 const shop_lowest_price = {
     // ==============材料==============
     egg: 50,
@@ -360,7 +367,6 @@ const shop_lowest_price = {
     raw_koi: 95,
     raw_lobster: 95,
     raw_octopus: 95,
-    raw_pork: 95,
     raw_pufferfish: 95,
     raw_squid: 95,
     raw_swordfish: 95,
@@ -465,18 +471,6 @@ const shop_lowest_price = {
     warped_planks: 14,
     warped_wood: 55,
     // ==============合成品==============
-    /*
-    木棒 100
-    神木棒 500
-    石劍 150
-    石斧 300
-    石短刀 250
-    鐵劍 600
-    鐵斧 650
-    鐵短刀 350
-    鐵製鎧甲 1200
-    */
-    stick: 100,
     god_stick: 500,
     stone_sword: 150,
     stone_axe: 300,
@@ -494,9 +488,13 @@ const shop_lowest_price = {
 
 const sell_data = Object.keys(shop_lowest_price).reduce(function (result, key) {
     result[key] = parseFloat((shop_lowest_price[key] * 0.9).toFixed(1));
-    return result
-}, {});
+    return result;
+},
+    /** @type {{ [k: string]: number }} */
+    ({})
+);
 
+/** @type {{ [k: string]: number }} */
 const food_data = {
     anglerfish: 4,
     apple: 1,
@@ -540,12 +538,9 @@ const food_data = {
     egg: 1,
     raw_beef: 1,
     raw_chicken: 1,
-    raw_duck: 1,
-    raw_mutton: 1,
     raw_pork: 1,
     raw_potato: 1,
     raw_shrimp: 1,
-    raw_tuna: 1,
     raw_anglerfish: 1,
     raw_catfish: 1,
     raw_clownfish: 1,
@@ -574,8 +569,9 @@ let foods = { ...foods_crops, ...foods_meat };
 foods = Object.keys(foods).sort((a, b) => food_data[b] - food_data[a]).reduce((obj, key) => {
     obj[key] = foods[key];
     return obj;
-}, /** @type {Object<string, string>} */ ({}));
+}, /** @type {Object<string, string>} */({}));
 
+/** @type {{ [k: string]: string }} */
 const brew = {
     cough_potion: "cough_potion",
     dizzy_potion: "dizzy_potion",
@@ -595,6 +591,7 @@ const brew = {
     unlucky_potion: "unlucky_potion",
 };
 
+/** @type {{ [k: string]: string }} */
 const fish = {
     raw_anglerfish: "raw_anglerfish",
     raw_catfish: "raw_catfish",
@@ -617,6 +614,7 @@ const fish = {
     raw_whale: "raw_whale",
 };
 
+/** @type {{ [k: string]: string }} */
 const weapons_armor = {
     iron_armor: "iron_armor",
     iron_axe: "iron_axe",
@@ -629,7 +627,7 @@ const weapons_armor = {
     wooden_hoe: "wooden_hoe",
 };
 
-// 原材料: 生產出來的
+/** @type {{ [k: string]: string }} */
 let bake = {
     raw_beef: "beef",
     raw_chicken: "chicken",
@@ -670,6 +668,7 @@ const cook = [
     },
 ];
 
+/** @type {{ [k: string]: string }} */
 const name = {
     // ==============礦物==============
     coal: "煤炭",
@@ -735,10 +734,8 @@ const name = {
     raw_mutton: "生羊肉",
     raw_pork: "生豬肉",
     raw_potato: "馬鈴薯",
-    raw_shrimp: "生蝦",
     raw_hugo: "生哈狗",
     hugo: "哈哈哈熱狗",
-    shrimp: "烤蝦",
     wheat: "小麥",
     // ==============動物==============
     a_chicken: "雞",
@@ -835,11 +832,12 @@ const name = {
 const name_reverse = Object.entries(name).reduce((acc, [key, value]) => {
     acc[value] = key;
     return acc;
-}, {});
+},
+    /** @type {{ [k: string]: string }} */
+    ({})
+);
 
 function check_item_data() {
-    const logger = get_logger();
-
     const all_items = [
         ...Object.values(mine_gets),
         ...Object.values(ingots),
@@ -895,8 +893,8 @@ function check_item_data() {
 /**
  * Get the item name of the item ID
  * @param {string} id
- * @param {any} default_value
- * @returns {string | any} id or default_value
+ * @param {string | *} default_value
+ * @returns {string | *} id or default_value
  */
 function get_name_of_id(id, default_value = id) {
     return name[id] || default_value;
@@ -905,13 +903,19 @@ function get_name_of_id(id, default_value = id) {
 /**
  * Get the item ID of the item name
  * @param {string} id
- * @param {string} default_value
- * @returns {string} id or default_value
+ * @param {string | *} default_value
+ * @returns {string | *} id or default_value
  */
 function get_id_of_name(id, default_value = id) {
     return name_reverse[id] || default_value;
 };
 
+/**
+ * Get the amount of item in the inventory of a user
+ * @param {string} name
+ * @param {string} userid
+ * @returns {Promise<number>}
+ */
 async function get_number_of_items(name, userid) {
     const rpg_data = await load_rpg_data(userid);
     const items = rpg_data.inventory;
@@ -949,36 +953,31 @@ function userHaveNotEnoughItems(rpg_data, item, amount_needed) {
 
 /**
  *
- * @param {Array<{item: string, amount: number}> | Array<string> | string} item_datas
- * @param {Interaction} [interaction]
+ * @param {({ item: string, amount: number } | string)[] | ({ item: string, amount: number } | string)} item_datas
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
 async function notEnoughItemEmbed(item_datas, interaction = null, client = global._client) {
-    if (item_datas?.length <= 0) throw new Error("item_datas is empty");
     if (!Array.isArray(item_datas)) item_datas = [item_datas];
-    const logger = get_logger();
+    if (!item_datas.length) throw new Error("item_datas is empty");
 
-    const items_str = item_datas.map(item_data => {
-        if (typeof item_data === "string") return item_data;
-        if (typeof item_data !== "object") {
-            logger.warn(`item_data應該是物件或字串，但：\n${JSON.stringify(item_data, null, 4)}`);
-            return item_data;
-        };
+    const items_str = Array.isArray(item_datas) ?
+        item_datas.map(item_data => {
+            if (typeof item_data === "string") return item_data;
+            if (typeof item_data !== "object") {
+                logger.warn(`item_data應該是物件或字串，但：\n${JSON.stringify(item_data, null, 4)}`);
+                return item_data;
+            };
 
-        if (item_data.name && !item_data.item) {
-            logger.warn(`item_data應該使用item屬性，但使用了name：\n${JSON.stringify(item_data, null, 4)}`)
-            item_data.item = item_data.name;
-            delete item_data.name;
-        };
+            const length = Object.keys(item_data).length;
+            if (!item_data.hasOwnProperty("item") || !item_data.hasOwnProperty("amount") || length !== 2) {
+                logger.warn(`item_data應該只有item和amount屬性，但：\n${JSON.stringify(item_data, null, 4)}`)
+            };
 
-        const length = Object.keys(item_data).length;
-        if (!item_data.hasOwnProperty("item") || !item_data.hasOwnProperty("amount") || length !== 2) {
-            logger.warn(`item_data應該只有item和amount屬性，但：\n${JSON.stringify(item_data, null, 4)}`)
-        };
-
-        return `${get_name_of_id(item_data.item)} \`x${item_data.amount}\`個`;
-    }).join("、");
+            return `${get_name_of_id(item_data.item)} \`x${item_data.amount}\`個`;
+        }).join("、")
+        : item_datas;
 
     const emoji_cross = await get_emoji("crosS", client);
     const embed = new EmbedBuilder()
@@ -999,8 +998,18 @@ async function notEnoughItemEmbed(item_datas, interaction = null, client = globa
 ╚═╝  ╚═╝╚═╝      ╚═════╝     ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
 */
 
-function BetterEval(obj) {
-    return Function(`"use strict";return ${obj}`)();
+/**
+ *
+ * @param {any} obj
+ * @param {any} [default_value=null]
+ * @returns {any}
+ */
+function BetterEval(obj, default_value = null) {
+    try {
+        return Function(`"use strict";return ${obj}`)();
+    } catch {
+        return default_value;
+    };
 };
 
 /**
@@ -1023,7 +1032,7 @@ function chunkArray(array, chunkSize) {
  * @param {import("./config.js").RpgDatabase} rpg_data
  * @param {string} command
  * @param {string} userId
- * @param {BaseInteraction} [interaction]
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<[EmbedBuilder | null, ActionRowBuilder<ButtonBuilder> | null]>}
  */
@@ -1050,8 +1059,10 @@ async function wrong_job_embed(rpg_data, command, userId, interaction = null, cl
                     .setLabel("選擇職業")
                     .setStyle(ButtonStyle.Primary);
 
-                row = new ActionRowBuilder()
-                    .addComponents(chooseJobButton);
+                row =
+                    /** @type {ActionRowBuilder<ButtonBuilder>} */
+                    (new ActionRowBuilder()
+                        .addComponents(chooseJobButton));
             };
 
             return [embed, row];
@@ -1065,10 +1076,10 @@ async function wrong_job_embed(rpg_data, command, userId, interaction = null, cl
  *
  * @param {string} name
  * @param {DogClient | null} [client]
- * @returns {Promise<Emoji>}
+ * @returns {Promise<ApplicationEmoji | null>}
  */
 async function get_emoji_object(name, client = global._client) {
-    if (!client) client = await wait_until_ready(client);
+    if (!client) client = await wait_for_client();
 
     let emojis = client.application?.emojis.cache;
     let emoji = emojis?.find(e => e.name === name);
@@ -1078,14 +1089,14 @@ async function get_emoji_object(name, client = global._client) {
         emoji = emojis?.find(e => e.name === name);
     };
 
-    return emoji;
+    return emoji || null;
 };
 
 /**
  *
- * @param {string} names
+ * @param {string[]} names
  * @param {DogClient | null} [client]
- * @returns {Promise<Emoji[]>}
+ * @returns {Promise<(ApplicationEmoji | null)[]>}
  */
 async function get_emoji_objects(names, client = global._client) {
     if (!client) client = await wait_until_ready(client);
@@ -1135,7 +1146,7 @@ async function get_emojis(names, client = global._client) {
  * @param {number} remaining_time
  * @param {string} action
  * @param {number | string} count
- * @param {BaseInteraction} [interaction]
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
@@ -1147,35 +1158,45 @@ async function get_cooldown_embed(remaining_time, action, count, interaction = n
     const timestamp = Math.floor(Date.now() / 1000) + Math.floor(remaining_time / 1000);
     const time = `<t:${timestamp}:T> (<t:${timestamp}:R>)`;
 
-    action = rpg_actions[action];
-    const verb = action[0];
-    const noun = action[1];
+    const [verb, noun] = rpg_actions[action];
 
     const embed = new EmbedBuilder()
         .setColor(embed_error_color)
         .setTitle(`${emoji} | 你過勞了！`)
-        .setDescription(`你今天${verb}了 \`${count}\` 次${noun}，等待到 ${time} 可以繼續${action.join("")}`)
+        .setDescription(`你今天${verb}了 \`${count}\` 次${noun}，等待到 ${time} 可以繼續${verb}${noun}`)
         .setEmbedFooter(interaction);
 
     return embed;
 };
 
+/**
+ * Get work cooldown time
+ * @param {string} command_name
+ * @param {import("./config.js").RpgDatabase} rpg_data
+ * @returns {number}
+ */
 function get_cooldown_time(command_name, rpg_data) {
     const { rpg_cooldown } = require("../cogs/rpg/msg_handler.js");
 
-    return BetterEval(rpg_cooldown[command_name].replace("{c}", rpg_data.count[command_name]));
+    return BetterEval(rpg_cooldown[command_name].replace("{c}", String(rpg_data.count[command_name])));
 };
 
 /**
  * 檢查指令是否已經冷卻完畢
  * @param {string} command_name - 指令名稱
  * @param {import("./config.js").RpgDatabase} rpg_data - 用戶的RPG數據
- * @returns {{is_finished: boolean, remaining_time: number}} - is_finished:如果已冷卻完畢返回true，否則返回false - remaining_time: 剩餘時間
+ * @returns {{ is_finished: boolean, remaining_time: number, endsAtms: number, endsAts: number }} - is_finished:如果已冷卻完畢返回true，否則返回false - remaining_time: 剩餘時間
  */
 function is_cooldown_finished(command_name, rpg_data) {
     const { rpg_cooldown } = require("../cogs/rpg/msg_handler.js");
 
-    if (!rpg_cooldown[command_name]) return { is_finished: true, remaining_time: 0 };
+    if (!rpg_cooldown[command_name]) return {
+        is_finished: true,
+        remaining_time: 0,
+        endsAtms: 0,
+        endsAts: 0,
+    };
+
     const lastRunTimestamp = rpg_data.lastRunTimestamp[command_name] || 0;
     const now = Date.now();
     const time_diff = now - lastRunTimestamp;
@@ -1193,7 +1214,7 @@ function is_cooldown_finished(command_name, rpg_data) {
  * 
  * @param {string} failed_reason
  * @param {import("./config.js").RpgDatabase} rpg_data
- * @param {BaseInteraction} [interaction]
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
@@ -1306,7 +1327,7 @@ function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
  * Generate analyze template
  * @param {string} title
  * @param {string} description
- * @returns {object}
+ * @returns {{ title: string, description: string }}
  */
 function generate_analyze_data(title, description) {
     return {
@@ -1318,7 +1339,7 @@ function generate_analyze_data(title, description) {
 /**
  * Analyze an error stack
  * @param {string} errorStack
- * @returns {Array<Object>}
+ * @returns {{ title: string, description: string }[]}
  */
 function error_analyze(errorStack) {
     const analyzes = [];
@@ -1400,7 +1421,7 @@ function error_analyze(errorStack) {
 
 /**
  * 
- * @param {string} text
+ * @param {string | Error} text
  * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client=global._client]
  * @returns {Promise<EmbedBuilder[]>}
@@ -1408,7 +1429,7 @@ function error_analyze(errorStack) {
 async function get_loophole_embed(text, interaction = null, client = global._client) {
     const emoji_cross = await get_emoji("crosS", client);
 
-    if (typeof text instanceof Error) {
+    if (text instanceof Error) {
         text = util.inspect(text, { depth: null });
     };
 
@@ -1479,9 +1500,9 @@ async function job_delay_embed(userId, interaction = null, client = global._clie
 };
 
 /**
- * 
- * @param {string} userid 
- * @returns {Promise<EmbedBuilder>}
+ * Get the row of the "choose job"
+ * @param {string} userid
+ * @returns {Promise<[ActionRowBuilder<StringSelectMenuBuilder>, ActionRowBuilder<ButtonBuilder>]>}
  */
 async function choose_job_row(userid) {
     const selectMenu = new StringSelectMenuBuilder()
@@ -1511,11 +1532,15 @@ async function choose_job_row(userid) {
         .setLabel("取消")
         .setStyle(ButtonStyle.Danger);
 
-    const row1 = new ActionRowBuilder()
-        .addComponents(selectMenu);
+    const row1 =
+        /** @type {ActionRowBuilder<StringSelectMenuBuilder>} */
+        (new ActionRowBuilder()
+            .addComponents(selectMenu));
 
-    const row2 = new ActionRowBuilder()
-        .addComponents(cancel_button);
+    const row2 =
+        /** @type {ActionRowBuilder<ButtonBuilder>} */
+        (new ActionRowBuilder()
+            .addComponents(cancel_button));
 
     return [row1, row2];
 };
@@ -1529,13 +1554,51 @@ function amount_limit(amount) {
     return amount > Number.MAX_SAFE_INTEGER || amount < Number.MIN_SAFE_INTEGER;
 };
 
-async function ls_function({ client, message, rpg_data, mode, PASS, interaction = null }) {
+/**
+ * @overload 
+ * @param {Object} options
+ * @param {DogClient} options.client
+ * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
+ * @param {import("./config.js").RpgDatabase} options.rpg_data
+ * @param {1} options.mode
+ * @param {boolean} [options.PASS=false]
+ * @param {BaseInteraction | null} [options.interaction=null]
+ * @returns {Promise<{ [k: string]: any }>}
+ */
+/**
+ * @overload
+ * @param {Object} options
+ * @param {DogClient} options.client
+ * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
+ * @param {import("./config.js").RpgDatabase} options.rpg_data
+ * @param {0 | 1} [options.mode=0]
+ * @param {boolean} [options.PASS=false]
+ * @param {BaseInteraction | null} [options.interaction=null]
+ * @returns {Promise<Message | null>}
+ */
+/**
+ * Handle &ls for open backpack interaction
+ * @param {Object} options
+ * @param {DogClient} options.client
+ * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
+ * @param {import("./config.js").RpgDatabase} options.rpg_data
+ * @param {0 | 1} [options.mode=0]
+ * @param {boolean} [options.PASS=false]
+ * @param {BaseInteraction | null} [options.interaction=null]
+ */
+async function ls_function({ client, message, rpg_data, mode = 0, PASS = false, interaction = null }) {
+    if (!message.author) return mode === 0 ? null : {};
+
     if (!rpg_data.privacy.includes(PrivacySettings.Inventory) && !PASS) {
-        const guildData = await loadData(message.guild.id);
+        if (!message.guild) throw new Error("Invalid Guild of the message");
+
+        const [guildData, emoji_bag] = await Promise.all([
+            loadData(message.guild?.id),
+            get_emoji("bag", client),
+        ]);
 
         const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
 
-        const emoji_bag = await get_emoji("bag", client);
 
         let embed = new EmbedBuilder()
             .setTitle(`${emoji_bag} | 查看包包`)
@@ -1549,8 +1612,10 @@ async function ls_function({ client, message, rpg_data, mode, PASS, interaction 
             .setLabel("查看包包")
             .setStyle(ButtonStyle.Success);
 
-        const row = new ActionRowBuilder()
-            .addComponents(confirm_button);
+        const row =
+            /** @type {ActionRowBuilder<ButtonBuilder>} */
+            (new ActionRowBuilder()
+                .addComponents(confirm_button));
 
         if (mode === 1) return { embeds: [embed], components: [row] };
         return await message.reply({ embeds: [embed], components: [row] });
@@ -1559,13 +1624,21 @@ async function ls_function({ client, message, rpg_data, mode, PASS, interaction 
     const [emoji_bag, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await get_emojis(["bag", "ore", "farmer", "cow", "swords", "potion"], client);
 
     // 分類物品
+    /** @type {Object.<string, number>} */
     const ores = {};
+    /** @type {Object.<string, number>} */
     const log_items = {};
+    /** @type {Object.<string, number>} */
     const food_crops_items = {};
+    /** @type {Object.<string, number>} */
     const food_meat_items = {}
+    /** @type {Object.<string, number>} */
     const fish_items = {};
+    /** @type {Object.<string, number>} */
     const weapons_armor_items = {};
+    /** @type {Object.<string, number>} */
     const potions_items = {}
+    /** @type {Object.<string, number>} */
     const other_items = {};
 
     // 遍歷背包中的物品並分類
@@ -1641,10 +1714,10 @@ async function firstPrefix(guildID) {
 };
 
 /**
- * 
- * @param {string} guildID 
- * @param {string} prefix 
- * @returns {Promise<Array<string>>}
+ * Check whether a prefix is included in the prefixes of the guild
+ * @param {string} guildID
+ * @param {string} prefix
+ * @returns {Promise<string[]>}
  */
 async function InPrefix(guildID, prefix) {
     const guildData = await loadData(guildID);
@@ -1654,74 +1727,32 @@ async function InPrefix(guildID, prefix) {
 
     return prefixes
         .map(p => {
-            if (prefix.includes(p)) return p;
-
-            return null;
+            return prefix.includes(p)
+                ? p
+                : "";
         })
-        .filter(p => p);
+        .filter(Boolean);
 };
 
 /**
- * 
- * @param {string} guildID 
- * @param {string} prefix 
- * @returns {Promise<boolean | string>}
+ * Check whether a string is starts with one of the prefixes of the guild
+ * @param {string} guildID
+ * @param {string} str
+ * @returns {Promise<false | string>}
  */
-async function startsWith_prefixes(guildID, prefix) {
+async function startsWith_prefixes(guildID, str) {
     const guildData = await loadData(guildID);
 
     const prefixes = (guildData.prefix ?? [])
         .concat(reserved_prefixes);
 
     for (const p of prefixes) {
-        if (prefix.startsWith(p)) {
+        if (str.startsWith(p)) {
             return p;
         };
     };
 
     return false;
-};
-
-function any(iterable) {
-    if (iterable == null) {
-        throw new TypeError("any() argument must be an iterable");
-    };
-
-    for (const element of iterable) {
-        if (element) {
-            return true;
-        };
-    };
-
-    return false;
-};
-
-function all(iterable, defaultValue = true) {
-    if (iterable == null) {
-        if (arguments.length === 1) {
-            throw new TypeError("all() argument must be an iterable");
-        };
-
-        return defaultValue;
-    };
-
-    // 处理不可迭代的情况
-    if (typeof iterable[Symbol.iterator] !== "function") {
-        throw new TypeError("all() argument must be an iterable");
-    };
-
-    // 使用 for...of 遍历
-    try {
-        for (const element of iterable) {
-            if (!element) {
-                return false;
-            };
-        };
-    } catch (error) {
-        throw new TypeError("all() argument must be an iterable");
-    };
-
-    return true;
 };
 
 /**
@@ -1808,6 +1839,4 @@ module.exports = {
     startsWith_prefixes,
     get_fightjob_name,
     get_job_name,
-    all,
-    any,
 };

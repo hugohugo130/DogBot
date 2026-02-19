@@ -11,6 +11,7 @@ const { get_logger } = require("./logger.js");
 const { existsSync, compareLocalRemote, join_db_folder, readFile, stringify } = require("./file.js");
 const { get_areadline } = require("./readline.js");
 const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
+const { AxiosError } = require("axios");
 
 // @ts-ignore
 const { IP: serverIP, PORT } = global._client?.serverIP ?? getServerIPSync();
@@ -47,13 +48,13 @@ async function onlineDB_downloadFile(filename, savePath = null) {
         const writer = fs.createWriteStream(savePath);
         res.data.pipe(writer);
         await new Promise((resolve, reject) => {
-            writer.on("finish", resolve);
+            writer.on("finish", () => resolve(""));
             writer.on("error", reject);
         });
 
         return savePath;
     } catch (err) {
-        if (err.response.status === 404) {
+        if (err instanceof AxiosError && err.response?.status === 404) {
             logger.error(`下載檔案時遇到錯誤: 檔案 ${filename} 不存在`);
             return [err, `下載檔案時遇到錯誤: 檔案 ${filename} 不存在`];
         } else {
@@ -78,6 +79,8 @@ async function onlineDB_uploadFile(filepath) {
         const filenameWithoutExt = filename.replace(/\.json$/, "");
         const fileExt = path.extname(filename);
         const now = new Date();
+
+        /** @param {string | number} n */
         const pad = n => n.toString().padStart(2, "0");
         const year = now.getFullYear();
         const month = pad(now.getMonth() + 1);
@@ -91,7 +94,7 @@ async function onlineDB_uploadFile(filepath) {
         try {
             await axios.post(`${SERVER_URL}/copy`, { src: filename, dst: backupFile });
         } catch (err) {
-            if (err.response?.status === 404) {
+            if (err instanceof AxiosError && err.response?.status === 404) {
                 logger.warn(`[警告] 備份遠端檔案時: 來源文件 ${filename} 不存在`);
             } else {
                 throw err;
@@ -122,7 +125,7 @@ async function onlineDB_deleteFile(filename) {
         const res = await axios.delete(`${SERVER_URL}/files/${filename}`);
         return res.data;
     } catch (err) {
-        if (err.response.status === 404) {
+        if (err instanceof AxiosError && err.response?.status === 404) {
             logger.error(`刪除檔案時遇到錯誤: 檔案 ${filename} 不存在`);
             return [err, `刪除檔案時遇到錯誤: 檔案 ${filename} 不存在`];
         } else {
@@ -145,6 +148,13 @@ function diff(localContent, remoteContent) {
     return diffResult;
 };
 
+/**
+ * Check whether files locally and remotely is same by their contents
+ * @warning this will prompt user using readline
+ * @param {string} filename
+ * @param {number} maxRetries
+ * @returns {Promise<boolean | 1 | 2>}
+ */
 async function onlineDB_checkFileContent(filename, maxRetries = 3) {
     const [same, localContent, remoteContent] = await compareLocalRemote(filename, logger, maxRetries);
     const rl = get_areadline();
@@ -280,7 +290,11 @@ async function uploadAllDatabaseFiles() {
     return true;
 };
 
-// === 下載單一檔案到指定路徑 ===
+/**
+ * 下載單一檔案到指定路徑
+ * @param {string} src 
+ * @param {string | null} [dst=null]
+ */
 async function downloadDatabaseFile(src, dst = null) {
     // 預設下載到 download/ 資料夾
     if (!dst) {
@@ -308,10 +322,12 @@ async function uploadChangedDatabaseFiles() {
         if (fs.existsSync(file)) {
             let localContent;
             try {
-                localContent = await readFile(file);
+                localContent = await readFile(file, {
+                    encoding: "utf-8",
+                });
                 localContent = JSON.stringify(JSON.parse(localContent)); // 格式化本地內容
             } catch (err) {
-                logger.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
+                if (err instanceof Error) logger.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
                 continue;
             };
 
@@ -320,11 +336,11 @@ async function uploadChangedDatabaseFiles() {
                 const response = await axios.get(`${SERVER_URL}/files/${file}`);
                 remoteContent = JSON.stringify(response.data);
             } catch (err) {
-                if (err.response?.status === 404) {
+                if (err instanceof AxiosError && err.response?.status === 404) {
                     logger.info(`遠端無 ${file} 檔案準備上傳本地檔案`);
                     await onlineDB_uploadFile(file);
                 } else {
-                    logger.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
+                    if (err instanceof Error) logger.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
                 };
 
                 continue;

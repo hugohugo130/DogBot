@@ -39,7 +39,7 @@ async function search_tracks(query) {
 /**
  * Get the audio stream of a soundcloud track
  * @param {import("soundcloud.ts").SoundcloudTrack | string} track - The soundcloud track
- * @returns {Promise<[Readable, import("file-type").FileTypeResult]>} - [Readable, FileTypeResult] FileTypeResult.mime is usually audio/mpeg
+ * @returns {Promise<[Readable, string | null]>} - [Readable, string] string is FileTypeResult.mime, usually "audio/mpeg"
  */
 async function getAudioStream(track) {
     // const stream_url = await sc.util.streamLink(track);
@@ -48,7 +48,7 @@ async function getAudioStream(track) {
         // logger.debug(stream_url)
         const [audio_stream, fileType] = await fetchAudioStream(stream_url);
         // logger.debug("fetched")
-        return [audio_stream, fileType];
+        return [audio_stream, fileType.mime];
     } else {
         // logger.debug("else:")
         const stream = await sc.util.streamTrack(track);
@@ -60,7 +60,7 @@ async function getAudioStream(track) {
 /**
  * 
  * @param {string} url
- * @returns {import("soundcloud.ts").SoundcloudTrack}
+ * @returns {Promise<import("soundcloud.ts").SoundcloudTrack>}
  */
 async function get_track_info(url) {
     return await sc.tracks.get(url);
@@ -69,12 +69,18 @@ async function get_track_info(url) {
 /**
  * Get the tracks related to a track.
  * @param {string | number} track_id - the ID of a track
- * @returns {Promise<import("soundcloud.ts").SoundcloudTrack[]>}
+ * @returns {Promise<import("soundcloud.ts").SoundcloudSearch>}
  */
 async function get_related_tracks(track_id) {
     return await sc.tracks.related(track_id);
 };
 
+/**
+ * Check whether a string is a valid soundcloud url
+ * @param {string | null} [url=null]
+ * @param {string | null} [type=null]
+ * @returns {boolean}
+ */
 function validateURL(url = null, type = "all") {
     if (typeof url !== "string") return false;
 
@@ -82,11 +88,13 @@ function validateURL(url = null, type = "all") {
         case "artist":
             return Constants.REGEX_ARTIST.test(url);
         case "playlist":
-            return Constants.REGEX_SET.test(url) || (url.match(/soundcloud.app.goo.gl/) && url.split("/").pop().length === 5);
+            return !!(Constants.REGEX_SET.test(url) || (url.match(/soundcloud.app.goo.gl/) && url.split("/").pop()?.length === 5));
         case "track":
-            return Constants.REGEX_TRACK.test(url) || url.match(/soundcloud.app.goo.gl/) && url.split("/").pop().length > 5;
+            const last = url.split("/").pop();
+
+            return !!(Constants.REGEX_TRACK.test(url) || url.match(/soundcloud.app.goo.gl/) && last && last.length > 5);
         default:
-            return Constants.SOUNDCLOUD_URL_REGEX.test(url) || url.match(/soundcloud.app.goo.gl/);
+            return !!(Constants.SOUNDCLOUD_URL_REGEX.test(url) || url.match(/soundcloud.app.goo.gl/));
     };
 };
 

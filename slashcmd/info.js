@@ -1,20 +1,23 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown, Locale } = require("discord.js");
 
 const {
-    convertToSecondTimestamp
+    convertToSecondTimestamp,
 } = require("../utils/timestamp.js");
 const {
-    load_rpg_data
+    load_rpg_data,
 } = require("../utils/file.js");
 const {
     get_emojis,
     get_emoji,
     get_job_name,
-    get_fightjob_name
+    get_fightjob_name,
 } = require("../utils/rpg.js");
 const {
-    get_lang_data
+    get_lang_data,
 } = require("../utils/language.js");
+const {
+    wait_for_client,
+} = require("../utils/wait_until_ready.js");
 const {
     embed_default_color,
     max_hunger,
@@ -26,15 +29,23 @@ const DogClient = require("../utils/customs/client.js");
 
 /**
  * 
- * @param {Locale | string} locale
- * @param {DogClient} client
+ * @param {Locale[any] | string | null} [locale=null]
+ * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
 async function getBotInfoEmbed(locale = null, client = global._client) {
-    const fix = (num) => {
-        num = num / 1024 / 1024;
-        return Math.floor(num);
-    };
+    if (!client) client = await wait_for_client();
+
+    const fix =
+        /**
+         * divide a number by 1024*1024 and floor it
+         * @param {number} num 
+         * @returns {number}
+         */
+        (num) => {
+            num = num / 1024 / 1024;
+            return Math.floor(num);
+        };
 
     const [emoji_timer, emoji_user, emoji_server, emoji_memory] = await get_emojis(["timer", "user", "server", "memory"], client);
 
@@ -48,7 +59,9 @@ async function getBotInfoEmbed(locale = null, client = global._client) {
 
     const serverCount = client.guilds.cache.size;
     const userCount = client.users.cache.size;
-    const readyAt = convertToSecondTimestamp(client.readyAt.getTime());
+    const readyAt = client.readyAt
+        ? convertToSecondTimestamp(client.readyAt.getTime())
+        : "無法獲取資料";
 
     return new EmbedBuilder()
         .setColor(embed_default_color)
@@ -74,7 +87,7 @@ async function getBotInfoEmbed(locale = null, client = global._client) {
             },
         )
         .setFooter({ text: lang_footer })
-        .setEmbedAuthor(`${client.user.tag} 🤖`);
+        .setEmbedAuthor(client, `${client.user?.tag} 🤖`);
 };
 
 module.exports = {
@@ -297,15 +310,19 @@ module.exports = {
                 const lang_splash = get_lang_data(locale, "/info", "guild.splash"); // Splash 邀請背景
 
                 const guild = interaction.guild;
+                if (!guild) return await interaction.editReply({
+                    content: "你不在一個伺服器内執行這個指令！"
+                });
+
                 const guildId = guild.id;
                 const guildName = guild.name;
                 const guildMembers = guild.memberCount;
                 const boosts = guild.premiumSubscriptionCount ?? 0;
                 const boostLevel = guild.premiumTier;
                 const ownerId = guild.ownerId;
-                const serverIconURL = guild.iconURL({ dynamic: true });
-                const serverBanner = guild.bannerURL({ dynamic: true });
-                const serverSplash = guild.splashURL({ dynamic: true });
+                const serverIconURL = guild.iconURL();
+                const serverBanner = guild.bannerURL();
+                const serverSplash = guild.splashURL();
                 const createdAt = convertToSecondTimestamp(interaction.guild.createdAt.getTime());
 
                 const embed = new EmbedBuilder()
@@ -367,8 +384,9 @@ module.exports = {
                 };
 
                 const row = BtnLinks.length ?
-                    new ActionRowBuilder()
-                        .addComponents(BtnLinks)
+                    /** @type {ActionRowBuilder<ButtonBuilder>} */
+                    (new ActionRowBuilder()
+                        .addComponents(BtnLinks))
                     : null;
 
                 await interaction.editReply({ embeds: [embed], components: row ? [row] : [] });
@@ -382,11 +400,13 @@ module.exports = {
                 const refreshButton = new ButtonBuilder()
                     .setCustomId(`refresh|any|/info bot`)
                     .setEmoji(emoji_robot)
-                    .setLabel(lang_refresh)
+                    .setLabel(lang_refresh || "")
                     .setStyle(ButtonStyle.Primary);
 
-                const row = new ActionRowBuilder()
-                    .addComponents(refreshButton);
+                const row =
+                    /** @type {ActionRowBuilder<ButtonBuilder>} */
+                    (new ActionRowBuilder()
+                        .addComponents(refreshButton));
 
                 await interaction.editReply({ embeds: [embed], components: [row] });
             };

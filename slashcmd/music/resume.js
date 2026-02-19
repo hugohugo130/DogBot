@@ -38,7 +38,7 @@ module.exports = {
             });
         };
 
-        const queue = getQueue(guildId, false);
+        const queue = getQueue(guildId);
         const [[emoji_cross, emoji_pause, emoji_play], notPlayingEmbed] = await Promise.all([
             get_emojis(["crosS", "pause", "play"], client),
             noMusicIsPlayingEmbed(queue, interaction, client),
@@ -54,7 +54,7 @@ module.exports = {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
-                .setDescription(`你必須待在 <#${queue.connection?.joinConfig.channelId || queue.voiceChannel.id}> 裡面`)
+                .setDescription(`你必須待在 <#${queue?.connection?.joinConfig.channelId || queue?.voiceChannel?.id}> 裡面`)
                 .setEmbedFooter(interaction);
 
             return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });

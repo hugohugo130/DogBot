@@ -12,8 +12,9 @@ function randint(min, max) {
 
 /**
  * Choose a random element from a non-empty sequence.
- * @param {Array<element>} array 
- * @returns {element}
+ * @template T
+ * @param {Array<T>} array
+ * @returns {T}
  */
 function choice(array) {
     const randomIndex = Math.floor(Math.random() * array.length);
@@ -21,7 +22,8 @@ function choice(array) {
 };
 
 /**
- *
+ * Choose some random elements from a non-empty sequence.
+ * @template T
  * @param {Array<T>} array
  * @param {number} [amount]
  * @returns {Array<T>}
@@ -36,7 +38,8 @@ function choicesSync(array, amount = 1) {
 };
 
 /**
- *
+ * Choose some random elements from a non-empty sequence.
+ * @template T
  * @param {Array<T>} array
  * @param {number} [amount]
  * @returns {Promise<Array<T>>}
@@ -74,6 +77,11 @@ function generateSessionId(length = 32) {
     return crypto.randomBytes(Math.floor(length / 2)).toString('hex');
 };
 
+/**
+ * Generate a SHA256 hash
+ * @param {crypto.BinaryLike} input
+ * @returns {string}
+ */
 function generateSHA256(input) {
     const SHA256Hash = crypto.createHash('sha256');
 
@@ -81,6 +89,11 @@ function generateSHA256(input) {
     return SHA256Hash.digest('hex');
 };
 
+/**
+ * Generate a MD5 hash
+ * @param {crypto.BinaryLike} input
+ * @returns {string}
+ */
 function generateMD5(input) {
     const MD5Hash = crypto.createHash('md5');
 

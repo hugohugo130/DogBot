@@ -4,9 +4,12 @@
         "allowJs": true,
         "strictNullChecks": true,
         "strictFunctionTypes": true,
+        "skipLibCheck": true,
     },
     "exclude": [
         "node_modules",
-        "**/node_modules"
+        "**/node_modules",
+        "error_reader.js",
+        "*test*.js",
     ]
 }

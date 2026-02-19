@@ -6,6 +6,7 @@ const { get_logger } = require("./logger.js");
 const { cogsFolder } = require("./config.js");
 const DogClient = require("./customs/client.js");
 
+/** @type {string[]} */
 const load_skiplist = [];
 const logger = get_logger();
 
@@ -17,6 +18,11 @@ const logger = get_logger();
  * @returns {Promise<number>}
  */
 async function load_cog(client, cog, itemPath) {
+    /**
+     *
+     * @param  {...any} args
+     * @returns
+     */
     async function run_execute(...args) {
         try {
             await cog.execute(client, ...args);
@@ -52,9 +58,12 @@ async function load_cog(client, cog, itemPath) {
  * @returns {Promise<number>}
  */
 async function processDirectory(client, dirPath, quiet = false) {
-    const items = fs.readdirSync(dirPath).filter(item => !load_skiplist.includes(item));
+    const items = fs.readdirSync(dirPath, {
+        encoding: "utf-8",
+    }).filter(item => !load_skiplist.includes(item));
+
     let loadedFiles = 0;
-    const logger = get_logger({ client });
+    const logger = get_logger();
 
     for (const item of items) {
         const itemPath = path.join(dirPath, item);

@@ -1,11 +1,42 @@
-const { Client, GatewayIntentBits, Options, Collection, Guild, GuildMember, VoiceChannel } = require("discord.js");
+const { Client, GatewayIntentBits, Options, Collection, Guild, GuildMember, User } = require("discord.js");
 
-const { loadslashcmd } = require("../loadslashcmd.js");
-const { loadDvoiceData } = require("../file.js");
 const { authorName, BotName } = require("../config.js");
+
+/**
+ * @typedef OvenBakeSession
+ * @property {string} item_id
+ * @property {number} amount
+ * @property {number} coal_amount
+ * @property {number} duration
+ * @property {{ item: string, amount: number }[]} item_need
+ * @property {string} userId
+ */
+
+/**
+ * @typedef {{ item: string, amount: number }[]} SmelterSession
+*/
+
+/**
+ * @typedef CookSession
+ * @property {string} userId
+ * @property {{ input: { name: string, amount: number }[], output: string, amount: number }} recipe
+ * @property {{ item: string, amount: number}[]} inputed_foods
+ * @property {{ item: string, amount: number}[]} item_needed
+ * @property {number} amount
+ * @property {number} cooked
+ * @property {number} last_cook_time
+ */
+
+/**
+ * @typedef GbmiSession
+ * @property {{ item: string, amount: number }[]} item_needed
+ * @property {string} userId
+ */
 
 class DogClient extends Client {
     constructor() {
+        const { loadslashcmd } = require("../loadslashcmd.js");
+
         const options = {
             intents: [
                 GatewayIntentBits.Guilds,
@@ -33,7 +64,10 @@ class DogClient extends Client {
                 },
                 users: {
                     interval: 3_600,
-                    filter: () => user => user.bot && user.id !== user.client.user.id,
+
+                    filter: () =>
+                        /** @param {User} user */
+                        (user) => user.bot && user.id !== user.client.user.id,
                 },
                 messages: {
                     interval: 3_600,
@@ -47,35 +81,38 @@ class DogClient extends Client {
         /** @type {string} */
         this.author = authorName || "哈狗";
 
-        /** @type {Collection<string, {owner: string, channel: VoiceChannel}} */
+        /** @type {Collection<string, import("../config.js").DvoiceData>} */
         this.dvoice = new Collection();
 
+        const cmds = loadslashcmd(true);
+        if (!(cmds instanceof Collection)) throw new Error("loadslashcmd(true) should return an Collection");
+
         /** @type {Collection<string, any>} */
-        this.commands = loadslashcmd(true);
+        this.commands = cmds;
 
         /** @type {Collection<string, any>} */
         this.musicTrackSession = new Collection();
 
-        /** @type {Collection<string, object>} */
+        /** @type {Collection<string, OvenBakeSession>} */
         this.oven_sessions = new Collection();
 
-        /** @type {Collection<string, object>} */
+        /** @type {Collection<string, SmelterSession>} */
         this.smelter_sessions = new Collection();
 
-        /** @type {Collection<string, object>} */
+        /** @type {Collection<string, CookSession>} */
         this.cook_sessions = new Collection();
 
-        /** @type {Collection<string, object>} */
+        /** @type {Collection<string, GbmiSession>} */
         this.gbmi_sessions = new Collection();
+
+        /** @type {{IP: string, PORT: number}} */
+        this.serverIP = { IP: "192.168.0.156", "PORT": 3003 };
 
         /** @type {string} */
         this.name = BotName; // will be set when the client is ready if BotName is not set
 
         /**
-         * @type {Object.<string, Object.<string, Object.<string, string>>>}
-         * USERID: {
-         *  command: string
-         * }
+         * @type {{ rpg_handler: { [k: string]: string} }}
          */
         this.lock = {
             rpg_handler: {},
@@ -84,8 +121,14 @@ class DogClient extends Client {
         this.setMaxListeners(Infinity);
     };
 
+    /**
+     * @returns {Promise<void>}
+     */
     async on_ready() {
-        this.dvoice = new Collection(Object.entries(await loadDvoiceData()));
+        const { loadDvoiceData } = require("../file.js");
+
+        this.dvoice = new Collection(await loadDvoiceData());
+
         if (!this.name && this.user?.id) this.name = this.user.id;
     };
 
@@ -96,14 +139,20 @@ class DogClient extends Client {
     async getAllGuilds() {
         const shard = this.shard;
         if (shard) {
-            const guilds = await shard.fetchClientValues("guilds.cache");
+            /** @type {Guild[]} */
+            const guilds = [];
 
-            return Array.from(guilds.values())
-                .flat()
-            // .filter(Boolean);
-        } else {
-            return Array.from(this.guilds.cache.values()).flat();
+            for (const item of (await shard.fetchClientValues("guilds.cache"))) {
+                if (item instanceof Collection) {
+                    guilds.push(...item.values());
+                };
+            };
+
+            return guilds;
         };
+
+        // 非分片模式：直接返回本地的 guilds.cache 的值
+        return Array.from(this.guilds.cache.values());
     };
 
     /**
@@ -124,7 +173,7 @@ class DogClient extends Client {
                     members = await guild.members.fetch({ time: fetch_timeout * 1000 });
                 };
             } catch (err) {
-                if (!err.stack.includes("GuildMembersTimeout")) throw err;
+                if (err instanceof Error && err.stack && !err.stack.includes("GuildMembersTimeout")) throw err;
 
                 members = guild.members.cache;
             };

@@ -27,16 +27,19 @@ const logger = get_logger();
 
 // 未捕獲的 Promise Rejection 處理
 process.on("unhandledRejection", (reason, promise) => {
-    let errorStack = reason?.stack || reason;
+    let errorStack = reason;
+
     if (reason instanceof Error) {
         errorStack = util.inspect(reason, { depth: null });
     };
 
-    if (errorStack.includes("Missing Access")) return;
-    if (errorStack.includes("Missing Permissions")) return;
-    if (errorStack.includes("Unknown interaction")) return;
+    const errorStack_str = String(errorStack);
 
-    logger.error(`未捕獲的 Promise Rejection:\n${errorStack}`);
+    if (errorStack_str.includes("Missing Access")) return;
+    if (errorStack_str.includes("Missing Permissions")) return;
+    if (errorStack_str.includes("Unknown interaction")) return;
+
+    logger.error(`未捕獲的 Promise Rejection:\n${errorStack_str}`);
 });
 
 // 未捕獲的異常處理
@@ -99,7 +102,7 @@ client.once(Events.ClientReady, async () => {
                 const playingPlayers = musicQueues.filter(queue => queue.isPlaying()).size;
                 const playersCount = musicQueues.size;
                 const totalTracks = musicQueues.reduce((acc, queue) => {
-                    return acc + queue.isPlaying() ? 1 + queue.tracks.length : 0;
+                    return acc + (queue.isPlaying() ? 1 + queue.tracks.length : 0);
                 }, 0);
 
                 logger.info(`\n- 連接用戶 (音樂播放器)：${playersCount}\n- 正在播放總人數: ${playingPlayers}\n- 正在播放 ${totalTracks} 首音樂。`);
@@ -125,6 +128,7 @@ client.once(Events.ClientReady, async () => {
             switch (option) {
                 case "clear": {
                     const cachemgr = getCacheManager();
+                    if (!cachemgr) break;
 
                     cachemgr.clear();
                     logger.info(`[cacheManager] cleaned all caches successfully`);
@@ -133,6 +137,7 @@ client.once(Events.ClientReady, async () => {
 
                 case "stats": {
                     const cachemgr = getCacheManager();
+                    if (!cachemgr) break;
 
                     logger.info(util.inspect(cachemgr.getStats(), { depth: null }));
                     break;
@@ -158,7 +163,7 @@ client.once(Events.ClientReady, async () => {
     check_item_data();
     await checkDBFilesExists();
 
-    client.serverIP = getServerIPSync(client);
+    client.serverIP = getServerIPSync();
 
     const cogs = await load_cogs(client);
     logger.info(`✅ Loaded ${cogs} cogs`);

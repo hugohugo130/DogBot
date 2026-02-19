@@ -1,36 +1,49 @@
-const { REST, Routes, Collection } = require("discord.js");
+const { REST, Collection, Routes } = require("discord.js");
+const { Logger } = require("winston");
+
 const { BotID } = require("./utils/config.js");
 const { loadslashcmd } = require("./utils/loadslashcmd.js");
-const { Logger } = require("winston");
 const { get_logger } = require("./utils/logger.js");
 const { should_register_cmd, update_cmd_hash } = require("./utils/auto_register.js");
 const util = require("util");
 
 const args = process.argv.slice(2);
 
+/**
+ * Log something
+ * @param {Logger | false | null} logger
+ * @param {any} message - the message to be logged
+ */
 function log(logger, message) {
     if (logger) logger.info(message);
     else console.log(message);
 };
 
+/**
+ * Log some errors
+ * @param {Logger | false | null} logger
+ * @param {any} message - the message of error to be logged
+ */
 function _error(logger, message) {
     if (logger) logger.error(message);
     else console.error(message);
 };
 
 /**
- * 
- * @param {boolean} quiet 
- * @param {boolean | Logger} logger 
+ * Register slash commands
+ * @param {boolean} quiet
+ * @param {boolean | Logger} logger
  * @param {boolean} updateHash 是否在註冊成功後更新 hash 文件
- * @returns {Promise<Collection>}
+ * @returns {Promise<any[]>}
  */
 async function registcmd(quiet = true, logger = false, updateHash = true) {
     require("node:process").loadEnvFile();
 
+    if (!process.env.TOKEN) throw new Error("no bot token provided in .env");
+
     if (logger === true) logger = get_logger();
 
-    let commands = loadslashcmd();
+    const commands = Array.from(loadslashcmd(false));
     const rest = new REST().setToken(process.env.TOKEN);
 
     try {
@@ -41,17 +54,19 @@ async function registcmd(quiet = true, logger = false, updateHash = true) {
             { body: commands },
         );
 
-        if (!quiet) log(logger, `已註冊 ${data.length} 個斜線指令!`);
+        if (!quiet) log(logger, `已註冊 ${Array.isArray(data) ? data.length : null} 個斜線指令!`);
 
         // 註冊成功後更新 hash 文件
         if (updateHash) {
             await update_cmd_hash();
             if (!quiet) log(logger, "已更新命令 hash 文件");
-        }
+        };
 
         return commands;
     } catch (error) {
         _error(logger, error);
+
+        return [];
     };
 };
 

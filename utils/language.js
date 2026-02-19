@@ -8,7 +8,7 @@ const { get_logger } = require("./logger");
  * 
  * 所有鍵都是小寫的
  * {0} {1} {2} ... 是文字需要的變量
- * @typedef {Object} Translation
+ * @type {{ [k: Locale[any]]: {[k: string]: {[k: string]: string}}}}
  */
 const language = {
     [Locale.EnglishUS]: {
@@ -163,9 +163,11 @@ const logger = get_logger();
 /**
  * 檢查所有語言中的翻譯鍵是否完整
  * 收集所有語言中所有分類及其鍵，然後逐個語言檢查每個分類中是否有相應的鍵
- * 如果缺少鍵則使用 logger.warn 記錄警告
  */
 function check_language_keys() {
+    /** @type {string[]} */
+    const locales = Object.values(Locale);
+
     // 收集所有語言中所有分類及其鍵的集合
     const allCategories = new Set();
 
@@ -173,10 +175,12 @@ function check_language_keys() {
     const allKeysByCategory = new Map();
 
     // 第一步：收集所有語言中的所有分類和鍵
-    for (const locale of Object.values(Locale)) {
-        if (!language[locale]) continue;
+    for (const locale of locales) {
+        const localeData = locale in language
+            ? language[locale]
+            : null;
 
-        const localeData = language[locale];
+        if (!localeData) return;
 
         for (const [category, translations] of Object.entries(localeData)) {
             // 添加分類到集合
@@ -187,17 +191,18 @@ function check_language_keys() {
                 allKeysByCategory.set(category, new Set());
             };
 
+            const keyset = allKeysByCategory.get(category);
+
             // 收集該分類下的所有鍵（遞歸處理嵌套對象）
-            collectKeys(translations, '', allKeysByCategory.get(category));
+            if (keyset) collectKeys(translations, '', keyset);
         };
     };
 
     // 第二步：逐個語言檢查每個分類中是否有相應的鍵
     for (const locale of Object.values(Locale)) {
-        if (!language[locale]) continue;
+        if (!(locale in language)) continue;
 
         const localeData = language[locale];
-        const localeName = getLocaleName(locale);
 
         // 檢查每個分類
         for (const category of allCategories) {
@@ -209,7 +214,7 @@ function check_language_keys() {
 
             if (!categoryTranslations) {
                 // 該語言完全缺少這個分類
-                logger.warn(`語言 "${localeName}" (${locale}) 缺少分類 "${category}"`);
+                logger.warn(`語言 "${locale}" (${locale}) 缺少分類 "${category}"`);
                 continue;
             };
 
@@ -220,14 +225,14 @@ function check_language_keys() {
             // 檢查缺少哪些鍵
             for (const expectedKey of expectedKeys) {
                 if (!actualKeys.has(expectedKey)) {
-                    logger.warn(`語言 "${localeName}" (${locale}) 的分類 "${category}" 缺少鍵 "${expectedKey}"`);
+                    logger.warn(`語言 "${locale}" (${locale}) 的分類 "${category}" 缺少鍵 "${expectedKey}"`);
                 };
             };
 
             // 檢查是否有額外的鍵（不在所有鍵集合中的鍵）
             for (const actualKey of actualKeys) {
                 if (!expectedKeys.has(actualKey)) {
-                    logger.warn(`語言 "${localeName}" (${locale}) 的分類 "${category}" 有多餘的鍵 "${actualKey}"`);
+                    logger.warn(`語言 "${locale}" (${locale}) 的分類 "${category}" 有多餘的鍵 "${actualKey}"`);
                 };
             };
         };
@@ -258,24 +263,10 @@ function collectKeys(obj, prefix, keysSet) {
 };
 
 /**
- * 獲取語言的名稱（用於日誌輸出）
- * @param {string} locale - 語言代碼
- * @returns {string} 語言名稱
- */
-function getLocaleName(locale) {
-    const localeNames = {
-        [Locale.EnglishUS]: "英文（美式）",
-        [Locale.ChineseTW]: "中文（繁體）",
-    };
-
-    return localeNames[locale] || locale;
-};
-
-/**
  *
  * @param {string} lang
  * @param {string} [default_lang]
- * @returns {object}
+ * @returns {{ [k: string]: any }}
  */
 function get_lang(lang, default_lang = Locale.ChineseTW) {
     return (lang in language)
@@ -288,7 +279,7 @@ function get_lang(lang, default_lang = Locale.ChineseTW) {
  * @param {string} lang
  * @param {string} category
  * @param {string} [default_lang]
- * @returns {object}
+ * @returns {{ [k: string]: any }}
  */
 function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
     const lang_data = get_lang(lang, default_lang);
@@ -301,15 +292,16 @@ function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
 
 /**
  * 獲取語言資料
- * @param {string | null} lang
+ * @param {Locale[any] | null | undefined} lang
  * @param {string} category
  * @param {string} key
- * @param {string[]} [replace=[]] - 文字中需要的變量
- * @returns {string | undefined}
+ * @param {...any} replace - 文字中需要的變量
+ * @returns {string}
  */
 function get_lang_data(lang, category, key, ...replace) {
     const default_lang = Locale.ChineseTW;
 
+    if (!replace) replace = [];
     replace = replace.flat();
 
     lang = (lang && lang in language)

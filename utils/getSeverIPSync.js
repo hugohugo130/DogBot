@@ -10,15 +10,21 @@ const logger = get_logger();
 // const PORT = 3003;
 const PORT = DEFAULT_PORT;
 
+/**
+ * Check whether the IP:PORT can be connected
+ * @param {string} IP - The IP to check
+ * @param {number} PORT - The PORT to check
+ * @returns {boolean}
+ */
 function check_IP_valid(IP, PORT) {
     const platform = process.platform;
 
     if (platform === "win32") { // windows NT
-        res = execSync(`powershell -Command "try { (Invoke-WebRequest -Uri 'http://${IP}:${PORT}/verify' -UseBasicParsing -TimeoutSec 1).StatusCode } catch { '' }"`).toString().trim();
+        const res = execSync(`powershell -Command "try { (Invoke-WebRequest -Uri 'http://${IP}:${PORT}/verify' -UseBasicParsing -TimeoutSec 1).StatusCode } catch { '' }"`).toString().trim();
 
         return res === "200";
     } else if (platform === "linux") { // linux / ubuntu
-        res = execSync(`curl -s -o /dev/null -w "%{http_code}" http://${IP}:${PORT}/verify --connect-timeout 1 || echo ""`).toString().trim();
+        const res = execSync(`curl -s -o /dev/null -w "%{http_code}" http://${IP}:${PORT}/verify --connect-timeout 1 || echo ""`).toString().trim();
 
         return res === "200";
     } else {
@@ -32,9 +38,11 @@ function getServerIPSync() {
     let serverIP = null;
     if (fs.existsSync(serverIPFile)) {
         try {
-            serverIP = JSON.parse(readFileSync(serverIPFile, {
-                encoding: "utf-8",
-            }));
+            serverIP = JSON.parse(
+                readFileSync(serverIPFile, {
+                    encoding: "utf-8",
+                })
+            );
         } catch (e) {
             serverIP = null;
         };

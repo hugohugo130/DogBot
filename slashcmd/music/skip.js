@@ -29,14 +29,14 @@ module.exports = {
             ? interaction.member.voice?.channel
             : null;
 
-        if (!voiceChannel) {
+        if (!voiceChannel || !interaction.guild) {
             return await interaction.reply({
                 embeds: [await youHaveToJoinVC_Embed(interaction, client)],
                 flags: MessageFlags.Ephemeral,
             });
         };
 
-        const queue = getQueue(interaction.guildId, false);
+        const queue = getQueue(interaction.guild.id, true);
 
         const [clientMember, notPlayingEmbed, [emoji_cross, emoji_skip]] = await Promise.all([
             get_me(interaction.guild),
@@ -48,7 +48,7 @@ module.exports = {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 我們不在同一個頻道`)
-                .setDescription(`你必須待在 <#${queue.connection?.channel?.id}> 裡面`)
+                .setDescription(`你必須待在 <#${queue?.connection?.joinConfig.channelId || queue?.voiceChannel?.id}> 裡面`)
                 .setEmbedFooter(interaction);
 
             return await interaction.reply({ embeds: [embed] });
@@ -59,6 +59,7 @@ module.exports = {
         };
 
         const skippedTrack = queue.currentTrack;
+        if (!skippedTrack) return;
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
