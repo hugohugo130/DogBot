@@ -251,7 +251,7 @@ function getCallerModuleName(depth = 4) {
         res = unknown_word;
     };
 
-    if (res !== unknown_word) {
+    if (res === unknown_word) {
         const originalPrepareStackTrace = Error.prepareStackTrace;
         let callerFile;
 
@@ -296,7 +296,7 @@ function get_logger(options = {}) {
         nodc = false,
     } = options;
 
-    // 返回已存在的 logger (backend 和非 backend 的 logger 分開管理)
+    // 返回已存在的 logger
     if (backend) {
         if (loggerManager_log.has(name)) return loggerManager_log.get(name);
     } else if (nodc) {
