@@ -146,6 +146,31 @@ async function get_amount(item, user, amount_str) {
 
 /**
  * Redirect to another command
+ *
+ * @overload
+ * @param {Object} options
+ * @param {DogClient} options.client
+ * @param {Message | MockMessage} options.message
+ * @param {string} options.command
+ * @param {0} [options.mode=0]
+ * @returns {Promise<void | Message | null>}
+ *
+ * @overload
+ * @param {Object} options
+ * @param {DogClient} options.client
+ * @param {Message | MockMessage} options.message
+ * @param {string} options.command
+ * @param {1} options.mode
+ * @returns {Promise<void | { [k: string]: any } | null>}
+ *
+ * @overload
+ * @param {Object} options
+ * @param {DogClient} options.client
+ * @param {Message | MockMessage} options.message
+ * @param {string} options.command
+ * @param {0 | 1} [options.mode=0]
+ * @returns {Promise<void | { [k: string]: any } | Message | null>}
+ *
  * @param {Object} options
  * @param {DogClient} options.client
  * @param {Message | MockMessage} options.message
@@ -153,7 +178,6 @@ async function get_amount(item, user, amount_str) {
  * @param {0 | 1} [options.mode=0]
  * @throws {TypeError} When the mode argument is not valid
  * @throws {Error} When there is no guild property of the message object
- * @returns {Promise<void | { [k: string]: any } | Message | null>}
  */
 async function redirect({ client, message, command, mode = 0 }) {
     /*
@@ -587,14 +611,12 @@ const rpg_commands = {
 
                     if (amount === "all") amount = await get_number_of_items(item, userid); // 獲取所有物品數量
 
-                    if (!Object.keys(name).concat(Object.values(name)).includes(args[1])) {
-                        const embed = new EmbedBuilder()
-                            .setColor(embed_error_color)
-                            .setTitle(`${emoji_cross} | 未知的物品`)
-                            .setEmbedFooter();
-
-                        if (mode === 1) return { embeds: [embed] };
-                        return await message.reply({ embeds: [embed] });
+                    if (!
+                        Object.keys(name)
+                            .concat(Object.values(name))
+                            .includes(args[1])
+                    ) {
+                        return await redirect({ client, message, command: "help shop", mode });
                     };
 
                     const item_exist = shop_data.items[item];
