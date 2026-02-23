@@ -2,7 +2,6 @@
 
 > **版本**: 1.0.0
 > **最後更新**: 2026/2/2
-> **作者**: BAILUCODE AI IDE
 > **專案類型**: Discord Bot (Node.js)
 
 ---

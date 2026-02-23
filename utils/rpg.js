@@ -734,7 +734,7 @@ const name = {
     raw_pork: "生豬肉",
     raw_potato: "馬鈴薯",
     raw_hugo: "生哈狗",
-    hugo: "哈哈哈熱狗",
+    hugo: "烤哈狗",
     wheat: "小麥",
     // ==============動物==============
     a_chicken: "雞",
