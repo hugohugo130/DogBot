@@ -1,5 +1,6 @@
-const { Guild, GuildMember, DMChannel, User } = require("discord.js");
-const { wait_until_ready, wait_for_client } = require("./wait_until_ready.js")
+const { Guild, GuildMember, User } = require("discord.js");
+
+const { wait_for_client } = require("./wait_for_client.js")
 const DogClient = require("../utils/customs/client.js");
 
 /**
@@ -10,7 +11,7 @@ const DogClient = require("../utils/customs/client.js");
  * @returns {Promise<GuildMember[]>}
  */
 async function get_members_of_guild(guildID, fetch = true, client = global._client) {
-    if (!client) client = await wait_until_ready(client);
+    if (!client) client = await wait_for_client();
 
     const guild = await get_guild(guildID, client);
     if (!guild) return [];

@@ -3,10 +3,10 @@ const { Events, Message } = require("discord.js");
 const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
 const { add_money, get_emoji } = require("../utils/rpg.js");
 const { randint } = require("../utils/random.js");
+const { wait_for_client } = require("../utils/wait_for_client.js");
 const { daily_sign_guildIDs, embed_default_color } = require("../utils/config.js");
 const DogClient = require("../utils/customs/client.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");
-const { wait_for_client } = require("../utils/wait_until_ready.js");
 
 /**
  * 判斷用戶今天是否已簽到和斷簽

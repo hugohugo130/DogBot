@@ -3,10 +3,10 @@ const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, Messa
 const { notEnoughItemEmbed, wrong_job_embed, userHaveNotEnoughItems, get_name_of_id, get_emojis, get_emoji, cook, food_data } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
 const { generateSessionId } = require("../../../utils/random.js");
+const { wait_for_client } = require("../../../utils/wait_for_client.js");
 const { container_default_color, embed_error_color, cookClickAmount } = require("../../../utils/config.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 const DogClient = require("../../../utils/customs/client.js");
-const { wait_for_client } = require("../../../utils/wait_until_ready.js");
 
 /**
  * Get Cooking Container

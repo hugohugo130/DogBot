@@ -1,7 +1,7 @@
 const path = require("path");
 const util = require("util");
 
-const { wait_until_ready, wait_for_client } = require("./wait_until_ready.js");
+const { wait_for_client } = require("./wait_for_client.js");
 const { asleep } = require("./sleep.js");
 const { get_logger } = require("./logger.js");
 const { readSchedule } = require("./file.js");

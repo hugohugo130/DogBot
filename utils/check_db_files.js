@@ -3,7 +3,7 @@ const { User, Guild } = require("discord.js");
 const { DATABASE_FILES, DEFAULT_VALUES, priorityUserIDs, priorityGuildIDs } = require("./config.js");
 const { readJson, writeJson, exists, basename, join_db_folder, load_rpg_data, save_rpg_data, loadData, saveData } = require("./file.js");
 const { get_logger } = require("./logger.js");
-const { wait_until_ready, client_ready } = require("./wait_until_ready.js");
+const { wait_for_client } = require("./wait_for_client.js");
 const DogClient = require("./customs/client.js");
 
 const logger = get_logger();
@@ -163,22 +163,22 @@ async function make_db_compatible(users, guilds) {
 
 /**
  * @warning run this before client.login may block forever
- * @param {DogClient} client - The Discord Client
+ * @param {DogClient | null} [client] - The Discord Client
  * @returns {Promise<void>}
  */
-async function checkDBFilesDefault(client) {
+async function checkDBFilesDefault(client = global._client) {
     logger.info("開始更新資料庫檔案 (用戶和伺服器的預設值)");
+    if (!client) client = await wait_for_client();
+
     const start_time = Date.now();
 
     const user_files = DEFAULT_VALUES.user;
     const guild_files = DEFAULT_VALUES.guild;
 
-    if (!client_ready(client)) await wait_until_ready(client);
-
     const guilds = (await client.getAllGuilds())
         .sort((a, b) => {
-            if (priorityGuildIDs.filter(e => a.id.includes(e))) return -1;
-            if (priorityGuildIDs.filter(e => b.id.includes(e))) return 1;
+            if (priorityGuildIDs.filter(e => a.id.includes(e)).length) return -1;
+            if (priorityGuildIDs.filter(e => b.id.includes(e)).length) return 1;
             if (a.id.length !== b.id.length) return a.id.length - b.id.length;
             return a.id.localeCompare(b.id);
         });
@@ -186,8 +186,8 @@ async function checkDBFilesDefault(client) {
     const users = (await client.getAllGuildMembers(true))
         .map(member => member.user)
         .sort((a, b) => {
-            if (priorityGuildIDs.filter(e => a.id.includes(e))) return -1;
-            if (priorityGuildIDs.filter(e => b.id.includes(e))) return 1;
+            if (priorityGuildIDs.filter(e => a.id.includes(e)).length) return -1;
+            if (priorityGuildIDs.filter(e => b.id.includes(e)).length) return 1;
             if (a.id.length !== b.id.length) return a.id.length - b.id.length;
             return a.id.localeCompare(b.id);
         });

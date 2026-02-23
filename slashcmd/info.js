@@ -17,7 +17,7 @@ const {
 } = require("../utils/language.js");
 const {
     wait_for_client,
-} = require("../utils/wait_until_ready.js");
+} = require("../utils/wait_for_client.js");
 const {
     embed_default_color,
     max_hunger,

@@ -31,7 +31,7 @@ const {
 } = require("../../../utils/config.js");
 const {
     wait_for_client,
-} = require("../../../utils/wait_until_ready.js");
+} = require("../../../utils/wait_for_client.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
 const DogClient = require("../../../utils/customs/client.js");
 
@@ -386,6 +386,7 @@ module.exports = {
 
                     await smelt_smelt(interaction, item, amount, client, index === 0 ? 1 : 2);
                 };
+
                 break;
             };
 

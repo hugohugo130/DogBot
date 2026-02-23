@@ -7,9 +7,9 @@ const client_ready = (client = global._client) => client?.isReady?.();
 
 /**
  * Wait for the Client object
- * @param {boolean} [waitReady]
- * @param {number} [timeout]
- * @param {number} [wait]
+ * @param {boolean} [waitReady] - whether to wait the client to be ready.
+ * @param {number} [timeout] - unit: ms
+ * @param {number} [wait] - check per __ ms
  * @returns {Promise<DogClient>}
  */
 async function wait_for_client(waitReady = true, timeout = 10000, wait = 500) {
@@ -55,7 +55,5 @@ async function wait_until_ready(client = global._client, timeout = 10000, wait =
 };
 
 module.exports = {
-    client_ready,
     wait_for_client,
-    wait_until_ready,
 };

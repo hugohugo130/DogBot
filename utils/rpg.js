@@ -2,9 +2,8 @@ const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, E
 const util = require("util");
 
 const {
-    wait_until_ready,
     wait_for_client,
-} = require("./wait_until_ready.js");
+} = require("./wait_for_client.js");
 const {
     get_logger,
 } = require("./logger.js");
@@ -1099,7 +1098,7 @@ async function get_emoji_object(name, client = global._client) {
  * @returns {Promise<(ApplicationEmoji | null)[]>}
  */
 async function get_emoji_objects(names, client = global._client) {
-    if (!client) client = await wait_until_ready(client);
+    if (!client) client = await wait_for_client();
 
     const emojis = await Promise.all(
         names.map(name => get_emoji_object(name, client)),
@@ -1115,7 +1114,7 @@ async function get_emoji_objects(names, client = global._client) {
  * @returns {Promise<string>}
  */
 async function get_emoji(name, client = global._client) {
-    if (!client) client = await wait_until_ready(client);
+    if (!client) client = await wait_for_client();
 
     const emojiObject = await get_emoji_object(name, client);
 
@@ -1132,7 +1131,7 @@ async function get_emoji(name, client = global._client) {
  * @returns {Promise<string[]>}
  */
 async function get_emojis(names, client = global._client) {
-    if (!client) client = await wait_until_ready();
+    if (!client) client = await wait_for_client();
 
     const emojis = await Promise.all(
         names.map(name => get_emoji(name, client)),
@@ -1555,7 +1554,7 @@ function amount_limit(amount) {
 };
 
 /**
- * @overload 
+ * @overload
  * @param {Object} options
  * @param {DogClient} options.client
  * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message

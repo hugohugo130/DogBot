@@ -1,8 +1,7 @@
-const { wait_until_ready, wait_for_client } = require("./wait_until_ready.js");
+const { wait_for_client } = require("./wait_for_client.js");
 const { get_user, get_channels, get_guild } = require("./discord.js");
 const { get_logger } = require("./logger.js");
 const DogClient = require("../utils/customs/client.js");
-const { Message } = require("discord.js");
 
 const logger = get_logger();
 

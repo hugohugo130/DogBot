@@ -1,5 +1,5 @@
 const { load_cogs } = require("./load_cogs.js");
-const { wait_for_client } = require("./wait_until_ready.js");
+const { wait_for_client } = require("./wait_for_client.js");
 const DogClient = require("./customs/client.js");
 
 /**
