@@ -8,7 +8,8 @@
     "start": "node .",
     "test": "node ./test.js",
     "check-deps": "node check_circular_dependencies.js",
-    "pretest": "npm run check-deps"
+    "pretest": "npm run check-deps",
+    "changelog": "powershell -Command '$changeLogFolderPath = \"./changelogs\"; if (-not Test-Path -Path $changeLogFolderPath) {New-Item -Path $directoryPath -ItemType Directory ^| Out-Null}; auto-changelog --output $changeLogFolderPath/$(Get-Date -Format \"yyyyMMdd_HHmmss\") --template keepachangelog'"
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
@@ -17,7 +18,7 @@
     "@snazzah/davey": "^0.1.9",
     "axios": "^1.13.5",
     "diff": "^8.0.3",
-    "discord-api-types": "^0.38.39",
+    "discord-api-types": "^0.38.40",
     "discord.js": "^14.25.1",
     "express": "^5.2.1",
     "file-type": "^21.3.0",
