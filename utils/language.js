@@ -1,6 +1,6 @@
 const { Locale } = require("discord.js");
 
-const { get_logger } = require("./logger");
+const { get_logger } = require("./logger.js");
 
 /**
  * all keys are lowercase
