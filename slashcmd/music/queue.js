@@ -169,7 +169,7 @@ module.exports = {
                 ]);
 
                 return await interaction.editReply({ embeds: [embed], components: [row] });
-            };
+            }
 
             case "remove": {
                 const lang_invalid_track = get_lang_data(locale, "/queue", "remove.invalid_track"); // 沒有這首歌
@@ -197,7 +197,7 @@ module.exports = {
                 ]);
 
                 break;
-            };
+            }
         };
     },
     getQueueListEmbedRow,

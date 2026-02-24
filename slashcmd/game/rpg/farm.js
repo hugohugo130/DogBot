@@ -345,14 +345,14 @@ module.exports = {
                     .setEmbedFooter(interaction, { text: "", rpg_data });
 
                 return await interaction.editReply({ embeds: [success_embed] });
-            };
+            }
 
             case "info": {
                 await interaction.deferReply();
                 const [embed, row] = await get_farm_info_embed(user, interaction, client);
 
                 return await interaction.editReply({ embeds: [embed], components: [row] });
-            };
+            }
 
             case "get": {
                 if (farm_data.farms.length === 0) {
@@ -408,7 +408,7 @@ module.exports = {
                     .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
-            };
+            }
 
             case "water": {
                 const { is_finished, endsAts } = is_cooldown_finished(cooldown_key, rpg_data);
@@ -455,8 +455,7 @@ module.exports = {
                     .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
-                break;
-            };
+            }
         };
     },
     get_farm_info_embed,

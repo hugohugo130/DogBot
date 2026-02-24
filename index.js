@@ -90,11 +90,11 @@ client.once(Events.ClientReady, async () => {
             case "stop": {
                 await safeshutdown(client);
                 break;
-            };
+            }
 
             case "fstop": {
                 process.exit(0);
-            };
+            }
 
             case "music": {
                 const musicQueues = getQueues();
@@ -107,14 +107,14 @@ client.once(Events.ClientReady, async () => {
 
                 logger.info(`\n- 連接用戶 (音樂播放器)：${playersCount}\n- 正在播放總人數: ${playingPlayers}\n- 正在播放 ${totalTracks} 首音樂。`);
                 break;
-            };
+            }
 
             case "uploadall": {
                 await uploadAllDatabaseFiles();
                 logger.info(`done uploading all database files`)
 
                 break;
-            };
+            }
         };
 
         if (input.startsWith("musicd ")) {

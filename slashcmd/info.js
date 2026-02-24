@@ -297,7 +297,7 @@ module.exports = {
                     embeds: [user_data_embed, rpg_data_embed],
                 });
                 break;
-            };
+            }
 
             case "guild": {
                 const lang_id = get_lang_data(locale, "/info", "guild.id"); // ID
@@ -391,7 +391,7 @@ module.exports = {
 
                 await interaction.editReply({ embeds: [embed], components: row ? [row] : [] });
                 break;
-            };
+            }
 
             case "bot": {
                 const embed = await getBotInfoEmbed(locale, client);
@@ -409,7 +409,7 @@ module.exports = {
                         .addComponents(refreshButton));
 
                 await interaction.editReply({ embeds: [embed], components: [row] });
-            };
+            }
         };
     },
     getBotInfoEmbed,

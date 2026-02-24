@@ -175,17 +175,24 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
             answer = await rl.question("請選擇操作 (1/2/3/4/5): ");
 
             switch (answer.trim()) {
-                case "4":
-                    console.log(JSON.parse(stringify(localContent)));
+                case "4": {
+                    console.log(stringify(localContent));
                     break;
-                case "5":
-                    console.log(JSON.parse(stringify(remoteContent)));
+                }
+
+                case "5": {
+                    console.log(stringify(remoteContent));
                     break;
-                case "6":
+                }
+
+                case "6": {
                     console.log(diff(localContent, remoteContent));
                     break;
-                default:
+                }
+
+                default: {
                     break;
+                }
             };
 
             const validOptions = ["1", "2", "3", "4", "5"];
@@ -196,15 +203,20 @@ async function onlineDB_checkFileContent(filename, maxRetries = 3) {
 
         console.log(`已選擇: ${answer.trim()}`);
         switch (answer.trim()) {
-            case "1":
+            case "1": {
                 await onlineDB_uploadFile(filename);
                 return 1;
-            case "2":
+            }
+
+            case "2": {
                 await onlineDB_downloadFile(filename);
                 return 2;
-            case "3":
+            }
+
+            case "3": {
                 console.log("未進行任何操作");
                 return false;
+            }
         };
     } else if (localContent && !remoteContent) {
         logger.info(`遠端無 ${filename} 檔案，準備上載本地檔案`);

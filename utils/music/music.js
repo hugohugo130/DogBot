@@ -387,7 +387,7 @@ class MusicQueue {
 
                             await this.play(this.currentTrack);
                             break;
-                        };
+                        }
 
                         case loopStatus.ALL: { // 全部歌曲
                             if (!this.tracks.length && !this.currentTrack) return;
@@ -398,12 +398,12 @@ class MusicQueue {
                             const firstTrackInQueue = this.tracks.shift();
                             if (firstTrackInQueue) await this.play(firstTrackInQueue);
                             break;
-                        };
+                        }
 
                         case loopStatus.DISABLED: { // 循環已關閉
                             await this.nextTrack();
                             break;
-                        };
+                        }
                     };
                 };
             } catch (err) {

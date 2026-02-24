@@ -85,16 +85,23 @@ function validateURL(url = null, type = "all") {
     if (typeof url !== "string") return false;
 
     switch (type) {
-        case "artist":
+        case "artist": {
             return Constants.REGEX_ARTIST.test(url);
-        case "playlist":
+        }
+
+        case "playlist": {
             return !!(Constants.REGEX_SET.test(url) || (url.match(/soundcloud.app.goo.gl/) && url.split("/").pop()?.length === 5));
-        case "track":
+        }
+
+        case "track": {
             const last = url.split("/").pop();
 
             return !!(Constants.REGEX_TRACK.test(url) || url.match(/soundcloud.app.goo.gl/) && last && last.length > 5);
-        default:
+        }
+
+        default: {
             return !!(Constants.SOUNDCLOUD_URL_REGEX.test(url) || url.match(/soundcloud.app.goo.gl/));
+        }
     };
 };
 

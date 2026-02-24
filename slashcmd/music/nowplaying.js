@@ -125,19 +125,23 @@ async function getNowPlayingRows(queue, client = global._client) {
         case loopStatus.DISABLED: {
             loopMode = "關閉";
             break;
-        };
+        }
+
         case loopStatus.TRACK: {
             loopMode = "單曲";
             break;
-        };
+        }
+
         case loopStatus.ALL: {
             loopMode = "全部";
             break;
-        };
+        }
+
         case loopStatus.AUTO: {
             loopMode = "自動推薦";
             break;
-        };
+        }
+
         default: {
             const logger = get_logger();
             logger.warn(`[${queue.guildID}] 的loopstatus是 ${queue.loopStatus}，而不是0,1,2,3\n${util.inspect(queue, { depth: null })}`);
@@ -145,7 +149,7 @@ async function getNowPlayingRows(queue, client = global._client) {
 
             loopMode = "關閉";
             break;
-        };
+        }
     };
 
     const IsTrendingOn = queue.loopStatus === loopStatus.AUTO;

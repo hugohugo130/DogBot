@@ -976,7 +976,7 @@ const rpg_commands = {
 
                     if (mode === 1) return {};
                     return;
-                };
+                }
             };
         }, true],
     items: ["查看背包", "查看背包",

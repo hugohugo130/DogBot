@@ -57,7 +57,7 @@ module.exports = {
                 //     if (err.toString().toLowerCase().includes("unknown interaction")) return;
                 //     logger.error(err);
                 // };
-            };
+            }
 
             case "bake": {
                 const rpg_data = await load_rpg_data(userid);
@@ -82,7 +82,7 @@ module.exports = {
                 await interaction.respond(choices);
 
                 break;
-            };
+            }
 
             case "smelt": {
                 const rpg_data = await load_rpg_data(userid);
@@ -117,7 +117,7 @@ module.exports = {
                 await interaction.respond(choices);
 
                 break;
-            };
+            }
 
             case "cook": {
                 const rpg_data = await load_rpg_data(userid);
@@ -155,7 +155,7 @@ module.exports = {
                 );
 
                 break;
-            };
+            }
         };
     },
 };

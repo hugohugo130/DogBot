@@ -1616,14 +1616,14 @@ module.exports = {
 
                             await interaction.update({ embeds: [embed] });
                             break;
-                        };
+                        }
 
                         case "/farm info": {
                             const [embed, row] = await get_farm_info_embed(user, interaction, client);
 
                             await interaction.update({ embeds: [embed], components: [row] });
                             break;
-                        };
+                        }
 
                         case "nowplaying": {
                             if (!interaction.guildId) break;
@@ -1641,7 +1641,7 @@ module.exports = {
 
                             await interaction.update({ content: `${emoji_music} | 正在播放`, embeds: [embed], components: rows });
                             break;
-                        };
+                        }
                     };
 
                     break;
@@ -1680,7 +1680,7 @@ module.exports = {
                             };
 
                             break;
-                        };
+                        }
 
                         case "skip": {
                             if (!queue.currentTrack) return;
@@ -1694,7 +1694,7 @@ module.exports = {
                             ]);
 
                             break;
-                        };
+                        }
 
                         case "shuffle": {
                             const emoji_shuffle = await get_emoji("shuffle", client);
@@ -1705,7 +1705,7 @@ module.exports = {
                             ]);
 
                             break;
-                        };
+                        }
 
                         case "loop": {
                             const currentLoopStatus = queue.loopStatus;
@@ -1727,7 +1727,7 @@ module.exports = {
                             ]);
 
                             break;
-                        };
+                        }
 
                         case "trending": {
                             switch (options) {
@@ -1740,7 +1740,7 @@ module.exports = {
                                     ]);
 
                                     break;
-                                };
+                                }
 
                                 case "off": {
                                     const emoji_trending = await get_emoji("trending", client);
@@ -1751,11 +1751,11 @@ module.exports = {
                                     ]);
 
                                     break;
-                                };
+                                }
                             };
 
                             break;
-                        };
+                        }
 
                         case "disconnect": {
                             const emoji_wumpusWave = await get_emoji("wumpusWave", client);
@@ -1766,7 +1766,7 @@ module.exports = {
                             ]);
 
                             break;
-                        };
+                        }
 
                         case "page": {
                             if (typeof options !== "string") break;
@@ -1775,7 +1775,7 @@ module.exports = {
 
                             await interaction.update({ embeds: [embed], components: [row] });
                             break;
-                        };
+                        }
                     };
 
                     break;

@@ -484,7 +484,7 @@ module.exports = {
                 };
 
                 break;
-            };
+            }
 
             case "info": {
                 await interaction.deferReply();
@@ -523,7 +523,7 @@ module.exports = {
 
                 await interaction.editReply({ embeds: [embed] });
                 break;
-            };
+            }
 
             case "get": {
                 await interaction.deferReply();
@@ -585,7 +585,7 @@ module.exports = {
 
                 await interaction.editReply({ embeds });
                 break;
-            };
+            }
         };
     },
     divide,

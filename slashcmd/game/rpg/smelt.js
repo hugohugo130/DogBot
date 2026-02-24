@@ -388,7 +388,7 @@ module.exports = {
                 };
 
                 break;
-            };
+            }
 
             case "info": {
                 const used_slots = smelt_data ? smelt_data.length : 0;
@@ -425,7 +425,7 @@ module.exports = {
 
                 await interaction.editReply({ embeds: [embed] });
                 break;
-            };
+            }
 
             case "get": {
                 if (!smelt_data || smelt_data.length === 0) {
@@ -473,7 +473,7 @@ module.exports = {
                     .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });
-            };
+            }
         };
     },
 };
