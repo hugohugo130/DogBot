@@ -8,9 +8,13 @@ const config = require("./config.js");
 const DogClient = require("./customs/client.js");
 
 // 全局管理器
+/** @type {Map<string, winston.Logger>} */
 const loggerManager = new Map();
+/** @type {Map<string, winston.Logger>} */
 const loggerManager_log = new Map();
+/** @type {Map<string, winston.Logger>} */
 const loggerManager_nodc = new Map();
+
 global.sendQueue = [];
 
 const DEBUG = false;
@@ -195,9 +199,20 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
 };
 
 /**
+ * Get the module name of the caller (who calls this function)
+ * @overload
+ * @param {"list"} depth
+ * @returns {string[]}
  *
+ * @overload
+ * @param {number | null} depth
+ * @returns {string}
+ *
+ * @overload
  * @param {number | null | "list"} depth
  * @returns {string | string[]}
+ *
+ * @param {number | null | "list"} depth
  */
 function getCallerModuleName(depth = 4) {
     const unknown_word = "unknown";
@@ -305,7 +320,7 @@ function get_logger(options = {}) {
         if (loggerManager.has(name)) return loggerManager.get(name);
     };
 
-    if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger with backend=${backend}, nodc=${nodc}, name=${name}, call from ${getCallerModuleName(4)}`);
+    if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger with backend=${backend}, nodc=${nodc}, name=${name}, call from ${getCallerModuleName(null)}`);
 
     // 創建 transports
     /** @type {winston.transport[]} */
@@ -338,7 +353,7 @@ function get_logger(options = {}) {
             winston.format.json()
         ),
         defaultMeta: { module: name },
-        transports: transports
+        transports: transports,
     });
 
     // 儲存 logger
