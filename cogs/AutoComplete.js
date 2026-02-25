@@ -1,6 +1,6 @@
 const { Events, AutocompleteInteraction } = require("discord.js");
 
-const { wrong_job_embed, get_name_of_id, bake, smeltable_recipe, cook } = require("../utils/rpg.js");
+const { wrong_job_embed, get_name_of_id, bake, smeltable_recipe, cook, recipes } = require("../utils/rpg.js");
 const { load_rpg_data } = require("../utils/file.js");
 const DogClient = require("../utils/customs/client.js");
 
@@ -156,6 +156,26 @@ module.exports = {
 
                 break;
             }
+
+            case "make": {
+                await interaction.respond(
+                    Object.entries(recipes)
+                        .map(([item_id, recipe]) => {
+                            const recipe_str = recipe.input.map(input =>
+                                `${get_name_of_id(input.item) || input.item}x${input.amount}`
+                            ).join("、");
+
+                            return {
+                                name: `${get_name_of_id(item_id)}x${recipe.amount} (${recipe_str})`,
+                                value: `${item_id}|${recipe.input.map(input =>
+                                    `${input.item}*${input.amount}`
+                                ).join(",")}`
+                            };
+                        })
+                );
+
+                break;
+            };
         };
     },
 };

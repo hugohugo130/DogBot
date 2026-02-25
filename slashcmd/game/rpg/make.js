@@ -21,21 +21,8 @@ module.exports = {
         .addStringOption(option =>
             option.setName("物品")
                 .setDescription("要合成的物品")
-                .setRequired(true)
-                .addChoices(
-                    ...Object.entries(recipes).map(([item_id, recipe]) => {
-                        const recipe_str = recipe.input.map(input =>
-                            `${get_name_of_id(input.item) || input.item}x${input.amount}`
-                        ).join("、");
-
-                        return {
-                            name: `${get_name_of_id(item_id)}x${recipe.amount} (${recipe_str})`,
-                            value: `${item_id}|${recipe.input.map(input =>
-                                `${input.item}*${input.amount}`
-                            ).join(",")}`
-                        };
-                    })
-                ),
+                .setAutocomplete(true)
+                .setRequired(true),
         )
         .addIntegerOption(option =>
             option.setName("數量")
