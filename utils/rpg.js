@@ -185,6 +185,13 @@ const recipes = {
         output: "god_stick",
         amount: 1
     },
+    bread_dough: {
+        input: [
+            { item: "bread", amount: 1 }
+        ],
+        output: "bread_dough",
+        amount: 2
+    },
 };
 
 // 動態生成木材到木板的合成配方，比例 1:4
@@ -247,6 +254,7 @@ const tags = {
 const foods_crops = [
     "apple",
     "bread",
+    "bread_dough",
     "raw_potato",
     "tomato",
     "tomato_egg",
@@ -384,6 +392,7 @@ const shop_lowest_price = {
     raw_mutton: 115,
     // ==============食物==============
     bread: 125,
+    bread_dough: 62,
     potato: 130,
     shrimp: 150,
     salmon: 105,
@@ -716,6 +725,7 @@ const name = {
     apple: "蘋果",
     beef: "烤牛肉",
     bread: "麵包",
+    bread_dough: "麵包胚",
     chicken: "烤雞肉",
     duck: "烤鴨肉",
     mutton: "烤羊肉",
