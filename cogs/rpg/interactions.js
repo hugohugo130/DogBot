@@ -1462,12 +1462,16 @@ module.exports = {
                         ? get_job_name(job, locale)
                         : null;
 
+                    /*
                     const [emoji_job, delay_embed] = await Promise.all([
                         get_emoji("job", client),
                         job_delay_embed(user.id, interaction, client),
                     ]);
+                    */
 
-                    if (delay_embed) return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
+                    // if (delay_embed) return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
+
+                    const emoji_job = await get_emoji("job", client);
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_job_color)
