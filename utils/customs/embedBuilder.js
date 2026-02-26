@@ -45,7 +45,8 @@ class EmbedBuilder extends djsEmbedBuilder {
 
         const data = rpg_data;
 
-        let locale = "zh-TW";
+        /** @type {Locale} */
+        let locale = Locale.ChineseTW;
         if (interaction instanceof BaseInteraction) locale = interaction.locale;
 
         if (!force && data) text += `飽食度剩餘 ${data.hunger}`;

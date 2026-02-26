@@ -29,7 +29,7 @@ const DogClient = require("../utils/customs/client.js");
 
 /**
  * 
- * @param {Locale[any] | string | null} [locale=null]
+ * @param {Locale | null} [locale=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
@@ -235,11 +235,11 @@ module.exports = {
                 ]);
 
                 const nameOfTheJob = jobs[job]
-                    ? get_job_name(locale, job)
+                    ? get_job_name(job, locale)
                     : job;
 
                 const nameOfTheFightJob = fightjobs[fightjob]
-                    ? get_fightjob_name(locale, fightjob)
+                    ? get_fightjob_name(fightjob, locale)
                     : fightjob;
 
                 const user_data_embed = new EmbedBuilder()

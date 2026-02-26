@@ -292,7 +292,7 @@ function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
 
 /**
  * 獲取語言資料
- * @param {Locale[any] | null | undefined} lang
+ * @param {Locale | null | undefined} lang
  * @param {string} category
  * @param {string} key
  * @param {...any} replace - 文字中需要的變量

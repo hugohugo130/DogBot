@@ -1,4 +1,4 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, BaseInteraction, escapeMarkdown, Message, ApplicationEmoji } = require("discord.js");
+const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, BaseInteraction, escapeMarkdown, Message, ApplicationEmoji, Locale } = require("discord.js");
 const util = require("util");
 
 const {
@@ -1777,11 +1777,11 @@ async function startsWith_prefixes(guildID, str) {
 
 /**
  * Get the translation of adventure job by its ID
- * @param {string} locale - the locale
  * @param {string} fj_id - ID of the fight job
+ * @param {Locale | null} [locale=null] - the locale
  * @returns {string | undefined}
  */
-function get_fightjob_name(locale, fj_id) {
+function get_fightjob_name(fj_id, locale = null) {
     const key = "fightjob_name";
 
     return get_lang_data(locale, key, fj_id);
@@ -1789,11 +1789,11 @@ function get_fightjob_name(locale, fj_id) {
 
 /**
  * Get the translation of a job by its ID
- * @param {string} locale - the locale
  * @param {string} job_id - ID of the job
+ * @param {Locale | null} [locale=null] - the locale
  * @returns {string | undefined}
  */
-function get_job_name(locale, job_id) {
+function get_job_name(job_id, locale = null) {
     const key = "job_name";
 
     return get_lang_data(locale, key, job_id);
