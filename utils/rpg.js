@@ -192,6 +192,14 @@ const recipes = {
         output: "bread_dough",
         amount: 2
     },
+    hugo_burger: {
+        input: [
+            { item: "bread_dough", amount: 2 },
+            { item: "hugo", amount: 1 }
+        ],
+        output: "hugo_burger",
+        amount: 1
+    },
 };
 
 // 動態生成木材到木板的合成配方，比例 1:4
@@ -264,6 +272,7 @@ const foods_crops = [
     "cooked_corn",
     "potato",
     "wheat",
+    "hugo_burger",
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
@@ -543,6 +552,7 @@ const food_data = {
     whale: 4,
     raw_hugo: 4,
     hugo: 3,
+    hugo_burger: 4,
     egg: 1,
     raw_beef: 1,
     raw_chicken: 1,
@@ -745,6 +755,7 @@ const name = {
     raw_potato: "馬鈴薯",
     raw_hugo: "生哈狗",
     hugo: "烤哈狗",
+    hugo_burger: "哈狗堡",
     wheat: "小麥",
     // ==============動物==============
     a_chicken: "雞",
