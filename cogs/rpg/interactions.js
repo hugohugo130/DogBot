@@ -690,12 +690,15 @@ module.exports = {
         try {
             const { rpg_handler, MockMessage } = require("./msg_handler.js");
 
+            const { user, guild, channel, locale, message } = interaction;
+
+            if (client.get_user_locale(user.id) !== locale) {
+                client.save_user_locale(user.id, locale);
+            };
+
             if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
-            const { message, user, guild, channel } = interaction;
             const [interactionCategory, originalUserId, ...otherCustomIDs] = interaction.customId.split("|");
-
-            const locale = interaction.locale;
 
             // 驗證使用者身份
             if (originalUserId !== "any" && user.id !== originalUserId) {
@@ -1456,7 +1459,7 @@ module.exports = {
 
                     const job = interaction.values[0];
                     const job_name = jobs?.[job]
-                        ? get_job_name(locale, job)
+                        ? get_job_name(job, locale)
                         : null;
 
                     const [emoji_job, delay_embed] = await Promise.all([
@@ -1488,7 +1491,7 @@ module.exports = {
                     const [_, __, job] = interaction.customId.split("|");
 
                     const job_name = jobs?.[job]
-                        ? get_job_name(locale, job)
+                        ? get_job_name(job, locale)
                         : null;
 
                     const [emoji_job, delay_embed] = await Promise.all([
@@ -1975,7 +1978,7 @@ module.exports = {
 
                     if (!fightjobs[jobId]) jobId = null;
                     const fight_job_name = jobId
-                        ? get_fightjob_name(locale, jobId) ?? lang_none
+                        ? get_fightjob_name(jobId, locale) ?? lang_none
                         : lang_none;
 
                     const rpg_data = await load_rpg_data(user.id);

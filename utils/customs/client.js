@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits, Options, Collection, Guild, GuildMember, User } = require("discord.js");
+const { Client, GatewayIntentBits, Options, Collection, Guild, GuildMember, User, Locale } = require("discord.js");
 
 const { authorName, BotName } = require("../config.js");
 
@@ -105,8 +105,11 @@ class DogClient extends Client {
         /** @type {Collection<string, GbmiSession>} */
         this.gbmi_sessions = new Collection();
 
-        /** @type {{IP: string, PORT: number}} */
+        /** @type {{ IP: string, PORT: number }} */
         this.serverIP = { IP: "192.168.0.156", "PORT": 3003 };
+
+        /** @type {Collection<string, Locale>} */
+        this.locales = new Collection();
 
         /** @type {string} */
         this.name = BotName; // will be set when the client is ready if BotName is not set
@@ -200,6 +203,26 @@ class DogClient extends Client {
         return Array.from(members.values())
             .flat()
         // .filter(Boolean);
+    };
+
+    /**
+     * Get the locale cached of a user
+     * @param {string} userId
+     * @returns {Locale | undefined}
+     */
+    get_user_locale(userId) {
+        return this.locales.get(userId);
+    };
+
+    /**
+     * Save the locale cached of a user
+     * @param {string} userId
+     * @param {Locale} locale
+     * @returns {void}
+     */
+    save_user_locale(userId, locale) {
+        this.locales.set(userId, locale);
+        return;
     };
 };
 
