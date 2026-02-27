@@ -37,19 +37,21 @@ const cookable_items = cook.reduce((acc, item) => {
 module.exports = {
     name: Events.InteractionCreate,
     /**
-     * 
-     * @param {DogClient} client 
-     * @param {AutocompleteInteraction} interaction 
-     * @returns 
+     *
+     * @param {DogClient} client
+     * @param {AutocompleteInteraction} interaction
+     * @returns {Promise<any>}
      */
     execute: async function (client, interaction) {
         if (!interaction.isAutocomplete()) return;
 
-        const userid = interaction.user.id;
+        const { user } = interaction;
+
+        const userid = user.id;
+        const focusedValue = interaction.options.getFocused();
 
         switch (interaction.commandName) {
             case "play": {
-                // const focusedValue = interaction.options.getFocused();
                 // const choices = await searchVideos(focusedValue);
                 // try {
                 //     await interaction.respond(choices);
@@ -67,7 +69,6 @@ module.exports = {
                     { name: wrong_job.data.title ?? "", value: "nothing" }
                 ]);
 
-                const focusedValue = interaction.options.getFocused();
                 const choices = Object.keys(rpg_data.inventory)
                     .filter(item =>
                         Object.keys(bake).includes(item)
@@ -91,8 +92,6 @@ module.exports = {
                 if (wrong_job) return await interaction.respond([
                     { name: wrong_job.data.title ?? "", value: "nothing" }
                 ]);
-
-                const focusedValue = interaction.options.getFocused();
                 const choices = Object.keys(rpg_data.inventory)
                     .filter(item =>
                         Object.keys(smeltable_items).includes(item)
@@ -127,7 +126,6 @@ module.exports = {
                     { name: wrong_job.data.title ?? "", value: "nothing" },
                 ]);
 
-                const focusedValue = interaction.options.getFocused();
                 const choices = Object.entries(cookable_items)
                     .filter(([output, data]) => {
                         const itemsInInventory = Object.keys(rpg_data.inventory);
@@ -165,17 +163,25 @@ module.exports = {
                                 `${get_name_of_id(input.item) || input.item}x${input.amount}`
                             ).join("、");
 
+                            const name = recipe.amount !== 1
+                                ? `${get_name_of_id(item_id)}x${recipe.amount} (${recipe_str})`
+                                : `${get_name_of_id(item_id)} (${recipe_str})`;
+
                             return {
-                                name: `${get_name_of_id(item_id)}x${recipe.amount} (${recipe_str})`,
-                                value: `${item_id}|${recipe.input.map(input =>
-                                    `${input.item}*${input.amount}`
-                                ).join(",")}`
+                                name,
+                                value: item_id,
                             };
                         })
+                        .filter(({ name, value }) => {
+                            return (
+                                name.startsWith(focusedValue)
+                                || value.startsWith(focusedValue)
+                            );
+                        }),
                 );
 
                 break;
-            };
+            }
         };
     },
 };

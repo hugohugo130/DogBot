@@ -1,6 +1,6 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction } = require("discord.js");
+const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
 
-const { get_name_of_id, get_emojis, recipes, tags } = require("../../../utils/rpg.js");
+const { get_name_of_id, get_emojis, recipes, tags, get_id_of_name, get_emoji } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
 const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
@@ -45,41 +45,57 @@ module.exports = {
             get_emojis(["toolbox", "crosS"], client),
         ]);
 
-        const item_str = interaction.options.getString("物品", true);
+        const original_item_id = interaction.options.getString("物品", true);
         const amount = interaction.options.getInteger("數量") ?? 1;
 
-        const item = item_str.split("|");
-        const item_id = item[0];
+        const item_id = get_id_of_name(
+            original_item_id
+                .split("(")[0]
+                .trim()
+        );
 
-        /** @type {{ [k: string]: amount}} */
-        let item_need = {};
+        if (!get_name_of_id(item_id)) {
+            const error_embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 我不知道 ${original_item_id} 是什麼`)
+                .setEmbedFooter(interaction);
+
+            return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+
+        } else if (!(item_id in recipes)) {
+            const error_embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 這種物品不能被製作`)
+                .setEmbedFooter(interaction);
+
+            return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+        };
+
+        /** @type {{ item: string, amount: number }[]} */
+        const item_required = recipes[item_id].input;
+
+        /** @type {{ [k: string]: number }} */
+        const item_need = {};
 
         /** @type {{ name: string, amount: number }[]} */
-        let item_missing = [];
+        const item_missing = [];
 
-        for (const need of item[1].split(",")) {
-            const need_item = need.split("*");
-            const count = parseInt(need_item[1]) || 1;
-            let id = need_item[0];
-            let real_id = id;
+        for (const { item: need_item, amount: count } of item_required) {
+            let item_id = need_item;
 
-            if (id.startsWith("#")) {
-                const tag = id.replace("#", "");
+            if (need_item.startsWith("#")) {
+                const tag = need_item.slice(1);
+
                 for (const item of tags[tag]) {
                     if (rpg_data.inventory[item]) {
-                        id = item;
+                        item_id = item;
                         break;
                     };
                 };
-
-                if (!id.startsWith("#")) {
-                    real_id = id;
-                } else {
-                    real_id = need_item[0];
-                };
             };
 
-            item_need[real_id] = (item_need[real_id] || 0) + count * amount;
+            if (!item_need[need_item]) item_need[need_item] = 0;
+            item_need[need_item] += count * amount;
         };
 
         for (const need_item in item_need) {
@@ -92,16 +108,11 @@ module.exports = {
             };
         };
 
-        if (item_missing.length > 0) {
-            const items = [];
-            for (const missing of item_missing) {
-                items.push(`${missing.name} \`x${missing.amount}\`個`);
-            };
-
+        if (item_missing.length) {
             const embed = new EmbedBuilder()
                 .setTitle(`${emoji_cross} | 你沒有足夠的材料`)
                 .setColor(embed_error_color)
-                .setDescription(`你缺少了 ${items.join("、")}`)
+                .setDescription(`你缺少了 ${item_missing.map(missing => `${missing.name} \`x${missing.amount}\`個`).join("、")}`)
                 .setEmbedFooter(interaction);
 
             return await interaction.editReply({ embeds: [embed] });
@@ -116,7 +127,6 @@ module.exports = {
 
         if (!rpg_data.inventory[item_id]) rpg_data.inventory[item_id] = 0;
         rpg_data.inventory[item_id] += output_amount;
-        await save_rpg_data(userid, rpg_data);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
@@ -124,6 +134,9 @@ module.exports = {
             .setDescription(`你製作出了 \`${output_amount}\` 個 ${get_name_of_id(item_id)}`)
             .setEmbedFooter(interaction);
 
-        await interaction.editReply({ embeds: [embed] });
+        await Promise.all([
+            save_rpg_data(userid, rpg_data),
+            interaction.editReply({ embeds: [embed] }),
+        ]);
     },
 };
