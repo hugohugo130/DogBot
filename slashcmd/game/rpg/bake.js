@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Collection } = require("discord.js");
 
-const { notEnoughItemEmbed, wrong_job_embed, get_emojis, bake, name, oven_slots, food_data } = require("../../../utils/rpg.js");
+const { notEnoughItemEmbed, wrong_job_embed, get_emojis, bake, name, oven_slots, food_data, get_name_of_id } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
 const { generateSessionId } = require("../../../utils/random.js");
 const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
@@ -133,7 +133,7 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
         .setColor(embed_default_color)
         .setTitle(`${emoji_drumstick} | 烘烤確認`)
         .setDescription(
-            `將要烘烤 \`${amount}\` 個 \`${name[item_id]}\`
+            `將要烘烤 \`${amount}\` 個 \`${get_name_of_id(item_id)}\`
 花費 \`${coal_amount}\` 個煤炭
 預估時間：\`${duration / 60}\` 分鐘`)
         .setEmbedFooter(interaction);
@@ -503,8 +503,8 @@ module.exports = {
                 } else {
                     for (let i = 0; i < Math.min(25, bake_data.length); i++) {
                         const item = bake_data[i];
-                        const input_name = name[item.item_id] || item.item_id;
-                        const output_name = name[item.output_item_id] || item.output_item_id;
+                        const input_name = get_name_of_id(item.item_id);
+                        const output_name = get_name_of_id(item.output_item_id);
 
                         const total_duration = item.amount * 60;
                         const start_time = item.end_time - total_duration;
@@ -577,7 +577,7 @@ module.exports = {
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
-                        .setTitle(`${emoji_drumstick} | 成功從烤箱取出了 ${name[item.output_item_id] || item.output_item_id}x${item.amount}`)
+                        .setTitle(`${emoji_drumstick} | 成功從烤箱取出了 ${get_name_of_id(item.output_item_id)}x${item.amount}`)
                         .setEmbedFooter(interaction);
 
                     embeds.push(embed);

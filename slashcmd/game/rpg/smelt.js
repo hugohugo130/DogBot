@@ -405,8 +405,8 @@ module.exports = {
                 } else {
                     for (let i = 0; i < Math.min(25, smelt_data.length); i++) {
                         const item = smelt_data[i];
-                        const input_name = name[item.item_id] || item.item_id;
-                        const output_name = name[item.output_item_id] || item.output_item_id;
+                        const input_name = get_name_of_id(item.item_id);
+                        const output_name = get_name_of_id(item.output_item_id);
 
                         const total_duration = item.amount * 60;
                         const start_time = item.end_time - total_duration;
@@ -469,7 +469,7 @@ module.exports = {
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
-                    .setTitle(`${emoji_furnace} | 成功從煉金爐取出了 ${name[item.output_item_id] || item.output_item_id}x${item.output_amount}`)
+                    .setTitle(`${emoji_furnace} | 成功從煉金爐取出了 ${get_name_of_id( item.output_item_id)}x${item.output_amount}`)
                     .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });

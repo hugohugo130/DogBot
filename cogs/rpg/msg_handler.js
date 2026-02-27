@@ -121,6 +121,15 @@ class MockMessage {
     };
 };
 
+/**
+ * Check whether a item exists by its ID
+ * @param {string} item_id
+ * @returns {boolean}
+ */
+function item_exists(item_id) {
+    return !!get_name_of_id(item_id, null);
+};
+
 
 /**
  *
@@ -321,15 +330,15 @@ const rpg_commands = {
             if (!userid) return;
 
             const { item, amount } = random_item;
-            if (!name[item]) {
-                const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`, null, client);
+            if (!item_exists(item)) {
+                const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${get_name_of_id(item)}`, null, client);
                 return await message.reply({ embeds });
             };
 
             if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
             rpg_data.inventory[item] += amount;
 
-            const ore_name = name[item];
+            const ore_name = get_name_of_id(item);
 
             const [_, emoji] = await Promise.all([
                 save_rpg_data(userid, rpg_data),
@@ -375,9 +384,9 @@ const rpg_commands = {
             const userid = message.author.id;
 
             const { item, amount } = random_item;
-            const log_name = name[item];
+            const log_name = get_name_of_id(item);
 
-            if (!name[item]) {
+            if (!item_exists(item)) {
                 const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${log_name}`, null, client);
                 return await message.reply({ embeds });
             };
@@ -486,13 +495,13 @@ const rpg_commands = {
             const userid = message.author.id;
 
             const { item, amount } = random_item;
-            if (!name[item]) {
-                const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`, null, client);
+            if (!item_exists(item)) {
+                const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${get_name_of_id(item)}`, null, client);
                 return await message.reply({ embeds });
             };
 
             if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
-            const potion_name = name[item];
+            const potion_name = get_name_of_id(item);
             rpg_data.inventory[item] += amount;
             await save_rpg_data(userid, rpg_data);
 
@@ -527,15 +536,15 @@ const rpg_commands = {
             const userid = message.author.id;
 
             const { item, amount } = random_item;
-            if (!name[item]) {
-                const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${name[item]}`, null, client);
+            if (!item_exists(item)) {
+                const embeds = await get_loophole_embed(`找不到${item}的物品名稱: ${get_name_of_id(item)}`, null, client);
                 return await message.reply({ embeds });
             };
 
             if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
             rpg_data.inventory[item] += amount;
             await save_rpg_data(userid, rpg_data);
-            const fish_name = name[item];
+            const fish_name = get_name_of_id(item);
 
             let fish_text;
             let description;
@@ -808,7 +817,7 @@ const rpg_commands = {
                     const minerals = Object.entries(shop_data.items)
                         .filter(([item]) => Object.values(mine_gets).includes(item) || Object.values(ingots).includes(item))
                         .sort((a, b) => a[0].localeCompare(b[0]))
-                        .map(([item, data]) => `${name[item]} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
+                        .map(([item, data]) => `${get_name_of_id(item)} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
                         .join("\n");
 
                     if (minerals) embed.addFields({ name: `${emoji_ore} 礦物`, value: minerals, inline: false });
@@ -817,7 +826,7 @@ const rpg_commands = {
                     const food = Object.entries(shop_data.items)
                         .filter(([item]) => Object.values(foods).includes(item))
                         .sort((a, b) => a[0].localeCompare(b[0]))
-                        .map(([item, data]) => `${name[item]} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
+                        .map(([item, data]) => `${get_name_of_id(item)} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
                         .join("\n");
 
                     if (food) embed.addFields({ name: `${emoji_bread} 食物`, value: food, inline: false });
@@ -826,7 +835,7 @@ const rpg_commands = {
                     const others = Object.entries(shop_data.items)
                         .filter(([item]) => !Object.values(mine_gets).includes(item) && !Object.values(ingots).includes(item) && !Object.values(foods).includes(item))
                         .sort((a, b) => a[0].localeCompare(b[0]))
-                        .map(([item, data]) => `${name[item]} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
+                        .map(([item, data]) => `${get_name_of_id(item)} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
                         .join("\n");
 
                     if (others) embed.addFields({ name: `其他`, value: others, inline: false });
@@ -1062,7 +1071,7 @@ const rpg_commands = {
             let item = args[0];
             item = get_id_of_name(item);
 
-            if (!name[item]) item = null;
+            if (!item_exists(item)) item = null;
 
             const shop_data = await load_shop_data(target_user.id);
             if (shop_data.items.length === 0) {
@@ -1826,7 +1835,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             const emoji_trade = await get_emoji("trade", client);
 
-            if (!name[item_id]) {
+            if (!item_exists(item_id)) {
                 const emoji_cross = await get_emoji("crosS", client);
 
                 const embed = new EmbedBuilder()

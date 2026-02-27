@@ -1184,7 +1184,7 @@ module.exports = {
 
                         if (have_amount < need_amount) {
                             item_missing.push({
-                                name: name[current_item_id] || need_item,
+                                name: get_name_of_id(current_item_id),
                                 amount: need_amount - have_amount,
                             });
                         };
@@ -1235,7 +1235,7 @@ module.exports = {
 
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
-                        .setTitle(`${emoji_drumstick} | 成功放進烤箱烘烤 ${amount} 個 ${name[item_id]}`)
+                        .setTitle(`${emoji_drumstick} | 成功放進烤箱烘烤 ${amount} 個 ${get_name_of_id(item_id)}`)
                         .setDescription(`等待至 <t:${end_time}:R>`)
                         .setEmbedFooter(interaction);
 
