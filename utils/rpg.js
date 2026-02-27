@@ -431,6 +431,7 @@ const shop_lowest_price = {
     whale: 135,
     shark: 140,
     hugo: 150,
+    hugo_burger: 275,
     // ==============礦物==============
     coal: 50,
     iron_ore: 50,
@@ -858,7 +859,7 @@ const name_reverse = Object.entries(name).reduce((acc, [key, value]) => {
 );
 
 function check_item_data() {
-    const all_items = [
+    const all_items = [...new Set([
         ...Object.values(mine_gets),
         ...Object.values(ingots),
         ...Object.values(logs),
@@ -873,9 +874,10 @@ function check_item_data() {
         .filter(item => !item.startsWith("#"))
         .filter(item => !jobs[item])
         .filter(item => !Object.keys(animal_products).includes(item))
-        .filter(item => !Object.values(animals).includes(item));
+        .filter(item => !Object.values(animals).includes(item))
+    )];
 
-    const work_productions = [
+    const work_productions = [...new Set([
         ...Object.keys(animal_products),
         ...Object.values(mine_gets),
         // ...Object.values(ingots),
@@ -886,7 +888,9 @@ function check_item_data() {
         .flat()
         .filter(item => !Object.values(animal_products).includes(item))
         .filter(item => !Object.values(bake).includes(item))
-        .filter(item => !cook.map(data => data.output).includes(item));
+        .filter(item => !cook.map(data => data.output).includes(item))
+        .filter(item => !(item in recipes))
+    )];
 
 
     for (const item_id of all_items) {
@@ -895,17 +899,16 @@ function check_item_data() {
         };
 
         if (!shop_lowest_price[item_id]) {
-            logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的最低上架價格`);
+            logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的最低上架價格 和 出售價格`);
         };
 
-        if (!sell_data[item_id]) {
-            logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的出售價格`);
-        };
+        // if (!sell_data[item_id]) {
+        //     logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的出售價格`);
+        // };
 
     };
 
-    for (const item_id of work_productions) {
-        if (get_probability_of_id(item_id)) continue;
+    for (const item_id of work_productions.filter(item_id => !get_probability_of_id(item_id))) {
         logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的掉落機率，會導致無法獲取此物品、或是工作指令報錯`);
     };
 };
