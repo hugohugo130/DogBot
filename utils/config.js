@@ -207,7 +207,9 @@ const authorName = "哈狗";
 const rpg_lvlUp_per = 50;
 const setJobDelay = 604800// 24 * 24 * 60 * 7 = 604800
 const max_hunger = 20;
-const cannot_sell = ["raw_hugo", "hugo"];
+
+/** @type {string[]} */
+const cannot_sell = [];
 
 // music
 
