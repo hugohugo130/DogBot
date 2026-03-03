@@ -1,4 +1,4 @@
-const { Events, ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits } = require("discord.js");
+const { Events, ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits, escapeMarkdown } = require("discord.js");
 const util = require("util");
 
 const { get_logger } = require("../utils/logger.js");
@@ -19,7 +19,7 @@ const DogClient = require("../utils/customs/client.js");
 // };
 
 /**
- * 
+ *
  * @param {any} options
  * @returns {string[]}
  */
@@ -37,7 +37,7 @@ function getFullCommandPath(options) {
 };
 
 /**
- * 
+ *
  * @param {any} options
  * @returns {readonly import("discord.js").CommandInteractionOption<import("discord.js").CacheType>[]}
  */
@@ -58,32 +58,30 @@ const backend_logger = get_logger({ backend: true });
 module.exports = {
     name: Events.InteractionCreate,
     /**
-     * 
+     *
      * @param {DogClient} client
-     * @param {ChatInputCommandInteraction} interaction 
+     * @param {ChatInputCommandInteraction} interaction
      * @returns {Promise<any>}
      */
     async execute(client, interaction) {
-        if (!interaction.isChatInputCommand() || !interaction.guild || !interaction.channel) return;
+        const { user, guild, channel, commandName, isChatInputCommand } = interaction;
 
-        const user = interaction.user;
+        if (!isChatInputCommand() || !guild || !channel) return;
+
         const username = user.globalName || user.username;
-        const command = client.commands.get(interaction.commandName);
+        const command = client.commands.get(commandName);
 
         if (!command) {
-            logger.error(`找不到名為 ${interaction.commandName} 的指令`);
+            logger.error(`找不到名為 ${commandName} 的指令`);
             return;
         };
 
         let subPath = getFullCommandPath(interaction.options.data);
-        let fullCommand = [interaction.commandName, ...subPath].join(" ");
         let finalOptions = getFinalOptions(interaction.options.data);
         let optionsStr = finalOptions.map(option => `${option.name}: ${option.value}`).join(", ");
+        let fullCommand = [commandName, ...subPath].join(" ");
 
         try {
-            const guild = interaction.guild;
-            const channel = interaction.channel;
-
             if (!("permissionsFor" in channel)) return;
 
             const botMember = await get_me(guild);
@@ -91,17 +89,22 @@ module.exports = {
 
             logger.info(`${username} 正在執行斜線指令: ${fullCommand}${optionsStr ? `, 選項: ${optionsStr}` : ""}`);
 
+            const e_fullCommand = escapeMarkdown(fullCommand);
+            const e_optionsStr = escapeMarkdown(optionsStr || "無");
+            const e_guildName = escapeMarkdown(`${guild.name} (${guild.id})`);
+            const e_channelName = escapeMarkdown(`${channel.name} (${channel.id})`);
+
             const embed = new EmbedBuilder()
                 .setTitle("指令執行")
                 .addFields({ name: "指令執行者", value: user.toString() })
-                .addFields({ name: "指令名稱", value: fullCommand })
-                .addFields({ name: "選項", value: optionsStr ? optionsStr : "無" })
-                .addFields({ name: "伺服器", value: `${guild?.name} (${guild?.id})` })
-                .addFields({ name: "頻道", value: `${channel?.name} (${channel?.id})` });
+                .addFields({ name: "指令名稱", value: e_fullCommand })
+                .addFields({ name: "選項", value: e_optionsStr })
+                .addFields({ name: "伺服器", value: e_guildName })
+                .addFields({ name: "頻道", value: e_channelName });
 
             backend_logger.info(embed);
 
-            // interaction的reply 需要 read message history 權限
+            // interaction#reply 需要 read message history 權限
             /** @type {bigint[]} */
             const permissionNeeded = [PermissionFlagsBits.ReadMessageHistory];
 
@@ -121,6 +124,8 @@ module.exports = {
                     });
                 } catch { };
             };
+
+            if (!("execute" in command)) return;
 
             await command.execute(interaction, client);
         } catch (error) {
