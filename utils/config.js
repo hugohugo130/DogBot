@@ -256,6 +256,117 @@ const embed_marry_color = 0x6bce99;
 // No "random"
 const container_default_color = Math.floor(Math.random() * 0xFFFFFF); // Random
 
+// RPG
+const failed = [
+    "boom",
+    "mouse",
+    "collapse",
+    "storm",
+    "shark",
+    // "acid_rain",
+    "escape",
+    "epidemic",
+];
+
+/**
+ * Probabilities
+ * the first number is weight
+ * the second number is minimum gain amount
+ * the third number is maximum gain amount
+ * @type {{ [k: string]: { [k: string]: [number, number, number] } }}
+ */
+const probabilities = {
+    "farm": {
+        // "acid_rain": [2, 1, 1],
+        "wheat": [30, 1, 2],
+        "carrot": [20, 2, 3],
+        "raw_potato": [15, 1, 2],
+        "tomato": [10, 1, 1],
+        "apple": [10, 1, 1],
+        "corn": [10, 1, 2],
+    },
+    "fish": {
+        "storm": [2, 1, 1],
+        "shark": [3, 1, 1],
+        "raw_shrimp": [35, 1, 2],
+        "raw_salmon": [30, 1, 1],
+        "raw_tuna": [30, 1, 1],
+        "raw_anglerfish": [15, 1, 2],
+        "raw_catfish": [15, 1, 2],
+        "raw_clownfish": [15, 1, 2],
+        "raw_cod": [15, 1, 2],
+        "raw_crab": [15, 1, 2],
+        "raw_eel": [15, 1, 2],
+        "raw_goldfish": [15, 1, 2],
+        "raw_jellyfish": [15, 1, 2],
+        "raw_koi": [15, 1, 2],
+        "raw_lobster": [15, 1, 2],
+        "raw_octopus": [15, 1, 2],
+        "raw_pufferfish": [15, 1, 2],
+        "raw_squid": [15, 1, 2],
+        "raw_swordfish": [15, 1, 2],
+        "raw_tropical_fish": [15, 1, 2],
+        "raw_whale": [15, 1, 2],
+    },
+    "herd": {
+        "escape": [1.68, 1, 1],
+        "epidemic": [1.68, 1, 1],
+        "a_chicken": [20.99, 1, 2],
+        "pig": [16.79, 1, 1],
+        "cow": [16.79, 1, 1],
+        "a_duck": [16.79, 1, 1],
+        "a_sheep": [12.60, 1, 1],
+        "a_hugo": [12.60, 1, 1],
+        "a_dog": [0.08, 1, 1]
+    },
+    "mine": {
+        "boom": [2, 1, 1],
+        "collapse": [3, 1, 1],
+        "stone": [15, 1, 3],
+        "coal": [50, 2, 3],
+        "iron_ore": [30, 2, 3],
+        "diamond_ore": [8, 1, 3],
+        "emerald_ore": [1, 1, 3],
+        "gold_ore": [3, 1, 3],
+        "ruby_ore": [5, 1, 3],
+        "sapphire_ore": [6, 1, 3],
+    },
+    "fell": {
+        "mouse": [10, 1, 1],
+        "acacia_wood": [8, 1, 1],
+        "birch_wood": [8, 1, 1],
+        "crimson_wood": [8, 1, 1],
+        "dark_oak_wood": [9, 1, 1],
+        "god_wood": [3, 1, 1],
+        "ha_wood": [9, 1, 1],
+        "jungle_wood": [9, 1, 1],
+        "oak_wood": [9, 1, 1],
+        "spruce_wood": [9, 1, 1],
+        "warped_wood": [9, 1, 1]
+    },
+    "brew": {
+        "cough_potion": [8, 1, 1],
+        "dizzy_potion": [8, 1, 1],
+        "eye_potion": [8, 1, 1],
+        "floating_potion": [8, 1, 1],
+        "gold_potion": [8, 1, 1],
+        "ha_potion": [8, 1, 1],
+        "hair_growth_potion": [8, 1, 1],
+        "invisibility_potion": [8, 1, 1],
+        "jump_potion": [8, 1, 1],
+        "lucky_potion": [8, 1, 1],
+        "mystery_potion": [8, 1, 1],
+        "nausea_potion": [8, 1, 1],
+        "poison_potion": [8, 1, 1],
+        "regen_potion": [8, 1, 1],
+        "revive_potion": [8, 1, 1],
+        "unlucky_potion": [8, 1, 1],
+    },
+};
+
+
+// #region [job descriptions]
+
 /*
 農夫 和漁夫是差不多辛勤的職業，不過在這個世界，農夫的收益比漁夫還要高
 使用 /farm 指令種田
@@ -317,114 +428,8 @@ const container_default_color = Math.floor(Math.random() * 0xFFFFFF); // Random
 鴨肉    20%    1
 */
 
+// #endregion
 
-// RPG
-const failed = [
-    "boom",
-    "mouse",
-    "collapse",
-    "storm",
-    "shark",
-    // "acid_rain",
-    "escape",
-    "epidemic",
-];
-
-/**
- * Probabilities
- * the first number is weight
- * the second number is minimum gain amount
- * the third number is maximum gain amount
- * @type {{ [k: string]: { [k: string]: [number, number, number] } }}
- */
-const probabilities = {
-    "farm": {
-        // "acid_rain": [2, 1, 1],
-        "wheat": [30, 1, 2],
-        "carrot": [20, 2, 3],
-        "raw_potato": [15, 1, 2],
-        "tomato": [10, 1, 1],
-        "apple": [10, 1, 1],
-        "corn": [10, 1, 2],
-    },
-    "fish": {
-        "storm": [2, 1, 1],
-        "shark": [3, 1, 1],
-        "raw_shrimp": [35, 1, 2],
-        "raw_salmon": [30, 1, 1],
-        "raw_tuna": [30, 1, 1],
-        "raw_anglerfish": [15, 1, 2],
-        "raw_catfish": [15, 1, 2],
-        "raw_clownfish": [15, 1, 2],
-        "raw_cod": [15, 1, 2],
-        "raw_crab": [15, 1, 2],
-        "raw_eel": [15, 1, 2],
-        "raw_goldfish": [15, 1, 2],
-        "raw_jellyfish": [15, 1, 2],
-        "raw_koi": [15, 1, 2],
-        "raw_lobster": [15, 1, 2],
-        "raw_octopus": [15, 1, 2],
-        "raw_pufferfish": [15, 1, 2],
-        "raw_squid": [15, 1, 2],
-        "raw_swordfish": [15, 1, 2],
-        "raw_tropical_fish": [15, 1, 2],
-        "raw_whale": [15, 1, 2],
-    },
-    "herd": {
-        "escape": [20, 1, 1],
-        "epidemic": [20, 1, 1],
-        "a_chicken": [250, 1, 2],
-        "pig": [200, 1, 1],
-        "cow": [200, 1, 1],
-        "a_duck": [200, 1, 1],
-        "a_sheep": [150, 1, 1],
-        "a_hugo": [10, 1, 1],
-        "a_dog": [1, 1, 1],
-    },
-    "mine": {
-        "boom": [2, 1, 1],
-        "collapse": [3, 1, 1],
-        "stone": [15, 1, 3],
-        "coal": [50, 2, 3],
-        "iron_ore": [30, 2, 3],
-        "diamond_ore": [8, 1, 3],
-        "emerald_ore": [1, 1, 3],
-        "gold_ore": [3, 1, 3],
-        "ruby_ore": [5, 1, 3],
-        "sapphire_ore": [6, 1, 3],
-    },
-    "fell": {
-        "mouse": [10, 1, 1],
-        "acacia_wood": [8, 1, 1],
-        "birch_wood": [8, 1, 1],
-        "crimson_wood": [8, 1, 1],
-        "dark_oak_wood": [9, 1, 1],
-        "god_wood": [3, 1, 1],
-        "ha_wood": [9, 1, 1],
-        "jungle_wood": [9, 1, 1],
-        "oak_wood": [9, 1, 1],
-        "spruce_wood": [9, 1, 1],
-        "warped_wood": [9, 1, 1]
-    },
-    "brew": {
-        "cough_potion": [8, 1, 1],
-        "dizzy_potion": [8, 1, 1],
-        "eye_potion": [8, 1, 1],
-        "floating_potion": [8, 1, 1],
-        "gold_potion": [8, 1, 1],
-        "ha_potion": [8, 1, 1],
-        "hair_growth_potion": [8, 1, 1],
-        "invisibility_potion": [8, 1, 1],
-        "jump_potion": [8, 1, 1],
-        "lucky_potion": [8, 1, 1],
-        "mystery_potion": [8, 1, 1],
-        "nausea_potion": [8, 1, 1],
-        "poison_potion": [8, 1, 1],
-        "regen_potion": [8, 1, 1],
-        "revive_potion": [8, 1, 1],
-        "unlucky_potion": [8, 1, 1],
-    },
-};
 
 /** @type {Object.<string, { command: string[], emoji: string, desc: string, name: string }>} */
 const jobs = {
