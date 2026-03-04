@@ -2780,40 +2780,50 @@ async function rpg_handler({ client, message, d = false, mode = 0 }) {
 /**
  * Get a random gain of a rpg work
  * @param {string} category - work command or ID
- * @returns {{failed: boolean, item: string | null, amount: number}}
+ * @returns {{ failed: boolean, item: string | null, amount: number }}
  */
 function get_random_result(category) {
     const datas = probabilities[category];
 
-    if (!datas) return {
+    const error_template = {
         failed: true,
         item: null,
         amount: 0,
     };
 
-    /*
-    {
-        "key": [amount, ...],
-        "key2": [amount, ...],
-        ...
-    }
+    if (!datas || typeof datas !== "object") return error_template;
 
-    -> [key * amount, key2 * amount, ...]
-    */
-    const result = [];
-    for (const [key, value] of Object.entries(datas)) {
-        result.push(...Array(value[0]).fill(key));
+    const items = Object.keys(datas);
+    if (items.length === 0) return error_template;
+
+    let totalWeight = 0;
+    const cumulativeWeights = [];
+    for (const item of items) {
+        const weight = datas[item][0];
+
+        totalWeight += weight;
+        cumulativeWeights.push(totalWeight);
     };
 
-    const item = choice(result);
-    const data = datas[item];
+    // Choose item randomly
+    const rand = Math.random() * totalWeight;
+    let selectedItem = null;
+    for (let i = 0; i < cumulativeWeights.length; i++) {
+        if (rand < cumulativeWeights[i]) {
+            selectedItem = items[i];
+            break;
+        };
+    };
 
-    const amount = randint(data[1], data[2]);
+    if (!selectedItem) return error_template;
 
-    const is_failed = failed.includes(item);
+    const [minAmount, maxAmount] = datas[selectedItem];
+    const amount = randint(minAmount, maxAmount);
 
-    return { failed: is_failed, item, amount };
-};
+    const is_failed = failed.includes(selectedItem);
+
+    return { failed: is_failed, item: selectedItem, amount };
+}
 
 module.exports = {
     name: Events.MessageCreate,
