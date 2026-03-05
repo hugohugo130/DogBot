@@ -1,4 +1,4 @@
-const { Events, ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits, escapeMarkdown } = require("discord.js");
+const { Events, ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits, escapeMarkdown, BaseInteraction } = require("discord.js");
 const util = require("util");
 
 const { get_logger } = require("../utils/logger.js");
@@ -64,9 +64,11 @@ module.exports = {
      * @returns {Promise<any>}
      */
     async execute(client, interaction) {
-        const { user, guild, channel, commandName, isChatInputCommand } = interaction;
+        if (!interaction?.isChatInputCommand?.()) return;
 
-        if (!isChatInputCommand() || !guild || !channel) return;
+        const { user, guild, channel, commandName } = interaction;
+
+        if (!guild || !channel) return;
 
         const username = user.globalName || user.username;
         const command = client.commands.get(commandName);
@@ -76,10 +78,10 @@ module.exports = {
             return;
         };
 
-        let subPath = getFullCommandPath(interaction.options.data);
-        let finalOptions = getFinalOptions(interaction.options.data);
-        let optionsStr = finalOptions.map(option => `${option.name}: ${option.value}`).join(", ");
-        let fullCommand = [commandName, ...subPath].join(" ");
+        const subPath = getFullCommandPath(interaction.options.data);
+        const finalOptions = getFinalOptions(interaction.options.data);
+        const optionsStr = finalOptions.map(option => `${option.name}: ${option.value}`).join(", ");
+        const fullCommand = [commandName, ...subPath].join(" ");
 
         try {
             if (!("permissionsFor" in channel)) return;
