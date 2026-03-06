@@ -205,22 +205,20 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
  * @returns {string[]}
  *
  * @overload
- * @param {number | null} depth
+ * @param {number | null} [depth]
  * @returns {string}
  *
  * @overload
- * @param {number | null | "list"} depth
+ * @param {number | null | "list"} [depth]
  * @returns {string | string[]}
  *
- * @param {number | null | "list"} depth
+ * @param {number | null | "list"} [depth]
  */
 function getCallerModuleName(depth = 4) {
     const unknown_word = "unknown";
 
     if (!depth) {
-        const err = new Error();
-
-        return err.stack || unknown_word;
+        return new Error().stack || unknown_word;
     };
 
     if (depth === "list") {
@@ -245,7 +243,43 @@ function getCallerModuleName(depth = 4) {
         return callers;
     };
 
-    let res = unknown_word;
+    // #region [method 1]
+
+    const originalPrepareStackTrace = Error.prepareStackTrace;
+    let callerFile;
+
+    try {
+        Error.prepareStackTrace = (err, stack) => stack; // Override to get stack frames
+
+        const err = new Error();
+
+        const stack = /** @type {NodeJS.CallSite[]} */ (/** @type {unknown} */ (err.stack));
+        Error.prepareStackTrace = originalPrepareStackTrace; // Restore original
+
+        if (!stack) return unknown_word;
+
+        const currentFile = stack.shift()?.getFileName();
+
+        while (stack.length) {
+            // @ts-ignore
+            callerFile = stack.shift().getFileName();
+
+            if (currentFile !== callerFile) { // Find the first different file in the stack
+                break;
+            };
+        };
+
+        const fullPath = callerFile;
+        return fullPath ? path.basename(fullPath, ".js") : unknown_word;
+    } catch {
+    } finally {
+        Error.prepareStackTrace = originalPrepareStackTrace; // Restore original
+    };
+
+    // #endregion
+
+    // #region [method 2]
+
     try {
         const err = new Error();
 
@@ -259,44 +293,15 @@ function getCallerModuleName(depth = 4) {
 
         if (match) {
             const fullPath = match[1];
-            const fileName = fullPath.split(/[\\/]/).pop() || unknown_word;
-            res = fileName.replace(".js", "");
+            return fullPath ? path.basename(fullPath, ".js") : unknown_word;
         };
     } catch {
-        res = unknown_word;
+        return unknown_word;
     };
 
-    if (res === unknown_word) {
-        const originalPrepareStackTrace = Error.prepareStackTrace;
-        let callerFile;
+    // #endregion
 
-        try {
-            const err = new Error();
-            if (!err.stack) return unknown_word;
 
-            Error.prepareStackTrace = (err, stack) => stack; // Override to get stack frames
-
-            // @ts-ignore
-            const currentFile = err.stack.shift().getFileName();
-
-            while (err.stack.length) {
-                // @ts-ignore
-                callerFile = err.stack.shift().getFileName();
-
-                if (currentFile !== callerFile) { // Find the first different file in the stack
-                    break;
-                };
-            }
-        } catch (e) {
-            callerFile = unknown_word;
-        } finally {
-            Error.prepareStackTrace = originalPrepareStackTrace; // Restore original
-        };
-
-        return callerFile;
-    };
-
-    return res;
 };
 
 /**
@@ -313,11 +318,17 @@ function get_logger(options = {}) {
 
     // 返回已存在的 logger
     if (backend) {
-        if (loggerManager_log.has(name)) return loggerManager_log.get(name);
+        const cached_logger = loggerManager_log.get(name);
+
+        if (cached_logger) return cached_logger;
     } else if (nodc) {
-        if (loggerManager_nodc.has(name)) return loggerManager_nodc.get(name);
+        const cached_logger = loggerManager_nodc.get(name);
+
+        if (cached_logger) return cached_logger;
     } else {
-        if (loggerManager.has(name)) return loggerManager.get(name);
+        const cached_logger = loggerManager.get(name);
+
+        if (cached_logger) return cached_logger;
     };
 
     if (DEBUG) console.debug(`[DEBUG] [get_logger] create logger with backend=${backend}, nodc=${nodc}, name=${name}, call from ${getCallerModuleName(null)}`);
