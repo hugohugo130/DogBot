@@ -211,11 +211,15 @@ const max_hunger = 20;
 /** @type {string[]} */
 const cannot_sell = [];
 
-// music
+// #region [music]
 
 // require(utils/music/musicsearchengine)
-// 也會用在檔案名稱 (engine_id.mp3)
 const musicSearchEngine = ["soundcloud"];
+
+// 限制最多只能有 {musicPlayingPlayerLimit} 個正在播放的音樂播放器 (player)
+const musicPlayingPlayerLimit = 50;
+
+// #endregion
 
 // link
 const DOCS = "無";
@@ -572,7 +576,9 @@ module.exports = {
     max_hunger,
     cannot_sell,
 
+    // music
     musicSearchEngine,
+    musicPlayingPlayerLimit,
 
     DOCS,
     INVITE_LINK,

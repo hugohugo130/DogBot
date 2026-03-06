@@ -5,9 +5,9 @@ const { Soundcloud } = require("soundcloud.ts");
 const { getNowPlayingEmbed } = require("./nowplaying.js");
 const { generateSessionId } = require("../../utils/random.js");
 const { get_emojis, get_emoji } = require("../../utils/rpg.js");
-const { search_until, IsValidURL, getQueue, youHaveToJoinVC_Embed, fetchAudioStream, fixStructure } = require("../../utils/music/music.js");
+const { search_until, IsValidURL, getQueue, youHaveToJoinVC_Embed, fetchAudioStream, fixStructure, getPlayingPlayers } = require("../../utils/music/music.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
-const { embed_error_color } = require("../../utils/config.js");
+const { embed_error_color, musicPlayingPlayerLimit } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
 
@@ -127,6 +127,22 @@ module.exports = {
             });
         };
 
+        if (getPlayingPlayers().size > musicPlayingPlayerLimit) {
+            const emoji_cross = await get_emoji("crosS", client);
+
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 無法播放`)
+                .setDescription(`正在播放音樂的播放器數量已達到限制 (${musicPlayingPlayerLimit} 個)`)
+                .setEmbedFooter(interaction);
+
+            return await interaction.reply({
+                embeds: [embed],
+                flags: !hide ? undefined : MessageFlags.Ephemeral,
+            })
+        };
+
+
         const voiceConnection = getVoiceConnection(guildId);
 
         // 連接到語音頻道
@@ -139,7 +155,10 @@ module.exports = {
                 .setDescription(`你必須待在 <#${voiceConnection.joinConfig.channelId}> 裡面`)
                 .setEmbedFooter(interaction);
 
-            return await interaction.reply({ content: "", embeds: [embed], flags: !hide ? undefined : MessageFlags.Ephemeral });
+            return await interaction.reply({
+                embeds: [embed],
+                flags: !hide ? undefined : MessageFlags.Ephemeral,
+            });
         };
 
         const [_, [

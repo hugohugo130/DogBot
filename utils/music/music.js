@@ -15,6 +15,7 @@ const { get_guild } = require("../discord.js");
 
 const logger = get_logger();
 
+/** @type {Collection<string, MusicQueue>} */
 const queues = new Collection();
 
 const loopStatus = Object.freeze({
@@ -183,7 +184,7 @@ const fileStreamType = {
 
 class MusicTrack {
     /**
-     * 
+     *
       * @param {Object} datas
         * @param {string} datas.id
         * @param {string} datas.title
@@ -707,18 +708,16 @@ class MusicQueue {
 };
 
 /**
+ * Get a music queue by a guildID
  * @overload
  * @param {string} guildID
  * @param {boolean} [create=true]
  * @returns {MusicQueue | null}
- */
-/**
+ *
  * @overload
  * @param {string} guildID
  * @param {true} [create=true]
  * @returns {MusicQueue}
- */
-/**
  *
  * @param {string} guildID
  * @param {boolean} [create=true]
@@ -750,7 +749,19 @@ function getQueues() {
 };
 
 /**
- * 
+ * Get a Collection of audio players which are playing music.
+ * @returns {Collection<string, AudioPlayer>}
+ */
+function getPlayingPlayers() {
+    return new Collection(
+        [...queues.entries()]
+            .filter(([_, queue]) => queue.isPlaying())
+            .map(([guildID, queue]) => [guildID, queue.player])
+    );
+};
+
+/**
+ *
  * @param {any} object
  * @returns {object is import("soundcloud.ts").SoundcloudTrack}
  */
@@ -1095,6 +1106,7 @@ async function youHaveToJoinVC_Embed(interaction = null, client = global._client
 module.exports = {
     getQueue,
     getQueues,
+    getPlayingPlayers,
     getStream,
     fixStructure,
     search_until,
