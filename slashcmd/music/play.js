@@ -70,6 +70,19 @@ module.exports = {
                     "zh-CN": "从链接下载音频并尽可能播放",
                 })
                 .setRequired(false),
+        )
+        .addBooleanOption(option => // hide
+            option.setName("hide")
+                .setNameLocalizations({
+                    "zh-TW": "隱藏",
+                    "zh-CN": "隐藏",
+                })
+                .setDescription("Hide command output")
+                .setDescriptionLocalizations({
+                    "zh-TW": "隱藏指令輸出",
+                    "zh-CN": "隐藏指令输出",
+                })
+                .setRequired(false),
         ),
     // .addBooleanOption(option =>
     //     option.setName("shuffle")
@@ -90,9 +103,10 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        const query = interaction.options.getString("query") ?? "wellerman";
-        const next = interaction.options.getBoolean("next") ?? false;
+        const query = interaction.options.getString("query", false) ?? "wellerman";
+        const next = interaction.options.getBoolean("next", false) ?? false;
         const play_audio_url = interaction.options.getBoolean("play_audio_url") ?? false;
+        const hide = interaction.options.getBoolean("hide", false) ?? false;
         // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
 
         const voiceChannel = (
@@ -125,27 +139,27 @@ module.exports = {
                 .setDescription(`你必須待在 <#${voiceConnection.joinConfig.channelId}> 裡面`)
                 .setEmbedFooter(interaction);
 
-            return await interaction.reply({ content: "", embeds: [embed], flags: MessageFlags.Ephemeral });
+            return await interaction.reply({ content: "", embeds: [embed], flags: !hide ? undefined : MessageFlags.Ephemeral });
         };
 
         const [_, [
             emoji_cross,
             emoji_search,
         ]] = await Promise.all([
-            interaction.deferReply(),
+            interaction.deferReply({ flags: hide ? MessageFlags.Ephemeral : undefined }),
             get_emojis([
                 "crosS",
                 "search",
             ], client),
         ]);
 
-        await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
+        await interaction.editReply({ content: `${emoji_search} | Searching...` });
 
         const will_play_audio_url = play_audio_url && IsValidURL(query);
 
         let audioerr = null;
         try {
-            await fetchAudioStream(query);
+            if (will_play_audio_url) await fetchAudioStream(query);
         } catch (error) {
             audioerr = error instanceof Error ? error.stack : null;
         };
