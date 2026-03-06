@@ -537,9 +537,7 @@ const VALID_GUIDE_CATEGORIES = /** @type {const} */ (["general", "music", "rpg",
  * @param {string} value
  * @returns {value is ValidGuideCategory}
  */
-function isValidGuideCategory(value) {
-    return value in VALID_GUIDE_CATEGORIES;
-};
+const isValidGuideCategory = (value) => value in help.group && value in help.name;
 
 function check_help_rpg_info() {
     const { rpg_commands, redirect_data } = require("./msg_handler.js");
@@ -555,14 +553,14 @@ function check_help_rpg_info() {
 
 /**
  * Get the embed of guile information of a category
- * @param {ValidGuideCategory} category
+ * @param {string} category
  * @param {User} user
  * @param {DogClient} client
  * @param {BaseInteraction | null} [interaction=null]
- * @returns {[EmbedBuilder, ActionRowBuilder<StringSelectMenuBuilder> | null]}
+ * @returns {[ EmbedBuilder, ActionRowBuilder<StringSelectMenuBuilder> | null ]}
  */
 function get_help_embed(category, user, client, interaction = null) {
-    if (!(category in help.group)) throw new Error(`${category} is not a valid category`);
+    if (!isValidGuideCategory(category)) throw new Error(`${category} is not a valid category`);
 
     const options = Object.entries(help.group[category])
         .flatMap(([name, data]) => {
@@ -747,7 +745,7 @@ module.exports = {
 
                         embed = await get_help_command(category, choseValue || cmd || "buy", guild.id);
                     } else {
-                        if (!isValidGuideCategory(choseValue)) throw new Error(`${category} is not a valid guide category`);
+                        if (!isValidGuideCategory(choseValue)) throw new Error(`${choseValue} is not a valid guide category`);
 
                         [embed, row] = get_help_embed(choseValue, user, client, interaction);
                     };
