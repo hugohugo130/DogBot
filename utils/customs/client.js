@@ -1,6 +1,7 @@
 const { Client, GatewayIntentBits, Options, Collection, Guild, GuildMember, User, Locale } = require("discord.js");
 
 const { authorName, BotName } = require("../config.js");
+const { Partials } = require("discord.js");
 
 /**
  * @typedef OvenBakeSession
@@ -37,13 +38,19 @@ class DogClient extends Client {
     constructor() {
         const { loadslashcmd } = require("../loadslashcmd.js");
 
+        /** @type {import("discord.js").ClientOptions} */
         const options = {
             intents: [
                 GatewayIntentBits.Guilds,
                 GatewayIntentBits.GuildMembers,
                 GatewayIntentBits.GuildMessages,
+                GatewayIntentBits.DirectMessages,
                 GatewayIntentBits.MessageContent,
                 GatewayIntentBits.GuildVoiceStates,
+            ],
+            partials: [
+                Partials.Channel,
+                Partials.Message,
             ],
             rest: {
                 timeout: 15000,
@@ -105,11 +112,11 @@ class DogClient extends Client {
         /** @type {Collection<string, GbmiSession>} */
         this.gbmi_sessions = new Collection();
 
-        /** @type {{ IP: string, PORT: number }} */
-        this.serverIP = { IP: "192.168.0.156", "PORT": 3003 };
-
         /** @type {Collection<string, Locale>} */
         this.locales = new Collection();
+
+        /** @type {{ IP: string, PORT: number }} */
+        this.serverIP = { IP: "192.168.0.156", "PORT": 3003 };
 
         /** @type {string} */
         this.name = BotName; // will be set when the client is ready if BotName is not set

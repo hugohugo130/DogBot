@@ -7,8 +7,9 @@ const DogClient = require("../utils/customs/client.js");
 const logger = get_logger();
 
 const channels = [
-    ["1422545977226690683", "1456132424042807427"],
-    ["953638043846320158", "1365629151188484176"],
+    ["1422545977226690683", "1456132424042807427"], // 過夜
+    ["1479354643476779131", "1479354647259910148"], // 呆鵝の語音聊天室1
+    ["953638043846320158", "1365629151188484176"], // 瑪西亞の語音聊天頻道
 ];
 
 module.exports = {
@@ -20,10 +21,10 @@ module.exports = {
      */
     execute: async function (client) {
         for (const [guildID, channelID] of channels) {
-            const guild = client.guilds.cache.get(guildID);
+            const guild = await client.guilds.fetch(guildID);
             if (!guild) return;
 
-            const voiceChannel = guild.channels.cache.get(channelID);
+            const voiceChannel = await guild.channels.fetch(channelID);
             if (!voiceChannel) return;
 
             if (!getVoiceConnection(guildID)) {

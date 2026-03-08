@@ -319,13 +319,12 @@ const rpg_commands = {
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             const userid = message.author?.id;
             if (!userid) return;
 
@@ -373,13 +372,12 @@ const rpg_commands = {
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
             const userid = message.author.id;
 
@@ -420,13 +418,12 @@ const rpg_commands = {
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
             const userid = message.author.id;
 
@@ -484,13 +481,12 @@ const rpg_commands = {
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
             const userid = message.author.id;
 
@@ -525,13 +521,12 @@ const rpg_commands = {
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
             const userid = message.author.id;
 
@@ -585,13 +580,12 @@ const rpg_commands = {
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
 
             const subcommand = args[0];
@@ -995,13 +989,12 @@ const rpg_commands = {
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             return await ls_function({ client, message, rpg_data, mode, interaction: null })
         }, false],
     buy: ["購買", "購買其他人上架的物品",
@@ -1011,13 +1004,12 @@ const rpg_commands = {
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author || !message.guild) return;
 
             const userid = message.author.id;
@@ -1185,13 +1177,12 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
 
             const button = new ButtonBuilder()
@@ -1222,13 +1213,12 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             const lastRunTimestamp = rpg_data.lastRunTimestamp;
             const filtered_lastRunTimestamp = Object.fromEntries(
                 Object.
@@ -1271,13 +1261,12 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             const lastRunTimestamp = rpg_data.lastRunTimestamp;
             const filtered_lastRunTimestamp = Object.fromEntries(Object.entries(lastRunTimestamp).filter(([command, time]) => rpg_cooldown[command]));
 
@@ -1314,13 +1303,12 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
 
             const target_users = await mentions_users(message);
@@ -1398,13 +1386,12 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author || !message.guild) return;
             let specific_cmd = args[0];
 
@@ -1484,13 +1471,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
 
             const [emoji_backpack, emoji_pet, emoji_shield] = await get_emojis(["bag", "pet", "shield"], client);
@@ -1568,13 +1554,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             const user = message.author;
             const userid = user?.id;
             if (!userid) return;
@@ -1818,13 +1803,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
 
             const item_name = get_name_of_id(args[0]);
@@ -1936,13 +1920,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             const users = client.users.cache.values();
 
             const userDataList = await Promise.all(
@@ -1991,13 +1974,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             const users = client.users.cache.values();
 
             const userDataList = await Promise.all(
@@ -2046,13 +2028,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             const item_id = args[0];
 
             if (!args[0]) {
@@ -2093,13 +2074,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             const item_name = args.join(" ");
 
             if (!args[0]) {
@@ -2139,13 +2119,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
 
             const marry_info = rpg_data?.marry ?? {};
@@ -2255,13 +2234,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
 
             const emoji_cross = await get_emoji("crosS", client);
@@ -2321,13 +2299,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
 
             const [emoji_job, emoji_nekoWave] = await get_emojis(["job", "nekoWave"], client);
@@ -2386,13 +2363,12 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             const [[signed, _], [emoji_cross, emoji_calendar]] = await Promise.all([
                 hasSignedTodayOrBrokeSign(rpg_data.daily),
                 get_emojis(["crosS", "calendar"], client),
@@ -2444,13 +2420,12 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
          * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
-         * @param {import("../../utils/config.js").GuildDatabase} datas.data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
          * @returns {Promise<any>}
          */
-        async function ({ client, message, rpg_data, data, args, mode, random_item }) {
+        async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
 
             /** @type {string | null} */
@@ -2529,27 +2504,38 @@ function find_redirect_targets_from_id(id) {
  * @param {DogClient} options.client - Discord Client
  * @param {Message | MockMessage} options.message - Discord Message
  * @param {boolean} [options.d=false]
- * @param {0 | 1} [options.mode=0] 請求模式 - 0: 預設模式 - 1: 取得訊息回傳參數
+ * @param {boolean} [options.dm=false] - 私訊模式
+ * @param {0 | 1} [options.mode=0] - 請求模式 - 0: 預設模式 - 1: 取得訊息回傳參數
  * @returns {Promise<Message | { [k: string]: any } | null | void>}
 */
-async function rpg_handler({ client, message, d = false, mode = 0 }) {
+async function rpg_handler({ client, message, d = false, dm = false, mode = 0 }) {
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
 
     if (!d && message.author?.bot) return null;
 
-    const guildID = message.guild?.id;
-    if (!guildID) return null;
+    const guildID = message.guild?.id ?? null;
 
-    const data = await loadData(guildID);
-    if (!data["rpg"]) return null;
+    if (!dm) {
+        if (!guildID) return null;
+
+        const data = await loadData(guildID);
+        if (!data["rpg"]) return null;
+    };
 
     let content = message.content?.toLowerCase().trim();
     if (!content) return null;
 
-    const allowedPrefix = await startsWith_prefixes(guildID, content);
+    const allowedPrefix = dm || !guildID
+        ? "&"
+        : await startsWith_prefixes(guildID, content);
 
-    if (!allowedPrefix) return null;
-    content = content.replace(allowedPrefix, "").trim();
+    if (
+        (dm || !guildID) && allowedPrefix
+            ? content.startsWith(allowedPrefix)
+            : !allowedPrefix
+    ) return null;
+
+    if (allowedPrefix) content = content.replace(allowedPrefix, "").trim();
     let [command, ...args] = content.split(" ");
 
     // 移除所有元素的空白字元
@@ -2636,7 +2622,6 @@ async function rpg_handler({ client, message, d = false, mode = 0 }) {
                         client,
                         message,
                         rpg_data,
-                        data,
                         args: [found_food, "all"],
                         mode: 1
                         // {client, message, rpg_data, data, args, mode, random_item }
@@ -2773,7 +2758,7 @@ async function rpg_handler({ client, message, d = false, mode = 0 }) {
         return;
     };
 
-    const result = await execute({ client, message, rpg_data, data, args, mode, random_item: { item, amount } });
+    const result = await execute({ client, message, rpg_data, args, mode, random_item: { item, amount } });
     if (mode === 1) return result;
 };
 
@@ -2828,22 +2813,29 @@ function get_random_result(category) {
 module.exports = {
     name: Events.MessageCreate,
     /**
-     * 
-     * @param {DogClient} client 
-     * @param {Message} message 
+     *
+     * @param {DogClient} client
+     * @param {Message} message
      */
     execute: async function (client, message) {
-        if (!message.author || !message.guild) return;
+        if (message.author.bot) return;
 
-        const userId = message.author?.id;
-        const guildID = message.guild?.id;
+        const userId = message.author.id;
+        const guildID = message.guild?.id ?? null;
 
-        const [data, inpref] = await Promise.all([
-            loadData(guildID),
-            InPrefix(guildID, message.content.trim()),
-        ]);
+        /** @type {string[]} */
+        let inpref = guildID ? [] : ["&"];
 
-        if (!data["rpg"] || !inpref?.length) return;
+        if (guildID) {
+            let data;
+
+            [data, inpref] = await Promise.all([
+                loadData(guildID),
+                InPrefix(guildID, message.content.trim()),
+            ]);
+
+            if (!data["rpg"] || !inpref?.length) return;
+        };
 
         if (client.lock.rpg_handler.hasOwnProperty(userId)) {
             const emoji_cross = await get_emoji("crosS", client);
@@ -2879,7 +2871,7 @@ module.exports = {
             });
 
             await Promise.race([
-                rpg_handler({ client, message }),
+                rpg_handler({ client, message, dm: !guildID }),
                 timeoutPromise,
             ]);
         } catch (error) {

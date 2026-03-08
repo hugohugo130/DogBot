@@ -598,12 +598,12 @@ function get_help_embed(category, user, client, interaction = null) {
  * Get the embed of guile information of command
  * @param {ValidGuideCategory} category
  * @param {string} command_name
- * @param {string} guildID
+ * @param {string | null} [guildID=null]
  * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
-async function get_help_command(category, command_name, guildID, interaction = null, client = global._client) {
+async function get_help_command(category, command_name, guildID=null, interaction = null, client = global._client) {
     const { find_redirect_targets_from_id } = require("./msg_handler.js");
 
     if (!(category in help.group)) throw new Error(`${category} is not a valid category`);
@@ -617,7 +617,7 @@ async function get_help_command(category, command_name, guildID, interaction = n
     if (!command_data) return null;
 
     if (!client) client = await wait_for_client();
-    const prefix = await firstPrefix(guildID);
+    const prefix = guildID ? await firstPrefix(guildID) : "&";
 
     /*
     Field name: 使用方法
