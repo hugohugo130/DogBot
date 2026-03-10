@@ -301,7 +301,7 @@ class MusicQueue {
         this.destroying = false;
 
         this.player.on("error", async (error) => {
-            const errorStack = util.inspect(error, { depth: null });
+            const errorStack = util.inspect(error, { depth: 10 });
             logger.error(`[${this.guildID}] 播放音樂時發生錯誤: ${errorStack}`);
 
             if (this.textChannel?.send) {
