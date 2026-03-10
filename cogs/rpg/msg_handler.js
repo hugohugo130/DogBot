@@ -2525,17 +2525,18 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
     let content = message.content?.toLowerCase().trim();
     if (!content) return null;
 
-    const allowedPrefix = dm || !guildID
-        ? "&"
-        : await startsWith_prefixes(guildID, content);
+    let allowedPrefix;
 
-    if (
-        (dm || !guildID) && allowedPrefix
-            ? content.startsWith(allowedPrefix)
-            : !allowedPrefix
-    ) return null;
+    if (dm || !guildID) {
+        allowedPrefix = "&";
+        if (!content.startsWith(allowedPrefix)) return;
+    } else {
+        allowedPrefix = await startsWith_prefixes(guildID, content);
 
-    if (allowedPrefix) content = content.replace(allowedPrefix, "").trim();
+        if (!allowedPrefix) return null;
+    };
+
+    content = content.replace(allowedPrefix, "").trim();
     let [command, ...args] = content.split(" ");
 
     // 移除所有元素的空白字元
