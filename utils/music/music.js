@@ -700,6 +700,7 @@ class MusicQueue {
     destroy() {
         this.destroying = true;
 
+        this.player.removeAllListeners();
         this.unsubscribe();
         this.stopPlaying(true);
         this.connection?.destroy();
