@@ -55,9 +55,15 @@ function processDirectory(bot, dirPath) {
 };
 
 /**
- * 
+ * @overload
+ * @param {true} bot true返回collection, false返回array
+ * @returns {Collection<string, any>}
+ *
+ * @overload
  * @param {boolean} bot true返回collection, false返回array
  * @returns {Collection<string, any> | any[]}
+ *
+ * @param {boolean} bot true返回collection, false返回array
  */
 function loadslashcmd(bot) {
     if (!bot) return loadslashcmd_array();

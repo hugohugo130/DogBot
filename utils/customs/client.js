@@ -92,7 +92,6 @@ class DogClient extends Client {
         this.dvoice = new Collection();
 
         const cmds = loadslashcmd(true);
-        if (!(cmds instanceof Collection)) throw new Error("loadslashcmd(true) should return an Collection");
 
         /** @type {Collection<string, any>} */
         this.commands = cmds;
