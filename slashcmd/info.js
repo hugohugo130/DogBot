@@ -411,7 +411,7 @@ module.exports = {
                     .setCustomId(`refresh|any|/info bot`)
                     .setEmoji(emoji_robot)
                     .setLabel(lang_refresh || "")
-                    .setStyle(ButtonStyle.Primary);
+                    .setStyle(ButtonStyle.Success);
 
                 const row =
                     /** @type {ActionRowBuilder<ButtonBuilder>} */
