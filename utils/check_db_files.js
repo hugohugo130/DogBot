@@ -133,6 +133,24 @@ async function make_db_compatible(users, guilds) {
         // };
         // #endregion
 
+        // #region [2026 03 11]
+        /*
+        2026 03 11:
+        - fix(rpg): cooldown keys, hew and fell are the same, now use the `fell` key only.
+        */
+        // #endregion
+
+        // #region [2026 03 11] [CODE]
+        // /** @type {string[]} */
+        // const lst = ['mine', 'herd', 'brew', 'fish', 'farm_water', 'fell'];
+        // for (const LRT_id of Object.keys(rpg_data.lastRunTimestamp)) {
+        //     if (lst.includes(LRT_id)) continue;
+
+        //     delete rpg_data.lastRunTimestamp[LRT_id];
+        //     modified = true;
+        // };
+        // #endregion
+
         // =================================================================
 
         if (modified) await save_rpg_data(user.id, rpg_data);

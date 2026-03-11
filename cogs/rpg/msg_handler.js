@@ -263,7 +263,7 @@ const rpg_cooldown = {
     // brew: "145 + {c} * 25",
     // fish: "90 + {c} * 20",
     mine: "60 * 5",
-    hew: "60 * 5",
+    // hew: "60 * 5",
     herd: "60 * 5",
     brew: "60 * 5",
     fish: "60 * 5",
@@ -297,10 +297,13 @@ const redirect_data = {
 };
 
 /** @type {string[]} */
-const rpg_work = [
-    ...Object.keys(rpg_cooldown),
-    ...Object.keys(redirect_data).filter(key => key in Object.keys(rpg_cooldown)),
-];
+const rpg_work = [... new Set(
+    [
+        ...Object.keys(rpg_cooldown),
+        ...Object.values(redirect_data).filter(key => key in Object.keys(rpg_cooldown)),
+    ]
+        .filter(work_id => !Object.keys(redirect_data).includes(work_id)),
+)];
 
 const redirect_data_reverse = Object.entries(redirect_data).reduce((acc, [key, value]) => {
     acc[value] = key;
@@ -2749,7 +2752,7 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
         };
     };
 
-    if (need_arg && !args[0]) {
+    if (need_arg && !args.length) {
         const embed = await get_help_command("rpg", command, guildID, null, client);
 
         if (embed) {
