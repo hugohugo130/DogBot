@@ -48,8 +48,8 @@ function hasSignedTodayOrBrokeSign(lastSignTime) {
  * @returns {Promise<true | null>} success or null (signed today)
  */
 async function sign(rpg_data, message, client = null) {
-    const user = message.author;
     if (!client) client = await wait_for_client();
+    const user = message.author;
 
     if (!rpg_data.daily || typeof rpg_data.daily !== "number") rpg_data.daily = 0;
     if (!rpg_data.daily_times || typeof rpg_data.daily_times !== "number") rpg_data.daily_times = 0;
@@ -76,7 +76,7 @@ async function sign(rpg_data, message, client = null) {
             type: "每日簽到",
         });
     } catch (err) {
-        if (err instanceof Error && err.stack?.includes && err.stack?.includes("金額超過上限")) return true;
+        if (err instanceof Error && err.stack?.includes?.("金額超過上限")) return true;
         throw err;
     };
 
