@@ -38,13 +38,23 @@ async function getBotInfoEmbed(locale = null, client = global._client) {
 
     const fix =
         /**
-         * divide a number by 1024*1024 and floor it
-         * @param {number} num 
-         * @returns {number}
+         * divide a number by 1024*1024 and floor or fix it
+         * @overload
+         * @param {number} num
+         * @param {number} tofix
+         * @returns {string}
+         *
+         * @overload
+         * @param {number} num
+         * @param {number | null} [tofix=null]
+         * @returns {number | string}
+         *
+         * @param {number} num
+         * @param {number | null} [tofix=null]
          */
-        (num) => {
+        (num, tofix = null) => {
             num = num / 1024 / 1024;
-            return Math.floor(num);
+            return tofix ? num.toFixed(tofix) : Math.floor(num);
         };
 
     const [emoji_timer, emoji_user, emoji_server, emoji_memory] = await get_emojis(["timer", "user", "server", "memory"], client);
@@ -83,7 +93,7 @@ async function getBotInfoEmbed(locale = null, client = global._client) {
             },
             {
                 name: `${emoji_memory} ${lang_memory}`,
-                value: `\`${fix(memUsage.heapUsed)} MB\` / \`${fix(memUsage.heapTotal)} MB\` / \`${fix(memUsage.rss)} MB\``,
+                value: `\`${fix(memUsage.heapUsed, 1).replace(".0", "")} MB\` / \`${fix(memUsage.heapTotal)} MB\` / \`${fix(memUsage.rss)} MB\``,
             },
         )
         .setFooter({ text: lang_footer })
