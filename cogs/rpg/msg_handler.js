@@ -2803,7 +2803,7 @@ function get_random_result(category) {
 
     if (!selectedItem) return error_template;
 
-    const [minAmount, maxAmount] = datas[selectedItem];
+    const [_, minAmount, maxAmount] = datas[selectedItem];
     const amount = randint(minAmount, maxAmount);
 
     const is_failed = failed.includes(selectedItem);
