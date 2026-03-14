@@ -1,7 +1,7 @@
-const { Client, GatewayIntentBits, Options, Collection, Guild, GuildMember, User, Locale } = require("discord.js");
+const Discord = require("discord.js")
+const { Client, GatewayIntentBits, Collection, Guild, GuildMember, Locale, Options, Partials } = require("discord.js");
 
 const { authorName, BotName } = require("../config.js");
-const { Partials } = require("discord.js");
 
 /**
  * @typedef OvenBakeSession
@@ -38,7 +38,7 @@ class DogClient extends Client {
     constructor() {
         const { loadslashcmd } = require("../loadslashcmd.js");
 
-        /** @type {import("discord.js").ClientOptions} */
+        /** @type {Discord.ClientOptions} */
         const options = {
             intents: [
                 GatewayIntentBits.Guilds,
@@ -60,21 +60,12 @@ class DogClient extends Client {
                 repliedUser: false,
             },
             sweepers: {
-                ...Options.DefaultMakeCacheSettings,
-                channels: {
-                    interval: 3_600,
-                    lifetime: 1_800,
-                },
-                guilds: {
-                    interval: 3_600,
-                    lifetime: 1_800,
-                },
+                ...Options.DefaultSweeperSettings,
                 users: {
                     interval: 3_600,
 
                     filter: () =>
-                        /** @param {User} user */
-                        (user) => user.bot && user.id !== user.client.user.id,
+                        (user) => user.bot && user.id !== this.user?.id,
                 },
                 messages: {
                     interval: 3_600,
@@ -118,7 +109,7 @@ class DogClient extends Client {
         this.serverIP = { IP: "192.168.0.156", "PORT": 3003 };
 
         /** @type {string} */
-        this.name = BotName; // will be set when the client is ready if BotName is not set
+        this.name = BotName; // will be set when the client is ready and BotName is not set
 
         /**
          * @type {{ rpg_handler: { [k: string]: string} }}
