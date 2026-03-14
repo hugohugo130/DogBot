@@ -205,7 +205,7 @@ const authorName = "哈狗";
 
 // RPG
 const rpg_lvlUp_per = 50;
-const setJobDelay = 604800// 24 * 24 * 60 * 7 = 604800
+const setJobDelay = 604800 // 24 * 24 * 60 * 7 = 604800
 const max_hunger = 20;
 
 /** @type {string[]} */

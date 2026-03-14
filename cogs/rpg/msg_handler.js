@@ -1241,7 +1241,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
                     if (!rpg_cooldown[command]) continue;
 
                     const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
-                    const field_name = command === "work" ? "工作" : command;
+                    const field_name = command;
 
                     const target_time = Math.floor(Date.now() / 1000 + remaining_time / 1000);
                     const target_time_str = `<t:${target_time}:R>`;
@@ -2715,14 +2715,11 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
             return await message.reply({ embeds: [await get_cooldown_embed(remaining_time, action, rpg_data.count[command], null, client)] });
         };
 
+        // 減少體力值
         rpg_data.hunger -= 1;
 
         // 增加計數
-        if (rpg_work.includes(command)) {
-            rpg_data.count["work"]++;
-        } else {
-            rpg_data.count[command]++;
-        };
+        rpg_data.count[command]++;
 
         rpg_data.lastRunTimestamp[command] = Date.now();
         await save_rpg_data(userid, rpg_data);

@@ -151,6 +151,18 @@ async function make_db_compatible(users, guilds) {
         // };
         // #endregion
 
+        // #region [2026 03 14]
+        /*
+        2026 03 14:
+        - fix(rpg): work count
+        */
+        // #endregion
+
+        // #region [2026 03 14] [CODE]
+        // if (!rpg_data.lastRunTimestamp.work) rpg_data.lastRunTimestamp.work = 0;
+        // delete rpg_data.lastRunTimestamp.work;
+        // modified = true;
+        // #endregion
         // =================================================================
 
         if (modified) await save_rpg_data(user.id, rpg_data);
