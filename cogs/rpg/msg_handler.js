@@ -2711,7 +2711,6 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
 
         // 冷卻
         if (!is_finished) {
-            // if (!is_finished && message.channel.id !== "1432642462840524853") {
             if (mode === 1) return { embeds: [await get_cooldown_embed(remaining_time, action, rpg_data.count[command], null, client)] };
             return await message.reply({ embeds: [await get_cooldown_embed(remaining_time, action, rpg_data.count[command], null, client)] });
         };
