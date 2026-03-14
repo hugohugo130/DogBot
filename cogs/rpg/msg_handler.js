@@ -1191,7 +1191,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             const button = new ButtonBuilder()
                 .setCustomId(`rpg_transaction|${message.author.id}`)
                 .setLabel("查看交易紀錄")
-                .setStyle(ButtonStyle.Primary);
+                .setStyle(ButtonStyle.Secondary);
 
             const row = /** @type {ActionRowBuilder<ButtonBuilder>} */
                 (new ActionRowBuilder()
@@ -1204,7 +1204,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
                     iconURL: message.author.displayAvatarURL(),
                 })
                 .setDescription(`你目前有 \`${rpg_data.money.toLocaleString()}$\``)
-                .setEmbedFooter();
+                .setTimestamp();
 
             if (mode === 1) return { embeds: [embed], components: [row] };
             return await message.reply({ embeds: [embed], components: [row] });
