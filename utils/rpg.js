@@ -1849,7 +1849,6 @@ module.exports = {
     BetterEval,
     chunkArray,
     get_cooldown_embed,
-    get_cooldown_time,
     is_cooldown_finished,
     get_failed_embed,
     add_money,
