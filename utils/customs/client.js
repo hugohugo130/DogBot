@@ -129,7 +129,7 @@ class DogClient extends Client {
 
         this.dvoice = new Collection(await loadDvoiceData());
 
-        if (!this.name && this.user?.id) this.name = this.user.id;
+        if (!this.name && this.user?.displayName) this.name = this.user.displayName;
     };
 
     /**
