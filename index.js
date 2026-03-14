@@ -86,6 +86,8 @@ logger.info(`${split_line}機器人正在啟動....${split_line}`);
 
 client.once(Events.ClientReady, async () => {
     get_areadline(true)?.on("line", async (input) => {
+        input = input.trim();
+
         switch (input) {
             case "stop": {
                 await safeshutdown(client);
