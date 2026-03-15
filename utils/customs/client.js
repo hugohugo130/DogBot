@@ -207,20 +207,15 @@ class DogClient extends Client {
      * @param {string} userId
      * @returns {Locale | undefined}
      */
-    get_user_locale(userId) {
-        return this.locales.get(userId);
-    };
+    get_user_locale = (userId) => this.locales.get(userId);
 
     /**
      * Save the locale cached of a user
      * @param {string} userId
      * @param {Locale} locale
-     * @returns {void}
+     * @returns {any}
      */
-    save_user_locale(userId, locale) {
-        this.locales.set(userId, locale);
-        return;
-    };
+    save_user_locale = (userId, locale) => this.locales.set(userId, locale);
 };
 
 module.exports = DogClient;

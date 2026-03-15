@@ -92,7 +92,7 @@ async function sign(rpg_data, message, client = null) {
             .setColor(embed_default_color)
             .setTitle(`${emoji_calendar} | 每日簽到`)
             .setDescription(`你連續簽到了 \`${daily_times}\` 天，獲得了\`${amount}$\``)
-            .setEmbedFooter();
+            .setEmbedFooter(user.id);
 
         try {
             await user.send({ embeds: [embed] });

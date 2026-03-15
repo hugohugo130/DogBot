@@ -1,5 +1,6 @@
 const { EmbedBuilder: djsEmbedBuilder, BaseInteraction, Locale } = require("discord.js");
 
+const { isDigit } = require("../message.js");
 const DogClient = require("./client.js");
 
 class EmbedBuilder extends djsEmbedBuilder {
@@ -12,14 +13,14 @@ class EmbedBuilder extends djsEmbedBuilder {
     };
 
     /**
-     * 
-     * @param {BaseInteraction | string | null | { text?: string, rpg_data?: import("../config.js").RpgDatabase | null, force?: boolean, client?: DogClient }} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
+     * set customize footer
+     * @param {BaseInteraction | Locale | string | null | { text?: string, rpg_data?: import("../config.js").RpgDatabase | null, force?: boolean, client?: DogClient }} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
      * @param {Object} options
      * @param {string} [options.text=""]
      * @param {import("../config.js").RpgDatabase | null} [options.rpg_data=null]
      * @param {boolean} [options.force=false]
      * @param {DogClient | null} [options.client]
-     * @remark force: text參數是否不會增加飽食度或機器犬文字
+     * @remark force: text參數是否不會增加飽食度和機器犬文字
      * @returns {EmbedBuilder}
      */
     setEmbedFooter(interaction = null, { text = "", rpg_data = null, force = false, client = global._client } = {}) {
@@ -34,22 +35,27 @@ class EmbedBuilder extends djsEmbedBuilder {
             client = _client;
         };
 
-        if (!interaction) interaction = Locale.ChineseTW;
-
-        if (text.includes("飽食度剩餘")) {
-            const { get_logger, getCallerModuleName } = require("../logger.js");
-
-            const logger = get_logger({ nodc: true });
-            logger.warn(`[DEPRECATED] give rpg_data or user id instead add to the text\ncalled from ${getCallerModuleName(null)}`);
-        };
-
-        const data = rpg_data;
-
         /** @type {Locale} */
         let locale = Locale.ChineseTW;
-        if (interaction instanceof BaseInteraction) locale = interaction.locale;
 
-        if (!force && data) text += `飽食度剩餘 ${data.hunger}`;
+        if (
+            typeof interaction === "string"
+            && isDigit(interaction)
+        ) {
+            const userid = interaction;
+
+            const cached_locale = client?.get_user_locale(userid);
+            if (cached_locale) locale = cached_locale;
+        };
+
+        if (interaction instanceof BaseInteraction) {
+            locale = interaction.locale;
+
+            const userid = interaction.user.id;
+            client?.save_user_locale(userid, locale);
+        };
+
+        if (!force && rpg_data) text += `飽食度剩餘 ${rpg_data.hunger}`;
         if (!force) text += `\n${get_lang_data(locale, "embed", "footer")}`;
         text = text.trim();
 

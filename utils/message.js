@@ -2,11 +2,15 @@ const { Collection, Message, User } = require("discord.js");
 
 /**
  * Check whether a string is digit
- * @param {string} char
+ * @param {string} string
  * @returns {boolean}
  */
-function isDigit(char) {
-    return /^[0-9]+$/.test(char);
+function isDigit(string) {
+    return !!(
+        string
+        && typeof string === "string"
+        && /^[0-9]+$/.test(string)
+    );
 };
 
 /**
@@ -44,5 +48,6 @@ async function mentions_users(message) {
 };
 
 module.exports = {
+    isDigit,
     mentions_users,
 };
