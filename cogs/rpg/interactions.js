@@ -607,7 +607,7 @@ function get_help_embed(category, user, client, interaction = null) {
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
-async function get_help_command(category, command_name, guildID=null, interaction = null, client = global._client) {
+async function get_help_command(category, command_name, guildID = null, interaction = null, client = global._client) {
     const { find_redirect_targets_from_id } = require("./msg_handler.js");
 
     if (!(category in help.group)) throw new Error(`${category} is not a valid category`);

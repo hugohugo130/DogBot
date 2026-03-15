@@ -263,7 +263,6 @@ const rpg_cooldown = {
     // brew: "145 + {c} * 25",
     // fish: "90 + {c} * 20",
     mine: "60 * 5",
-    // hew: "60 * 5",
     herd: "60 * 5",
     brew: "60 * 5",
     fish: "60 * 5",
@@ -1013,13 +1012,14 @@ const rpg_commands = {
          * @returns {Promise<any>}
          */
         async function ({ client, message, rpg_data, args, mode, random_item }) {
-            if (!message.author || !message.guild) return;
+            if (!message.author) return;
 
             const userid = message.author.id;
-            const emoji_cross = await get_emoji("crosS", client);
-            const emoji_store = await get_emoji("store", client);
+            const [target_users, [emoji_cross, emoji_store]] = await Promise.all([
+                mentions_users(message),
+                get_emojis(["crosS", "store"], client),
+            ]);
 
-            const target_users = await mentions_users(message);
             const target_user = target_users.first();
             if (!target_user) {
                 const embed = new EmbedBuilder()
@@ -1054,7 +1054,7 @@ const rpg_commands = {
             if (args.length === 0 && target_user) {
                 return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
             } else if (args.length === 0) {
-                const embed = await get_help_command("rpg", "buy", message.guild.id, null, client);
+                const embed = await get_help_command("rpg", "buy", message.guild?.id, null, client);
 
                 if (embed) await message.reply({
                     embeds: [embed],
@@ -1082,7 +1082,7 @@ const rpg_commands = {
             /** @type {string} */
             const item_name = get_name_of_id(item);
 
-            if (!item || !name_reverse[item_name]) {
+            if (!item || !get_id_of_name(item_name, null)) {
                 return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
             };
 
