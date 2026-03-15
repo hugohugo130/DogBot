@@ -3,35 +3,13 @@ const { exec } = require("child_process");
 const util = require("util");
 
 const { get_logger } = require("../utils/logger.js");
-const { get_id_of_name, get_name_of_id, get_loophole_embed } = require("../utils/rpg.js");
+const { get_id_of_name, get_name_of_id, get_loophole_embed, add_item } = require("../utils/rpg.js");
 const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
 const { mentions_users } = require("../utils/message.js");
 const DogClient = require("../utils/customs/client.js");
 
 const execPromise = util.promisify(exec);
-
 const logger = get_logger();
-
-/**
- * Add item
- * @param {import("../utils/config.js").RpgDatabase} rpg_data
- * @param {string} item
- * @param {number} amount
- * @returns {import("../utils/config.js").RpgDatabase}
- */
-function add_item(rpg_data, item, amount) {
-    item = get_id_of_name(item);
-
-    if (get_name_of_id(item, null) === null) {
-        throw new Error("item not found");
-    };
-
-    if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
-
-    rpg_data.inventory[item] += amount;
-
-    return rpg_data;
-};
 
 /**
  * 
@@ -74,11 +52,11 @@ async function handleInvCommand(message, args) {
     if (!user) return message.reply("請標記一個用戶！");
 
     const rpg_data = await load_rpg_data(user.id);
-    if (!rpg_data.inventory) rpg_data.inventory = {};
     rpg_data.inventory[item] = amount;
+
     await save_rpg_data(user.id, rpg_data);
 
-    return message.reply(`done setting ${user.toString()}'s ${item} to ${amount}`);
+    return await message.reply(`done setting ${user.toString()}'s ${item} to ${amount}`);
 };
 
 /**

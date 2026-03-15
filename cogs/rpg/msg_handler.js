@@ -6,7 +6,6 @@ const {
 } = require("../../utils/logger.js");
 const {
     randint,
-    choice,
 } = require("../../utils/random.js");
 const {
     convertToSecondTimestamp,
@@ -42,6 +41,8 @@ const {
     sell_data,
     userHaveNotEnoughItems,
     BetterEval,
+    add_item,
+    subtract_item,
 } = require("../../utils/rpg.js");
 const {
     load_rpg_data,
@@ -336,8 +337,7 @@ const rpg_commands = {
                 return await message.reply({ embeds });
             };
 
-            if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
-            rpg_data.inventory[item] += amount;
+            rpg_data = add_item(rpg_data, item, amount);
 
             const ore_name = get_name_of_id(item);
 
@@ -398,8 +398,7 @@ const rpg_commands = {
                 description = `你來到了森林，並且砍了 \`${amount}\` 塊${log_name}`;
             };
 
-            if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
-            rpg_data.inventory[item] += amount;
+            rpg_data = add_item(rpg_data, item, amount);
             await save_rpg_data(userid, rpg_data);
 
             const emoji = await get_emoji("wood", client);
@@ -437,9 +436,7 @@ const rpg_commands = {
 
             const product = animal_products[random_animal];
 
-            if (!rpg_data.inventory[product]) rpg_data.inventory[product] = 0;
-
-            rpg_data.inventory[product] += amount;
+            rpg_data = add_item(rpg_data, product, amount);
 
             const product_name = get_name_of_id(product);
             const animal_name = product_name.replace("生", "").replace("肉", "");
@@ -450,8 +447,7 @@ const rpg_commands = {
             if (product === "raw_chicken") {
                 const egg_amount = randint(1, 3);
                 description += `\n不僅如此！你還發現了 \`${egg_amount}\` 顆 ${get_name_of_id("egg")}！`
-                if (!rpg_data.inventory["egg"]) rpg_data.inventory["egg"] = 0;
-                rpg_data.inventory["egg"] += egg_amount;
+                rpg_data = add_item(rpg_data, "egg", egg_amount);
             } else if (product === "raw_pork") {
                 title = "佩佩豬";
             } else if (product === "raw_duck") {
@@ -498,9 +494,9 @@ const rpg_commands = {
                 return await message.reply({ embeds });
             };
 
-            if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
             const potion_name = get_name_of_id(item);
-            rpg_data.inventory[item] += amount;
+
+            rpg_data = add_item(rpg_data, item, amount);
             await save_rpg_data(userid, rpg_data);
 
             const emoji_potion = await get_emoji("potion", client);
@@ -538,10 +534,10 @@ const rpg_commands = {
                 return await message.reply({ embeds });
             };
 
-            if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
-            rpg_data.inventory[item] += amount;
-            await save_rpg_data(userid, rpg_data);
             const fish_name = get_name_of_id(item);
+
+            rpg_data = add_item(rpg_data, item, amount);
+            await save_rpg_data(userid, rpg_data);
 
             let fish_text;
             let description;
@@ -670,7 +666,7 @@ const rpg_commands = {
                         return await message.reply({ embeds: [embed] });
                     };
 
-                    if (typeof rpg_data.inventory[item] !== "number") rpg_data.inventory[item] = 0;
+                    if (typeof rpg_data.inventory[item] !== "number") delete rpg_data.inventory[item];
                     if (rpg_data.inventory[item] < amount) {
                         const embed = new EmbedBuilder()
                             .setColor(embed_error_color)
@@ -681,7 +677,7 @@ const rpg_commands = {
                         return await message.reply({ embeds: [embed] });
                     };
 
-                    rpg_data.inventory[item] -= amount;
+                    rpg_data = subtract_item(rpg_data, item, amount);
 
                     if (item_exist) {
                         shop_data.items[item].amount += amount;
@@ -713,9 +709,9 @@ const rpg_commands = {
 
                 case "remove": {
                     const shop_data = await load_shop_data(userid);
-                    const item = args[1];
+                    const item_id = args[1];
 
-                    if (!item) {
+                    if (!item_id) {
                         const embed = new EmbedBuilder()
                             .setColor(embed_error_color)
                             .setTitle(`${emoji_cross} | 請輸入要下架的物品`)
@@ -725,8 +721,8 @@ const rpg_commands = {
                         return await message.reply({ embeds: [embed] });
                     };
 
-                    const item_name = get_name_of_id(item);
-                    const item_id = item;
+                    const item_name = get_name_of_id(item_id);
+
                     const item_exist = shop_data.items[item_id];
                     if (!item_exist) {
                         const embed = new EmbedBuilder()
@@ -739,7 +735,6 @@ const rpg_commands = {
                     };
 
                     const remove_amount = args[2];
-                    if (!rpg_data.inventory[item_id]) rpg_data.inventory[item_id] = 0;
                     const amount = parseInt(remove_amount) || item_exist.amount;
 
                     if (amount < 1) {
@@ -762,7 +757,7 @@ const rpg_commands = {
                         return await message.reply({ embeds: [embed] });
                     };
 
-                    rpg_data.inventory[item_id] += amount;
+                    rpg_data = add_item(rpg_data, item_id, amount);
 
                     shop_data.items[item_id].amount -= amount;
                     if (shop_data.items[item_id].amount <= 0) {
@@ -908,7 +903,7 @@ const rpg_commands = {
                 }
 
                 case "edit": {
-                    const rpg_data = await load_rpg_data(userid);
+                    let rpg_data = await load_rpg_data(userid);
                     const shop_data = await load_shop_data(userid);
 
                     const status = shop_data.status ? "營業中" : "打烊";
@@ -944,8 +939,7 @@ const rpg_commands = {
                     let shop_data_modified = false;
 
                     if (amount) {
-                        if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
-                        rpg_data.inventory[item] -= item_amount_needed;
+                        rpg_data = subtract_item(rpg_data, item, item_amount_needed);
 
                         shop_data.items[item].amount = amount;
 
@@ -1693,7 +1687,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 rpg_data.hunger += newadd;
                 rpg_data.hunger = Math.min(rpg_data.hunger, max_hunger);
 
-                rpg_data.inventory[food_id] -= amount;
+                rpg_data = subtract_item(rpg_data, food_id, amount);
                 await save_rpg_data(userid, rpg_data);
 
                 const embed = new EmbedBuilder()

@@ -1347,6 +1347,52 @@ function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
 };
 
 /**
+ * Add an item to the inventory
+ * @param {import("../utils/config.js").RpgDatabase} rpg_data
+ * @param {string} item
+ * @param {number} amount
+ * @returns {import("../utils/config.js").RpgDatabase} Modified rpg data
+ */
+function add_item(rpg_data, item, amount) {
+    item = get_id_of_name(item);
+
+    if (!get_name_of_id(item, null)) {
+        throw new Error("Item not found");
+    };
+
+    if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
+
+    rpg_data.inventory[item] += amount;
+
+    return rpg_data;
+};
+
+/**
+ * Reduce the amount of an item in the inventory
+ * @param {import("../utils/config.js").RpgDatabase} rpg_data
+ * @param {string} item
+ * @param {number} amount
+ * @returns {import("../utils/config.js").RpgDatabase} Modified rpg data
+ */
+function subtract_item(rpg_data, item, amount) {
+    item = get_id_of_name(item);
+
+    if (!get_name_of_id(item, null)) {
+        throw new Error("Item not found");
+    };
+
+    if (!rpg_data.inventory[item] || rpg_data.inventory[item] < amount) {
+        throw new Error("Not enough item");
+    };
+
+    rpg_data.inventory[item] -= amount;
+
+    if (rpg_data.inventory[item] === 0) delete rpg_data.inventory[item];
+
+    return rpg_data;
+};
+
+/**
  * Generate analyze template
  * @param {string} title
  * @param {string} description
@@ -1578,6 +1624,7 @@ function amount_limit(amount) {
 };
 
 /**
+ * Handle &ls for open backpack interaction
  * @overload
  * @param {Object} options
  * @param {DogClient} options.client
@@ -1587,8 +1634,7 @@ function amount_limit(amount) {
  * @param {boolean} [options.PASS=false]
  * @param {BaseInteraction | null} [options.interaction=null]
  * @returns {Promise<{ [k: string]: any }>}
- */
-/**
+ * 
  * @overload
  * @param {Object} options
  * @param {DogClient} options.client
@@ -1598,9 +1644,7 @@ function amount_limit(amount) {
  * @param {boolean} [options.PASS=false]
  * @param {BaseInteraction | null} [options.interaction=null]
  * @returns {Promise<Message | null>}
- */
-/**
- * Handle &ls for open backpack interaction
+ *
  * @param {Object} options
  * @param {DogClient} options.client
  * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
@@ -1621,7 +1665,6 @@ async function ls_function({ client, message, rpg_data, mode = 0, PASS = false, 
         ]);
 
         const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
-
 
         let embed = new EmbedBuilder()
             .setTitle(`${emoji_bag} | 查看包包`)
@@ -1853,6 +1896,8 @@ module.exports = {
     get_failed_embed,
     add_money,
     remove_money,
+    add_item,
+    subtract_item,
     get_loophole_embed,
     amount_limit,
     ls_function,

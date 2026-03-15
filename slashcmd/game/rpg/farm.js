@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, User, BaseInteraction, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
 
-const { get_name_of_id, get_id_of_name, get_emojis, is_cooldown_finished, userHaveNotEnoughItems, wrong_job_embed, farm_slots } = require("../../../utils/rpg.js");
+const { get_name_of_id, get_id_of_name, get_emojis, is_cooldown_finished, userHaveNotEnoughItems, wrong_job_embed, farm_slots, subtract_item, add_item } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
 const { convertToSecondTimestamp, DateNow, DateNowSecond } = require("../../../utils/timestamp.js");
 const { randint } = require("../../../utils/random.js");
@@ -252,7 +252,7 @@ module.exports = {
 
         const cooldown_key = `farm_water`;
 
-        const rpg_data = await load_rpg_data(userId);
+        let rpg_data = await load_rpg_data(userId);
         const [farm_data, [wrongJobEmbed, row]] = await Promise.all([
             load_farm_data(userId),
             wrong_job_embed(rpg_data, "/farm", userId, interaction, client),
@@ -330,8 +330,7 @@ module.exports = {
 
                 if (need_hunger) rpg_data.hunger -= need_hunger;
 
-                if (!rpg_data.inventory[hoe]) rpg_data.inventory[hoe] = 0;
-                rpg_data.inventory[hoe] -= amount;
+                rpg_data = subtract_item(rpg_data, hoe, amount);
 
                 await Promise.all([
                     save_rpg_data(userId, rpg_data),
@@ -392,8 +391,7 @@ module.exports = {
                 const items = get_harvest_items(farmlands);
                 const items_str = Object.entries(items).map(([item, amount]) => `${amount} 個${get_name_of_id(item)}`).join("、");
                 for (const [item, amount] of Object.entries(items)) {
-                    if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
-                    rpg_data.inventory[item] += amount;
+                    rpg_data = add_item(rpg_data, item, amount);
                 };
 
                 farm_data.farms = farm_data.farms.filter(farm => !completed_farms.includes(farm));

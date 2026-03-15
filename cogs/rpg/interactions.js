@@ -37,6 +37,8 @@ const {
     get_id_of_name,
     get_fightjob_name,
     get_job_name,
+    subtract_item,
+    add_item,
 } = require("../../utils/rpg.js");
 const {
     get_farm_info_embed,
@@ -960,7 +962,7 @@ module.exports = {
                     break;
                 }
                 case "sell": {
-                    const [_, rpg_data] = await Promise.all([
+                    let [_, rpg_data] = await Promise.all([
                         interaction.deferUpdate(),
                         load_rpg_data(user.id),
                     ]);
@@ -970,7 +972,8 @@ module.exports = {
                     const amount = parseInt(amount_str);
                     const total_price = Math.round(parseFloat(total_price_str));
 
-                    rpg_data.inventory[item_id] -= amount;
+                    rpg_data = subtract_item(rpg_data, item_id, amount);
+
                     rpg_data.money = add_money({
                         rpg_data,
                         amount: total_price,
@@ -1054,7 +1057,7 @@ module.exports = {
                     const amount = parseInt(amount_str);
                     const price = parseInt(price_str);
 
-                    const [[emoji_cross, emoji_store], buyerRPGData, targetUserRPGData, targetUserShopData] = await Promise.all([
+                    let [[emoji_cross, emoji_store], buyerRPGData, targetUserRPGData, targetUserShopData] = await Promise.all([
                         get_emojis(["crosS", "store"], client),
                         load_rpg_data(buyerUserId),
                         load_rpg_data(targetUserId),
@@ -1092,8 +1095,7 @@ module.exports = {
                         type: `購買物品付款`,
                     });
 
-                    if (!buyerRPGData.inventory[item]) buyerRPGData.inventory[item] = 0;
-                    buyerRPGData.inventory[item] += amount;
+                    buyerRPGData = add_item(buyerRPGData, item, amount);
 
                     targetUserRPGData.money = add_money({
                         rpg_data: targetUserRPGData,
@@ -1208,7 +1210,7 @@ module.exports = {
                     // ============================================
 
                     for (const need_item of item_need) {
-                        rpg_data.inventory[need_item.item] -= need_item.amount;
+                        rpg_data = subtract_item(rpg_data, need_item.item, need_item.amount);
                     };
 
                     const output_item_id = bake[item_id];
@@ -1243,7 +1245,7 @@ module.exports = {
                 }
                 case "smelter_smelt": {
                     const [item_id, amount, coal_amount, duration, output_amount, session_id] = otherCustomIDs;
-                    const [_, rpg_data, smelt_data, emoji_cross] = await Promise.all([
+                    let [_, rpg_data, smelt_data, emoji_cross] = await Promise.all([
                         interaction.deferUpdate(),
                         load_rpg_data(user.id),
                         load_smelt_data(user.id),
@@ -1286,7 +1288,7 @@ module.exports = {
                     // ==================檢查物品==================
 
                     for (const need_item of item_need) {
-                        rpg_data.inventory[need_item.item] -= need_item.amount;
+                        rpg_data = subtract_item(rpg_data, need_item.item, need_item.amount);
                     };
 
                     await save_rpg_data(user.id, rpg_data);
@@ -1506,14 +1508,12 @@ module.exports = {
 
                     if (delay_embed) return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
 
-                    const rpg_data = await load_rpg_data(user.id);
+                    let rpg_data = await load_rpg_data(user.id);
 
                     rpg_data.job = job;
 
                     if (job === "farmer") {
-                        if (!rpg_data.inventory) rpg_data.inventory = {};
-                        if (!rpg_data.inventory.wooden_hoe) rpg_data.inventory.wooden_hoe = 0;
-                        rpg_data.inventory.wooden_hoe += 4;
+                        rpg_data = add_item(rpg_data, "wooden_hoe", 4);
                     };
 
                     if (!rpg_data.lastRunTimestamp) rpg_data.lastRunTimestamp = {};
@@ -1853,15 +1853,16 @@ module.exports = {
                     session.last_cook_time = Date.now();
 
                     let container;
+                    let rpg_data;
 
                     if (session.cooked >= cookClickAmount) {
-                        container = await getCookingResultContainer(recipe.output, amount, client);
+                        [container, rpg_data] = await Promise.all([
+                            getCookingResultContainer(recipe.output, amount, client),
+                            load_rpg_data(user.id),
+                        ]);
 
-                        const rpg_data = await load_rpg_data(user.id);
                         const output_item = recipe.output;
-
-                        if (!rpg_data.inventory[output_item]) rpg_data.inventory[output_item] = 0;
-                        rpg_data.inventory[output_item] += amount;
+                        rpg_data = add_item(rpg_data, output_item, amount);
 
                         await Promise.all([
                             client.cook_sessions.delete(sessionId),
@@ -1913,11 +1914,10 @@ module.exports = {
                             return { name, amount };
                         })
 
-                    const rpg_data = await load_rpg_data(user.id);
+                    let rpg_data = await load_rpg_data(user.id);
 
                     for (const item of items) {
-                        if (!rpg_data.inventory[item.name]) rpg_data.inventory[item.name] = 0;
-                        rpg_data.inventory[item.name] += item.amount;
+                        rpg_data = add_item(rpg_data, item.name, item.amount);
                     };
 
                     const [__, ___, ____, emoji_check] = await Promise.all([

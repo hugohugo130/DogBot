@@ -24,6 +24,7 @@ const {
     smelter_slots,
     smeltable_recipe,
     bake,
+    add_item,
 } = require("../../../utils/rpg.js");
 const {
     embed_error_color,
@@ -275,7 +276,7 @@ module.exports = {
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
 
-        const rpg_data = await load_rpg_data(userId);
+        let rpg_data = await load_rpg_data(userId);
         const [smelt_data, [wrongJobEmbed, row], [emoji_cross, emoji_furnace]] = await Promise.all([
             load_smelt_data(userId),
             wrong_job_embed(rpg_data, "/smelt", userId, interaction, client),
@@ -460,16 +461,20 @@ module.exports = {
                 };
 
                 // 將熔鍊完成的物品加入背包
-                rpg_data.inventory[item.output_item_id] = (rpg_data.inventory[item.output_item_id] || 0) + item.output_amount;
+                rpg_data = add_item(rpg_data, item.output_item_id, item.output_amount);
+
                 // 從煉金爐移除該物品
                 smelt_data.splice(index, 1);
+
                 // 儲存資料
-                await save_smelt_data(userId, smelt_data);
-                await save_rpg_data(userId, rpg_data);
+                await Promise.all([
+                    save_smelt_data(userId, smelt_data),
+                    save_rpg_data(userId, rpg_data),
+                ]);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
-                    .setTitle(`${emoji_furnace} | 成功從煉金爐取出了 ${get_name_of_id( item.output_item_id)}x${item.output_amount}`)
+                    .setTitle(`${emoji_furnace} | 成功從煉金爐取出了 ${get_name_of_id(item.output_item_id)}x${item.output_amount}`)
                     .setEmbedFooter(interaction);
 
                 return await interaction.editReply({ embeds: [embed] });

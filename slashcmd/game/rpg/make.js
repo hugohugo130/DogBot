@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
 
-const { get_name_of_id, get_emojis, recipes, tags, get_id_of_name, get_emoji } = require("../../../utils/rpg.js");
+const { get_name_of_id, get_emojis, recipes, tags, get_id_of_name, get_emoji, subtract_item, add_item } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
 const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
 const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
@@ -39,7 +39,7 @@ module.exports = {
     async execute(interaction, client) {
         const userid = interaction.user.id;
 
-        const [_, rpg_data, [emoji_toolbox, emoji_cross]] = await Promise.all([
+        let [_, rpg_data, [emoji_toolbox, emoji_cross]] = await Promise.all([
             interaction.deferReply(),
             load_rpg_data(userid),
             get_emojis(["toolbox", "crosS"], client),
@@ -61,7 +61,6 @@ module.exports = {
                 .setEmbedFooter(interaction);
 
             return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
-
         } else if (!(item_id in recipes)) {
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -94,8 +93,8 @@ module.exports = {
                 };
             };
 
-            if (!item_need[need_item]) item_need[need_item] = 0;
-            item_need[need_item] += count * amount;
+            if (!item_need[item_id]) item_need[item_id] = 0;
+            item_need[item_id] += count * amount;
         };
 
         for (const need_item in item_need) {
@@ -119,14 +118,12 @@ module.exports = {
         };
 
         for (const need_item in item_need) {
-            if (!rpg_data.inventory[need_item]) rpg_data.inventory[need_item] = 0;
-            rpg_data.inventory[need_item] -= item_need[need_item];
+            rpg_data = subtract_item(rpg_data, need_item, item_need[need_item]);
         };
 
         const output_amount = recipes[item_id].amount * amount;
 
-        if (!rpg_data.inventory[item_id]) rpg_data.inventory[item_id] = 0;
-        rpg_data.inventory[item_id] += output_amount;
+        rpg_data = add_item(rpg_data, item_id, output_amount);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)

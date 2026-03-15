@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Collection } = require("discord.js");
 
-const { notEnoughItemEmbed, wrong_job_embed, get_emojis, bake, name, oven_slots, food_data, get_name_of_id } = require("../../../utils/rpg.js");
+const { notEnoughItemEmbed, wrong_job_embed, get_emojis, bake, name, oven_slots, food_data, get_name_of_id, add_item } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
 const { generateSessionId } = require("../../../utils/random.js");
 const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
@@ -366,7 +366,7 @@ module.exports = {
         const first_food = interaction.options.getString("food");
         const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
 
-        const rpg_data = await load_rpg_data(userId);
+        let rpg_data = await load_rpg_data(userId);
         const [bake_data, [wrongJobEmbed, row], [emoji_cross, emoji_drumstick]] = await Promise.all([
             load_bake_data(userId),
             wrong_job_embed(rpg_data, "/bake", userId, interaction, client),
@@ -564,7 +564,7 @@ module.exports = {
                     };
 
                     // 將烘烤完成的物品加入背包
-                    rpg_data.inventory[item.output_item_id] = (rpg_data.inventory[item.output_item_id] || 0) + item.amount;
+                    rpg_data = add_item(rpg_data, item.output_item_id, item.amount);
 
                     // 從烤箱移除該物品
                     bake_data.splice(index, 1);

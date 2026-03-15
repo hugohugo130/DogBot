@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize } = require("discord.js");
 
-const { notEnoughItemEmbed, wrong_job_embed, userHaveNotEnoughItems, get_name_of_id, get_emojis, get_emoji, cook, food_data } = require("../../../utils/rpg.js");
+const { notEnoughItemEmbed, wrong_job_embed, userHaveNotEnoughItems, get_name_of_id, get_emojis, get_emoji, cook, food_data, subtract_item } = require("../../../utils/rpg.js");
 const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
 const { generateSessionId } = require("../../../utils/random.js");
 const { wait_for_client } = require("../../../utils/wait_for_client.js");
@@ -157,7 +157,7 @@ module.exports = {
     async execute(interaction, client) {
         const userId = interaction.user.id;
 
-        const rpg_data = await load_rpg_data(userId);
+        let rpg_data = await load_rpg_data(userId);
         const [emoji_cross, [wrongJobEmbed, row]] = await Promise.all([
             get_emoji("crosS", client),
             wrong_job_embed(rpg_data, "/cook", userId, interaction, client),
@@ -210,8 +210,7 @@ module.exports = {
         if (not_enough_items.length) return await interaction.reply({ embeds: [await notEnoughItemEmbed(not_enough_items, interaction, client)], flags: MessageFlags.Ephemeral });
 
         for (const item of item_needed) {
-            if (!rpg_data.inventory[item.item]) rpg_data.inventory[item.item] = 0;
-            rpg_data.inventory[item.item] -= item.amount;
+            rpg_data = subtract_item(rpg_data, item.item, item.amount);
         };
 
         const buttonCustomIdLengthLimit = 100;
