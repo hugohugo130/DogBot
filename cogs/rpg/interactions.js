@@ -177,6 +177,10 @@ const help = {
                     {
                         name: "向{author}購買 `2` 個麵包",
                         value: "&buy @{author} bread 2"
+                    },
+                    {
+                        name: "列出{author}有販賣的物品",
+                        value: "&buy @{author}"
                     }
                 ],
                 format: "{cmd} @使用者 商品ID 數量",
