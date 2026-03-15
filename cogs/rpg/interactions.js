@@ -718,7 +718,7 @@ module.exports = {
             };
 
             setImmediate(() => {
-                logger.info(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`)
+                logger.info(`${user.username}${user.globalName ? `(${user.globalName})` : ""} 正在觸發互動(rpg_interactions): ${interaction.customId}，訊息ID: ${interaction.message?.id}`);
             });
 
             switch (interactionCategory) {
@@ -1888,7 +1888,7 @@ module.exports = {
                         const embed = new EmbedBuilder()
                             .setColor(embed_error_color)
                             .setTitle(`${emoji_cross} | 退回失敗`)
-                            .setDescription(`${emoji_panic} 正在偷吃你的物品，但被你抓到了 (跑走`)
+                            .setDescription(`${emoji_panic} 會話已過期`)
                             .setEmbedFooter(interaction);
 
                         return await interaction.reply({ embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
