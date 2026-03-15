@@ -979,7 +979,7 @@ module.exports = {
                         type: "出售物品所得",
                     })
 
-                    const emoji_trade = await Promise.all([
+                    const [emoji_trade, __] = await Promise.all([
                         get_emoji("trade", client),
                         save_rpg_data(user.id, rpg_data),
                     ]);
