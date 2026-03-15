@@ -1127,15 +1127,16 @@ module.exports = {
                     break;
                 }
                 case "oven_bake": {
-                    await interaction.deferUpdate();
+                    const [emoji_cross, ___] = await Promise.all([
+                        get_emoji("crosS", client),
+                        interaction.deferUpdate(),
+                    ]);
 
                     const [session_id] = otherCustomIDs;;
 
                     // 從全域變數中取得 oven_bake 資料
                     const oven_bake = client.oven_sessions.get(session_id);
                     if (!oven_bake) {
-                        const emoji_cross = await get_emoji("crosS", client);
-
                         const error_embed = new EmbedBuilder()
                             .setColor(embed_error_color)
                             .setTitle(`${emoji_cross} | 烘烤會話已過期`)
@@ -1148,8 +1149,6 @@ module.exports = {
                     const { item_id, amount, coal_amount, duration, item_need, userId: _userId } = oven_bake;
 
                     if (user.id !== _userId) {
-                        const emoji_cross = await get_emoji("crosS", client);
-
                         const error_embed = new EmbedBuilder()
                             .setColor(embed_error_color)
                             .setTitle(`${emoji_cross} | 這不是你的烘烤會話`)
@@ -1166,8 +1165,6 @@ module.exports = {
                     if (!bake_data) bake_data = [];
 
                     if (bake_data?.length && bake_data.length >= oven_slots) {
-                        const emoji_cross = await get_emoji("crosS", client);
-
                         const embed = new EmbedBuilder()
                             .setColor(embed_error_color)
                             .setTitle(`${emoji_cross} | 你的烤箱已經滿了`)
@@ -1326,12 +1323,14 @@ module.exports = {
                         output_amount: parseInt(output_amount),
                     });
 
-                    await save_smelt_data(user.id, smelt_data);
+                    const [emoji_furnace, __] = await Promise.all([
+                        get_emoji("furnace", client),
+                        save_smelt_data(user.id, smelt_data),
+                    ]);
 
                     // 清理 session 資料
                     client.smelter_sessions.delete(session_id);
 
-                    const emoji_furnace = await get_emoji("furnace", client);
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
                         .setTitle(`${emoji_furnace} | 成功放進煉金爐內`)
@@ -1587,6 +1586,7 @@ module.exports = {
                             channel instanceof TextChannel
                             || channel instanceof ThreadChannel
                         )) queue.setTextChannel(channel);
+
                     queue.subscribe();
 
                     const [trackSessionID, trackID] = interaction.values[0].split("|");

@@ -1089,7 +1089,7 @@ async function noMusicIsPlayingEmbed(queue, interaction = null, client = global.
 };
 
 /**
- * 
+ *
  * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client] - Discord Client
  * @returns {Promise<EmbedBuilder>}

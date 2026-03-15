@@ -1314,11 +1314,13 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         async function ({ client, message, rpg_data, args, mode, random_item }) {
             if (!message.author) return;
 
-            const target_users = await mentions_users(message);
-            const target_user = target_users.first();
+            const [target_users, [emoji_cross, emoji_top]] = await Promise.all([
+                mentions_users(message),
+                get_emoji("crosS", client),
+                get_emoji("top", client),
+            ]);
 
-            const emoji_cross = await get_emoji("crosS", client);
-            const emoji_top = await get_emoji("top", client);
+            const target_user = target_users.first();
 
             if (!target_user) {
                 return await redirect({ client, message, command: `help`, mode });
@@ -1820,11 +1822,9 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             const isFarmer = rpg_data.job === "farmer";
             const isHoe = item_id?.endsWith("hoe") ?? false;
 
-            const emoji_trade = await get_emoji("trade", client);
+            const [emoji_trade, emoji_cross] = await get_emojis(["trade", "crosS"], client);
 
             if (!item_exists(item_id)) {
-                const emoji_cross = await get_emoji("crosS", client);
-
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 未知的物品`)
@@ -1835,8 +1835,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             };
 
             if (!rpg_data.inventory[item_id]) {
-                const emoji_cross = await get_emoji("crosS", client);
-
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你沒有這個物品哦`)
@@ -1848,8 +1846,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             const amount = await get_amount(item_id, message.author, args[1]) || 1;
             if (rpg_data.inventory[item_id] < amount) {
-                const emoji_cross = await get_emoji("crosS", client);
-
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你沒有那麼多的物品`)
@@ -1860,8 +1856,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             };
 
             if (cannot_sell.includes(item_id)) {
-                const emoji_cross = await get_emoji("crosS", client);
-
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 這個物品不能販賣`)
@@ -1872,8 +1866,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             };
 
             if (isFarmer && isHoe) {
-                const emoji_cross = await get_emoji("crosS", client);
-
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 農夫不能販賣鋤頭`)
@@ -1931,8 +1923,9 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         async function ({ client, message, rpg_data, args, mode, random_item }) {
             const users = client.users.cache.values();
 
-            const userDataList = await Promise.all(
-                Array.from(users).map(async (user) => {
+            const [emoji_top, ...userDataList] = await Promise.all([
+                get_emoji("top", client),
+                ...Array.from(users).map(async (user) => {
                     const userid = user.id;
                     const user_rpg_data = await load_rpg_data(userid);
                     return {
@@ -1940,11 +1933,9 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                         money: user_rpg_data.money,
                     };
                 }),
-            );
+            ]);
 
             userDataList.sort((a, b) => b.money - a.money);
-
-            const emoji_top = await get_emoji("top", client);
 
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
@@ -1985,8 +1976,9 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         async function ({ client, message, rpg_data, args, mode, random_item }) {
             const users = client.users.cache.values();
 
-            const userDataList = await Promise.all(
-                Array.from(users).map(async (user) => {
+            const [emoji_decrease, ...userDataList] = await Promise.all([
+                get_emoji("decrease", client),
+                ...Array.from(users).map(async (user) => {
                     const userid = user.id;
                     const user_rpg_data = await load_rpg_data(userid);
                     return {
@@ -1994,11 +1986,9 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                         money: user_rpg_data.money,
                     };
                 }),
-            );
+            ]);
 
             userDataList.sort((a, b) => a.money - b.money);
-
-            const emoji_decrease = await get_emoji("decrease", client);
 
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
@@ -2134,9 +2124,11 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             const marry_with = marry_info.with ?? null;
             const married = marry_info.status ?? false;
 
-            const emoji_cross = await get_emoji("crosS", client);
+            const [emoji_cross, target_users] = await Promise.all([
+                get_emoji("crosS", client),
+                mentions_users(message),
+            ]);
 
-            const target_users = await mentions_users(message);
             const target_user = target_users.first();
             if (!target_user) {
                 if (!married) {
