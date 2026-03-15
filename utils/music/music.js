@@ -315,6 +315,8 @@ class MusicQueue {
 
                 await this.textChannel.send({ embeds: [embed] });
             };
+
+            this.destroy();
         });
 
         this.player.on("stateChange", async (oldState, newState) => {
@@ -348,11 +350,9 @@ class MusicQueue {
 
                             // wait 500ms
                             await new Promise(resolve => setTimeout(resolve, 500));
-
-                            this.destroy();
-                        } else {
-                            this.destroy();
                         };
+
+                        this.destroy();
                     };
                 };
 
