@@ -662,7 +662,7 @@ async function get_help_command(category, command_name, guildID = null, interact
 
     let emoji = "";
     if (command_data.emoji) {
-        emoji = await get_emoji(command_data.emoji, client) ?? command_data.emoji;
+        emoji = await get_emoji(command_data.emoji, client) || command_data.emoji;
     };
 
     const embed = new EmbedBuilder()
