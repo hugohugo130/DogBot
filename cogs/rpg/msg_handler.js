@@ -312,9 +312,9 @@ const redirect_data_reverse = Object.entries(redirect_data).reduce((acc, [key, v
     ({})
 );
 
-/** @type {{ [k: string]: [string, string, Function, boolean | ((client: DogClient, userId: string) => Promise<boolean> | boolean)] }} */
+/** @type {{ [k: string]: [string, Function, boolean | ((client: DogClient, userId: string) => Promise<boolean> | boolean)] }} */
 const rpg_commands = {
-    mine: ["挖礦", "挖礦",
+    mine: ["挖礦",
         /**
          *
          * @param {Object} datas
@@ -367,7 +367,7 @@ const rpg_commands = {
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         }, false],
-    fell: ["伐木", "砍砍樹，偶爾可以挖到神木 owob",
+    fell: ["伐木",
         /**
          *
          * @param {Object} datas
@@ -413,7 +413,7 @@ const rpg_commands = {
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         }, false],
-    herd: ["放牧", "放牧或屠宰動物",
+    herd: ["放牧",
         /**
          *
          * @param {Object} datas
@@ -476,7 +476,7 @@ const rpg_commands = {
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         }, false],
-    brew: ["釀造", "釀造藥水",
+    brew: ["釀造",
         /**
          *
          * @param {Object} datas
@@ -516,7 +516,7 @@ const rpg_commands = {
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         }, false],
-    fish: ["抓魚", "魚魚: 漁夫!不要抓我~~~",
+    fish: ["抓魚",
         /**
          *
          * @param {Object} datas
@@ -575,7 +575,7 @@ const rpg_commands = {
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         }, false],
-    shop: ["商店", "對你的商店進行任何操作",
+    shop: ["商店",
         /**
          *
          * @param {Object} datas
@@ -984,7 +984,7 @@ const rpg_commands = {
                 }
             };
         }, true],
-    items: ["查看背包", "查看背包",
+    items: ["查看背包",
         /**
          *
          * @param {Object} datas
@@ -999,7 +999,7 @@ const rpg_commands = {
         async function ({ client, message, rpg_data, args, mode, random_item }) {
             return await ls_function({ client, message, rpg_data, mode, interaction: null })
         }, false],
-    buy: ["購買", "購買其他人上架的物品",
+    buy: ["購買",
         /**
          *
          * @param {Object} datas
@@ -1173,7 +1173,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             if (mode === 1) return { embeds: [embed], components: [row] };
             return await message.reply({ embeds: [embed], components: [row] });
         }, true],
-    money: ["查看餘額", "查看自己的餘額",
+    money: ["查看餘額",
         /**
          *
          * @param {Object} datas
@@ -1209,7 +1209,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             if (mode === 1) return { embeds: [embed], components: [row] };
             return await message.reply({ embeds: [embed], components: [row] });
         }, false],
-    cd: ["查看冷卻剩餘時間", "查看冷卻剩餘時間",
+    cd: ["查看冷卻剩餘時間",
         /**
          *
          * @param {Object} datas
@@ -1257,7 +1257,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         }, false],
-    cdd: ["[簡易]查看冷卻剩餘時間", "查看冷卻剩餘時間，但是只顯示時間",
+    cdd: ["[簡易]查看冷卻剩餘時間",
         /**
          *
          * @param {Object} datas
@@ -1299,7 +1299,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         }, false],
-    pay: ["付款", "付款給其他用戶",
+    pay: ["付款",
         /**
          *
          * @param {Object} datas
@@ -1382,7 +1382,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             if (mode === 1) return { embeds: [embed], components: [row] };
             return await message.reply({ embeds: [embed], components: [row] });
         }, true],
-    help: ["查看指令", "查看指令",
+    help: ["查看指令",
         /**
          *
          * @param {Object} datas
@@ -1467,7 +1467,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             if (mode === 1) return { embeds: [embed], components: [row] };
             return await message.reply({ embeds: [embed], components: [row] });
         }, false],
-    privacy: ["隱私權", "修改隱私權",
+    privacy: ["隱私權",
         /**
          *
          * @param {Object} datas
@@ -1550,7 +1550,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             if (mode === 1) return { embeds: [embed], components: [row] };
             return await message.reply({ embeds: [embed], components: [row] });
         }, false],
-    eat: ["吃東西", "吃東西回復飽食度",
+    eat: ["吃東西",
         /**
          *
          * @param {Object} datas
@@ -1799,7 +1799,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 return await message.reply({ embeds: [embed], components: [row] });
             };
         }, false],
-    sell: ["出售", "出售物品給系統",
+    sell: ["出售",
         /**
          *
          * @param {Object} datas
@@ -1916,7 +1916,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             if (mode === 1) return { embeds: [embed], components: [row] };
             return await message.reply({ embeds: [embed], components: [row] });
         }, true],
-    top: ["金錢排行榜", "who!誰是世界首富!是不是你!",
+    top: ["金錢排行榜",
         /**
          *
          * @param {Object} datas
@@ -1970,7 +1970,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         }, false],
-    last: ["「倒數」金錢排行榜", "讓我們看看誰最窮!嘿嘿",
+    last: ["「倒數」金錢排行榜",
         /**
          *
          * @param {Object} datas
@@ -2024,7 +2024,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         }, false],
-    name: ["顯示物品名稱", "透過物品ID顯示物品名稱",
+    name: ["顯示物品名稱",
         /**
          *
          * @param {Object} datas
@@ -2070,7 +2070,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         }, true],
-    id: ["顯示物品ID", "透過物品名稱顯示物品ID",
+    id: ["顯示物品ID",
         /**
          *
          * @param {Object} datas
@@ -2115,7 +2115,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         }, true],
-    marry: ["結婚", "與某人結婚",
+    marry: ["結婚",
         /**
          *
          * @param {Object} datas
@@ -2230,7 +2230,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             return !married;
         }],
-    divorce: ["結婚", "與某人結婚",
+    divorce: ["離婚",
         /**
          *
          * @param {Object} datas
@@ -2295,7 +2295,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             return !married;
         }],
-    job: ["職業", "選擇職業",
+    job: ["職業",
         /**
          *
          * @param {Object} datas
@@ -2359,7 +2359,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
                 return await message.reply({ embeds: [embed], components: rows });
             };
         }, false],
-    daily: ["簽到", "簽到",
+    daily: ["簽到",
         /**
          *
          * @param {Object} datas
@@ -2416,7 +2416,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
             if (mode === 1) return { embeds: [embed], components: [row] };
             await message.reply({ embeds: [embed], components: [row] });
         }, false],
-    fightjob: ["選擇冒險職業", "選擇冒險職業",
+    fightjob: ["選擇冒險職業",
         /**
          *
          * @param {Object} datas
@@ -2576,7 +2576,7 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
         command = command.replace(/[^a-zA-Z0-9]/g, "");
 
         const firstChar = command.charAt(0);
-        const similarCommands = commands.filter(cmd => cmd.startsWith(firstChar) && !rpg_commands[cmd][3] && !redirect_data[cmd]);
+        const similarCommands = commands.filter(cmd => cmd.startsWith(firstChar) && !rpg_commands[cmd][2] && !redirect_data[cmd]);
 
         const embed = new EmbedBuilder()
             .setColor(embed_error_color)
@@ -2611,7 +2611,7 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
         return await message.reply({ embeds: [embed], components: rows });
     };
 
-    const execute = cmd_data[2];
+    const execute = cmd_data[1];
     const action = cmd_data[0];
 
     if (rpg_work.includes(command)) {
@@ -2622,13 +2622,13 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
             if (found_food) {
                 // 嘗試自動吃掉一個食物
                 if (typeof rpg_commands.eat?.[2] === "function") {
-                    const eatPromise = rpg_commands.eat[2]({
+                    const eatPromise = rpg_commands.eat[1]({
                         client,
                         message,
                         rpg_data,
                         args: [found_food, "all"],
                         mode: 1
-                        // {client, message, rpg_data, data, args, mode, random_item }
+                        // {client, message, rpg_data, args, mode, random_item }
                     });
 
 
@@ -2738,7 +2738,7 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
     };
 
     let need_arg = false;
-    const need_arg_func = rpg_commands[command][3];
+    const need_arg_func = rpg_commands[command][2];
 
     if (need_arg_func) {
         if (typeof need_arg_func === "function") {
