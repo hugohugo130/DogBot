@@ -1,6 +1,6 @@
 const { User, Guild } = require("discord.js");
 
-const { DATABASE_FILES, DEFAULT_VALUES, priorityUserIDs, priorityGuildIDs } = require("./config.js");
+const { DATABASE_FILES, DEFAULT_VALUES, priorityGuildIDs } = require("./config.js");
 const { readJson, writeJson, exists, basename, join_db_folder, load_rpg_data, save_rpg_data, loadData, saveData } = require("./file.js");
 const { get_logger } = require("./logger.js");
 const { wait_for_client } = require("./wait_for_client.js");
@@ -44,8 +44,8 @@ async function checkDBFilesCorrupted() {
 };
 
 /**
- * 
- * @param {Array<User>} users 
+ *
+ * @param {Array<User>} users
  * @param {Array<Guild>} guilds
  * @returns {Promise<void>}
  */
@@ -192,7 +192,7 @@ async function make_db_compatible(users, guilds) {
 };
 
 /**
- * @warning run this before client.login may block forever
+ * @warning run this before client.login and with no given args may block forever
  * @param {DogClient | null} [client] - The Discord Client
  * @returns {Promise<void>}
  */
