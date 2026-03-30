@@ -73,6 +73,27 @@ const database_folder = `${cwd()}/db`;
  * @property {VoiceChannel} channel
  */
 
+/**
+ * @typedef {Object} MusicTrackData
+ * @property {string} id
+ * @property {string} title
+ * @property {string | null} url
+ * @property {number} duration
+ * @property {string | null} thumbnail
+ * @property {string} author
+ * @property {string} source
+ */
+
+/**
+ * @typedef {Object} MusicStatus
+ * @property {string | null} channelId
+ * @property {string | null} textChannelId
+ * @property {MusicTrackData | null} currentTrack
+ * @property {MusicTrackData[]} queue
+ * @property {number} loopStatus
+ * @property {boolean} paused
+ */
+
 const DATABASE_FILES = [
     "database.json",
     "rpg_database.json",
@@ -82,6 +103,7 @@ const DATABASE_FILES = [
     "serverIP.json",
     "dvoice_db.json",
     "rpg_farm.json",
+    "music.json",
 ];
 
 /**
@@ -146,6 +168,7 @@ const DEFAULT_VALUES = {
             IP: DEFAULT_IP,
             PORT: DEFAULT_PORT,
         },
+        "music.json": {},
         "dvoice_db.json": [],
     },
     "guild": {
@@ -165,6 +188,7 @@ const onlineDB_Files = [
     "smelt_db.json",
     "dvoice_db.json",
     "rpg_farm.json",
+    "music.json",
 ];
 
 // Database order
@@ -186,6 +210,7 @@ const rpg_farm_file = join(database_folder, "rpg_farm.json");
 const bake_data_file = join(database_folder, "bake_db.json");
 const smelt_data_file = join(database_folder, "smelt_db.json");
 const dvoice_data_file = join(database_folder, "dvoice_db.json");
+const music_status_file = join(database_folder, "music.json")
 const serverIPFile = join(database_folder, "serverIP.json");
 const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
 
@@ -549,6 +574,7 @@ module.exports = {
     bake_data_file,
     smelt_data_file,
     dvoice_data_file,
+    music_status_file,
     serverIPFile,
 
     cogsFolder,

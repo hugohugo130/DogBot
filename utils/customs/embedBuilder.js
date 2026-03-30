@@ -1,3 +1,4 @@
+const Discord = require("discord.js");
 const { EmbedBuilder: djsEmbedBuilder, BaseInteraction, Locale } = require("discord.js");
 
 const { isDigit } = require("../message.js");
@@ -6,7 +7,7 @@ const DogClient = require("./client.js");
 class EmbedBuilder extends djsEmbedBuilder {
     /**
      *
-     * @param {import("discord.js").EmbedData | import("discord.js").APIEmbed} [data]
+     * @param {Discord.EmbedData | Discord.APIEmbed} [data]
      */
     constructor(data) {
         super(data);

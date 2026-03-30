@@ -127,7 +127,7 @@ module.exports = {
             });
         };
 
-        if (getPlayingPlayers().size > musicPlayingPlayerLimit) {
+        if (getPlayingPlayers().size >= musicPlayingPlayerLimit) {
             const emoji_cross = await get_emoji("crosS", client);
 
             const embed = new EmbedBuilder()
@@ -141,7 +141,6 @@ module.exports = {
                 flags: !hide ? undefined : MessageFlags.Ephemeral,
             })
         };
-
 
         const voiceConnection = getVoiceConnection(guildId);
 
@@ -172,7 +171,7 @@ module.exports = {
             ], client),
         ]);
 
-        await interaction.editReply({ content: `${emoji_search} | Searching...` });
+        await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
         const will_play_audio_url = play_audio_url && IsValidURL(query);
 
@@ -186,7 +185,7 @@ module.exports = {
         if (will_play_audio_url && audioerr) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setDescription(`${emoji_cross} | 播放自定義url時遇到問題: \n${audioerr}`.slice(0, 4090))
+                .setDescription(`${emoji_cross} | 播放自定義url時遇到問題: \n\`\`\`${audioerr}\`\`\``.slice(0, 4090))
                 .setEmbedFooter(interaction);
 
             return await interaction.editReply({ content: "", embeds: [embed] });

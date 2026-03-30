@@ -25,6 +25,10 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
+        const guildId = interaction.guild?.id;
+        if (!guildId) return;
+
+        const textChannel = interaction.channel;
         const voiceChannel = (
             interaction.member
             && 'voice' in interaction.member
@@ -33,10 +37,6 @@ module.exports = {
         )
             ? interaction.member.voice?.channel
             : null;
-
-        const guildId = interaction.guild?.id;
-
-        if (!guildId) return;
 
         const queue = getQueue(guildId);
 
@@ -73,10 +73,9 @@ module.exports = {
             });
         };
 
-        await Promise.all([
-            queue.setConnection(connection),
-            queue.setVoiceChannel(voiceChannel),
-            interaction.editReply(`${emoji_voice} | 加入了 \`${interaction.user.username}\` 的語音頻道`),
-        ]);
+        queue.setConnection(connection);
+        queue.setVoiceChannel(voiceChannel);
+        if (textChannel?.isSendable()) queue.setTextChannel(textChannel);
+        await interaction.editReply(`${emoji_voice} | 加入了 \`${interaction.user.username}\` 的語音頻道`);
     },
 };

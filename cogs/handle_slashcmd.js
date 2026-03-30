@@ -1,5 +1,6 @@
-const { Events, ChatInputCommandInteraction, MessageFlags, PermissionFlagsBits, escapeMarkdown, BaseInteraction } = require("discord.js");
 const util = require("util");
+const Discord = require("discord.js");
+const { escapeMarkdown, PermissionFlagsBits, Events, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
 
 const { get_logger } = require("../utils/logger.js");
 const { get_loophole_embed } = require("../utils/rpg.js");
@@ -39,10 +40,10 @@ function getFullCommandPath(options) {
 /**
  *
  * @param {any} options
- * @returns {readonly import("discord.js").CommandInteractionOption<import("discord.js").CacheType>[]}
+ * @returns {readonly Discord.CommandInteractionOption<Discord.CacheType>[]}
  */
 function getFinalOptions(options) {
-    /** @type {readonly import("discord.js").CommandInteractionOption<import("discord.js").CacheType>[] | undefined}*/
+    /** @type {readonly Discord.CommandInteractionOption<Discord.CacheType>[] | undefined}*/
     let current = options;
 
     while (current && current.length > 0 && (current[0].type === 1 || current[0].type === 2)) {

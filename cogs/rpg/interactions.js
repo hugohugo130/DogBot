@@ -1546,7 +1546,12 @@ module.exports = {
 
                     // 連接到語音頻道
                     if (!vconnection) {
-                        const voiceChannel = interaction.member && 'voice' in interaction.member
+                        const voiceChannel = (
+                            interaction.member
+                            && 'voice' in interaction.member
+                            && interaction.member.voice?.channel
+                            && "speakable" in interaction.member.voice?.channel
+                        )
                             ? interaction.member.voice?.channel
                             : null;
 
@@ -1574,7 +1579,7 @@ module.exports = {
 
                         if (!queue.voiceChannel && vconnection.joinConfig.channelId) {
                             const vchannel = await get_channel(vconnection.joinConfig.channelId, interaction.guild);
-                            if (vchannel && vchannel instanceof VoiceChannel) {
+                            if (vchannel?.isVoiceBased()) {
                                 queue.setVoiceChannel(vchannel);
                             };
                         };

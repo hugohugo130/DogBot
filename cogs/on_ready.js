@@ -2,9 +2,10 @@ const { Events, ActivityType } = require("discord.js");
 const util = require("util");
 
 const { get_logger } = require("../utils/logger.js");
-const { checkDBFilesDefault } = require("../utils/check_db_files.js");
 const { run_schedule } = require("../utils/run_schedule.js");
 const { safeshutdown } = require("../utils/safeshutdown.js");
+const { checkDBFilesDefault } = require("../utils/check_db_files.js");
+const { restoreAllMusicStates } = require("../utils/music/persistence.js");
 const DogClient = require("../utils/customs/client.js");
 
 const logger = get_logger();
@@ -65,5 +66,7 @@ module.exports = {
             }),
             checkDBFilesDefault(client),
         ]);
+
+        await restoreAllMusicStates(client);
     },
 }

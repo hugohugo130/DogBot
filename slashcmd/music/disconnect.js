@@ -1,11 +1,12 @@
 const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags, VoiceChannel } = require("discord.js");
 const { getVoiceConnection } = require("@discordjs/voice");
-const { getQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
+
 const { get_emoji } = require("../../utils/rpg.js");
+const { get_channel } = require("../../utils/discord.js");
+const { getQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
 const { embed_error_color } = require("../../utils/config.js");
 const DogClient = require("../../utils/customs/client.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
-const { get_channel } = require("../../utils/discord.js");
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -20,18 +21,19 @@ module.exports = {
             "zh-CN": "让机器人离开语音频道",
         }),
     /**
-     * 
+     *
      * @param {ChatInputCommandInteraction} interaction
      * @param {DogClient} client
      */
     async execute(interaction, client) {
         if (!interaction.guildId) return;
 
-        const voiceChannel = interaction.member && 'voice' in interaction.member
+        const voiceChannel = (
+            interaction.member
+            && 'voice' in interaction.member
+        )
             ? interaction.member.voice?.channel
             : null;
-
-        const queue = getQueue(interaction.guildId);
 
         if (!voiceChannel) {
             return await interaction.reply({
@@ -40,6 +42,7 @@ module.exports = {
             });
         };
 
+        const queue = getQueue(interaction.guildId);
         const emoji_cross = await get_emoji("crosS", client);
 
         const vconnection = getVoiceConnection(interaction.guildId);
@@ -49,7 +52,7 @@ module.exports = {
             if (!queue.voiceChannel) {
                 const vchannel = await get_channel(vconnection.joinConfig.channelId, interaction.guild);
 
-                if (vchannel instanceof VoiceChannel) queue.setVoiceChannel(vchannel);
+                if (vchannel?.isVoiceBased()) queue.setVoiceChannel(vchannel);
             };
         };
 

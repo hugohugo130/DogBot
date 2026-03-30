@@ -1,10 +1,11 @@
-const { EmbedBuilder: djsEmbedBuilder, MessageFlags, Embed, escapeMarkdown } = require("discord.js");
-const Transport = require("winston-transport")
-const winston = require("winston");
 const path = require("path");
+const winston = require("winston");
+const Discord = require("discord.js");
+const Transport = require("winston-transport")
+const { EmbedBuilder: djsEmbedBuilder, MessageFlags, Embed, escapeMarkdown } = require("discord.js");
 
-const { time2 } = require("./time.js");
 const config = require("./config.js");
+const { time2 } = require("./time.js");
 const DogClient = require("./customs/client.js");
 
 // 全局管理器
@@ -163,7 +164,7 @@ const consoleFormat = winston.format.combine(
  * 
  * @param {any} channel
  * @param {string} level
- * @param {import("discord.js").ColorResolvable} color
+ * @param {Discord.ColorResolvable} color
  * @param {string} logger_name
  * @param {string} message
  * @param {number | null} [timestamp=null]

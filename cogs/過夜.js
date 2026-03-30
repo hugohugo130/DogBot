@@ -2,6 +2,7 @@ const { Events } = require("discord.js");
 const { joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
 
 const { get_logger } = require("../utils/logger.js");
+const { getQueue } = require("../utils/music/music.js");
 const DogClient = require("../utils/customs/client.js");
 
 const logger = get_logger();
@@ -16,7 +17,7 @@ module.exports = {
     name: Events.ClientReady,
     once: true,
     /**
-     * 
+     *
      * @param {DogClient} client
      */
     execute: async function (client) {
@@ -25,17 +26,20 @@ module.exports = {
             if (!guild) return;
 
             const voiceChannel = await guild.channels.fetch(channelID);
-            if (!voiceChannel) return;
+            if (!voiceChannel?.isVoiceBased()) return;
 
-            if (!getVoiceConnection(guildID)) {
-                joinVoiceChannel({
-                    channelId: voiceChannel.id,
-                    guildId: guild.id,
-                    selfDeaf: true,
-                    selfMute: false,
-                    adapterCreator: guild.voiceAdapterCreator,
-                });
-            };
+            const queue = getQueue(guildID, true);
+
+            const connection = getVoiceConnection(guildID) ?? joinVoiceChannel({
+                channelId: voiceChannel.id,
+                guildId: guild.id,
+                selfDeaf: true,
+                selfMute: false,
+                adapterCreator: guild.voiceAdapterCreator,
+            });
+
+            queue.setVoiceChannel(voiceChannel);
+            queue.setConnection(connection);
 
             logger.info(`✅ Joined voice channel ${voiceChannel.name}`);
         };

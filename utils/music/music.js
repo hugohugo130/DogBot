@@ -1,17 +1,18 @@
 const util = require("util");
+const Discord = require("discord.js");
 const { createAudioResource, createAudioPlayer, joinVoiceChannel, getVoiceConnection, AudioPlayerStatus, VoiceConnection, AudioPlayer, StreamType, AudioResource, PlayerSubscription } = require("@discordjs/voice");
 const { fileTypeFromStream } = require("file-type");
 const { Readable } = require("node:stream");
-const { Collection, TextChannel, VoiceChannel, Guild, BaseInteraction, ThreadChannel } = require("discord.js");
+const { Collection, VoiceChannel, Guild, BaseInteraction } = require("discord.js");
 
 const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
-const { get_logger } = require("../logger.js");
-const { formatMinutesSeconds } = require("../timestamp.js");
 const { get_emoji } = require("../rpg.js");
+const { get_logger } = require("../logger.js");
+const { get_guild, get_channel } = require("../discord.js");
+const { formatMinutesSeconds } = require("../timestamp.js");
 const { generateSessionId, generateUUID } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
-const { get_guild } = require("../discord.js");
 
 const logger = get_logger();
 
@@ -185,16 +186,16 @@ const fileStreamType = {
 class MusicTrack {
     /**
      *
-      * @param {Object} datas
-        * @param {string} datas.id
-        * @param {string} datas.title
-        * @param {string | null} [datas.url=null]
-        * @param {number} [datas.duration=0]
-        * @param {string | null} [datas.thumbnail=null]
-        * @param {string} [datas.author="unknown"]
-        * @param {string} [datas.source=""]
-        * @param {Readable | null} [datas.stream=null]
-        * @param {any} [datas.original_track=null]
+     * @param {Object} datas
+     * @param {string} datas.id
+     * @param {string} datas.title
+     * @param {string | null} [datas.url=null]
+     * @param {number} [datas.duration=0]
+     * @param {string | null} [datas.thumbnail=null]
+     * @param {string} [datas.author="unknown"]
+     * @param {string} [datas.source=""]
+     * @param {Readable | null} [datas.stream=null]
+     * @param {any} [datas.original_track=null]
      */
     constructor({ id, title, url = null, duration = 0, thumbnail = null, author = "unknown", source = "", stream = null, original_track = null }) {
         /** @type {string} */
@@ -226,6 +227,18 @@ class MusicTrack {
 
         /** @type {any} */
         this.original_track = original_track;
+    };
+
+    toJSON() {
+        return {
+            id: this.id,
+            title: this.title,
+            url: this.url,
+            duration: this.duration,
+            thumbnail: this.thumbnail,
+            author: this.author,
+            source: this.source,
+        };
     };
 
     /**
@@ -285,10 +298,10 @@ class MusicQueue {
         /** @type {boolean} */
         this.paused = false;
 
-        /** @type {TextChannel | ThreadChannel | null} */
+        /** @type {Discord.SendableChannels | null} */
         this.textChannel = null;
 
-        /** @type {VoiceChannel | import("discord.js").VoiceBasedChannel | null} */
+        /** @type {VoiceChannel | Discord.VoiceBasedChannel | null} */
         this.voiceChannel = null;
 
         /** @type {VoiceConnection | null} */
@@ -306,7 +319,6 @@ class MusicQueue {
 
             if (this.textChannel?.send) {
                 const emoji_cross = await get_emoji("crosS", client);
-
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 播放音樂時發生了錯誤`)
@@ -363,7 +375,6 @@ class MusicQueue {
                     if (!this.currentTrack || (this.lastTrack && this.currentTrack && this.lastTrack.uuid === this.currentTrack.uuid)) return;
 
                     const emoji_music = await get_emoji("music", client);
-
                     // 正在播放
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
@@ -376,8 +387,8 @@ class MusicQueue {
                 }
 
                 else if (
-                    oldState.status === AudioPlayerStatus.Playing &&
-                    newState.status === AudioPlayerStatus.Idle
+                    oldState.status === AudioPlayerStatus.Playing
+                    && newState.status === AudioPlayerStatus.Idle
                 ) {
                     // 閒置 (播完了)
                     this.playing = false;
@@ -421,11 +432,9 @@ class MusicQueue {
     /**
      *
      * @param {any} msg
-     * @returns {void}
+     * @returns {any}
      */
-    debug(msg) {
-        logger.debug(`[${this.guildID}] ${msg}`);
-    };
+    debug = (msg) => logger.debug(`[${this.guildID}] ${msg}`);
 
     /**
      * 將音樂加入佇列
@@ -458,27 +467,49 @@ class MusicQueue {
      * 檢查播放器是否正在播放
      * @returns {boolean}
      */
-    isPlaying() {
-        return this.playing;
-    };
+    isPlaying = () => this.playing;
 
     /**
      * 檢查播放器是否暫停
      * @returns {boolean}
      */
-    isPaused() {
-        return this.paused;
+    isPaused = () => this.paused;
+
+    /**
+     * Check whether this queue is valid
+     * @returns {Promise<boolean>}
+     */
+    async isValid() {
+        const guild = await get_guild(this.guildID, this.client);
+
+        if (!guild) return false;
+
+        const voiceChannel = await get_channel(this.voiceChannel?.id);
+
+        if (!voiceChannel) return false;
+
+        const textChannel = await get_channel(this.textChannel?.id, guild);
+
+        if (!textChannel) this.textChannel = null;
+
+        return true;
     };
 
     /**
      * 播放音樂
      * @param {MusicTrack} track
+     * @returns {Promise<MusicTrack | null>}
      */
     async play(track) {
         if (DEBUG) this.debug(`- triggered play() | going to play ${track.title}`);
 
         if (!this.connection && this.voiceChannel) {
             if (!this.guild) this.guild = await get_guild(this.guildID);
+            if (!this.guild) {
+                this.destroy();
+
+                return null;
+            };
 
             const connection = getVoiceConnection(this.guildID)
                 || joinVoiceChannel({
@@ -504,7 +535,9 @@ class MusicQueue {
 
         let resource;
 
+        if (DEBUG) this.debug("fetching stream");
         const [originalAudioStream, fileType] = await getStream({ track, url, source });
+        if (DEBUG) this.debug(`got stream, type: ${fileType}`);
 
         resource = createAudioResource(
             originalAudioStream,
@@ -513,6 +546,7 @@ class MusicQueue {
             },
         );
 
+        if (DEBUG) this.debug("playing resource");
         this.player.play(resource);
         this.player.unpause();
 
@@ -677,7 +711,7 @@ class MusicQueue {
 
     /**
      * Set the voice channel of the queue.
-     * @param {VoiceChannel | import("discord.js").VoiceBasedChannel | null} voiceChannel
+     * @param {VoiceChannel | Discord.VoiceBasedChannel | null} voiceChannel
      * @returns {void}
      */
     setVoiceChannel(voiceChannel) {
@@ -686,7 +720,7 @@ class MusicQueue {
 
     /**
      * Set the text channel of the queue.
-     * @param {TextChannel | ThreadChannel | null} [textChannel=null]
+     * @param {Discord.SendableChannels | null} [textChannel=null]
      * @returns {void}
      */
     setTextChannel(textChannel = null) {
@@ -745,9 +779,7 @@ function getQueue(guildID, create = true) {
  *
  * @returns {Collection<string, MusicQueue>}
  */
-function getQueues() {
-    return queues;
-};
+const getQueues = () => queues;
 
 /**
  * Get a Collection of audio players which are playing music.
@@ -859,7 +891,8 @@ async function fixStructure(objects) {
 };
 
 /**
- * Get the data of an audio stream for creating MusicTracks
+ * Get the data of an audio stream by its URL.
+ * This function is used for creating a MusicTrack
  * @param {string} url
  * @param {boolean} [stream=false]
  * @returns {{ id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean }}
@@ -913,9 +946,12 @@ async function fetchAudioStream(url) {
 };
 
 /**
- * 
- * @param {{ track: MusicTrack, url?: string | null, source: string }} param0
- * @returns {Promise<[Readable, string] >} [Audio Stream - It must be an audio stream, fileType ([MediaType](https://en.wikipedia.org/wiki/Media_type))]
+ *
+ * @param {Object} options
+ * @param {MusicTrack} options.track
+ * @param {string | null} [options.url]
+ * @param {string | null} [options.source]
+ * @returns {Promise<[Readable, string]>} [Audio Stream - It must be an audio stream, fileType ([MediaType](https://en.wikipedia.org/wiki/Media_type))]
  */
 async function getStream({ track, url, source }) {
     let engine;
@@ -942,7 +978,7 @@ async function getStream({ track, url, source }) {
 };
 
 /**
- * 
+ *
  * @param {string} query
  * @param {number} amount
  * @param {boolean} customURL
@@ -1071,15 +1107,32 @@ function IsValidURL(str) {
 
 /**
  *
+ * @overload
+ * @param {null} queue
+ * @param {BaseInteraction| null} [interaction=null]
+ * @param {DogClient | null} [client]
+ * @returns {Promise<EmbedBuilder>}
+ *
+ * @overload
+ * @param {MusicQueue} queue
+ * @param {BaseInteraction| null} [interaction=null]
+ * @param {DogClient | null} [client]
+ * @returns {Promise<EmbedBuilder | null>}
+ *
+ * @overload
  * @param {MusicQueue | null} queue
  * @param {BaseInteraction| null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
+ *
+ * @param {MusicQueue | null} queue
+ * @param {BaseInteraction| null} [interaction=null]
+ * @param {DogClient | null} [client]
  */
 async function noMusicIsPlayingEmbed(queue, interaction = null, client = global._client) {
     const emoji_cross = await get_emoji("crosS", client);
 
-    return !queue?.isPlaying?.() || !queue?.currentTrack
+    return !(queue?.isPlaying?.()) || !(queue?.currentTrack)
         ? new EmbedBuilder()
             .setColor(embed_error_color)
             .setTitle(`${emoji_cross} | 沒有音樂正在播放`)

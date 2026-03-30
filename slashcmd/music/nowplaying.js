@@ -278,6 +278,9 @@ module.exports = {
             return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };
 
+        const textChannel = interaction.channel;
+        if (textChannel?.isSendable()) queue.setTextChannel(textChannel);
+
         const [_, [embed, rows]] = await Promise.all([
             interaction.deferReply(),
             getNowPlayingEmbed(queue, null, interaction, client),

@@ -25,12 +25,17 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        const voiceChannel = interaction.member && 'voice' in interaction.member
+        const guildId = interaction.guild?.id;
+        if (!guildId) return;
+
+        const voiceChannel = (
+            interaction.member
+            && 'voice' in interaction.member
+            && interaction.member.voice?.channel
+            && "speakable" in interaction.member.voice?.channel
+        )
             ? interaction.member.voice?.channel
             : null;
-        const guildId = interaction.guild?.id;
-
-        if (!guildId) return;
 
         if (!voiceChannel) {
             return await interaction.reply({
@@ -48,6 +53,9 @@ module.exports = {
         if (notPlayingEmbed) {
             return await interaction.reply({ embeds: [notPlayingEmbed], flags: MessageFlags.Ephemeral });
         };
+
+        const textChannel = interaction.channel;
+        if (queue && textChannel?.isSendable()) queue.setTextChannel(textChannel);
 
         const connection = getVoiceConnection(guildId);
 

@@ -1,5 +1,5 @@
 require("./utils/check.env.js") // check .env file
-require("node:process").loadEnvFile(); // loads .env file
+require("node:process").loadEnvFile(); // load .env file
 const { Events, Collection } = require("discord.js");
 const { get_logger } = require("./utils/logger.js");
 const { load_cogs } = require("./utils/load_cogs.js");
@@ -13,6 +13,7 @@ const { check_language_keys } = require("./utils/language.js");
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
 const { should_register_cmd } = require("./utils/auto_register.js");
 const { check_help_rpg_info } = require("./cogs/rpg/interactions.js");
+const { saveAllMusicStates } = require("./utils/music/persistence.js");
 const { checkDBFilesExists, checkDBFilesCorrupted } = require("./utils/check_db_files.js");
 const { checkAllDatabaseFilesContent, uploadAllDatabaseFiles } = require("./utils/onlineDB.js");
 const DogClient = require("./utils/customs/client.js");
@@ -144,6 +145,14 @@ client.once(Events.ClientReady, async () => {
                     logger.info(util.inspect(cachemgr.getStats(), { depth: null }));
                     break;
                 }
+            };
+        } else if (input.startsWith("debug ")) {
+            const [_, option] = input.split(" ");
+
+            switch (option) {
+                case "music-persistence": {
+                    await saveAllMusicStates();
+                };
             };
         };
 
