@@ -2729,7 +2729,7 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
 
     const { failed, item, amount } = get_random_result(command);
     if (failed && rpg_work.includes(command)) {
-        // rpg_data.hunger += 1;
+        // rpg_data.hunger ++;
         // await save_rpg_data(userid, rpg_data);
         if (item) {
             if (mode === 1) return { embeds: [await get_failed_embed(item, rpg_data, null, client)] };

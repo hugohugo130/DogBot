@@ -44,20 +44,21 @@ function hasSignedTodayOrBrokeSign(lastSignTime) {
  * Sign Function
  * @param {import("../utils/config.js").RpgDatabase} rpg_data - RPG data
  * @param {Message} message - Discord Message
- * @param {DogClient | null} [client] - Discord Client
- * @returns {Promise<true | null>} success or null (signed today)
+ * @param {DogClient | null} [client=null] - Discord Client
+ * @returns {Promise<boolean>} true if signed successfully, otherwise false
  */
 async function sign(rpg_data, message, client = null) {
     if (!client) client = await wait_for_client();
     const user = message.author;
 
+    if (!rpg_data.job) return false;
     if (!rpg_data.daily || typeof rpg_data.daily !== "number") rpg_data.daily = 0;
     if (!rpg_data.daily_times || typeof rpg_data.daily_times !== "number") rpg_data.daily_times = 0;
 
     let daily_times = rpg_data.daily_times;
 
     const [signedToday, brokeSign] = hasSignedTodayOrBrokeSign(rpg_data.daily);
-    if (signedToday) return null;
+    if (signedToday) return false;
 
     if (brokeSign) daily_times = 0;
 
@@ -81,7 +82,7 @@ async function sign(rpg_data, message, client = null) {
     };
 
     rpg_data.daily = Date.now();
-    daily_times += 1;
+    daily_times++;
 
     rpg_data.daily_times = daily_times;
 
