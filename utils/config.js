@@ -173,7 +173,7 @@ const DEFAULT_VALUES = {
     },
     "guild": {
         "database.json": {
-            "rpg": false,
+            "rpg": true,
             "dynamicVoice": null,
             "prefix": ["&"],
         },
