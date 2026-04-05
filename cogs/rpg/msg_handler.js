@@ -1,4 +1,4 @@
-const { Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User, StringSelectMenuOptionBuilder, Guild } = require("discord.js");
+const { Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User, StringSelectMenuOptionBuilder, Guild, BaseInteraction } = require("discord.js");
 const util = require("util");
 
 const {
@@ -228,10 +228,11 @@ async function redirect({ client, message, command, mode = 0 }) {
 /**
  * Get the embed for showing marry info of a user
  * @param {import("../../utils/config.js").RpgDatabase} rpg_data
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
-async function show_marry_info(rpg_data, client = global._client) {
+async function show_marry_info(rpg_data, interaction = null, client = global._client) {
     const marry_info = rpg_data?.marry ?? {};
     const married = marry_info.status ?? false;
     if (!married) throw new Error("not married but triggered show_marry_info");
@@ -242,12 +243,12 @@ async function show_marry_info(rpg_data, client = global._client) {
     const embed = new EmbedBuilder()
         .setTitle(`${emoji_check} 結婚資訊`)
         .setColor(embed_marry_color)
-        .setDescription(
-            `你和 <@${marry_info.with}> ❤️
+        .setDescription(`
+你和 <@${marry_info.with}> ❤️
 
 結婚紀念日 - <t:${marryTime}:R>`
         )
-        .setEmbedFooter();
+        .setEmbedFooter(interaction);
 
     return embed;
 };
@@ -2148,7 +2149,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                     if (mode === 1) return { embeds: [embed] };
                     return await message.reply({ embeds: [embed] });
                 } else {
-                    const embed = await show_marry_info(rpg_data, client);
+                    const embed = await show_marry_info(rpg_data, null, client);
 
                     if (mode === 1) return { embeds: [embed] };
                     return await message.reply({ embeds: [embed] });
