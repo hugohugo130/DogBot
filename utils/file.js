@@ -660,7 +660,7 @@ async function getPrefixes(guildID) {
 };
 
 /**
- *
+ * Load RPG data
  * @param {string} userid
  * @returns {Promise<import("../utils/config.js").RpgDatabase>}
  */
@@ -696,31 +696,7 @@ async function load_rpg_data(userid) {
 };
 
 /**
- *
- * @param {string} userid
- * @returns {object}
- */
-function load_rpg_dataSync(userid) {
-    logger.debug(`load_rpg_dataSync(${userid}) - ${getCallerModuleName("list")}`);
-    const rpg_emptyeg = find_default_value("rpg_database.json", {});
-
-    if (existsSync(rpg_database_file)) {
-        const data = readJsonSync(rpg_database_file);
-
-        if (!data[userid]) {
-            save_rpg_dataSync(userid, rpg_emptyeg);
-            return rpg_emptyeg;
-        };
-
-        return order_data(data[userid], rpg_emptyeg);
-    } else {
-        save_rpg_dataSync(userid, rpg_emptyeg);
-        return rpg_emptyeg;
-    };
-};
-
-/**
- * 
+ * Save RPG data
  * @param {string} userid
  * @param {import("./config.js").RpgDatabase} rpg_data
  * @returns {Promise<void>}
@@ -756,43 +732,6 @@ async function save_rpg_data(userid, rpg_data) {
 
     // 更新緩存
     cacheManager.set(CacheTypes.RPG, userid, data[userid]);
-};
-
-/**
- * 
- * @param {string} userid
- * @param {import("./config.js").RpgDatabase} rpg_data
- * @returns {void}
- */
-function save_rpg_dataSync(userid, rpg_data) {
-    logger.debug(`save_rpg_dataSync(${userid}) - ${getCallerModuleName("list")}`);
-
-    const rpg_emptyeg = find_default_value("rpg_database.json", {});
-
-    /** @type {{ [k: string]: import("./config.js").RpgDatabase}} */
-    let data = {};
-    if (existsSync(rpg_database_file)) {
-        data = readJsonSync(rpg_database_file);
-    };
-
-    if (!data[userid]) {
-        data[userid] = rpg_emptyeg;
-    };
-
-    data[userid] = { ...data[userid], ...rpg_data };
-
-    // 檢查並清理 inventory 中數量為 0 或 null 的物品
-    if (data[userid].inventory) {
-        Object.keys(data[userid].inventory).forEach(item => {
-            if (data[userid].inventory[item] === 0 || data[userid].inventory[item] === null) {
-                delete data[userid].inventory[item];
-            };
-        });
-    };
-
-    data[userid] = order_data(data[userid], rpg_emptyeg);
-
-    writeJsonSync(rpg_database_file, data);
 };
 
 /**
@@ -1076,9 +1015,7 @@ module.exports = {
     rmPrefix,
     getPrefixes,
     load_rpg_data,
-    load_rpg_dataSync,
     save_rpg_data,
-    save_rpg_dataSync,
     load_shop_data,
     save_shop_data,
     load_farm_data,
