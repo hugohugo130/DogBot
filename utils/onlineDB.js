@@ -13,9 +13,7 @@ const { get_areadline } = require("./readline.js");
 const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
 const { AxiosError } = require("axios");
 
-// @ts-ignore
-const { IP: serverIP, PORT } = global._client?.serverIP ?? getServerIPSync();
-// @ts-ignore
+const { IP: serverIP, PORT } = global._client?.serverIP || getServerIPSync();
 if (global._client && !global._client?.serverIP) global._client.serverIP = { IP: serverIP, PORT };
 
 const SERVER_URL = `http://${serverIP}:${PORT}`;

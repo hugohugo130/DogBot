@@ -862,8 +862,7 @@ async function fixStructure(objects) {
             continue;
         };
 
-        // @ts-ignore
-        let { id, title, url, duration = 0, thumbnail = null, author = "Unknown", source = "unknown", stream = null } = object;
+        let id, title, url, duration = 0, thumbnail = null, author = "Unknown", source = "unknown", stream = null;
         const original_track = object;
 
         if (isSoundCloudTrack(object)) {
@@ -877,12 +876,20 @@ async function fixStructure(objects) {
             thumbnail = object.artwork_url;
             author = object.publisher_metadata?.artist || object.user?.full_name || object.user?.username || "Unknown";
             source = "soundcloud";
+        } else {
+            id = object.id;
+            title = object.title;
+            url = object.url;
+            duration = object.duration || 0;
+            thumbnail = object.thumbnail || null;
+            author = object.author || "Unknown";
+            source = object.source || "unknown";
         };
 
         id = String(id);
 
         const track = new MusicTrack({ id, title, url, duration, thumbnail, author, source, stream, original_track });
-        if (!stream && id?.startsWith?.("audio/")) await track.prepareStream();
+        if (id?.startsWith?.("audio/")) await track.prepareStream(true);
 
         fixedObjects.push(track);
     };

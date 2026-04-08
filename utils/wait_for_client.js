@@ -7,17 +7,35 @@ const client_ready = (client = global._client) => client?.isReady?.();
 
 /**
  * Wait for the Client object
- * @param {boolean} [waitReady] - whether to wait the client to be ready.
- * @param {number} [timeout] - unit: ms
- * @param {number} [wait] - check per __ ms
+ *
+ * @overload
+ * @param {boolean} [waitReady=true] - whether to wait the client to be ready.
+ * @param {null | undefined | 0} [timeout=10000] - unit: ms
+ * @param {number} [wait=500] - check per __ ms
  * @returns {Promise<DogClient>}
+ *
+ * @overload
+ * @param {boolean} [waitReady=true] - whether to wait the client to be ready.
+ * @param {number} [timeout=10000] - unit: ms
+ * @param {number} [wait=500] - check per __ ms
+ * @returns {Promise<DogClient | null>}
+ *
+ * @overload
+ * @param {boolean} [waitReady=true] - whether to wait the client to be ready.
+ * @param {number} [timeout=10000] - unit: ms
+ * @param {number} [wait=500] - check per __ ms
+ * @returns {Promise<DogClient | null>}
+ *
+ * @param {boolean} [waitReady=true] - whether to wait the client to be ready.
+ * @param {number} [timeout=10000] - unit: ms
+ * @param {number} [wait=500] - check per __ ms
  */
 async function wait_for_client(waitReady = true, timeout = 10000, wait = 500) {
     const client = global._client;
     const start = Date.now();
 
     while (true) {
-        if ((start + timeout) >= Date.now()) break;
+        if (timeout && (start + timeout) >= Date.now()) break;
 
         if (waitReady) {
             if (client_ready(client)) break;
@@ -26,7 +44,6 @@ async function wait_for_client(waitReady = true, timeout = 10000, wait = 500) {
         await asleep(wait);
     };
 
-    // @ts-ignore
     return client;
 };
 

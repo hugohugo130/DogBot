@@ -1,3 +1,5 @@
+const Discord = require("discord.js");
+
 const { wait_for_client } = require("./wait_for_client.js");
 const { get_user, get_channels, get_guild } = require("./discord.js");
 const { get_logger } = require("./logger.js");
@@ -28,8 +30,10 @@ module.exports = {
             if (!channel) return;
             channels.push(channel);
         } else {
-            const Guild = await get_guild(guild_id, client);
-            const guild_channels = await get_channels(Guild);
+            const guild = await get_guild(guild_id, client);
+            if (!guild) return;
+
+            const guild_channels = await get_channels(guild);
             channels.push(...guild_channels);
         };
 
@@ -43,17 +47,14 @@ module.exports = {
 
             const messages = await channel.messages.fetch(options);
 
-            // @ts-ignore
-            const userMessages = messages.filter(
-                /** @param {import('discord.js').Message} msg */
-                (msg) => msg.author?.id === userID,
-            );
+            const userMessages = messages.filter((msg) => msg.author?.id === userID);
 
             if (userMessages.size === 0) continue;
             if (!("bulkDelete" in channel)) return;
 
             try {
-                const deletedMessages = await channel.bulkDelete(userMessages, true)
+                const deletedMessages = await channel.bulkDelete(userMessages, true);
+
                 logger.info(`[USER ${user.globalName || user.username}] channel: ${channel.name}; deleted messages: ${deletedMessages.size}`);
             } catch (err) {
                 logger.error(err);

@@ -105,7 +105,6 @@ async function get_channels(guild, fetch_first = false) {
 
     if (!channels && !fetch_first) channels = await guild.channels.fetch();
 
-    // @ts-ignore
     return Array
         .from(channels.values())
         .filter(e => e !== null);
@@ -131,7 +130,6 @@ async function get_channel(channelId, guild = null, fetch_first = false) {
 
         if (!channel && !fetch_first) channel = await guild_or_client.channels.fetch(channelId);
 
-        // @ts-ignore
         return channel;
     } catch {
         return null;

@@ -262,8 +262,7 @@ function getCallerModuleName(depth = 4) {
         const currentFile = stack.shift()?.getFileName();
 
         while (stack.length) {
-            // @ts-ignore
-            callerFile = stack.shift().getFileName();
+            callerFile = stack.shift()?.getFileName();
 
             if (currentFile !== callerFile) { // Find the first different file in the stack
                 break;

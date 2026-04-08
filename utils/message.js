@@ -24,26 +24,34 @@ async function mentions_users(message) {
     if (!message.content) return new Collection();
 
     const userIDs = message.content.split(" ")
-        .flatMap(e => {
-            e = e.trim();
+        .flatMap(userID => {
+            userID = userID.trim();
 
-            if (e.startsWith("<@") && e.endsWith(">")) {
-                e = e.slice(2, -1);
+            if (userID.startsWith("<@") && userID.endsWith(">")) {
+                userID = userID.slice(2, -1);
             };
 
-            return e;
+            return userID.trim();
         })
-        .filter(isDigit)
-        .filter(e => Boolean(e.trim()));
+        .filter(userID => isDigit(userID) && Boolean(userID));
 
-    return new Collection(
-        // @ts-ignore
-        await Promise.all(
-            userIDs.map(
-                /** @param {string} userid */
-                async (userid) => [userid, await get_user(userid)]
-            ),
-        )
+    /**
+     * @type {Promise<[string, User | null]>[]}
+     */
+    const promises = userIDs.map(
+        /**
+         * @param {string} userid
+         * @returns {Promise<[string, User | null]>}
+         */
+        async (userid) => [userid, await get_user(userid)],
+    );
+
+    return (
+        /** @type {Collection<string, User>} */
+        (new Collection(
+            (await Promise.all(promises))
+                .filter(([_, user]) => user !== null)
+        ))
     );
 };
 

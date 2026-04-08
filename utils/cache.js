@@ -235,7 +235,7 @@ class CacheManager {
  * @param {boolean} [create=true] - Whether to create the cache manager if not exists.
  */
 function getCacheManager(create = true) {
-    /** @type {CacheManager | null} */ // @ts-ignore
+    /** @type {CacheManager | null} */
     const global_cacheManager = global._cacheManager;
 
     return (

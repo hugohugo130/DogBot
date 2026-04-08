@@ -216,7 +216,6 @@ async function redirect({ client, message, command, mode = 0 }) {
     const prefix = await firstPrefix(guild.id);
 
     if (!command.includes(prefix)) command = prefix + command;
-    // @ts-ignore
     const msg = new MockMessage(command, message.channel, message.author, message.guild, (await mentions_users(message)).first());
     const message_args = await rpg_handler({ client, message: msg, d: true, mode: 1 });
     if (!message_args || message_args instanceof Message) return message_args;
