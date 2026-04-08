@@ -1,7 +1,7 @@
 const path = require("path");
 const crypto = require("crypto");
 
-const { existsSync, readFile, readdir, writeFile } = require("./file.js");
+const { exists, readFile, readdir, writeFile } = require("./file.js");
 const { enable_auto_register_cmd, auto_register_cmd_file } = require("./config.js");
 
 const DEBUG = false;
@@ -9,21 +9,16 @@ const DEBUG = false;
 /**
  * Get SHA256 of an array<string>
  * @param {Array<string>} file_datas
- * @returns {[number, string]}
+ * @returns {string}
  */
 function get_hash_of_datas(file_datas) {
-    let length = 0;
-
     // 將所有 file_datas 合併
     let combined_data = file_datas.join("");
-    for (const data of file_datas) {
-        length += data.length;
-    };
 
     // 計算 SHA256 哈希值
     const hash = crypto.createHash("sha256").update(combined_data).digest("hex");
 
-    return [length, hash];
+    return hash;
 };
 
 /**
@@ -35,7 +30,9 @@ async function read_all_files_in_dir(dir) {
     const files = (await readdir(dir, {
         recursive: true,
         encoding: "utf-8",
-    })).filter(file => file.endsWith(".js")).sort(); // 排序確保順序一致
+    }))
+        .filter(file => file.endsWith(".js"))
+        .sort(); // 排序確保順序一致
 
     const file_datas = [];
 
@@ -52,23 +49,21 @@ async function read_all_files_in_dir(dir) {
 };
 
 /**
- * 檢查是否需要註冊命令（不會更新 hash 文件）
+ * 檢查是否需要註冊命令
  * @returns {Promise<boolean>}
  */
 async function should_register_cmd() {
     if (!enable_auto_register_cmd) return false;
 
-    if (existsSync(auto_register_cmd_file)) {
-        const [length_str, hash] = (await readFile(auto_register_cmd_file)).split("|");
-        const length = parseInt(length_str);
+    if (await (exists(auto_register_cmd_file))) {
+        const hash = await readFile(auto_register_cmd_file);
 
         const file_datas_new = await read_all_files_in_dir("slashcmd");
-        const [length_new, hash_new] = get_hash_of_datas(file_datas_new);
-        const res = length !== length_new || hash !== hash_new;
-        if (DEBUG) console.debug(`length(${length}) !== length_new(${length_new}): ${length !== length_new}`)
+        const hash_new = get_hash_of_datas(file_datas_new);
+
         if (DEBUG) console.debug(`hash(${hash}) !== hash_new(${hash_new}): ${hash !== hash_new}`);
-        if (DEBUG) console.debug(`res: ${res}`)
-        return res;
+
+        return hash !== hash_new;
     } else {
         // 文件不存在時，需要註冊
         return true;
@@ -81,14 +76,14 @@ async function should_register_cmd() {
  */
 async function update_cmd_hash() {
     const file_datas = await read_all_files_in_dir("slashcmd");
-    const [length, hash] = get_hash_of_datas(file_datas);
-    await writeFile(auto_register_cmd_file, `${length}|${hash}`);
+    const hash = get_hash_of_datas(file_datas);
+    await writeFile(auto_register_cmd_file, `${hash}`);
 
-    if (DEBUG) console.debug(`已更新 hash 文件: ${length}|${hash}`);
+    if (DEBUG) console.debug(`已更新 hash 文件: ${hash}`);
 };
 
 
 module.exports = {
     should_register_cmd,
     update_cmd_hash,
-}
+};

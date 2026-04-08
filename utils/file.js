@@ -1,11 +1,11 @@
 const { Logger } = require("winston");
+const { AxiosError } = require("axios");
 const { VoiceChannel } = require("discord.js");
-const fs = require("fs");
 const fsp = fs.promises;
+const fs = require("fs");
 const path = require("path");
 const util = require("util");
 const axios = require("axios");
-const { AxiosError } = require("axios");
 
 const {
     INDENT,
@@ -25,9 +25,17 @@ const {
     dvoice_data_file,
     temp_folder,
 } = require("./config.js");
-const { get_logger, getCallerModuleName } = require("./logger.js");
-const { asleep } = require("./sleep.js");
-const { CacheTypes, getCacheManager } = require("./cache.js");
+const {
+    get_logger,
+    getCallerModuleName,
+} = require("./logger.js");
+const {
+    asleep,
+} = require("./sleep.js");
+const {
+    CacheTypes,
+    getCacheManager,
+} = require("./cache.js");
 
 const cacheManager = getCacheManager();
 
@@ -326,7 +334,7 @@ async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
     const local_filepath = join_db_folder(basename_filename);
 
     // 獲取遠端伺服器地址
-    const { IP: serverIP, PORT } = getServerIPSync();
+    const { IP: serverIP, PORT } = global._client?.serverIP || getServerIPSync();
     const SERVER_URL = `http://${serverIP}:${PORT}`;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -1008,18 +1016,18 @@ async function getDynamicVoice(guildID) {
  * joins the temp folder with the filename
  * filename will be converted to basename
  * @param {string} filename - The filename to join with the temp folder
- * @returns {string}
+ * @returns {Promise<string>}
  */
-function join_temp_folder(filename) {
-    const temp_folder = get_temp_folder();
+async function join_temp_folder(filename) {
+    const temp_folder = await get_temp_folder();
 
     const basename = path.basename(filename);
     return join_folder(temp_folder, basename);
 };
 
-function get_temp_folder() {
-    if (!existsSync(temp_folder)) {
-        mkdirSync(temp_folder, { recursive: true });
+async function get_temp_folder() {
+    if (!(await exists(temp_folder))) {
+        await mkdir(temp_folder, { recursive: true });
     };
 
     return temp_folder;

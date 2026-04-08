@@ -43,7 +43,7 @@ async function registcmd(quiet = true, logger = false, updateHash = true) {
 
     if (logger === true) logger = get_logger();
 
-    const commands = Array.from(loadslashcmd(false));
+    const commands = Array.from(await loadslashcmd(false));
     const rest = new REST().setToken(process.env.TOKEN);
 
     try {

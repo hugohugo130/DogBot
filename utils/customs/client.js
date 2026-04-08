@@ -36,8 +36,6 @@ const { authorName, BotName } = require("../config.js");
 
 class DogClient extends Client {
     constructor() {
-        const { loadslashcmd } = require("../loadslashcmd.js");
-
         /** @type {Discord.ClientOptions} */
         const options = {
             intents: [
@@ -82,10 +80,8 @@ class DogClient extends Client {
         /** @type {Collection<string, import("../config.js").DvoiceData>} */
         this.dvoice = new Collection();
 
-        const cmds = loadslashcmd(true);
-
         /** @type {Collection<string, any>} */
-        this.commands = cmds;
+        this.commands = new Collection();
 
         /** @type {Collection<string, any>} */
         this.musicTrackSession = new Collection();
@@ -126,7 +122,9 @@ class DogClient extends Client {
      */
     async on_ready() {
         const { loadDvoiceData } = require("../file.js");
+        const { loadslashcmd } = require("../loadslashcmd.js");
 
+        this.commands = await loadslashcmd();
         this.dvoice = new Collection(await loadDvoiceData());
 
         if (!this.name && this.user?.displayName) this.name = this.user.displayName;

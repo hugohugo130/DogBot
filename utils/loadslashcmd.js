@@ -1,8 +1,8 @@
-const fs = require("fs");
+const fsp = require("fs").promises;
 const path = require("path");
 const { Collection } = require("discord.js");
 
-const { readdirSync } = require("./file.js");
+const { readdir } = require("./file.js");
 const { get_logger } = require("./logger.js");
 
 const logger = get_logger();
@@ -11,22 +11,22 @@ const logger = get_logger();
  * Process a command directory
  * @param {boolean} bot
  * @param {string} dirPath
- * @returns {Collection<string, any> | any[]}
+ * @returns {Promise<Collection<string, any> | any[]>}
  */
-function processDirectory(bot, dirPath) {
+async function processDirectory(bot, dirPath) {
     /** @type {Collection<string, any> | any[]} */
     const commands = bot ? new Collection() : [];
 
-    const items = readdirSync(dirPath, {
+    const items = (await readdir(dirPath, {
         encoding: "utf-8",
-    });
+    }))
 
     for (const item of items) {
         const itemPath = path.join(dirPath, item);
-        const stat = fs.statSync(itemPath);
+        const stat = await fsp.stat(itemPath);
 
         if (stat.isDirectory()) {
-            const subCommands = processDirectory(bot, itemPath);
+            const subCommands = await processDirectory(bot, itemPath);
 
             if (commands instanceof Collection) {
                 for (const [name, command] of subCommands) {
@@ -56,32 +56,32 @@ function processDirectory(bot, dirPath) {
 
 /**
  * @overload
- * @param {true} bot true返回collection, false返回array
- * @returns {Collection<string, any>}
+ * @param {true} [bot=true] true返回collection, false返回array
+ * @returns {Promise<Collection<string, any>>}
  *
  * @overload
- * @param {boolean} bot true返回collection, false返回array
- * @returns {Collection<string, any> | any[]}
+ * @param {boolean} [bot=true] true返回collection, false返回array
+ * @returns {Promise<Collection<string, any> | any[]>}
  *
- * @param {boolean} bot true返回collection, false返回array
+ * @param {boolean} [bot=true] true返回collection, false返回array
  */
-function loadslashcmd(bot) {
-    if (!bot) return loadslashcmd_array();
+async function loadslashcmd(bot = true) {
+    if (!bot) return await loadslashcmd_array();
 
     const commandsPath = path.join(process.cwd(), "slashcmd");
 
-    const commands = processDirectory(bot, commandsPath);
+    const commands = await processDirectory(bot, commandsPath);
     return commands;
 };
 
 /**
  *
- * @returns {any[]}
+ * @returns {Promise<any[]>}
  */
-function loadslashcmd_array() {
+async function loadslashcmd_array() {
     const commandsPath = path.join(process.cwd(), "slashcmd");
 
-    const commands = processDirectory(false, commandsPath);
+    const commands = await processDirectory(false, commandsPath);
     return Array.from(commands);
 };
 

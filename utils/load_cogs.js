@@ -1,7 +1,9 @@
 const fs = require("fs");
+const fsp = fs.promises;
 const path = require("path");
 const util = require("util");
 
+const { readdir } = require("./file.js");
 const { get_logger } = require("./logger.js");
 const { cogsFolder } = require("./config.js");
 const DogClient = require("./customs/client.js");
@@ -58,16 +60,17 @@ async function load_cog(client, cog, itemPath) {
  * @returns {Promise<number>}
  */
 async function processDirectory(client, dirPath, quiet = false) {
-    const items = fs.readdirSync(dirPath, {
+    const items = (await readdir(dirPath, {
         encoding: "utf-8",
-    }).filter(item => !load_skiplist.includes(item));
+    }))
+        .filter(item => !load_skiplist.includes(item));
 
     let loadedFiles = 0;
     const logger = get_logger();
 
     for (const item of items) {
         const itemPath = path.join(dirPath, item);
-        const stat = fs.statSync(itemPath);
+        const stat = await fsp.stat(itemPath);
 
         if (stat.isDirectory()) {
             loadedFiles += await processDirectory(client, itemPath);

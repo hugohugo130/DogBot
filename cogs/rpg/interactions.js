@@ -1854,7 +1854,7 @@ module.exports = {
                         ]);
                     };
 
-                    session.cooked ++;
+                    session.cooked++;
                     session.last_cook_time = Date.now();
 
                     let container;

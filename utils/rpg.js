@@ -8,11 +8,6 @@ const {
     get_logger,
 } = require("./logger.js");
 const {
-    load_rpg_data,
-    loadData,
-    get_probability_of_id,
-} = require("./file.js");
-const {
     convertToSecondTimestamp,
     DateNowSecond,
 } = require("./timestamp.js");
@@ -859,6 +854,8 @@ const name_reverse = Object.entries(name).reduce((acc, [key, value]) => {
 );
 
 function check_item_data() {
+    const { get_probability_of_id } = require("./file.js");
+
     const all_items = [...new Set([
         ...Object.values(mine_gets),
         ...Object.values(ingots),
@@ -940,6 +937,8 @@ function get_id_of_name(id, default_value = id) {
  * @returns {Promise<number>}
  */
 async function get_number_of_items(name, userid) {
+    const { load_rpg_data } = require("./file.js");
+
     const rpg_data = await load_rpg_data(userid);
     const items = rpg_data.inventory;
 
@@ -1548,6 +1547,8 @@ async function get_loophole_embed(text, interaction = null, client = global._cli
  * @returns {Promise<EmbedBuilder | null>}
  */
 async function job_delay_embed(userId, interaction = null, client = global._client) {
+    const { load_rpg_data } = require("./file.js");
+
     const rpg_data = await load_rpg_data(userId);
     const lastRunTimestamp = rpg_data.lastRunTimestamp ?? {};
     const setJobTime = convertToSecondTimestamp(lastRunTimestamp.job ?? 0);
@@ -1654,6 +1655,8 @@ function amount_limit(amount) {
  * @param {BaseInteraction | null} [options.interaction=null]
  */
 async function ls_function({ client, message, rpg_data, mode = 0, PASS = false, interaction = null }) {
+    const { loadData } = require("./file.js");
+
     if (!message.author) return mode === 0 ? null : {};
 
     if (!rpg_data.privacy.includes(PrivacySettings.Inventory) && !PASS) {
@@ -1772,6 +1775,8 @@ async function ls_function({ client, message, rpg_data, mode = 0, PASS = false, 
  * @returns {Promise<string>}
  */
 async function firstPrefix(guildID) {
+    const { loadData } = require("./file.js");
+
     const guildData = await loadData(guildID);
 
     const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
@@ -1786,18 +1791,15 @@ async function firstPrefix(guildID) {
  * @returns {Promise<string[]>}
  */
 async function InPrefix(guildID, prefix) {
+    const { loadData } = require("./file.js");
+
     const guildData = await loadData(guildID);
 
     const prefixes = (guildData.prefix ?? [])
         .concat(reserved_prefixes);
 
     return prefixes
-        .map(p => {
-            return prefix.includes(p)
-                ? p
-                : "";
-        })
-        .filter(Boolean);
+        .filter((p) => prefix.includes(p));
 };
 
 /**
@@ -1807,6 +1809,8 @@ async function InPrefix(guildID, prefix) {
  * @returns {Promise<false | string>}
  */
 async function startsWith_prefixes(guildID, str) {
+    const { loadData } = require("./file.js");
+
     const guildData = await loadData(guildID);
 
     const prefixes = (guildData.prefix ?? [])
@@ -1825,25 +1829,17 @@ async function startsWith_prefixes(guildID, str) {
  * Get the translation of adventure job by its ID
  * @param {string} fj_id - ID of the fight job
  * @param {Locale | null} [locale=null] - the locale
- * @returns {string | undefined}
+ * @returns {string}
  */
-function get_fightjob_name(fj_id, locale = null) {
-    const key = "fightjob_name";
-
-    return get_lang_data(locale, key, fj_id);
-};
+const get_fightjob_name = (fj_id, locale = null) => get_lang_data(locale, "fightjob_name", fj_id);
 
 /**
  * Get the translation of a job by its ID
  * @param {string} job_id - ID of the job
  * @param {Locale | null} [locale=null] - the locale
- * @returns {string | undefined}
+ * @returns {string}
  */
-function get_job_name(job_id, locale = null) {
-    const key = "job_name";
-
-    return get_lang_data(locale, key, job_id);
-};
+const get_job_name = (job_id, locale = null) => get_lang_data(locale, "job_name", job_id);
 
 const oven_slots = 6;
 const farm_slots = 4;
