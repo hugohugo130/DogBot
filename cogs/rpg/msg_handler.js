@@ -313,7 +313,7 @@ const redirect_data_reverse = Object.entries(redirect_data).reduce((acc, [key, v
     ({})
 );
 
-/** @type {{ [k: string]: [string, Function, boolean | ((client: DogClient, userId: string) => Promise<boolean> | boolean)] }} */
+/** @type {{ [commandName: string]: [string, Function, boolean | ((client: DogClient, userId: string) => Promise<boolean> | boolean)] }} */
 const rpg_commands = {
     mine: ["挖礦",
         /**
@@ -2575,17 +2575,33 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
         const commands = Object.keys(rpg_commands);
         const emoji_cross = await get_emoji("crosS", client);
 
-        command = command.replace(/[^a-zA-Z0-9]/g, "");
-
         const firstChar = command.charAt(0);
-        const similarCommands = commands.filter(cmd => cmd.startsWith(firstChar) && !rpg_commands[cmd][2] && !redirect_data[cmd]);
+        const similarCommands = [... new Set( // 完成下述操作後 去重複
+            commands
+                .filter((cmd) => {
+                    return (
+                        cmd.startsWith(firstChar) // 以 firstChar 開頭的指令
+                        && rpg_commands[cmd][2] // 且不需要參數
+                    );
+                })
+                .map((cmd) => {
+                    const will_redirect = cmd in redirect_data;
+
+                    if (will_redirect) { // 如果目前的指令會導向到新的指令
+                        return redirect_data[cmd]; // 則改成新的指令
+                    };
+
+                    return cmd;
+                }),
+        )];
+
+
+        if (similarCommands.length === 0) return null;
 
         const embed = new EmbedBuilder()
             .setColor(embed_error_color)
             .setTitle(`${emoji_cross} | 是不是打錯指令了？我找到了你可能想要的指令`)
             .setEmbedFooter(userid);
-
-        if (similarCommands.length === 0) return null;
 
         const buttons = similarCommands.map(cmd => {
             return new ButtonBuilder()
