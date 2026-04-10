@@ -4,7 +4,7 @@ const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
 const { add_money, get_emoji } = require("../utils/rpg.js");
 const { randint } = require("../utils/random.js");
 const { wait_for_client } = require("../utils/wait_for_client.js");
-const { daily_sign_guildIDs, embed_default_color } = require("../utils/config.js");
+const { daily_sign_guildIDs, embed_default_color, RPGDatabase } = require("../utils/config.js");
 const DogClient = require("../utils/customs/client.js");
 const EmbedBuilder = require("../utils/customs/embedBuilder.js");
 
@@ -42,7 +42,7 @@ function hasSignedTodayOrBrokeSign(lastSignTime) {
 
 /**
  * Sign Function
- * @param {import("../utils/config.js").RpgDatabase} rpg_data - RPG data
+ * @param {RPGDatabase} rpg_data - RPG data
  * @param {Message} message - Discord Message
  * @param {DogClient | null} [client=null] - Discord Client
  * @returns {Promise<boolean>} true if signed successfully, otherwise false

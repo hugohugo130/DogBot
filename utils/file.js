@@ -24,6 +24,7 @@ const {
     smelt_data_file,
     dvoice_data_file,
     temp_folder,
+    RPGDatabase,
 } = require("./config.js");
 const {
     get_logger,
@@ -662,7 +663,7 @@ async function getPrefixes(guildID) {
 /**
  * Load RPG data
  * @param {string} userid
- * @returns {Promise<import("../utils/config.js").RpgDatabase>}
+ * @returns {Promise<RPGDatabase>}
  */
 async function load_rpg_data(userid) {
     logger.debug(`load_rpg_data(${userid}) - ${getCallerModuleName("list")}`);
@@ -680,32 +681,32 @@ async function load_rpg_data(userid) {
 
         if (!data[userid]) {
             await save_rpg_data(userid, rpg_emptyeg);
-            return rpg_emptyeg;
+            return new RPGDatabase(rpg_emptyeg);
         };
 
         const userData = order_data(data[userid], rpg_emptyeg);
 
         // 存入緩存
-        cacheManager.set(CacheTypes.RPG, userid, userData);
+        cacheManager.set(CacheTypes.RPG, userid, new RPGDatabase(userData));
 
-        return userData;
+        return new RPGDatabase(userData);
     } else {
         await save_rpg_data(userid, rpg_emptyeg);
-        return rpg_emptyeg;
+        return new RPGDatabase(rpg_emptyeg);
     };
 };
 
 /**
  * Save RPG data
  * @param {string} userid
- * @param {import("./config.js").RpgDatabase} rpg_data
+ * @param {RPGDatabase} rpg_data
  * @returns {Promise<void>}
  */
 async function save_rpg_data(userid, rpg_data) {
     logger.debug(`save_rpg_data(${userid}) - ${getCallerModuleName("list")}`);
     const rpg_emptyeg = find_default_value("rpg_database.json", {});
 
-    /** @type {{ [k: string]: import("./config.js").RpgDatabase}} */
+    /** @type {{ [k: string]: RPGDatabase }} */
     let data = {};
     if (await exists(rpg_database_file)) {
         data = await readJson(rpg_database_file);
@@ -715,7 +716,7 @@ async function save_rpg_data(userid, rpg_data) {
         data[userid] = rpg_emptyeg;
     };
 
-    data[userid] = { ...data[userid], ...rpg_data };
+    data[userid] = rpg_data.concat(data[userid]);
 
     // 檢查並清理 inventory 中數量為 0 或 null 的物品
     if (data[userid].inventory) {

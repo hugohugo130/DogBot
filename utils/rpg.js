@@ -20,6 +20,7 @@ const {
     jobs,
     workCmdJobs,
     PrivacySettings,
+    RPGDatabase,
 } = require("./config.js");
 const {
     get_lang_data,
@@ -953,7 +954,7 @@ async function get_number_of_items(name, userid) {
 
 /**
  *
- * @param {import("./config.js").RpgDatabase} rpg_data
+ * @param {RPGDatabase} rpg_data
  * @param {string} item
  * @param {number} amount_needed
  * @returns {null | {item: string, amount: number}} 如果玩家有足夠的物品，回傳null，否則返回物品id和數量
@@ -1051,7 +1052,7 @@ function chunkArray(array, chunkSize) {
 
 /**
  * 
- * @param {import("./config.js").RpgDatabase} rpg_data
+ * @param {RPGDatabase} rpg_data
  * @param {string} command
  * @param {string} userId
  * @param {BaseInteraction | null} [interaction=null]
@@ -1194,7 +1195,7 @@ async function get_cooldown_embed(remaining_time, action, count, interaction = n
 /**
  * Get work cooldown time
  * @param {string} command_name
- * @param {import("./config.js").RpgDatabase} rpg_data
+ * @param {RPGDatabase} rpg_data
  * @returns {number}
  */
 function get_cooldown_time(command_name, rpg_data) {
@@ -1206,7 +1207,7 @@ function get_cooldown_time(command_name, rpg_data) {
 /**
  * 檢查指令是否已經冷卻完畢
  * @param {string} command_name - 指令名稱
- * @param {import("./config.js").RpgDatabase} rpg_data - 用戶的RPG數據
+ * @param {RPGDatabase} rpg_data - 用戶的RPG數據
  * @returns {{ is_finished: boolean, remaining_time: number, endsAtms: number, endsAts: number }} - is_finished:如果已冷卻完畢返回true，否則返回false - remaining_time: 剩餘時間
  */
 function is_cooldown_finished(command_name, rpg_data) {
@@ -1235,7 +1236,7 @@ function is_cooldown_finished(command_name, rpg_data) {
 /**
  * 
  * @param {string} failed_reason
- * @param {import("./config.js").RpgDatabase} rpg_data
+ * @param {RPGDatabase} rpg_data
  * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
@@ -1298,7 +1299,7 @@ async function get_failed_embed(failed_reason, rpg_data, interaction = null, cli
 /**
  * 增加錢
  * @param {Object} options - 選項
- * @param {import("./config.js").RpgDatabase} options.rpg_data
+ * @param {RPGDatabase} options.rpg_data
  * @param {number} options.amount
  * @param {string} options.originalUser 來源用戶 (系統 或者 "<@id>")
  * @param {string} options.targetUser 目標用戶 (只能是 "<@id>")
@@ -1323,7 +1324,7 @@ function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
 /**
  * 扣除錢
  * @param {Object} options - 選項
- * @param {import("./config.js").RpgDatabase} options.rpg_data
+ * @param {RPGDatabase} options.rpg_data
  * @param {number} options.amount
  * @param {string} options.originalUser 來源用戶 (系統 或者 "<@id>")
  * @param {string} options.targetUser 目標用戶 (只能是 "<@id>")
@@ -1347,10 +1348,10 @@ function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
 
 /**
  * Add an item to the inventory
- * @param {import("../utils/config.js").RpgDatabase} rpg_data
+ * @param {RPGDatabase} rpg_data
  * @param {string} item
  * @param {number} amount
- * @returns {import("../utils/config.js").RpgDatabase} Modified rpg data
+ * @returns {RPGDatabase} Modified rpg data
  */
 function add_item(rpg_data, item, amount) {
     item = get_id_of_name(item);
@@ -1368,10 +1369,10 @@ function add_item(rpg_data, item, amount) {
 
 /**
  * Reduce the amount of an item in the inventory
- * @param {import("../utils/config.js").RpgDatabase} rpg_data
+ * @param {RPGDatabase} rpg_data
  * @param {string} item
  * @param {number} amount
- * @returns {import("../utils/config.js").RpgDatabase} Modified rpg data
+ * @returns {RPGDatabase} Modified rpg data
  */
 function subtract_item(rpg_data, item, amount) {
     item = get_id_of_name(item);
@@ -1630,7 +1631,7 @@ function amount_limit(amount) {
  * @param {Object} options
  * @param {DogClient} options.client
  * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
- * @param {import("./config.js").RpgDatabase} options.rpg_data
+ * @param {RPGDatabase} options.rpg_data
  * @param {1} options.mode
  * @param {boolean} [options.PASS=false]
  * @param {BaseInteraction | null} [options.interaction=null]
@@ -1640,7 +1641,7 @@ function amount_limit(amount) {
  * @param {Object} options
  * @param {DogClient} options.client
  * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
- * @param {import("./config.js").RpgDatabase} options.rpg_data
+ * @param {RPGDatabase} options.rpg_data
  * @param {0 | 1} [options.mode=0]
  * @param {boolean} [options.PASS=false]
  * @param {BaseInteraction | null} [options.interaction=null]
@@ -1649,7 +1650,7 @@ function amount_limit(amount) {
  * @param {Object} options
  * @param {DogClient} options.client
  * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
- * @param {import("./config.js").RpgDatabase} options.rpg_data
+ * @param {RPGDatabase} options.rpg_data
  * @param {0 | 1} [options.mode=0]
  * @param {boolean} [options.PASS=false]
  * @param {BaseInteraction | null} [options.interaction=null]

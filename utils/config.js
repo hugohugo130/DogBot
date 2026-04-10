@@ -12,6 +12,86 @@ const DEFAULT_PORT = 3003
 const INDENT = 4;
 const database_folder = `${cwd()}/db`;
 
+class RPGDatabase {
+    /** @type {number} */
+    money = 1000;
+    /** @type {number} */
+    hunger = 20;
+    /** @type {number} */
+    daily = 0;
+    /** @type {number} */
+    daily_times = 0;
+    /** @type {boolean} */
+    daily_msg = false;
+    /** @type {string | null} */
+    job = null;
+    /** @type {string | null} */
+    fightjob = null;
+    /** @type {string | null} */
+    badge = null;
+
+    /** @type {import("./config.js").MarryInfo} */
+    marry = {
+        status: false,
+        with: null,
+        time: 0,
+    };
+
+    /** @type {{ [k: string]: number}} */
+    lastRunTimestamp = {};
+    /** @type {{ [k: string]: number}} */
+    inventory = {};
+
+    /** @type {import("./config.js").TransactionsInfo[]} */
+    transactions = [];
+    /** @type {{ [k: string]: number}} */
+    count = {};
+    /** @type {string[]} */
+    privacy = [];
+
+    /**
+     * @param {import("./config.js").RpgDatabase | RPGDatabase} data
+     */
+    constructor(data) {
+        Object.assign(this, structuredClone(data));
+    };
+
+    /**
+     * Merge two objects
+     * @param {Object | RPGDatabase} new_data
+     * @returns {RPGDatabase} Modified RPGDatabase
+     */
+    concat(new_data) {
+        if (new_data instanceof RPGDatabase) {
+            new_data = new_data.toJSON();
+        };
+
+        return new RPGDatabase({ ...new_data, ...this.toJSON() });
+    };
+
+    /**
+     * @returns {import("./config.js").RpgDatabase}
+     */
+    toJSON() {
+        return {
+            money: this.money,
+            hunger: this.hunger,
+            daily: this.daily,
+            daily_times: this.daily_times,
+            daily_msg: this.daily_msg,
+            job: this.job,
+            fightjob: this.fightjob,
+            badge: this.badge,
+            marry: this.marry,
+            lastRunTimestamp: this.lastRunTimestamp,
+            inventory: this.inventory,
+            transactions: this.transactions,
+            count: this.count,
+            privacy: this.privacy,
+        };
+    };
+};
+
 /**
  * @typedef {Object} MarryInfo
  * @property {boolean} status   - 是否已結婚
@@ -39,10 +119,10 @@ const database_folder = `${cwd()}/db`;
  * @property {string | null} fightjob
  * @property {string | null} badge
  * @property {MarryInfo} marry
- * @property {Object.<string, number>} lastRunTimestamp - 最後一次運行一些操作的時間戳
- * @property {Object.<string, number>} inventory        - 背包；item_id: amount
- * @property {Array<TransactionsInfo>} transactions                - 交易記錄
- * @property {Object.<string, number>} count            - 工作次數
+ * @property {Object.<string, number>} lastRunTimestamp  - 最後一次運行一些操作的時間戳
+ * @property {Object.<string, number>} inventory         - 背包；item_id: amount
+ * @property {Array<TransactionsInfo>} transactions      - 交易記錄
+ * @property {Object.<string, number>} count             - 工作次數
  * @property {Array<string>} privacy                     - 隱私設定
  */
 
@@ -554,6 +634,8 @@ const PrivacySettings = Object.freeze({
 });
 
 module.exports = {
+    RPGDatabase,
+
     DEFAULT_IP,
     DEFAULT_PORT,
 

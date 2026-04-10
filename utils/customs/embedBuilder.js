@@ -2,6 +2,7 @@ const Discord = require("discord.js");
 const { EmbedBuilder: djsEmbedBuilder, BaseInteraction, Locale } = require("discord.js");
 
 const { isDigit } = require("../message.js");
+const { RPGDatabase } = require("../config.js");
 const DogClient = require("./client.js");
 
 class EmbedBuilder extends djsEmbedBuilder {
@@ -15,10 +16,10 @@ class EmbedBuilder extends djsEmbedBuilder {
 
     /**
      * set customize footer
-     * @param {BaseInteraction | Locale | string | null | { text?: string, rpg_data?: import("../config.js").RpgDatabase | null, force?: boolean, client?: DogClient }} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
+     * @param {BaseInteraction | Locale | string | null | { text?: string, rpg_data?: RPGDatabase | null, force?: boolean, client?: DogClient }} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
      * @param {Object} options
      * @param {string} [options.text=""]
-     * @param {import("../config.js").RpgDatabase | null} [options.rpg_data=null]
+     * @param {RPGDatabase | null} [options.rpg_data=null]
      * @param {boolean} [options.force=false]
      * @param {DogClient | null} [options.client]
      * @remark force: text參數是否不會增加飽食度和機器犬文字

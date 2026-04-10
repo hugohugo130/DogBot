@@ -68,6 +68,7 @@ const {
     INVITE_LINK,
     daily_sign_guildIDs,
     fightjobs,
+    RPGDatabase,
 } = require("../../utils/config.js");
 const {
     get_help_command,
@@ -226,7 +227,7 @@ async function redirect({ client, message, command, mode = 0 }) {
 
 /**
  * Get the embed for showing marry info of a user
- * @param {import("../../utils/config.js").RpgDatabase} rpg_data
+ * @param {RPGDatabase} rpg_data
  * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
@@ -321,7 +322,7 @@ const rpg_commands = {
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -373,7 +374,7 @@ const rpg_commands = {
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -418,7 +419,7 @@ const rpg_commands = {
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -478,7 +479,7 @@ const rpg_commands = {
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -518,7 +519,7 @@ const rpg_commands = {
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -577,7 +578,7 @@ const rpg_commands = {
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -986,7 +987,7 @@ const rpg_commands = {
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -1001,7 +1002,7 @@ const rpg_commands = {
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -1175,7 +1176,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -1211,7 +1212,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -1261,7 +1262,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -1305,7 +1306,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -1390,7 +1391,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -1475,7 +1476,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -1558,7 +1559,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -1807,7 +1808,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -1914,7 +1915,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -1969,7 +1970,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -2024,7 +2025,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -2072,7 +2073,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -2119,7 +2120,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -2236,7 +2237,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -2301,7 +2302,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -2365,7 +2366,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
@@ -2424,7 +2425,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
          * @param {Object} datas
          * @param {DogClient} datas.client
          * @param {Message | MockMessage} datas.message
-         * @param {import("../../utils/config.js").RpgDatabase} datas.rpg_data
+         * @param {RPGDatabase} datas.rpg_data
          * @param {any[]} datas.args
          * @param {0 | 1} datas.mode
          * @param {{ item: string, amount: number }} datas.random_item
