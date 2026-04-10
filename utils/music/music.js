@@ -372,9 +372,10 @@ class MusicQueue {
                     [AudioPlayerStatus.Buffering, AudioPlayerStatus.Idle].includes(oldState.status)
                     && newState.status === AudioPlayerStatus.Playing
                 ) {
-                    if (!this.currentTrack || (this.lastTrack && this.currentTrack && this.lastTrack.uuid === this.currentTrack.uuid)) return;
+                    if (!this.currentTrack || (this.lastTrack && this.currentTrack && this.lastTrack.uuid === this.currentTrack.uuid) || this.loopStatus === loopStatus.ALL) return;
 
                     const emoji_music = await get_emoji("music", client);
+
                     // 正在播放
                     const embed = new EmbedBuilder()
                         .setColor(embed_default_color)
