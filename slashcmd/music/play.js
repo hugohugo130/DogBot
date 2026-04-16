@@ -45,6 +45,19 @@ module.exports = {
                 .setRequired(true)
             // .setAutocomplete(true),
         )
+        .addStringOption(option => // name
+            option.setName("track_name")
+                .setNameLocalizations({
+                    "zh-TW": "曲目名稱",
+                    "zh-CN": "曲目名称",
+                })
+                .setDescription("Set a custom name of this track")
+                .setDescriptionLocalizations({
+                    "zh-TW": "設定這首曲目的名稱",
+                    "zh-CN": "设定这首曲目的名称",
+                })
+                .setRequired(false),
+        )
         .addBooleanOption(option => // next
             option.setName("next")
                 .setNameLocalizations({
@@ -105,7 +118,8 @@ module.exports = {
     async execute(interaction, client) {
         const query = interaction.options.getString("query", false) ?? "wellerman";
         const next = interaction.options.getBoolean("next", false) ?? false;
-        const play_audio_url = interaction.options.getBoolean("play_audio_url") ?? false;
+        const play_audio_url = interaction.options.getBoolean("play_audio_url", false) ?? false;
+        const custom_track_name = interaction.options.getString("track_name", false) ?? null;
         const hide = interaction.options.getBoolean("hide", false) ?? false;
         // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
 
@@ -197,6 +211,7 @@ module.exports = {
 
         if (tracks.length === 1) {
             const track = (await fixStructure(tracks))[0];
+            if (custom_track_name) track.title = custom_track_name;
 
             const queue = getQueue(guildId);
 
@@ -258,6 +273,7 @@ module.exports = {
                 return [[id], [{
                     track,
                     next,
+                    custom_track_name,
                 }]];
             }))
         );

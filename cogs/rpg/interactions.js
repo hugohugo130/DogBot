@@ -1610,7 +1610,9 @@ module.exports = {
 
                     client.musicTrackSession.delete(trackSessionID);
 
-                    const { track, next } = trackSession;
+                    const { track, next, custom_track_name } = trackSession;
+
+                    if (custom_track_name) track.title = custom_track_name;
 
                     const [embed, rows] = await getNowPlayingEmbed(queue, track, interaction, client, true);
 

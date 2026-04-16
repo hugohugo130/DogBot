@@ -124,7 +124,7 @@ class DogClient extends Client {
         const { loadDvoiceData } = require("../file.js");
         const { loadslashcmd } = require("../loadslashcmd.js");
 
-        this.commands = await loadslashcmd();
+        if (!this.commands.size) this.commands = await loadslashcmd();
         this.dvoice = new Collection(await loadDvoiceData());
 
         if (!this.name && this.user?.displayName) this.name = this.user.displayName;
