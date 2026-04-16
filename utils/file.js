@@ -1,8 +1,8 @@
 const { Logger } = require("winston");
 const { AxiosError } = require("axios");
 const { VoiceChannel } = require("discord.js");
-const fsp = fs.promises;
 const fs = require("fs");
+const fsp = fs.promises;
 const path = require("path");
 const util = require("util");
 const axios = require("axios");
@@ -37,8 +37,6 @@ const {
     CacheTypes,
     getCacheManager,
 } = require("./cache.js");
-
-const cacheManager = getCacheManager();
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
@@ -501,6 +499,8 @@ async function loadData(guildID = null, mode = 0) {
 
     if (mode == 0 && guildID) {
         // 從緩存中獲取
+        const cacheManager = getCacheManager();
+
         const cached = cacheManager.get(CacheTypes.GUILD, guildID);
         if (cached) {
             return cached;
@@ -510,6 +510,8 @@ async function loadData(guildID = null, mode = 0) {
     const data = await readJson(database_file);
 
     if (mode == 0 && guildID) {
+        const cacheManager = getCacheManager();
+
         if (!data[guildID]) {
             data[guildID] = database_emptyeg;
             await saveData(guildID, data[guildID]);
@@ -568,6 +570,8 @@ async function saveData(guildID, guildData) {
     if (retries === 0) {
         throw lastError;
     };
+
+    const cacheManager = getCacheManager();
 
     // 更新緩存
     cacheManager.set(CacheTypes.GUILD, guildID, data[guildID]);
@@ -667,6 +671,7 @@ async function getPrefixes(guildID) {
  */
 async function load_rpg_data(userid) {
     logger.debug(`load_rpg_data(${userid}) - ${getCallerModuleName("list")}`);
+    const cacheManager = getCacheManager();
 
     // 嘗試從緩存中獲取
     const cached = cacheManager.get(CacheTypes.RPG, userid);
@@ -730,6 +735,8 @@ async function save_rpg_data(userid, rpg_data) {
     data[userid] = order_data(data[userid], rpg_emptyeg);
 
     await writeJson(rpg_database_file, data);
+
+    const cacheManager = getCacheManager();
 
     // 更新緩存
     cacheManager.set(CacheTypes.RPG, userid, data[userid]);
