@@ -58,7 +58,7 @@ async function getAudioStream(track) {
 };
 
 /**
- * 
+ * Get info of a Soundcloud Track
  * @param {string} url
  * @returns {Promise<import("soundcloud.ts").SoundcloudTrack>}
  */

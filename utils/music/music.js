@@ -238,23 +238,34 @@ class MusicTrack {
             thumbnail: this.thumbnail,
             author: this.author,
             source: this.source,
+            original_track: this.original_track,
         };
     };
 
     /**
      * Prepare a stream for playing
-     * @param {boolean} force - Must prepare?
-     * @returns {Promise<Readable>}
+     *
+     * @overload
+     * @param {true} [force] - Must prepare?
+     * @returns {Promise<[Readable, string]>}
+     *
+     * @overload
+     * @param {false} [force] - Must prepare?
+     * @returns {Promise<[Readable, string | null]>}
+     *
+     * @param {boolean} [force=false] - Must prepare?
      */
     async prepareStream(force = false) {
+        let streamType = null;
+
         if (force || !this.stream || this.stream.closed) {
-            this.stream = (await getStream({
+            [this.stream, streamType] = (await getStream({
                 track: this,
                 source: this.source,
-            }))[0];
+            }));
         };
 
-        return this.stream;
+        return [this.stream, streamType];
     };
 };
 
@@ -531,13 +542,12 @@ class MusicQueue {
 
         if (DEBUG) this.debug(`has subscription: ${Boolean(this.subscription)}`);
 
-        const url = track.url;
         const source = track.source;
 
         let resource;
 
         if (DEBUG) this.debug("fetching stream");
-        const [originalAudioStream, fileType] = await getStream({ track, url, source });
+        const [originalAudioStream, fileType] = await track.prepareStream(true);
         if (DEBUG) this.debug(`got stream, type: ${fileType}`);
 
         resource = createAudioResource(
@@ -547,7 +557,7 @@ class MusicQueue {
             },
         );
 
-        if (DEBUG) this.debug("playing resource");
+        if (DEBUG) this.debug("gonna play the audio resource");
         this.player.play(resource);
         this.player.unpause();
 
@@ -964,16 +974,16 @@ async function fetchAudioStream(url) {
 async function getStream({ track, url, source }) {
     let engine;
     try {
-        engine = require(`./${source ?? "soundcloud"}.js`);
+        engine = require(`./${source?.toLowerCase() ?? "soundcloud"}.js`);
     } catch { };
 
-    if (!url && track) {
+    if (!url && "url" in track) {
         url = track.url;
     } else if (!url && !track) throw new Error(`無效的參數`);
 
     let stream, fileType;
 
-    if (engine?.getAudioStream && typeof engine.getAudioStream === "function") {
+    if (typeof engine?.getAudioStream === "function") {
         [stream, fileType] = await engine.getAudioStream(track.original_track ?? track);
     } else if (url) {
         const [fetched_stream, fileTypes] = await fetchAudioStream(url);

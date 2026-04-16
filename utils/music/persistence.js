@@ -118,7 +118,6 @@ async function restoreAllMusicStates(client) {
         if (!queue.voiceChannel) queue.setVoiceChannel(voiceChannel);
         queue.setConnection(connection);
         queue.setLoopStatus(state.loopStatus);
-        if (state.paused) queue.pause();
 
         for (const trackData of state.queue) {
             const queue_track = new MusicTrack(trackData);
