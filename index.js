@@ -8,6 +8,7 @@ const { registcmd } = require("./register_commands.js");
 const { getQueues } = require("./utils/music/music.js");
 const { getCacheManager } = require("./utils/cache.js");
 const { get_areadline } = require("./utils/readline.js");
+const { loadslashcmd } = require("./utils/loadslashcmd.js");
 const { safeshutdown } = require("./utils/safeshutdown.js");
 const { check_language_keys } = require("./utils/language.js");
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
@@ -179,7 +180,13 @@ client.once(Events.ClientReady, async () => {
     const cogs = await load_cogs(client);
     logger.info(`✅ Loaded ${cogs} cogs`);
 
-    if (await should_register_cmd()) await registcmd(true, true);
+    if (await should_register_cmd()) {
+        await registcmd(true, true)
+    };
+
+    const loaded_cmds = await loadslashcmd(true);
+
+    client.commands = loaded_cmds;
 
     logger.info(`✅ Loaded ${client.commands.size} slash commands`);
 
