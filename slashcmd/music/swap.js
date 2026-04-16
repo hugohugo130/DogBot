@@ -27,8 +27,8 @@ module.exports = {
             })
             .setDescription("The index of the first song to swap")
             .setDescriptionLocalizations({
-                "zh-TW": "第一首目曲的索引",
-                "zh-CN": "第一首目曲的索引"
+                "zh-TW": "第一首曲目的索引",
+                "zh-CN": "第一首曲目的索引"
             })
             .setRequired(true)
             .setMinValue(1),
@@ -41,8 +41,8 @@ module.exports = {
             })
             .setDescription("The index of the second song to swap")
             .setDescriptionLocalizations({
-                "zh-TW": "第二首目曲的索引",
-                "zh-CN": "第二首目曲的索引"
+                "zh-TW": "第二首曲目的索引",
+                "zh-CN": "第二首曲目的索引"
             })
             .setRequired(true)
             .setMinValue(1),
