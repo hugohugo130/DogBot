@@ -55,6 +55,7 @@ Since <t:{1}:R>`,
             "guild.id": "ID",
             "guild.members": "Members",
             "guild.boosts": "Boosts",
+            "guild.boosts_value": "{0} Boosts / Tier {1}",
             "guild.created_at": "Created At",
             "guild.owner": "Owner",
             "guild.icon": "Icon",
@@ -128,6 +129,7 @@ Since <t:{1}:R>`,
             "guild.id": "ID",
             "guild.members": "成員",
             "guild.boosts": "加成狀態",
+            "guild.boosts_value": "{0} 個加成 / {1} 級",
             "guild.created_at": "創建時間",
             "guild.owner": "擁有者",
             "guild.icon": "圖標",
@@ -309,11 +311,13 @@ function get_lang_data(lang, category, key, ...replace) {
         : default_lang;
 
     const lang_category = get_lang_category(lang, category, default_lang);
+
+    /** @type {string} */
     let lang_value = lang_category[key] ?? language[default_lang]?.[category]?.[key];
 
     if (replace?.length > 0) {
         for (let i = 0; i < replace.length; i++) {
-            lang_value = lang_value.replace(`{${i}}`, replace[i]);
+            lang_value = lang_value.replaceAll(`{${i}}`, replace[i]);
         };
     };
 

@@ -335,6 +335,8 @@ module.exports = {
                 const serverSplash = guild.splashURL();
                 const createdAt = convertToSecondTimestamp(interaction.guild.createdAt.getTime());
 
+                const lang_boosts_value = get_lang_data(locale, "/info", "guild.boosts_value", boosts, boostLevel);
+
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
                     .setTitle(guildName)
@@ -352,7 +354,7 @@ module.exports = {
                         },
                         {
                             name: `${emoji_boost2} ${lang_boosts}`,
-                            value: `${boosts} 個加成 / ${boostLevel} 級`,
+                            value: lang_boosts_value,
                             inline: true,
                         },
                         {
