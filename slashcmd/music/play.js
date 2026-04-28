@@ -2,6 +2,7 @@ const { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction, ActionRo
 const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
 const { Soundcloud } = require("soundcloud.ts");
 
+const { get_logger } = require("../../utils/logger.js");
 const { getNowPlayingEmbed } = require("./nowplaying.js");
 const { generateSessionId } = require("../../utils/random.js");
 const { get_emojis, get_emoji } = require("../../utils/rpg.js");
@@ -10,6 +11,8 @@ const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 const { embed_error_color, musicPlayingPlayerLimit } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
 const DogClient = require("../../utils/customs/client.js");
+
+const DEBUG = false;
 
 /** @type {Soundcloud} */
 let sc = global._sc ?? new Soundcloud();
@@ -123,6 +126,8 @@ module.exports = {
         const hide = interaction.options.getBoolean("hide", false) ?? false;
         // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
 
+        const logger = get_logger();
+
         const voiceChannel = (
             interaction.member
             && "voice" in interaction.member
@@ -142,6 +147,8 @@ module.exports = {
         };
 
         if (getPlayingPlayers().size >= musicPlayingPlayerLimit) {
+            if (DEBUG) logger.debug(`達到了播放器數量: ${musicPlayingPlayerLimit}`);
+
             const emoji_cross = await get_emoji("crosS", client);
 
             const embed = new EmbedBuilder()
@@ -188,10 +195,14 @@ module.exports = {
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
         const will_play_audio_url = play_audio_url && IsValidURL(query);
+        if (DEBUG) logger.debug(`自定義url: ${will_play_audio_url}`);
 
         let audioerr = null;
         try {
-            if (will_play_audio_url) await fetchAudioStream(query);
+            if (will_play_audio_url) {
+                if (DEBUG) logger.debug(`正在檢查自定義url是否可訪問`);
+                await fetchAudioStream(query);
+            };
         } catch (error) {
             audioerr = error instanceof Error ? error.stack : null;
         };
@@ -205,7 +216,9 @@ module.exports = {
             return await interaction.editReply({ content: "", embeds: [embed] });
         };
 
+        if (DEBUG) logger.debug(`正在搜尋曲目`);
         const tracks = await search_until(query, 25, will_play_audio_url);
+        if (DEBUG) logger.debug(`搜到了${tracks.length}首曲目`);
 
         if (tracks.length === 0) return await interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
 
