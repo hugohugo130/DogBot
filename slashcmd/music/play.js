@@ -6,7 +6,7 @@ const { get_logger } = require("../../utils/logger.js");
 const { getNowPlayingEmbed } = require("./nowplaying.js");
 const { generateSessionId } = require("../../utils/random.js");
 const { get_emojis, get_emoji } = require("../../utils/rpg.js");
-const { search_until, IsValidURL, getQueue, youHaveToJoinVC_Embed, fetchAudioStream, fixStructure, getPlayingPlayers } = require("../../utils/music/music.js");
+const { search_until, IsValidURL, getQueue, youHaveToJoinVC_Embed, fixStructure, getPlayingPlayers, URLAvaliable } = require("../../utils/music/music.js");
 const { formatMinutesSeconds } = require("../../utils/timestamp.js");
 const { embed_error_color, musicPlayingPlayerLimit } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
@@ -201,16 +201,19 @@ module.exports = {
         try {
             if (will_play_audio_url) {
                 if (DEBUG) logger.debug(`正在檢查自定義url是否可訪問`);
-                await fetchAudioStream(query);
+
+                if (!(await URLAvaliable(query))) {
+                    throw new Error("URL無法訪問，請檢查拼字或稍後再試");
+                };
             };
         } catch (error) {
-            audioerr = error instanceof Error ? error.stack : null;
+            audioerr = error instanceof Error ? error.message : null;
         };
 
         if (will_play_audio_url && audioerr) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setDescription(`${emoji_cross} | 播放自定義url時遇到問題: \n\`\`\`${audioerr}\`\`\``.slice(0, 4090))
+                .setDescription(`${emoji_cross} | 播放自定義url時遇到問題: \n\`${audioerr}\``.slice(0, 4090))
                 .setEmbedFooter(interaction);
 
             return await interaction.editReply({ content: "", embeds: [embed] });
@@ -218,6 +221,7 @@ module.exports = {
 
         if (DEBUG) logger.debug(`正在搜尋曲目`);
         const tracks = await search_until(query, 25, will_play_audio_url);
+
         if (DEBUG) logger.debug(`搜到了${tracks.length}首曲目`);
 
         if (tracks.length === 0) return await interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
