@@ -1,4 +1,5 @@
 const util = require("util");
+const axios = require("axios");
 const Discord = require("discord.js");
 const { createAudioResource, createAudioPlayer, joinVoiceChannel, getVoiceConnection, AudioPlayerStatus, VoiceConnection, AudioPlayer, StreamType, AudioResource, PlayerSubscription } = require("@discordjs/voice");
 const { fileTypeFromStream } = require("file-type");
@@ -259,10 +260,10 @@ class MusicTrack {
         let streamType = null;
 
         if (force || !this.stream || this.stream.closed) {
-            [this.stream, streamType] = (await getStream({
+            [this.stream, streamType] = await getStream({
                 track: this,
                 source: this.source,
-            }));
+            });
         };
 
         return [this.stream, streamType];
@@ -293,6 +294,9 @@ class MusicQueue {
 
         /** @type {boolean} */
         this.playing = false;
+
+        /** @type {boolean} */
+        this.play_lock = false;
 
         /** @type {MusicTrack | null} */
         this.currentTrack = null;
@@ -343,7 +347,7 @@ class MusicQueue {
         });
 
         this.player.on("stateChange", async (oldState, newState) => {
-            if (DEBUG) this.debug(`音樂播放器狀態改變: ${oldState.status} -> ${newState.status}: ${Boolean(getVoiceConnection(this.guildID))}`);
+            if (DEBUG) this.debug(`音樂播放器狀態改變: ${oldState.status} -> ${newState.status}: ${!!getVoiceConnection(this.guildID)}`);
 
             if (this.destroying) return;
 
@@ -451,7 +455,7 @@ class MusicQueue {
     /**
      * 將音樂加入佇列
      * @param {MusicTrack} track
-     * @param {number | null} [insert_at] - 要插入的位置，預設在結尾
+     * @param {number | null} [insert_at] - 要插入的位置(索引)，預設在結尾
      */
     addTrack(track, insert_at = null) {
         if (insert_at) {
@@ -513,64 +517,79 @@ class MusicQueue {
      * @returns {Promise<MusicTrack | null>}
      */
     async play(track) {
-        if (DEBUG) this.debug(`- triggered play() | going to play ${track.title}`);
+        try {
+            if (DEBUG) this.debug(`- triggered play() | going to play ${track.title}`);
 
-        if (!this.connection && this.voiceChannel) {
-            if (!this.guild) this.guild = await get_guild(this.guildID);
-            if (!this.guild) {
-                this.destroy();
+            if (!this.connection && this.voiceChannel) {
+                if (!this.guild) this.guild = await get_guild(this.guildID);
+                if (!this.guild) {
+                    this.destroy();
 
-                return null;
+                    return null;
+                };
+
+                const connection = getVoiceConnection(this.guildID)
+                    || joinVoiceChannel({
+                        channelId: this.voiceChannel.id,
+                        guildId: this.guildID,
+                        selfDeaf: true,
+                        selfMute: false,
+                        adapterCreator: this.guild.voiceAdapterCreator,
+                    });
+
+                this.connection = connection;
             };
 
-            const connection = getVoiceConnection(this.guildID)
-                || joinVoiceChannel({
-                    channelId: this.voiceChannel.id,
-                    guildId: this.guildID,
-                    selfDeaf: true,
-                    selfMute: false,
-                    adapterCreator: this.guild.voiceAdapterCreator,
-                });
+            if (this.play_lock) {
+                /*
+                TODO: 研究並解決問題
+                LOG: https://pastebin.com/rHR0J3Px
 
-            this.connection = connection;
+                治標不治本 >:(
+                但現在有BUG就這先這樣做吧 >:)
+                */
+                this.addTrack(track, 0); // 把 意外地再次播放了可能不同的曲目 放進佇列的開頭
+            };
+
+            if (DEBUG) this.debug(`has connection: ${!!this.connection}`);
+            if (DEBUG) this.debug(`has voiceChannel: ${!!this.voiceChannel}`);
+
+            this.subscribe();
+
+            if (DEBUG) this.debug(`has subscription: ${!!this.subscription}`);
+
+            let resource;
+
+            if (DEBUG) this.debug("fetching stream");
+            const [originalAudioStream, fileType] = await track.prepareStream(true);
+            if (DEBUG) this.debug(`got stream, type: ${fileType}`);
+
+            resource = createAudioResource(
+                originalAudioStream,
+                {
+                    inputType: fileStreamType[fileType] || StreamType.Arbitrary,
+                },
+            );
+
+            if (DEBUG) this.debug("gonna play the audio resource");
+            this.player.play(resource);
+            this.player.unpause();
+
+            if (this.currentTrack) {
+                this.lastTrack = this.currentTrack;
+            };
+
+            this.playing = true;
+            this.paused = false;
+            this.currentTrack = track;
+            this.currentResource = resource;
+
+            return track;
+        } catch (e) {
+            throw e;
+        } finally { // 就算 return 了 這裡也會執行
+            this.play_lock = false;
         };
-
-        if (DEBUG) this.debug(`has connection: ${Boolean(this.connection)}`);
-        if (DEBUG) this.debug(`has voiceChannel: ${Boolean(this.voiceChannel)}`);
-
-        this.subscribe();
-
-        if (DEBUG) this.debug(`has subscription: ${Boolean(this.subscription)}`);
-
-        const source = track.source;
-
-        let resource;
-
-        if (DEBUG) this.debug("fetching stream");
-        const [originalAudioStream, fileType] = await track.prepareStream(true);
-        if (DEBUG) this.debug(`got stream, type: ${fileType}`);
-
-        resource = createAudioResource(
-            originalAudioStream,
-            {
-                inputType: fileStreamType[fileType] || StreamType.Arbitrary,
-            },
-        );
-
-        if (DEBUG) this.debug("gonna play the audio resource");
-        this.player.play(resource);
-        this.player.unpause();
-
-        if (this.currentTrack) {
-            this.lastTrack = this.currentTrack;
-        };
-
-        this.playing = true;
-        this.paused = false;
-        this.currentTrack = track;
-        this.currentResource = resource;
-
-        return track;
     };
 
     /**
@@ -754,6 +773,13 @@ class MusicQueue {
 };
 
 /**
+ * Get redirected URL
+ * @param {string} original_url
+ * @returns {Promise<string>}
+ */
+const get_redirected_url = async (original_url) => (await axios.get(original_url)).request.res.responseUrl
+
+/**
  * Get a music queue by a guildID
  * @overload
  * @param {string} guildID
@@ -913,14 +939,25 @@ async function fixStructure(objects) {
  * This function is used for creating a MusicTrack
  * @param {string} url
  * @param {boolean} [stream=false]
- * @returns {{ id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean }}
+ * @returns {Promise<{ id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean }>}
  */
-function getAudioFileData(url, stream = false) {
+async function getAudioFileData(url, stream = false) {
     const uri = url.split("/").pop()?.split("?")[0];
 
+    const response = await axios.get(url);
+    const content_disposition = response.headers['content-disposition'];
+    const match = content_disposition.match(/filename="(.+)"/);
+
+    await response.data?.destroy?.();
+
+    const filename = match
+        ? match[1]
+        : uri
+        || "unknown";
+
     return {
-        id: `audio_${generateSessionId(8)}`,
-        title: uri || "unknown",
+        id: `a${generateSessionId(8)}${Date.now().toFixed(5)}`,
+        title: filename,
         url,
         duration: 0,
         thumbnail: null,
@@ -932,11 +969,45 @@ function getAudioFileData(url, stream = false) {
 
 /**
  *
- * @param {string} url - 音檔網址
+ * @param {any} promiseOrFn
+ * @param {number} ms
+ * @param {boolean} [error=true]
+ * @returns {Promise<any>}
+ */
+async function withTimeout(promiseOrFn, ms, error = true) {
+    let timeoutId;
+
+    const actualPromise = typeof promiseOrFn === 'function'
+        ? promiseOrFn()
+        : Promise.resolve(promiseOrFn);
+
+    const timeoutPromise = new Promise((resolve, reject) => {
+        timeoutId = setTimeout(() => {
+            if (error) {
+                reject(new Error(`Operation timed out: ${ms}ms`));
+            } else {
+                resolve(null);
+            };
+        }, ms);
+    });
+
+    try {
+        return await Promise.race([actualPromise, timeoutPromise]);
+    } finally {
+        clearTimeout(timeoutId);
+    };
+};
+
+/**
+ *
+ * @param {string} original_url - 音檔網址
  * @returns {Promise<[Readable, {ext: string | null, mime: string | null}]>}
  */
-async function fetchAudioStream(url) {
-    const response = await fetch(url, {
+async function fetchAudioStream(original_url) {
+    // const redirected_url = await get_redirected_url(original_url);
+    const redirected_url = original_url;
+
+    const response = await fetch(redirected_url, {
         headers: {
             'User-Agent': 'Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36'
         },
@@ -948,19 +1019,28 @@ async function fetchAudioStream(url) {
     if (statusCode !== 200 || !response.body) throw new Error(statusText);
 
     const clonedStream = response.clone().body;
-    const clonedStream2 = response.clone().body;
 
-    if (!clonedStream2) throw new Error("Received no stream")
+    // if (!clonedStream) throw new Error("Received no stream");
 
-    const fileType = clonedStream ? await fileTypeFromStream(clonedStream) : null;
+    let fileType = null;
+    if (clonedStream) {
+        fileType = await withTimeout(fileTypeFromStream(clonedStream), 10000, false);
+    };
+
     const ext = fileType?.ext || null;
     const mime = fileType?.mime?.replace("video/", "audio/") || null;
 
-    if (!mime?.startsWith("audio/")) throw new Error("Not an audio stream");
+    if (mime && !mime?.startsWith("audio/")) throw new Error("Not an audio stream");
 
-    response.body.cancel(); // no need to wait it resolved.
+    const WebReadableStream = response.clone().body;
 
-    return [Readable.fromWeb(clonedStream2), { ext, mime }];
+    if (!WebReadableStream) throw new Error("Received no stream");
+
+    const readable_stream = Readable.fromWeb(WebReadableStream);
+
+    response.body.cancel();
+
+    return [readable_stream, { ext, mime }];
 };
 
 /**
@@ -1038,7 +1118,9 @@ async function search_until(query, amount = 25, customURL = false) {
             };
 
             if (customURL && IsValidURL(query) && Array.isArray(output)) {
-                const audioData = getAudioFileData(query, true);
+                query = await get_redirected_url(query);
+
+                const audioData = await getAudioFileData(query, true);
 
                 output.push(audioData);
             };
@@ -1125,6 +1207,29 @@ function IsValidURL(str) {
 
 /**
  *
+ * @param {string} url
+ * @param {number | null} [statusCodeMatch=null]
+ * @returns {Promise<boolean>}
+ */
+async function URLAvaliable(url, statusCodeMatch = null) {
+    try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return (
+            response.ok
+            && (
+                (statusCodeMatch === null)
+                || (
+                    statusCodeMatch === response.status
+                )
+            )
+        );
+    } catch (error) {
+        return false;
+    };
+};
+
+/**
+ *
  * @overload
  * @param {null} queue
  * @param {BaseInteraction| null} [interaction=null]
@@ -1180,10 +1285,12 @@ module.exports = {
     getQueues,
     getPlayingPlayers,
     getStream,
+    get_redirected_url,
     fixStructure,
     search_until,
     fetchAudioStream,
     IsValidURL,
+    URLAvaliable,
     noMusicIsPlayingEmbed,
     youHaveToJoinVC_Embed,
     MusicQueue,
