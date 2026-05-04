@@ -119,6 +119,12 @@ client.once(Events.ClientReady, async () => {
 
                 break;
             }
+
+            case "ping": {
+                logger.info(`Pong! ${client.ws.ping}ms`);
+
+                break;
+            }
         };
 
         if (input.startsWith("musicd ")) {
