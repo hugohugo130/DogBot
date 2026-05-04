@@ -9,8 +9,9 @@ const { Collection, VoiceChannel, Guild, BaseInteraction } = require("discord.js
 const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
 const { get_emoji } = require("../rpg.js");
 const { get_logger } = require("../logger.js");
-const { get_guild, get_channel } = require("../discord.js");
+const { get_guild, get_channel, get_me } = require("../discord.js");
 const { formatMinutesSeconds } = require("../timestamp.js");
+const { wait_for_client } = require("../wait_for_client.js");
 const { generateSessionId, generateUUID } = require("../random.js");
 const EmbedBuilder = require("../customs/embedBuilder.js");
 const DogClient = require("../customs/client.js");
@@ -491,6 +492,29 @@ class MusicQueue {
      */
     isPaused = () => this.paused;
 
+    async isConnectionValid() {
+        let guild = this.guild;
+
+        if (!guild) guild = await get_guild(this.guildID, this.client);
+        if (!guild) return this.destroy();
+
+        const guildVoiceConnection = getVoiceConnection(this.guildID);
+        const me = await get_me(guild);
+
+        const clientJoinedVC_Channel = me.voice.channel
+
+        const connection = this.connection;
+
+        return (
+            this.isSubscriptionValid()
+            && (
+                !clientJoinedVC_Channel
+                || connection?.joinConfig.channelId === clientJoinedVC_Channel.id
+            )
+            && guildVoiceConnection === connection
+        );
+    };
+
     /**
      * Check whether this queue is valid
      * @returns {Promise<boolean>}
@@ -498,17 +522,12 @@ class MusicQueue {
     async isValid() {
         const guild = await get_guild(this.guildID, this.client);
 
-        if (!guild) return false;
-
-        const voiceChannel = await get_channel(this.voiceChannel?.id);
-
-        if (!voiceChannel) return false;
-
-        const textChannel = await get_channel(this.textChannel?.id, guild);
-
-        if (!textChannel) this.textChannel = null;
-
-        return true;
+        return !!(
+            guild
+            && await get_channel(this.voiceChannel?.id)
+            && await get_channel(this.textChannel?.id, guild)
+            && await this.isConnectionValid()
+        );
     };
 
     /**
@@ -628,17 +647,19 @@ class MusicQueue {
         return [old_track, new_track];
     };
 
+    isSubscriptionValid = () => (
+        this.subscription?.connection.state
+        && "subscription" in this.subscription?.connection.state
+        && this.subscription?.connection.state.subscription
+        && this.subscription.connection.state.subscription === this.subscription
+    );
+
     /**
      * Subscribe to the player.
      * @returns {PlayerSubscription | null}
      */
     subscribe() {
-        if (
-            this.subscription?.connection.state
-            && "subscription" in this.subscription?.connection.state
-            && this.subscription?.connection.state.subscription
-            && this.subscription.connection.state.subscription === this.subscription
-        ) return this.subscription;
+        if (this.isSubscriptionValid()) return this.subscription;
 
         if (this.connection && this.player) {
             this.subscription = this.connection.subscribe(this.player) || null;
@@ -768,6 +789,7 @@ class MusicQueue {
         this.unsubscribe();
         this.stopPlaying(true);
         this.connection?.destroy();
+
         queues.delete(this.guildID);
     };
 };

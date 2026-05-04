@@ -136,6 +136,22 @@ async function get_channel(channelId, guild = null, fetch_first = false) {
     };
 };
 
+/**
+ *
+ * @param {Discord.VoiceChannel} voiceChannel
+ * @param {Guild} guild
+ * @returns {import("@discordjs/voice").CreateVoiceConnectionOptions & import("@discordjs/voice").JoinVoiceChannelOptions & Omit<import("@discordjs/voice").JoinConfig, "group">}
+ */
+const VCJoinConfig = (voiceChannel, guild) => {
+    return {
+        "channelId": voiceChannel.id,
+        "guildId": guild.id,
+        "selfDeaf": true,
+        "selfMute": false,
+        "adapterCreator": guild.voiceAdapterCreator,
+    };
+};
+
 module.exports = {
     get_members_of_guild,
     get_users_of_guild,
@@ -144,4 +160,6 @@ module.exports = {
     get_guild,
     get_channels,
     get_channel,
+
+    VCJoinConfig,
 };

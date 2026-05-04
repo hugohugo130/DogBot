@@ -2,6 +2,7 @@ const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = requi
 const { joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
 
 const { get_emojis } = require("../../utils/rpg.js");
+const { VCJoinConfig } = require("../../utils/discord.js");
 const { getQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
 const { embed_error_color } = require("../../utils/config.js");
 const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
@@ -25,8 +26,8 @@ module.exports = {
      * @param {DogClient} client
      */
     async execute(interaction, client) {
-        const guildId = interaction.guild?.id;
-        if (!guildId) return;
+        const guild = interaction.guild;
+        if (!guild?.id) return;
 
         const textChannel = interaction.channel;
         const voiceChannel = (
@@ -38,7 +39,7 @@ module.exports = {
             ? interaction.member.voice?.channel
             : null;
 
-        const queue = getQueue(guildId);
+        const queue = getQueue(guild.id);
 
         const [emoji_cross, emoji_voice] = await get_emojis(["crosS", "voice"], client);
 
@@ -49,7 +50,7 @@ module.exports = {
             });
         };
 
-        let connection = getVoiceConnection(guildId);
+        let connection = getVoiceConnection(guild.id);
 
         if (connection && connection.joinConfig.channelId !== voiceChannel.id) {
             const embed = new EmbedBuilder()
@@ -64,17 +65,25 @@ module.exports = {
         await interaction.deferReply();
 
         if (!connection) {
-            connection = joinVoiceChannel({
-                channelId: voiceChannel.id,
-                guildId: interaction.guild.id,
-                selfDeaf: true,
-                selfMute: false,
-                adapterCreator: interaction.guild.voiceAdapterCreator,
-            });
+            connection = joinVoiceChannel(VCJoinConfig(voiceChannel, guild));
         };
 
         queue.setConnection(connection);
+        const validConnection = await queue.isConnectionValid();
+
+        if (!validConnection) {
+            queue.connection?.rejoin(VCJoinConfig(voiceChannel, guild));
+
+            const validNow = await queue.isConnectionValid();
+            if (!validNow) {
+                queue.connection?.destroy();
+
+                queue.setConnection(joinVoiceChannel(VCJoinConfig(voiceChannel, guild)));
+            };
+        };
+
         queue.setVoiceChannel(voiceChannel);
+
         if (textChannel?.isSendable()) queue.setTextChannel(textChannel);
         await interaction.editReply(`${emoji_voice} | 加入了 \`${interaction.user.username}\` 的語音頻道`);
     },
