@@ -10,6 +10,7 @@ const { getCacheManager } = require("./utils/cache.js");
 const { get_areadline } = require("./utils/readline.js");
 const { loadslashcmd } = require("./utils/loadslashcmd.js");
 const { safeshutdown } = require("./utils/safeshutdown.js");
+const { hot_reload_cogs } = require("./utils/hot_reload.js");
 const { check_language_keys } = require("./utils/language.js");
 const { getServerIPSync } = require("./utils/getSeverIPSync.js");
 const { should_register_cmd } = require("./utils/auto_register.js");
@@ -177,10 +178,27 @@ client.once(Events.ClientReady, async () => {
 
                 break;
             }
+
+            case "reload": {
+                const [reload_what] = args;
+
+                switch (reload_what) {
+                    case "cog":
+                    case "cogs": {
+                        const reloaded_cogs = await hot_reload_cogs({ quiet: true });
+
+                        logger.info(`✅ Reloaded ${reloaded_cogs} cogs`);
+
+                        break;
+                    }
+                };
+
+                break;
+            }
         };
 
         logger.info("=".repeat(20));
-    });
+    })
 });
 
 (async () => {
