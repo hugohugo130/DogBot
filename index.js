@@ -90,7 +90,9 @@ client.once(Events.ClientReady, async () => {
     get_areadline(true)?.on("line", async (input) => {
         input = input.trim();
 
-        switch (input) {
+        const [command, ...args] = input.split(" ");
+
+        switch (command) {
             case "stop": {
                 await safeshutdown(client);
                 break;
@@ -98,6 +100,8 @@ client.once(Events.ClientReady, async () => {
 
             case "fstop": {
                 process.exit(0);
+
+                break;
             }
 
             case "music": {
@@ -110,6 +114,7 @@ client.once(Events.ClientReady, async () => {
                 }, 0);
 
                 logger.info(`\n- 連接用戶 (音樂播放器)：${playersCount}\n- 正在播放總人數: ${playingPlayers}\n- 正在播放 ${totalTracks} 首音樂。`);
+
                 break;
             }
 
@@ -125,42 +130,53 @@ client.once(Events.ClientReady, async () => {
 
                 break;
             }
-        };
 
-        if (input.startsWith("musicd ")) {
-            const [_, depth] = input.split(" ");
-            const depthNum = parseInt(depth) || null;
+            case "musicd": {
+                const [depth] = args;
 
-            logger.info(util.inspect(getQueues(), { depth: depthNum }));
-        } else if (input.startsWith("cache ")) {
-            const [_, option] = input.split(" ");
+                const depthNum = parseInt(depth) || null;
 
-            switch (option) {
-                case "clear": {
-                    const cachemgr = getCacheManager();
-                    if (!cachemgr) break;
+                logger.info(util.inspect(getQueues(), { depth: depthNum }));
 
-                    cachemgr.clear();
-                    logger.info(`[cacheManager] cleaned all caches successfully`);
-                    break;
-                }
+                break;
+            }
 
-                case "stats": {
-                    const cachemgr = getCacheManager();
-                    if (!cachemgr) break;
+            case "cache": {
+                const [option] = args;
 
-                    logger.info(util.inspect(cachemgr.getStats(), { depth: null }));
-                    break;
-                }
-            };
-        } else if (input.startsWith("debug ")) {
-            const [_, option] = input.split(" ");
+                switch (option) {
+                    case "clear": {
+                        const cachemgr = getCacheManager();
+                        if (!cachemgr) break;
 
-            switch (option) {
-                case "music-persistence": {
-                    await saveAllMusicStates();
+                        cachemgr.clear();
+                        logger.info(`[cacheManager] cleaned all caches successfully`);
+                        break;
+                    }
+
+                    case "stats": {
+                        const cachemgr = getCacheManager();
+                        if (!cachemgr) break;
+
+                        logger.info(util.inspect(cachemgr.getStats(), { depth: null }));
+                        break;
+                    }
                 };
-            };
+
+                break;
+            }
+
+            case "debug": {
+                const [option] = args;
+
+                switch (option) {
+                    case "music-persistence": {
+                        await saveAllMusicStates();
+                    };
+                };
+
+                break;
+            }
         };
 
         logger.info("=".repeat(20));
