@@ -43,26 +43,8 @@ module.exports = {
 
         const rpg_data = await load_rpg_data(user.id);
 
-        /*
-            "money": 1000,
-            "hunger": 20,
-            "job": null,
-            "fightjob": null,
-            "badge": null,
-            "marry": {
-                "status": false,
-                "with": null,
-                "time": 0,
-            },
-            "lastRunTimestamp": {},
-            "inventory": {},
-            "transactions": [],
-            "count": {},
-            "privacy": [],
-        */
-
         const filename = `rpg_data-${user.id}-${Math.floor(Date.now())}.json`;
-        const filePath = join_temp_folder(filename);
+        const filePath = await join_temp_folder(filename);
         await writeJson(filePath, rpg_data);
 
         const attachment = new AttachmentBuilder(filePath)
