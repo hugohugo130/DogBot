@@ -144,6 +144,7 @@ class RPGDatabase {
  * @typedef {Object} GuildDatabase
  * @property {boolean} rpg
  * @property {string | null} dynamicVoice
+ * @property {boolean} voiceNotification
  * @property {string[]} prefix
  */
 
@@ -255,6 +256,7 @@ const DEFAULT_VALUES = {
         "database.json": {
             "rpg": true,
             "dynamicVoice": null,
+            "voiceNotification": false,
             "prefix": ["&"],
         },
     },
@@ -343,16 +345,16 @@ const reserved_prefixes = [`<@${BotID}>`];
 const enable_auto_register_cmd = true;
 
 /*
-https://discord.js.org/docs/packages/discord.js/14.25.1/ColorResolvable:TypeAlias
-- ColorResolvable -
-1. key of Colors (already imported)
-2. "Random"
-3. readonly [red: number, green: number, blue: number]
-4. number
-5. HexColorString
+type ColorResolvable =
+  | keyof typeof Colors
+  | 'Random'
+  | readonly [red: number, green: number, blue: number]
+  | number
+  | HexColorString;
 */
 
 // Embed colors
+/** @type {import("discord.js").ColorResolvable} */
 const embed_default_color = "Random";
 const embed_warn_color = 0xF0B90B;
 const embed_error_color = 0xF04A47;
