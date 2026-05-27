@@ -101,6 +101,10 @@ class DogClient extends Client {
         /** @type {Collection<string, Locale>} */
         this.locales = new Collection();
 
+        //                   GuildID Timestamp(ms)
+        /** @type {Collection<string, number>} */
+        this.counting_warning_cooldown = new Collection();
+
         /** @type {{ IP: string, PORT: number }} */
         this.serverIP = { IP: "192.168.0.156", "PORT": 3003 };
 

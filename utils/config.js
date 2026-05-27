@@ -141,8 +141,17 @@ class RPGDatabase {
  */
 
 /**
+ * @typedef {Object} CountingData
+ * @property {number} current
+ * @property {number} highest
+ * @property {string | null} channelId
+ * @property {string | null} last_counter
+ */
+
+/**
  * @typedef {Object} GuildDatabase
  * @property {boolean} rpg
+ * @property {CountingData} counting
  * @property {string | null} dynamicVoice
  * @property {boolean} voiceNotification
  * @property {string[]} prefix
@@ -195,18 +204,18 @@ const DATABASE_FILES = [
  *     "rpg_farm.json": RpgFarm,
  *     "bake_db.json": Array<any>,
  *     "smelt_db.json": Array<any>,
- *     [k: string]: object,
+ *     [k: string]: object | Array<any>,
  *   },
  *   "single": {
  *     "serverIP.json": { IP: string, PORT: number },
  *     "dvoice_db.json": [[string], DvoiceData][],
- *     [k: string]: object,
+ *     [k: string]: object | Array<any>,
  *   },
  *   "guild": {
  *     "database.json": GuildDatabase,
- *     [k: string]: object,
+ *     [k: string]: object | Array<any>,
  *   },
- *   [k: string]: object,
+ *   [k: string]: { [ k: string ]: object | Array<any> },
  * }}
  */
 const DEFAULT_VALUES = {
@@ -255,6 +264,12 @@ const DEFAULT_VALUES = {
     "guild": {
         "database.json": {
             "rpg": true,
+            "counting": {
+                "current": 0,
+                "highest": 0,
+                "channelId": null,
+                "last_counter": null,
+            },
             "dynamicVoice": null,
             "voiceNotification": false,
             "prefix": ["&"],
@@ -309,7 +324,6 @@ const BotID = "1422212094274830470";
 const BotName = "狗狗機器犬"; // 預設為 client.user.tag
 const authorName = "哈狗";
 
-
 // RPG
 const rpg_lvlUp_per = 50;
 const setJobDelay = 604800 // 24 * 24 * 60 * 7 = 604800
@@ -317,6 +331,9 @@ const max_hunger = 20;
 
 /** @type {string[]} */
 const cannot_sell = [];
+
+// counting
+const counting_warning_cooldown = 3000; // ms
 
 // #region [music]
 
@@ -685,6 +702,9 @@ module.exports = {
     setJobDelay,
     max_hunger,
     cannot_sell,
+
+    // counting
+    counting_warning_cooldown,
 
     // music
     musicSearchEngine,
