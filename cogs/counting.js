@@ -1,7 +1,7 @@
 const { Events, Message } = require("discord.js");
 
 const { isDigit } = require("../utils/message.js");
-const { loadData, saveData } = require("../utils/file.js");
+const { loadData, saveData, find_default_value } = require("../utils/file.js");
 const { counting_warning_cooldown } = require("../utils/config.js");
 const DogClient = require("../utils/customs/client.js");
 
@@ -25,6 +25,7 @@ function IsAValidNumber(n) {
     const given_number = String(n);
 
     return (
+        given_number !== "0" &&
         isDigit(given_number) &&
         given_number.length < Number.MAX_SAFE_INTEGER.toString().length
     );
@@ -52,7 +53,16 @@ module.exports = {
 
         const guildData = await loadData(guildId);
 
-        const counting_data = guildData.counting;
+        let counting_data = guildData.counting;
+
+        if (!counting_data) {
+            const db_def_value = find_default_value("database.json");
+
+            counting_data = db_def_value.counting;
+            guildData.counting = db_def_value.counting;
+
+            await saveData(guildId, guildData);
+        };
 
         const { channelId: counting_channel_id, last_counter, current: current_number, highest: highest_number } = counting_data;
 
