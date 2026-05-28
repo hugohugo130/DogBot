@@ -29,7 +29,6 @@ const {
     startsWith_prefixes,
     foods,
     name,
-    name_reverse,
     fish,
     ingots,
     mine_gets,
@@ -2673,26 +2672,17 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
             rpg_data = await load_rpg_data(userid);
 
             if (rpg_data.hunger <= 0) {
-                if (!found_food) {
-                    const emoji_cross = await get_emoji("crosS", client);
+                const emoji_cross = await get_emoji("crosS", client);
 
-                    const embed = new EmbedBuilder()
-                        .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 你已經餓到沒有食物可以吃了！請先補充食物！`);
+                const embed = new EmbedBuilder()
+                    .setTitle(`${emoji_cross} | 你的體力不足了！`)
+                    .setColor(embed_error_color)
+                    .setEmbedFooter(userid);
 
-                    if (mode === 1) return { embeds: [embed] };
-                    return await message.reply({ embeds: [embed] });
-                } else { // 正常是不會發生這種事情拉
-                    const emoji_cross = await get_emoji("crosS", client);
+                if (!found_food) embed.setDescription("你已經餓到沒有食物可以吃了！請先補充食物！");
 
-                    const embed = new EmbedBuilder()
-                        .setTitle(`${emoji_cross} | 你的體力不足了！`)
-                        .setColor(embed_error_color)
-                        .setEmbedFooter(userid);
-
-                    if (mode === 1) return { embeds: [embed] };
-                    return await message.reply({ embeds: [embed] });
-                };
+                if (mode === 1) return { embeds: [embed] };
+                return await message.reply({ embeds: [embed] });
             };
 
         };
