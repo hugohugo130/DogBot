@@ -22,26 +22,30 @@ module.exports = {
      */
     execute: async function (client) {
         for (const [guildID, channelID] of channels) {
-            const guild = await client.guilds.fetch(guildID);
-            if (!guild) return;
+            try {
+                const guild = await client.guilds.fetch(guildID);
+                if (!guild) return;
 
-            const voiceChannel = await guild.channels.fetch(channelID);
-            if (!voiceChannel?.isVoiceBased()) return;
+                const voiceChannel = await guild.channels.fetch(channelID);
+                if (!voiceChannel?.isVoiceBased()) return;
 
-            const queue = getQueue(guildID, true);
+                const queue = getQueue(guildID, true);
 
-            const connection = getVoiceConnection(guildID) ?? joinVoiceChannel({
-                channelId: voiceChannel.id,
-                guildId: guild.id,
-                selfDeaf: true,
-                selfMute: false,
-                adapterCreator: guild.voiceAdapterCreator,
-            });
+                const connection = getVoiceConnection(guildID) ?? joinVoiceChannel({
+                    channelId: voiceChannel.id,
+                    guildId: guild.id,
+                    selfDeaf: true,
+                    selfMute: false,
+                    adapterCreator: guild.voiceAdapterCreator,
+                });
 
-            queue.setVoiceChannel(voiceChannel);
-            queue.setConnection(connection);
+                queue.setVoiceChannel(voiceChannel);
+                queue.setConnection(connection);
 
-            logger.info(`✅ Joined voice channel ${voiceChannel.name}`);
+                logger.info(`✅ Joined voice channel ${voiceChannel.name}`);
+            } catch {
+                continue;
+            };
         };
     },
 };
