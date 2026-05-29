@@ -1,5 +1,5 @@
 const Discord = require("discord.js");
-const { Guild, GuildMember, User } = require("discord.js");
+const { Message, Guild, GuildMember, User } = require("discord.js");
 
 const { wait_for_client } = require("./wait_for_client.js")
 const DogClient = require("../utils/customs/client.js");
@@ -115,7 +115,7 @@ async function get_channels(guild, fetch_first = false) {
  * @param {any} channelId
  * @param {Guild | null} [guild=null]
  * @param {boolean} [fetch_first=false]
- * @returns {Promise<Discord.Channel | Discord.VoiceBasedChannel |null | undefined>}
+ * @returns {Promise<Discord.Channel | Discord.VoiceBasedChannel | null | undefined>}
  */
 async function get_channel(channelId, guild = null, fetch_first = false) {
     try {
@@ -134,6 +134,69 @@ async function get_channel(channelId, guild = null, fetch_first = false) {
     } catch {
         return null;
     };
+};
+
+/**
+ * Get message by its ID and guild
+ * @param {Guild} guild
+ * @param {string} messageId
+ * @param {boolean} [fetch=false]
+ * @param {DogClient | null} [client=null]
+ * @returns {Promise<Message | null>}
+ */
+async function get_message_by_guild(guild, messageId, fetch = false, client = null) {
+    if (!client) client = await wait_for_client();
+
+    const channels_fetched = fetch
+        ? await guild.channels.fetch()
+        : guild.channels.cache;
+
+    const channels = Array.from(channels_fetched.values()).filter(c => c !== null && c.isTextBased());
+
+    for (const channel of channels) {
+        try {
+            const message = await channel.messages.fetch(messageId);
+
+            if (message) return message;
+        } catch (err) {
+            // 忽略找不到訊息的錯誤
+            continue;
+        };
+    };
+
+    if (!fetch) {
+        return await get_message_by_guild(guild, messageId, true, client);
+    };
+
+    return null;
+};
+
+/**
+ * Get message by its ID and channel
+ * @param {import("discord.js").SendableChannels} channel
+ * @param {string} messageId
+ * @param {boolean} [fetch=false]
+ * @param {DogClient | null} [client=null]
+ * @returns {Promise<Message | null>}
+ */
+async function get_message_by_channel(channel, messageId, fetch = false, client = null) {
+    if (!client) client = await wait_for_client();
+
+    try {
+        const message = fetch
+            ? await channel.messages.fetch(messageId)
+            : channel.messages.cache.get(messageId);
+
+        if (message) return message;
+    } catch (err) {
+        return null;
+    };
+
+    if (!fetch) {
+        return await get_message_by_channel(channel, messageId, true, client);
+    };
+
+    return null;
 };
 
 /**
@@ -160,6 +223,8 @@ module.exports = {
     get_guild,
     get_channels,
     get_channel,
+    get_message_by_guild,
+    get_message_by_channel,
 
     VCJoinConfig,
 };
