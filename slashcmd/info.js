@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown, Locale } = require("discord.js");
+const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown, Locale, ContainerBuilder, SeparatorSpacingSize, MessageFlags, Message } = require("discord.js");
 
 const {
     convertToSecondTimestamp,
@@ -23,17 +23,17 @@ const {
     max_hunger,
     jobs,
     fightjobs,
+    container_default_color,
 } = require("../utils/config.js");
-const EmbedBuilder = require("../utils/customs/embedBuilder.js");
-const DogClient = require("../utils/customs/client.js");
+import EmbedBuilder from "../utils/customs/embedBuilder.js";
+import DogClient from "../utils/customs/client.js";
 
 /**
- * 
  * @param {Locale | null} [locale=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
-async function getBotInfoEmbed(locale = null, client = global._client) {
+export async function getBotInfoEmbed(locale = null, client = global._client) {
     if (!client) client = await wait_for_client();
 
     const fix =
@@ -43,6 +43,11 @@ async function getBotInfoEmbed(locale = null, client = global._client) {
          * @param {number} num
          * @param {number} tofix
          * @returns {string}
+         *
+         * @overload
+         * @param {number} num
+         * @param {null} tofix
+         * @returns {number}
          *
          * @overload
          * @param {number} num
@@ -100,7 +105,78 @@ async function getBotInfoEmbed(locale = null, client = global._client) {
         .setEmbedAuthor(client, `${client.user?.tag} 🤖`);
 };
 
-module.exports = {
+/**
+ * @param {Message} message
+ * @param {Locale | null} [locale=null]
+ * @returns {ContainerBuilder}
+ */
+export function getMsgInfoContainer(message, locale = null) {
+    const messageId = message.id;
+    const author = message.author;
+    const msg_channel = message.channel;
+    const msg_channel_id = msg_channel.id;
+    const createdAt = Math.floor(message.createdAt.getTime() / 1000);
+    const editedAt = message.editedAt ? Math.floor(message.editedAt.getTime() / 1000) : null;
+
+    const jump_url = `https://discord.com/channels/${message.guildId}/${msg_channel_id}/${messageId}`;
+
+    /*
+    const embed = new EmbedBuilder()
+        .setColor(embed_default_color)
+        .setTitle("訊息資訊")
+        .addFields(
+            { name: "訊息ID", value: messageId, inline: true },
+            { name: "頻道", value: `${msg_channel.toString()} (${msg_channel_id})`, inline: true },
+            { name: "作者", value: `${author.toString()} (${author.id})`, inline: true },
+            { name: "內容", value: message.content?escapeMarkdown(message.content) : "無內容", inline: false },
+            { name: "跳轉至訊息", value: `[點擊此處](${jump_url})`, inline: false },
+            { name: "附件", value: message.attachments.size ? message.attachments.map(a => a.url).join("\n") : "無附件", inline: false },
+            { name: "建立時間", value: createdAt ? `<t:${createdAt}:D><t:${createdAt}:T>\n(<t:${createdAt}:R>)` : "未知", inline: true },
+            { name: "編輯時間", value: editedAt ? `<t:${editedAt}:D><t:${editedAt}:T>\n(<t:${editedAt}:R>)` : "未編輯", inline: true }
+        );
+    */
+
+    const lang_id = get_lang_data(locale, "/info", "message.id");
+    const lang_channel = get_lang_data(locale, "/info", "message.channel");
+    const lang_author = get_lang_data(locale, "/info", "message.author");
+    const lang_content = get_lang_data(locale, "/info", "message.content");
+    const lang_clickhere = get_lang_data(locale, "/info", "message.clickhere");
+    const lang_no_content = get_lang_data(locale, "/info", "message.no_content");
+    const lang_jump_to_msg = get_lang_data(locale, "/info", "message.jump_to_msg");
+    const lang_attachment = get_lang_data(locale, "/info", "message.attachment");
+    const lang_message_info = get_lang_data(locale, "/info", "message.message_info");
+    const lang_no_attachment = get_lang_data(locale, "/info", "message.no_attachment");
+    const lang_created_at = get_lang_data(locale, "/info", "message.created_at");
+    const lang_edited_at = get_lang_data(locale, "/info", "message.edited_at");
+    const lang_unedited = get_lang_data(locale, "/info", "message.unedited");
+    const lang_unknown = get_lang_data(locale, "/info", "message.unknown");
+    const lang_update = get_lang_data(locale, "/info", "message.update");
+
+    return new ContainerBuilder()
+        .setAccentColor(container_default_color)
+        .addSectionComponents((section) =>
+            section
+                .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`### **${lang_message_info}**`))
+                .setButtonAccessory(
+                    new ButtonBuilder()
+                        .setCustomId("refresh|any|/info message")
+                        .setEmoji("💬")
+                        .setLabel(lang_update)
+                        .setStyle(ButtonStyle.Primary)
+                ),
+        )
+        .addSeparatorComponents((separator) => separator.setSpacing(SeparatorSpacingSize.Small))
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_id}**:\n${messageId}`))
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_channel}**:\n${msg_channel.toString()} (${msg_channel_id})`))
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_author}**:\n${author.toString()} (${author.id})`))
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_content}**:\n${message.content ? escapeMarkdown(message.content) : lang_no_content}`))
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_jump_to_msg}**:\n[${lang_clickhere}](${jump_url})`))
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_attachment}**:\n${message.attachments.size ? message.attachments.map(a => a.url).join("\n") : lang_no_attachment}`))
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_created_at}**:\n${createdAt ? `<t:${createdAt}:D><t:${createdAt}:T>\n(<t:${createdAt}:R>)` : lang_unknown}`))
+        .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_edited_at}**:\n${editedAt ? `<t:${editedAt}:D><t:${editedAt}:T>\n(<t:${editedAt}:R>)` : lang_unedited}`))
+};
+
+export default {
     data: new SlashCommandBuilder()
         .setName("info")
         .setDescription("info")
@@ -120,8 +196,8 @@ module.exports = {
             })
             .setDescription("Getting user's information")
             .setDescriptionLocalizations({
-                "zh-TW": "查詢使用者的資訊",
-                "zh-CN": "查询用户的資訊",
+                "zh-TW": "查看使用者的資訊",
+                "zh-CN": "查看用户的資訊",
             })
             .addUserOption(option =>
                 option.setName("user")
@@ -131,8 +207,8 @@ module.exports = {
                     })
                     .setDescription("Getting user's information")
                     .setDescriptionLocalizations({
-                        "zh-TW": "查詢使用者的資訊",
-                        "zh-CN": "查询用户的資訊",
+                        "zh-TW": "查看使用者的資訊",
+                        "zh-CN": "查看用户的資訊",
                     }),
             ),
         )
@@ -144,8 +220,8 @@ module.exports = {
             })
             .setDescription("Getting guild's information")
             .setDescriptionLocalizations({
-                "zh-TW": "查詢伺服器的資訊",
-                "zh-CN": "查询服务器的資訊",
+                "zh-TW": "查看伺服器的資訊",
+                "zh-CN": "查看服务器的資訊",
             }),
         )
         .addSubcommand(new SlashCommandSubcommandBuilder() // bot
@@ -156,9 +232,34 @@ module.exports = {
             })
             .setDescription("Getting bot information")
             .setDescriptionLocalizations({
-                "zh-TW": "查詢機器人的資訊",
-                "zh-CN": "查询机器人的資訊",
+                "zh-TW": "查看機器人的資訊",
+                "zh-CN": "查看机器人的資訊",
             }),
+        )
+        .addSubcommand(new SlashCommandSubcommandBuilder() // message
+            .setName("message")
+            .setNameLocalizations({
+                "zh-TW": "訊息",
+                "zh-CN": "讯息",
+            })
+            .setDescription("Getting message information (default is the last message in the channel)")
+            .setDescriptionLocalizations({
+                "zh-TW": "查看訊息的資訊 (預設是頻道中最後一則訊息)",
+                "zh-CN": "查看讯息的资讯 (预设是频道中最后一则讯息)",
+            })
+            .addStringOption(option =>
+                option.setName("message_id")
+                    .setNameLocalizations({
+                        "zh-TW": "訊息id",
+                        "zh-CN": "讯息id",
+                    })
+                    .setDescription("The message id")
+                    .setDescriptionLocalizations({
+                        "zh-TW": "訊息的id",
+                        "zh-CN": "讯息的id",
+                    })
+                    .setRequired(false),
+            ),
         ),
     /**
      *
@@ -167,6 +268,10 @@ module.exports = {
      */
     async execute(interaction, client) {
         const subcommand = interaction.options.getSubcommand();
+        const channel = interaction.channel;
+        if (!channel) return;
+
+        const given_msg_id = interaction.options.getString("message_id", false);
 
         const [_, [
             emoji_idCard,
@@ -407,6 +512,7 @@ module.exports = {
 
             case "bot": {
                 const embed = await getBotInfoEmbed(locale, client);
+
                 const lang_refresh = get_lang_data(locale, "/info", "bot.refresh");
 
                 const refreshButton = new ButtonBuilder()
@@ -421,8 +527,30 @@ module.exports = {
                         .addComponents(refreshButton));
 
                 await interaction.editReply({ embeds: [embed], components: [row] });
+                break;
+            }
+
+            case "message": {
+                const message = (
+                    (given_msg_id && await interaction.channel.messages.fetch(given_msg_id))
+                    || (await interaction.channel.messages.fetch({ limit: 2 })).reverse().first()
+                );
+
+                if (!message) {
+                    return await interaction.editReply({ content: "請先提供訊息ID或在此頻道中發送訊息。" });
+                };
+
+                const container = getMsgInfoContainer(message);
+
+                // await interaction.editReply({ embeds: [embed] });
+                await interaction.editReply({
+                    content: null,
+                    components: [container],
+                    flags: MessageFlags.IsComponentsV2,
+                });
+
+                break;
             }
         };
     },
-    getBotInfoEmbed,
 };

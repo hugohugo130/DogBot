@@ -1,6 +1,6 @@
-const { Locale } = require("discord.js");
+import { Locale } from "discord.js";
 
-const { get_logger } = require("./logger.js");
+import { get_logger } from "./logger.js";
 
 /**
  * all keys are lowercase
@@ -68,8 +68,23 @@ Since <t:{1}:R>`,
             "bot.memory": "Memory Usage (Used / Total / RSS)",
             "bot.footer": "We made this with discord.js",
             "bot.refresh": "Refresh",
-        },
 
+            "message.id": "Message ID",
+            "message.channel": "Channel",
+            "message.author": "Author",
+            "message.content": "Content",
+            "message.no_content": "`Empty`",
+            "message.message_info": "Message Info",
+            "message.jump_to_msg": "Jump to Message",
+            "message.clickhere": "Click Here",
+            "message.attachment": "Attachment",
+            "message.no_attachment": "No Attachment",
+            "message.created_at": "Created At",
+            "message.edited_at": "Edited At",
+            "message.unedited": "Unedited",
+            "message.unknown": "Unknown",
+            "message.update": "Update",
+        },
         "/queue": {
             "list.no_track_in_queue": "There is no tracks in the queue",
             "list.playing": "Now Playing",
@@ -142,8 +157,23 @@ Since <t:{1}:R>`,
             "bot.memory": "記憶體狀況 (Used / Total / RSS)",
             "bot.footer": "我們使用 discord.js 製作這個機器人",
             "bot.refresh": "更新",
-        },
 
+            "message.id": "訊息ID",
+            "message.channel": "頻道",
+            "message.author": "作者",
+            "message.content": "內容",
+            "message.no_content": "無內容",
+            "message.message_info": "訊息資訊",
+            "message.jump_to_msg": "跳轉至訊息",
+            "message.clickhere": "點擊此處",
+            "message.attachment": "附件",
+            "message.no_attachment": "無附件",
+            "message.created_at": "建立時間",
+            "message.edited_at": "編輯時間",
+            "message.unedited": "未編輯",
+            "message.unknown": "未知",
+            "message.update": "更新",
+        },
         "/queue": {
             "list.no_track_in_queue": "沒有音樂在佇列裡",
             "list.playing": "正在播放",
@@ -324,7 +354,7 @@ function get_lang_data(lang, category, key, ...replace) {
     return lang_value;
 };
 
-module.exports = {
+export {
     check_language_keys,
     get_lang_data,
 };
