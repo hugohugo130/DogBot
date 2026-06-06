@@ -1,28 +1,31 @@
-const { Collection } = require("discord.js");
-const fs = require("fs");
-const path = require("path");
-const axios = require("axios");
-const FormData = require("form-data");
-const util = require("util");
-const jsdiff = require("diff");
+import { diffLines } from "diff";
+import { AxiosError } from "axios";
+import { Collection } from "discord.js";
+import fs from "fs";
+import path from "path";
+import axios from "axios";
+import FormData from "form-data";
+import util from "util";
 
-const { getServerIPSync } = require("./getSeverIPSync.js");
-const { get_logger } = require("./logger.js");
-const { existsSync, compareLocalRemote, join_db_folder, readFile, stringify } = require("./file.js");
-const { get_areadline } = require("./readline.js");
-const { onlineDB_Files, DATABASE_FILES } = require("./config.js");
-const { AxiosError } = require("axios");
+import get_areadline from "./readline.js";
+import { getServerIPSync } from "./getSeverIPSync.js";
+import { get_logger } from "./logger.js";
+import { existsSync, compareLocalRemote, join_db_folder, readFile, stringify } from "./file.js";
+import { onlineDB_Files, DATABASE_FILES } from "./config.js";
 
-const { IP: serverIP, PORT } = global._client?.serverIP || getServerIPSync();
-if (global._client && !global._client?.serverIP) global._client.serverIP = { IP: serverIP, PORT };
+function getServerURL() {
+    const { IP: serverIP, PORT } = getServerIPSync();
 
-const SERVER_URL = `http://${serverIP}:${PORT}`;
+    return `http://${serverIP}:${PORT}`;
+};
 
 const logger = get_logger();
 
 // 列出所有檔案
 async function onlineDB_listFiles() {
     try {
+        const SERVER_URL = getServerURL();
+
         const res = await axios.get(`${SERVER_URL}/files`);
         return res.data.files;
     } catch (err) {
@@ -40,6 +43,8 @@ async function onlineDB_listFiles() {
  */
 async function onlineDB_downloadFile(filename, savePath = null) {
     try {
+        const SERVER_URL = getServerURL();
+
         const res = await axios.get(`${SERVER_URL}/files/${filename}`, { responseType: "stream" });
 
         if (savePath === null) savePath = join_db_folder(filename);
@@ -71,6 +76,8 @@ async function onlineDB_downloadFile(filename, savePath = null) {
  */
 async function onlineDB_uploadFile(filepath) {
     try {
+        const SERVER_URL = getServerURL();
+
         // === 備份遠端檔案 ===
         filepath = join_db_folder(filepath);
         const filename = path.basename(filepath);
@@ -120,6 +127,8 @@ async function onlineDB_uploadFile(filepath) {
  */
 async function onlineDB_deleteFile(filename) {
     try {
+        const SERVER_URL = getServerURL();
+
         const res = await axios.delete(`${SERVER_URL}/files/${filename}`);
         return res.data;
     } catch (err) {
@@ -139,10 +148,10 @@ async function onlineDB_deleteFile(filename) {
  * get the different of two strings
  * @param {string} localContent
  * @param {string} remoteContent
- * @returns {jsdiff.ChangeObject<string>[]}
+ * @returns {import("diff").ChangeObject<string>[]}
  */
 function diff(localContent, remoteContent) {
-    const diffResult = jsdiff.diffLines(localContent, remoteContent);
+    const diffResult = diffLines(localContent, remoteContent);
     return diffResult;
 };
 
@@ -239,6 +248,8 @@ async function preloadDBfilesResponse(file) {
     const basename_filename = path.basename(file);
 
     try {
+        const SERVER_URL = getServerURL();
+
         const url = `${SERVER_URL}/files/${basename_filename}`;
 
         const response = await axios.get(url)
@@ -343,6 +354,8 @@ async function uploadChangedDatabaseFiles() {
 
             let remoteContent;
             try {
+                const SERVER_URL = getServerURL();
+
                 const response = await axios.get(`${SERVER_URL}/files/${file}`);
                 remoteContent = JSON.stringify(response.data);
             } catch (err) {
@@ -364,7 +377,7 @@ async function uploadChangedDatabaseFiles() {
     };
 };
 
-module.exports = {
+export {
     onlineDB_checkFileContent,
     onlineDB_deleteFile,
     onlineDB_downloadFile,
