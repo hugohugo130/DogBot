@@ -1,12 +1,12 @@
-const path = require("path");
-const winston = require("winston");
-const Discord = require("discord.js");
-const Transport = require("winston-transport")
-const { EmbedBuilder: djsEmbedBuilder, MessageFlags, Embed, escapeMarkdown } = require("discord.js");
+import path from "path";
+import winston from "winston";
+import Transport from "winston-transport";
+import { EmbedBuilder as djsEmbedBuilder, MessageFlags, Embed, escapeMarkdown } from "discord.js";
 
-const config = require("./config.js");
-const { time2 } = require("./time.js");
-const DogClient = require("./customs/client.js");
+import { error_channel_id, warn_channel_id, log_channel_id, dc_send_ignore_keywords, backend_channel_id, console_ignore_keywords } from "./config.js";
+import { time2 } from "./time.js";
+import DogClient from "./customs/client.js";
+import EmbedBuilder from "./customs/embedBuilder.js";
 
 // 全局管理器
 /** @type {Map<string, winston.Logger>} */
@@ -33,11 +33,11 @@ const LEVEL_COLORS = {
 // 頻道映射
 /** @type {{ [k: string]: string }} */
 const CHANNEL_MAPPING = {
-    error: config.error_channel_id,
-    warn: config.warn_channel_id,
-    info: config.log_channel_id,
-    debug: config.log_channel_id,
-    verbose: config.log_channel_id
+    error: error_channel_id,
+    warn: warn_channel_id,
+    info: log_channel_id,
+    debug: log_channel_id,
+    verbose: log_channel_id
 };
 
 /**
@@ -87,8 +87,8 @@ class DiscordTransport extends Transport {
         if (DEBUG) console.debug(`[DEBUG] [DiscordTransport] pushed info to sendQueue: ${JSON.stringify(info, null, 4)}`);
 
         // 如果message含有config.dc_send_ignore_keywords中任何一個關鍵字，則不發送
-        if (info.message && any(config.dc_send_ignore_keywords.map(keyword => info.message.includes(keyword)))) return;
-        if (info.stack && any(config.dc_send_ignore_keywords.map(keyword => info.stack.includes(keyword)))) return;
+        if (info.message && any(dc_send_ignore_keywords.map(keyword => info.message.includes(keyword)))) return;
+        if (info.stack && any(dc_send_ignore_keywords.map(keyword => info.stack.includes(keyword)))) return;
 
         global.sendQueue.push(info);
 
@@ -108,7 +108,7 @@ class BackendTransport extends Transport {
         this.name = "backend";
         this.level = opts?.level || "info";
         this.levels = winston.config.npm.levels;
-        this.channel_id = config.backend_channel_id;
+        this.channel_id = backend_channel_id;
     };
 
     /**
@@ -143,7 +143,7 @@ const consoleFormat = winston.format.combine(
                 typeof info.message === "object" &&
                 "data" in info.message
             ) || (
-                config.console_ignore_keywords.filter((keyword) => {
+                console_ignore_keywords.filter((keyword) => {
                     let msg = String(info.stack || info.message);
 
                     return msg.includes(keyword);
@@ -164,15 +164,13 @@ const consoleFormat = winston.format.combine(
  * 
  * @param {any} channel
  * @param {string} level
- * @param {Discord.ColorResolvable} color
+ * @param {import('discord.js').ColorResolvable} color
  * @param {string} logger_name
  * @param {string} message
  * @param {number | null} [timestamp=null]
  * @returns {Promise<void>}
  */
 async function send_msg(channel, level, color, logger_name, message, timestamp = null) {
-    const EmbedBuilder = require("./customs/embedBuilder.js");
-
     message = message.replace("```", "");
     message = escapeMarkdown(message, {
         codeBlockContent: false,
@@ -300,8 +298,6 @@ function getCallerModuleName(depth = 4) {
     };
 
     // #endregion
-
-
 };
 
 /**
@@ -380,8 +376,6 @@ function get_logger(options = {}) {
  * @param {DogClient} client
  */
 async function process_send_queue(client) {
-    const EmbedBuilder = require("./customs/embedBuilder.js");
-
     while (global.sendQueue.length > 0) {
         const info = global.sendQueue[0];
         if (DEBUG) console.debug(`[DEBUG] [process_send_queue] handling send Queue ${JSON.stringify(info, null, 4)}`)
@@ -458,12 +452,9 @@ async function shutdown(quiet = false, wait = 1000) {
     await new Promise(resolve => setTimeout(resolve, wait));
 };
 
-module.exports = {
+export {
     get_logger,
     getCallerModuleName,
     process_send_queue,
     shutdown,
-    loggerManager,
-    loggerManager_log,
-    loggerManager_nodc,
 };
