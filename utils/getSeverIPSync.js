@@ -1,9 +1,9 @@
-const fs = require("fs");
-const { execSync } = require("child_process");
+import fs from "fs";
+import { execSync } from "child_process";
 
-const { writeJsonSync, readFileSync } = require("./file.js");
-const { get_logger } = require("./logger.js");
-const { DEFAULT_IP, DEFAULT_PORT, serverIPFile } = require("./config.js");
+import { writeJsonSync, readFileSync } from "./file.js";
+import { get_logger } from "./logger.js";
+import { DEFAULT_IP, DEFAULT_PORT, serverIPFile } from "./config.js";
 
 const logger = get_logger();
 
@@ -34,7 +34,15 @@ function check_IP_valid(IP, PORT) {
     return false;
 };
 
+/**
+ * 
+ * @returns {{ IP: string, PORT: number }}
+ */
 function getServerIPSync() {
+    if (global._client?.serverIP) {
+        return global._client.serverIP;
+    };
+
     let serverIP = null;
     if (fs.existsSync(serverIPFile)) {
         try {
@@ -74,9 +82,13 @@ function getServerIPSync() {
         serverIP.PORT = DEFAULT_PORT;
     };
 
+    if (global._client) {
+        global._client.serverIP = serverIP;
+    };
+
     return serverIP;
 };
 
-module.exports = {
+export {
     getServerIPSync,
 };
