@@ -1,13 +1,15 @@
-const { REST, Collection, Routes } = require("discord.js");
-const { Logger } = require("winston");
+import { loadEnvFile } from "node:process";
+import { REST, Routes } from "discord.js";
+import { Logger } from "winston";
 
-const { BotID } = require("./utils/config.js");
-const { loadslashcmd } = require("./utils/loadslashcmd.js");
-const { get_logger } = require("./utils/logger.js");
-const { should_register_cmd, update_cmd_hash } = require("./utils/auto_register.js");
-const util = require("util");
+import { BotID, BETA_BotID } from "./utils/config.js";
+import { loadslashcmd } from "./utils/loadslashcmd.js";
+import { get_logger } from "./utils/logger.js";
+import { should_register_cmd, update_cmd_hash } from "./utils/auto_register.js";
+import util from "util";
 
 const args = process.argv.slice(2);
+const isBeta = args.includes("--beta");
 
 /**
  * Log something
@@ -31,26 +33,31 @@ function _error(logger, message) {
 
 /**
  * Register slash commands
- * @param {boolean} quiet
- * @param {boolean | Logger} logger
- * @param {boolean} updateHash 是否在註冊成功後更新 hash 文件
+ * @param {boolean} [quiet=true]
+ * @param {boolean | Logger} [logger=false]
+ * @param {boolean} [updateHash=true] 是否在註冊成功後更新 hash 文件
+ * @param {boolean} [beta] 是否使用 beta bot
  * @returns {Promise<any[]>}
  */
-async function registcmd(quiet = true, logger = false, updateHash = true) {
-    require("node:process").loadEnvFile();
+async function registcmd(quiet = true, logger = false, updateHash = true, beta = isBeta) {
+    loadEnvFile();
 
-    if (!process.env.TOKEN) throw new Error("no bot token provided in .env");
+    const token_key = beta ? "BETA_TOKEN" : "TOKEN";
+    const botID = beta ? BETA_BotID : BotID;
+
+    if (!process.env[token_key]) throw new Error("no bot token provided in .env");
+    if (!botID) throw new Error("no bot id provided");
 
     if (logger === true) logger = get_logger();
 
     const commands = Array.from(await loadslashcmd(false));
-    const rest = new REST().setToken(process.env.TOKEN);
+    const rest = new REST().setToken(process.env[token_key]);
 
     try {
         if (!quiet) log(logger, `正在註冊 ${commands.length} 個斜線指令...`);
 
         const data = await rest.put(
-            Routes.applicationCommands(BotID),
+            Routes.applicationCommands(botID),
             { body: commands },
         );
 
@@ -70,7 +77,7 @@ async function registcmd(quiet = true, logger = false, updateHash = true) {
     };
 };
 
-if (require.main === module) {
+if (import.meta.main) { // 等於 (require.main === module)
     (async () => {
         const res = await should_register_cmd();
         console.log("should_register_cmd: " + res);
@@ -94,6 +101,6 @@ if (require.main === module) {
     })();
 };
 
-module.exports = {
+export {
     registcmd,
 }

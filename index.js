@@ -1,28 +1,36 @@
-require("./utils/check.env.js") // check .env file
-require("node:process").loadEnvFile(); // load .env file
-const { Events, Collection } = require("discord.js");
-const { get_logger } = require("./utils/logger.js");
-const { load_cogs } = require("./utils/load_cogs.js");
-const { check_item_data } = require("./utils/rpg.js");
-const { registcmd } = require("./register_commands.js");
-const { getQueues } = require("./utils/music/music.js");
-const { getCacheManager } = require("./utils/cache.js");
-const { get_areadline } = require("./utils/readline.js");
-const { loadslashcmd } = require("./utils/loadslashcmd.js");
-const { safeshutdown } = require("./utils/safeshutdown.js");
-const { hot_reload_cogs } = require("./utils/hot_reload.js");
-const { check_language_keys } = require("./utils/language.js");
-const { getServerIPSync } = require("./utils/getSeverIPSync.js");
-const { should_register_cmd } = require("./utils/auto_register.js");
-const { check_help_rpg_info } = require("./cogs/rpg/interactions.js");
-const { saveAllMusicStates } = require("./utils/music/persistence.js");
-const { checkDBFilesExists, checkDBFilesCorrupted } = require("./utils/check_db_files.js");
-const { checkAllDatabaseFilesContent, uploadAllDatabaseFiles } = require("./utils/onlineDB.js");
-const DogClient = require("./utils/customs/client.js");
-const util = require("util");
+import "./utils/check.env.js"; // check .env file
+import { inspect } from "util";
+import { loadEnvFile } from "node:process";
+
+import get_areadline from "./utils/readline.js";
+import { Events, Collection } from "discord.js";
+import { get_logger } from "./utils/logger.js";
+import { load_cogs } from "./utils/load_cogs.js";
+import { check_item_data } from "./utils/rpg.js";
+import { registcmd } from "./register_commands.js";
+import { getQueues } from "./utils/music/music.js";
+import { getCacheManager } from "./utils/cache.js";
+import { loadslashcmd } from "./utils/loadslashcmd.js";
+import { safeshutdown } from "./utils/safeshutdown.js";
+import { hot_reload_cogs } from "./utils/hot_reload.js";
+import { check_language_keys } from "./utils/language.js";
+import { getServerIPSync } from "./utils/getSeverIPSync.js";
+import { should_register_cmd } from "./utils/auto_register.js";
+import { check_help_rpg_info } from "./cogs/rpg/interactions.js";
+import { saveAllMusicStates } from "./utils/music/persistence.js";
+import { checkDBFilesExists, checkDBFilesCorrupted } from "./utils/check_db_files.js";
+import { checkAllDatabaseFilesContent, uploadAllDatabaseFiles } from "./utils/onlineDB.js";
+import DogClient from "./utils/customs/client.js";
+
+loadEnvFile(); // load .env file
 
 const args = process.argv.slice(2);
 const debug = args.includes("--debug");
+const isBeta = args.includes("--beta");
+
+const TOKEN = !isBeta
+    ? process.env.TOKEN
+    : process.env.BETA_TOKEN;
 
 const client = new DogClient();
 
@@ -33,7 +41,7 @@ process.on("unhandledRejection", (reason, promise) => {
     let errorStack = reason;
 
     if (reason instanceof Error) {
-        errorStack = util.inspect(reason, { depth: null });
+        errorStack = inspect(reason, { depth: null });
     };
 
     const errorStack_str = String(errorStack);
@@ -47,7 +55,7 @@ process.on("unhandledRejection", (reason, promise) => {
 
 // 未捕獲的異常處理
 process.on("uncaughtException", (error) => {
-    const errorStack = util.inspect(error, { depth: null });
+    const errorStack = inspect(error, { depth: null });
 
     if (errorStack.includes("Missing Access")) return;
     if (errorStack.includes("Missing Permissions")) return;
@@ -137,7 +145,7 @@ client.once(Events.ClientReady, async () => {
 
                 const depthNum = parseInt(depth) || null;
 
-                logger.info(util.inspect(getQueues(), { depth: depthNum }));
+                logger.info(inspect(getQueues(), { depth: depthNum }));
 
                 break;
             }
@@ -159,7 +167,7 @@ client.once(Events.ClientReady, async () => {
                         const cachemgr = getCacheManager();
                         if (!cachemgr) break;
 
-                        logger.info(util.inspect(cachemgr.getStats(), { depth: null }));
+                        logger.info(inspect(cachemgr.getStats(), { depth: null }));
                         break;
                     }
                 };
@@ -221,16 +229,14 @@ client.once(Events.ClientReady, async () => {
     logger.info(`✅ Loaded ${cogs} cogs`);
 
     if (await should_register_cmd()) {
-        await registcmd(true, true)
+        await registcmd(true, true);
     };
 
-    const loaded_cmds = await loadslashcmd(true);
-
-    client.commands = loaded_cmds;
+    client.commands = await loadslashcmd(true);
 
     logger.info(`✅ Loaded ${client.commands.size} slash commands`);
 
-    await client.login(process.env.TOKEN);
+    await client.login(TOKEN);
 
     global._client = client;
 })();

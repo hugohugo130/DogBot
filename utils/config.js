@@ -1,12 +1,12 @@
-const { Colors, VoiceChannel } = require("discord.js");
+import { VoiceChannel } from "discord.js";
+import { join } from "path";
 
 // functions for config
 const cwd = process.cwd;
-const join = require("path").join;
 
 // Online Database Info
-const DEFAULT_IP = "192.168.0.156"
-const DEFAULT_PORT = 3003
+const DEFAULT_IP = "192.168.0.156";
+const DEFAULT_PORT = 3003;
 
 // Database
 const INDENT = 4;
@@ -320,7 +320,8 @@ const dc_send_ignore_keywords = ["金額超過上限", "GuildMembersTimeout", "M
 const console_ignore_keywords = ["金額超過上限", "GuildMembersTimeout"];
 
 // Bot info
-const BotID = "1422212094274830470";
+const BotID = "1422212094274830470"; // 狗狗機器犬
+const BETA_BotID = "1509140015534309386"; // 孵化中的幼犬
 const BotName = "狗狗機器犬"; // 預設為 client.user.tag
 const authorName = "哈狗";
 
@@ -652,7 +653,7 @@ const PrivacySettings = Object.freeze({
     Partner: "partner",
 });
 
-module.exports = {
+export {
     RPGDatabase,
 
     DEFAULT_IP,
@@ -692,6 +693,7 @@ module.exports = {
     console_ignore_keywords,
 
     BotID,
+    BETA_BotID,
     BotName,
     authorName,
 
