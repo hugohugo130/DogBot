@@ -6,7 +6,6 @@ import { EmbedBuilder as djsEmbedBuilder, MessageFlags, Embed, escapeMarkdown } 
 import { error_channel_id, warn_channel_id, log_channel_id, dc_send_ignore_keywords, backend_channel_id, console_ignore_keywords } from "./config.js";
 import { time2 } from "./time.js";
 import DogClient from "./customs/client.js";
-import EmbedBuilder from "./customs/embedBuilder.js";
 
 // 全局管理器
 /** @type {Map<string, winston.Logger>} */
@@ -171,6 +170,8 @@ const consoleFormat = winston.format.combine(
  * @returns {Promise<void>}
  */
 async function send_msg(channel, level, color, logger_name, message, timestamp = null) {
+    const { default: EmbedBuilder } = await import(new URL("./customs/embedBuilder.js", import.meta.url).href);
+
     message = message.replace("```", "");
     message = escapeMarkdown(message, {
         codeBlockContent: false,
@@ -267,7 +268,10 @@ function getCallerModuleName(depth = 4) {
             };
         };
 
-        const fullPath = callerFile;
+        const fullPath = callerFile
+            ? decodeURIComponent(callerFile) // 支援中文檔案名稱
+            : callerFile;
+
         return fullPath ? path.basename(fullPath, ".js") : unknown_word;
     } catch {
     } finally {
@@ -376,6 +380,8 @@ function get_logger(options = {}) {
  * @param {DogClient} client
  */
 async function process_send_queue(client) {
+    const { default: EmbedBuilder } = await import(new URL("./customs/embedBuilder.js", import.meta.url).href);
+
     while (global.sendQueue.length > 0) {
         const info = global.sendQueue[0];
         if (DEBUG) console.debug(`[DEBUG] [process_send_queue] handling send Queue ${JSON.stringify(info, null, 4)}`)
