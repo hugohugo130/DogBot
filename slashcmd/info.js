@@ -1,30 +1,11 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown, Locale, ContainerBuilder, SeparatorSpacingSize, MessageFlags, Message } = require("discord.js");
+import { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown, Locale, ContainerBuilder, SeparatorSpacingSize, MessageFlags, Message } from "discord.js";
 
-const {
-    convertToSecondTimestamp,
-} = require("../utils/timestamp.js");
-const {
-    load_rpg_data,
-} = require("../utils/file.js");
-const {
-    get_emojis,
-    get_emoji,
-    get_job_name,
-    get_fightjob_name,
-} = require("../utils/rpg.js");
-const {
-    get_lang_data,
-} = require("../utils/language.js");
-const {
-    wait_for_client,
-} = require("../utils/wait_for_client.js");
-const {
-    embed_default_color,
-    max_hunger,
-    jobs,
-    fightjobs,
-    container_default_color,
-} = require("../utils/config.js");
+import { convertToSecondTimestamp } from "../utils/timestamp.js";
+import { load_rpg_data } from "../utils/file.js";
+import { get_emojis, get_emoji, get_job_name, get_fightjob_name } from "../utils/rpg.js";
+import { get_lang_data } from "../utils/language.js";
+import { wait_for_client } from "../utils/wait_for_client.js";
+import { embed_default_color, max_hunger, jobs, fightjobs, container_default_color } from "../utils/config.js";
 import EmbedBuilder from "../utils/customs/embedBuilder.js";
 import DogClient from "../utils/customs/client.js";
 
@@ -159,7 +140,7 @@ export function getMsgInfoContainer(message, locale = null) {
                 .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`### **${lang_message_info}**`))
                 .setButtonAccessory(
                     new ButtonBuilder()
-                        .setCustomId("refresh|any|/info message")
+                        .setCustomId(`refresh|any|/info message|${message.id}`)
                         .setEmoji("💬")
                         .setLabel(lang_update)
                         .setStyle(ButtonStyle.Primary)
@@ -540,7 +521,7 @@ export default {
                     return await interaction.editReply({ content: "請先提供訊息ID或在此頻道中發送訊息。" });
                 };
 
-                const container = getMsgInfoContainer(message);
+                const container = getMsgInfoContainer(message, locale);
 
                 // await interaction.editReply({ embeds: [embed] });
                 await interaction.editReply({
