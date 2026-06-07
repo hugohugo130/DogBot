@@ -1,11 +1,11 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Collection } = require("discord.js");
+import { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Collection } from "discord.js";
 
-const { notEnoughItemEmbed, wrong_job_embed, get_emojis, bake, name, oven_slots, food_data, get_name_of_id, add_item } = require("../../../utils/rpg.js");
-const { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } = require("../../../utils/file.js");
-const { generateSessionId } = require("../../../utils/random.js");
-const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
-const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
-const DogClient = require("../../../utils/customs/client.js");
+import { notEnoughItemEmbed, wrong_job_embed, get_emojis, bake, name, oven_slots, food_data, get_name_of_id, add_item } from "../../../utils/rpg.js";
+import { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } from "../../../utils/file.js";
+import { generateSessionId } from "../../../utils/random.js";
+import { embed_error_color, embed_default_color } from "../../../utils/config.js";
+import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
+import DogClient from "../../../utils/customs/client.js";
 
 /**
  * Divide an amount by a number
@@ -13,7 +13,7 @@ const DogClient = require("../../../utils/customs/client.js");
  * @param {number} by
  * @returns {number[]}
  */
-function divide(amount, by) {
+export function divide(amount, by) {
     // 檢查 amount 和 by 是否為整數（沒有小數點）
     if (!Number.isInteger(amount) || !Number.isInteger(by)) {
         throw new Error("amount 和 by 必須是整數");
@@ -60,8 +60,10 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
 
     const [emoji_cross, emoji_drumstick] = await get_emojis(["crosS", "drumstick"], client);
 
-    let rpg_data = await load_rpg_data(userId);
-    const bake_data = await load_bake_data(userId);
+    let [rpg_data, bake_data] = await Promise.all([
+        load_rpg_data(userId),
+        load_bake_data(userId)
+    ]);
 
     const oven_remain_slots = oven_slots - (bake_data?.length || 0);
 
@@ -88,7 +90,7 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
     const target_food = bake[item_id];
     const target_food_hunger = food_data[target_food];
 
-    const duration = 60 * target_food_hunger;
+    const duration = 60 * amount * target_food_hunger;
 
     const coal_amount = Math.ceil(amount / 2);
 
@@ -194,7 +196,7 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
  * @property {number} end_time
  */
 
-module.exports = {
+export default {
     data: new SlashCommandBuilder()
         .setName("bake")
         .setDescription("烤箱相關指令")
@@ -588,5 +590,4 @@ module.exports = {
             }
         };
     },
-    divide,
 };
