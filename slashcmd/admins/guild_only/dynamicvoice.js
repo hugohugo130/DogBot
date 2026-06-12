@@ -1,9 +1,28 @@
-const { SlashCommandBuilder, ChannelType, MessageFlags, ChatInputCommandInteraction, VoiceChannel } = require("discord.js");
+import {
+    SlashCommandBuilder,
+    ChannelType,
+    MessageFlags,
+    VoiceChannel,
+    PermissionFlagsBits,
+} from "discord.js";
 
-const { setDynamicVoice } = require("../../../utils/file.js");
+import {
+    setDynamicVoice,
+} from "../../../utils/file.js";
+import {
+    get_me,
+} from "../../../utils/discord.js";
+import {
+    get_emoji,
+} from "../../../utils/rpg.js";
+import {
+    get_lang_data,
+    PermissionTranslationKeyMapping,
+} from "../../../utils/language.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../../utils/types.js").Slash<["guild"]>} */
+export const dvoiceSlash = {
+    builder: new SlashCommandBuilder()
         .setName("dvoice")
         .setDescription("Enable or disable dynamic voice channel for this server")
         .setNameLocalizations({
@@ -27,22 +46,54 @@ module.exports = {
                 })
                 .addChannelTypes(ChannelType.GuildVoice)
                 .setRequired(false),
-        )
-        .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @returns {Promise<any>}
-     */
-    async execute(interaction) {
-        if (!interaction.guild) return await interaction.reply({ content: "你不在伺服器內執行這個指令！", flags: MessageFlags.Ephemeral });
+        ),
+    // .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
+    permissions: {
+        bot: ["ManageChannels"],
+        user: ["ManageChannels"],
+    },
+    allowedContext: ["guild"],
+    stage: "beta",
 
-        await interaction.deferReply();
+    execute: async function (interaction, client) {
+        const channel = /** @type {VoiceChannel | undefined} */
+            (interaction.options.getChannel("vchannel", false)) ?? null;
 
-        const channel = interaction.options.getChannel("vchannel") ?? null;
+        const locale = interaction.locale;
         const guildID = interaction.guild.id;
+        const me = await get_me(interaction.guild);
 
-        if (channel instanceof VoiceChannel) await setDynamicVoice(guildID, channel);
+        if (channel) {
+            const botChannelPerm = me.permissionsIn(channel);
+
+            /** @type {(Exclude<keyof typeof PermissionFlagsBits, "ManageEmojisAndStickers">)[]} */
+            const permissionsNeeded = [
+                "ViewChannel",
+                "MoveMembers",
+            ];
+
+            const missingPermissions = permissionsNeeded.filter(perm => !botChannelPerm.has(perm));
+
+            if (missingPermissions.length > 0) {
+                const emoji_cross = await get_emoji("crosS", client);
+                const missPermText = missingPermissions.map(perm => {
+                    const translation_key = PermissionTranslationKeyMapping[perm];
+
+                    const translated_perm = get_lang_data(locale, "permissions", `perm.${translation_key}`);
+                    `\`${translated_perm || perm}\``
+                }).join(", ");
+
+                await interaction.reply({
+                    content: `${emoji_cross} | 你缺少了這些權限: ${missPermText}`,
+                    flags: MessageFlags.Ephemeral,
+                });
+            };
+        };
+
+        await Promise.all([
+            interaction.deferReply(),
+            setDynamicVoice(guildID, channel),
+        ]);
 
         await interaction.editReply({ content: `已成功設定動態語音頻道${channel ? `為 ${channel}` : "：關閉"}` });
     },

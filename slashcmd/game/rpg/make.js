@@ -1,13 +1,33 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
+import {
+    SlashCommandBuilder,
+    ChatInputCommandInteraction,
+    MessageFlags,
+} from "discord.js";
 
-const { get_name_of_id, get_emojis, recipes, tags, get_id_of_name, get_emoji, subtract_item, add_item } = require("../../../utils/rpg.js");
-const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
-const { embed_error_color, embed_default_color } = require("../../../utils/config.js");
-const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
-const DogClient = require("../../../utils/customs/client.js");
+import {
+    get_name_of_id,
+    get_emojis,
+    recipes,
+    tags,
+    get_id_of_name,
+    get_emoji,
+    subtract_item,
+    add_item,
+} from "../../../utils/rpg.js";
+import {
+    load_rpg_data,
+    save_rpg_data,
+} from "../../../utils/file.js";
+import {
+    embed_error_color,
+    embed_default_color,
+} from "../../../utils/config.js";
+import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
+import DogClient from "../../../utils/customs/client.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../../utils/types.js").Slash} */
+export const makeSlash = {
+    builder: new SlashCommandBuilder()
         .setName("make")
         .setDescription("Craft items and weapons")
         .setNameLocalizations({
@@ -19,23 +39,36 @@ module.exports = {
             "zh-CN": "合成制造武器和物品",
         })
         .addStringOption(option =>
-            option.setName("物品")
-                .setDescription("要合成的物品")
+            option.setName("item")
+                .setNameLocalizations({
+                    "zh-TW": "物品",
+                    "zh-CN": "物品",
+                })
+                .setDescription("The item to be crafted")
+                .setDescriptionLocalizations({
+                    "zh-TW": "要合成的物品",
+                    "zh-CN": "要合成的物品",
+                })
                 .setAutocomplete(true)
                 .setRequired(true),
         )
         .addIntegerOption(option =>
-            option.setName("數量")
-                .setDescription("要合成的數量")
+            option.setName("amount")
+                .setNameLocalizations({
+                    "zh-TW": "數量",
+                    "zh-CN": "数量",
+                })
+                .setDescription("The amount to be crafted")
+                .setDescriptionLocalizations({
+                    "zh-TW": "要合成的數量",
+                    "zh-CN": "要合成的数量",
+                })
                 .setMinValue(1)
                 .setRequired(false),
         ),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-     * @returns {Promise<any>}
-     */
+    allowedContext: ["dm", "guild"],
+    stage: "beta",
+
     async execute(interaction, client) {
         const userid = interaction.user.id;
 
@@ -45,8 +78,8 @@ module.exports = {
             get_emojis(["toolbox", "crosS"], client),
         ]);
 
-        const original_item_id = interaction.options.getString("物品", true);
-        const amount = interaction.options.getInteger("數量") ?? 1;
+        const original_item_id = interaction.options.getString("item", true);
+        const amount = interaction.options.getInteger("amount") ?? 1;
 
         const item_id = get_id_of_name(
             original_item_id

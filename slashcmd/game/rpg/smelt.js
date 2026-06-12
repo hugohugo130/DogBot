@@ -1,18 +1,26 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
+import {
+    SlashCommandBuilder,
+    SlashCommandSubcommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ChatInputCommandInteraction,
+    MessageFlags,
+} from "discord.js";
 
-const {
+import {
     divide,
-} = require("./bake.js");
-const {
+} from "./bake.js";
+import {
     get_logger,
-} = require("../../../utils/logger.js");
-const {
+} from "../../../utils/logger.js";
+import {
     load_rpg_data,
     load_smelt_data,
     save_smelt_data,
     save_rpg_data,
-} = require("../../../utils/file.js");
-const {
+} from "../../../utils/file.js";
+import {
     get_name_of_id,
     get_emojis,
     wrong_job_embed,
@@ -20,21 +28,20 @@ const {
     get_id_of_name,
     userHaveNotEnoughItems,
     notEnoughItemEmbed,
-    name,
     smelter_slots,
     smeltable_recipe,
     bake,
     add_item,
-} = require("../../../utils/rpg.js");
-const {
+} from "../../../utils/rpg.js";
+import {
     embed_error_color,
     embed_default_color,
-} = require("../../../utils/config.js");
-const {
+} from "../../../utils/config.js";
+import {
     wait_for_client,
-} = require("../../../utils/wait_for_client.js");
-const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
-const DogClient = require("../../../utils/customs/client.js");
+} from "../../../utils/wait_for_client.js";
+import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
+import DogClient from "../../../utils/customs/client.js";
 
 /**
  * @typedef SmeltData
@@ -163,8 +170,9 @@ async function smelt_smelt(interaction, item_id, amount, client = global._client
     else await interaction.followUp(replyOption);
 };
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../../utils/types.js").Slash} */
+export const smeltSlash = {
+    builder: new SlashCommandBuilder()
         .setName("smelt")
         .setDescription("煉金爐相關指令")
         .setNameLocalizations({
@@ -264,12 +272,9 @@ module.exports = {
                     .setMinValue(1),
             ),
         ),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-     * @returns {Promise<any>}
-     */
+    allowedContext: ["dm", "guild"],
+    stage: "beta",
+
     async execute(interaction, client) {
         await interaction.deferReply();
 

@@ -1,8 +1,16 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction } = require("discord.js");
-const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
+import {
+    SlashCommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    ChatInputCommandInteraction,
+} from "discord.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
+import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
+
+/** @type {import("../../../utils/types.js").Slash} */
+export const setLangSlash = {
+    builder: new SlashCommandBuilder()
         .setName("set_language")
         .setDescription("Set bot display language")
         .setNameLocalizations({
@@ -15,11 +23,9 @@ module.exports = {
             "zh-CN": "设置机器人显示语言",
             "en-US": "set bot display language",
         }),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @returns {Promise<any>}
-     */
+    allowedContext: ["dm", "guild"],
+    stage: "beta",
+
     async execute(interaction) {
         // const { get_emoji } = require("../../../utils/rpg.js");
 

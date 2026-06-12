@@ -1,11 +1,42 @@
-import { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChatInputCommandInteraction, escapeMarkdown, Locale, ContainerBuilder, SeparatorSpacingSize, MessageFlags, Message } from "discord.js";
+import {
+    SlashCommandBuilder,
+    SlashCommandSubcommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    escapeMarkdown,
+    Locale,
+    ContainerBuilder,
+    SeparatorSpacingSize,
+    MessageFlags,
+    Message,
+} from "discord.js";
 
-import { convertToSecondTimestamp } from "../utils/timestamp.js";
-import { load_rpg_data } from "../utils/file.js";
-import { get_emojis, get_emoji, get_job_name, get_fightjob_name } from "../utils/rpg.js";
-import { get_lang_data } from "../utils/language.js";
-import { wait_for_client } from "../utils/wait_for_client.js";
-import { embed_default_color, max_hunger, jobs, fightjobs, container_default_color } from "../utils/config.js";
+import {
+    convertToSecondTimestamp,
+} from "../utils/timestamp.js";
+import {
+    load_rpg_data,
+} from "../utils/file.js";
+import {
+    get_emojis,
+    get_emoji,
+    get_job_name,
+    get_fightjob_name,
+} from "../utils/rpg.js";
+import {
+    get_lang_data,
+} from "../utils/language.js";
+import {
+    wait_for_client,
+} from "../utils/wait_for_client.js";
+import {
+    embed_default_color,
+    max_hunger,
+    jobs,
+    fightjobs,
+    container_default_color,
+} from "../utils/config.js";
 import EmbedBuilder from "../utils/customs/embedBuilder.js";
 import DogClient from "../utils/customs/client.js";
 
@@ -157,14 +188,15 @@ export function getMsgInfoContainer(message, locale = null) {
         .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_edited_at}**:\n${editedAt ? `<t:${editedAt}:D><t:${editedAt}:T>\n(<t:${editedAt}:R>)` : lang_unedited}`))
 };
 
-export default {
-    data: new SlashCommandBuilder()
+/** @type {import("../utils/types.js").Slash} */
+export const infoSlash = {
+    builder: new SlashCommandBuilder()
         .setName("info")
-        .setDescription("info")
         .setNameLocalizations({
             "zh-TW": "取得資訊",
             "zh-CN": "取得资讯",
         })
+        .setDescription("info")
         .setDescriptionLocalizations({
             "zh-TW": "取得資訊",
             "zh-CN": "取得资讯",
@@ -242,11 +274,9 @@ export default {
                     .setRequired(false),
             ),
         ),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-     */
+    allowedContext: ["dm", "guild"],
+    stage: "beta",
+
     async execute(interaction, client) {
         const subcommand = interaction.options.getSubcommand();
         const channel = interaction.channel;

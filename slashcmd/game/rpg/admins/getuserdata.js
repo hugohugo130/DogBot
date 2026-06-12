@@ -1,10 +1,24 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, AttachmentBuilder, FileBuilder, MessageFlags, TextDisplayBuilder, ContainerBuilder } = require("discord.js");
+import {
+    SlashCommandBuilder,
+    AttachmentBuilder,
+    FileBuilder,
+    MessageFlags,
+    TextDisplayBuilder,
+    ContainerBuilder,
+} from "discord.js";
 
-const { load_rpg_data, writeJson, join_temp_folder } = require("../../../../utils/file.js");
-const { admins } = require("../../../../utils/config.js");
+import {
+    load_rpg_data,
+    writeJson,
+    join_temp_folder,
+} from "../../../../utils/file.js";
+import {
+    admins,
+} from "../../../../utils/config.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../../../utils/types.js").Slash} */
+export const getUserDataSlash = {
+    builder: new SlashCommandBuilder()
         .setName("getuserdata")
         .setDescription("Get rpg data of a user")
         .setNameLocalizations({
@@ -28,23 +42,23 @@ module.exports = {
                 })
                 .setRequired(true),
         ),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @returns {Promise<any>}
-     */
-    async execute(interaction) {
-        if (!admins.includes(interaction.user.id)) return
+    allowedContext: ["dm", "guild"],
+    stage: "admin",
 
-        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+    async execute(interaction) {
+        if (!admins.includes(interaction.user.id)) return;
 
         const user = interaction.options.getUser("user");
         if (!user) return;
 
-        const rpg_data = await load_rpg_data(user.id);
-
         const filename = `rpg_data-${user.id}-${Math.floor(Date.now())}.json`;
-        const filePath = await join_temp_folder(filename);
+
+        const [_, rpg_data, filePath] = await Promise.all([
+            interaction.deferReply({ flags: MessageFlags.Ephemeral }),
+            load_rpg_data(user.id),
+            await join_temp_folder(filename),
+        ]);
+
         await writeJson(filePath, rpg_data);
 
         const attachment = new AttachmentBuilder(filePath)

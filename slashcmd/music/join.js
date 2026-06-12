@@ -1,30 +1,44 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
-const { joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
+import {
+    SlashCommandBuilder,
+    MessageFlags,
+} from "discord.js";
+import {
+    joinVoiceChannel,
+    getVoiceConnection,
+} from "@discordjs/voice";
 
-const { get_emojis } = require("../../utils/rpg.js");
-const { VCJoinConfig } = require("../../utils/discord.js");
-const { getQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
-const { embed_error_color } = require("../../utils/config.js");
-const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
-const DogClient = require("../../utils/customs/client.js");
+import {
+    get_emojis,
+} from "../../utils/rpg.js";
+import {
+    VCJoinConfig,
+} from "../../utils/discord.js";
+import {
+    getQueue,
+    youHaveToJoinVC_Embed,
+} from "../../utils/music/music.js";
+import {
+    embed_error_color,
+} from "../../utils/config.js";
+import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../utils/types.js").Slash<["guild"]>} */
+export const joinSlash = {
+    builder: new SlashCommandBuilder()
         .setName("join")
-        .setDescription("make bot join your voice channel")
         .setNameLocalizations({
             "zh-TW": "加入語音頻道",
             "zh-CN": "加入语音频道"
         })
+        .setDescription("make bot join your voice channel")
         .setDescriptionLocalizations({
             "zh-TW": "讓機器人加入你的語音頻道",
             "zh-CN": "让机器人加入你的语音频道"
         }),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-     */
+    allowedContext: ["guild"],
+    stage: "beta",
+    music: true,
+        
     async execute(interaction, client) {
         const guild = interaction.guild;
         if (!guild?.id) return;

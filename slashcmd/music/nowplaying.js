@@ -1,15 +1,42 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags, BaseInteraction, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
-const util = require("util");
+import {
+    SlashCommandBuilder,
+    MessageFlags,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    BaseInteraction,
+} from "discord.js";
+import util from "util";
 
-const { get_logger } = require("../../utils/logger.js");
-const { get_emojis, get_emoji } = require("../../utils/rpg.js");
-const { formatMinutesSeconds } = require("../../utils/timestamp.js");
-const { wait_for_client } = require("../../utils/wait_for_client.js");
-const { MusicQueue, MusicTrack, getQueue, noMusicIsPlayingEmbed } = require("../../utils/music/music.js");
-const { loopStatus } = require("../../utils/music/music.js");
-const { embed_default_color, DOCS, STATUS_PAGE } = require("../../utils/config.js");
-const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
-const DogClient = require("../../utils/customs/client.js");
+import {
+    get_logger,
+} from "../../utils/logger.js";
+import {
+    get_emojis,
+    get_emoji,
+} from "../../utils/rpg.js";
+import {
+    formatMinutesSeconds,
+} from "../../utils/timestamp.js";
+import {
+    wait_for_client,
+} from "../../utils/wait_for_client.js";
+import {
+    MusicQueue,
+    MusicTrack,
+    getQueue,
+    noMusicIsPlayingEmbed,
+} from "../../utils/music/music.js";
+import {
+    loopStatus,
+} from "../../utils/music/music.js";
+import {
+    embed_default_color,
+    DOCS,
+    STATUS_PAGE,
+} from "../../utils/config.js";
+import EmbedBuilder from "../../utils/customs/embedBuilder.js";
+import DogClient from "../../utils/customs/client.js";
 
 /**
  * 生成 Discord 進度條
@@ -215,7 +242,7 @@ async function getNowPlayingRows(queue, client = global._client) {
  * @param {boolean} [start = false] - 是否剛開始播放
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>[]]>}
  */
-async function getNowPlayingEmbed(queue, currentTrack = null, interaction = null, client = global._client, start = false) {
+export async function getNowPlayingEmbed(queue, currentTrack = null, interaction = null, client = global._client, start = false) {
     if (!currentTrack) currentTrack = queue.currentTrack ?? queue.tracks[0];
     if (!currentTrack) throw new Error("No current track found.");
     if (!client) client = await wait_for_client();
@@ -250,23 +277,23 @@ ${emoji} ${formattedPlayingAt}${progressBar}${formattedDuration}
     return [embed, rows];
 };
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../utils/types.js").Slash<["guild"]>} */
+export const nowPlayingSlash = {
+    builder: new SlashCommandBuilder()
         .setName("nowplaying")
-        .setDescription("Get the currently playing music")
         .setNameLocalizations({
             "zh-TW": "正在播放",
             "zh-CN": "正在播放"
         })
+        .setDescription("Get the currently playing music")
         .setDescriptionLocalizations({
             "zh-TW": "查詢正在播放的音樂",
             "zh-CN": "查询正在播放的音乐"
         }),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-     */
+    allowedContext: ["guild"],
+    stage: "beta",
+    music: true,
+
     async execute(interaction, client) {
         const guildId = interaction.guild?.id;
         if (!guildId) return;
@@ -288,5 +315,4 @@ module.exports = {
 
         await interaction.editReply({ embeds: [embed], components: rows });
     },
-    getNowPlayingEmbed,
 };

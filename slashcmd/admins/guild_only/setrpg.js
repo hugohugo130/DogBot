@@ -1,9 +1,14 @@
-const { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
+import {
+    SlashCommandBuilder,
+} from "discord.js";
 
-const { setRPG } = require("../../../utils/file.js");
+import {
+    setRPG,
+} from "../../../utils/file.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../../utils/types.js").Slash<["guild"]>} */
+export const setRPGSlash = {
+    builder: new SlashCommandBuilder()
         .setName("setrpg")
         .setDescription("Enable or disable the RPG system for this server")
         .setNameLocalizations({
@@ -26,16 +31,15 @@ module.exports = {
                     "zh-TW": "啟用或停用RPG遊戲",
                 })
                 .setRequired(true),
-        )
-        .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @returns {Promise<any>}
-     */
-    async execute(interaction) {
-        if (!interaction.guild) return await interaction.reply({ content: "你不在伺服器內執行這個指令！", flags: MessageFlags.Ephemeral });
+        ),
+        // .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
+    permissions: {
+        user: ["ManageGuild"],
+    },
+    allowedContext: ["guild"],
+    stage: "beta",
 
+    async execute(interaction) {
         await interaction.deferReply();
 
         const enable = interaction.options.getBoolean("enable") ?? false;

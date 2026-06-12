@@ -1,14 +1,27 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
+import {
+    SlashCommandBuilder,
+    MessageFlags,
+} from "discord.js";
 
-const { get_emojis } = require("../../utils/rpg.js");
-const { getQueue, noMusicIsPlayingEmbed, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
-const { get_me } = require("../../utils/discord.js");
-const { embed_error_color } = require("../../utils/config.js");
-const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
-const DogClient = require("../../utils/customs/client.js");
+import {
+    get_emojis,
+} from "../../utils/rpg.js";
+import {
+    getQueue,
+    noMusicIsPlayingEmbed,
+    youHaveToJoinVC_Embed,
+} from "../../utils/music/music.js";
+import {
+    get_me,
+} from "../../utils/discord.js";
+import {
+    embed_error_color,
+} from "../../utils/config.js";
+import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../utils/types.js").Slash<["guild"]>} */
+export const swapSlash = {
+    builder: new SlashCommandBuilder()
         .setName("swap")
         .setDescription("Swap two songs in the music queue")
         .setNameLocalizations({
@@ -19,7 +32,7 @@ module.exports = {
             "zh-TW": "替換音樂歌單兩首歌的位置",
             "zh-CN": "替换音乐歌单两首歌的位置"
         })
-        .addIntegerOption(option => option
+        .addIntegerOption(option => option // first
             .setName("first")
             .setNameLocalizations({
                 "zh-TW": "第一首",
@@ -33,7 +46,7 @@ module.exports = {
             .setRequired(true)
             .setMinValue(1),
         )
-        .addIntegerOption(option => option
+        .addIntegerOption(option => option // second
             .setName("second")
             .setNameLocalizations({
                 "zh-TW": "第二首",
@@ -47,11 +60,10 @@ module.exports = {
             .setRequired(true)
             .setMinValue(1),
         ),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-    */
+    allowedContext: ["guild"],
+    stage: "beta",
+    music: true,
+
     async execute(interaction, client) {
         const voiceChannel = (
             interaction.member

@@ -1,33 +1,44 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags, VoiceChannel } = require("discord.js");
-const { getVoiceConnection } = require("@discordjs/voice");
+import {
+    SlashCommandBuilder,
+    MessageFlags,
+} from "discord.js";
+import {
+    getVoiceConnection,
+} from "@discordjs/voice";
 
-const { get_emoji } = require("../../utils/rpg.js");
-const { get_channel } = require("../../utils/discord.js");
-const { getQueue, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
-const { embed_error_color } = require("../../utils/config.js");
-const DogClient = require("../../utils/customs/client.js");
-const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
+import {
+    get_emoji,
+} from "../../utils/rpg.js";
+import {
+    get_channel,
+} from "../../utils/discord.js";
+import {
+    getQueue,
+    youHaveToJoinVC_Embed,
+} from "../../utils/music/music.js";
+import {
+    embed_error_color,
+} from "../../utils/config.js";
+import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../utils/types.js").Slash<["guild"]>} */
+export const disconnectSlash = {
+    builder: new SlashCommandBuilder()
         .setName("disconnect")
-        .setDescription("make the bot leave the voice channel")
         .setNameLocalizations({
             "zh-TW": "中斷連線",
             "zh-CN": "离开",
         })
+        .setDescription("make the bot leave the voice channel")
         .setDescriptionLocalizations({
             "zh-TW": "讓機器人離開語音頻道",
             "zh-CN": "让机器人离开语音频道",
         }),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-     */
-    async execute(interaction, client) {
-        if (!interaction.guildId) return;
+    allowedContext: ["guild"],
+    stage: "beta",
+    music: true,
 
+    async execute(interaction, client) {
         const voiceChannel = (
             interaction.member
             && 'voice' in interaction.member
@@ -42,10 +53,10 @@ module.exports = {
             });
         };
 
-        const queue = getQueue(interaction.guildId);
+        const queue = getQueue(interaction.guild.id);
         const emoji_cross = await get_emoji("crosS", client);
 
-        const vconnection = getVoiceConnection(interaction.guildId);
+        const vconnection = getVoiceConnection(interaction.guild.id);
         if (vconnection?.joinConfig.channelId) {
             if (!queue.connection) queue.connection = vconnection;
 

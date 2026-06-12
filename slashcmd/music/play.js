@@ -1,16 +1,49 @@
-const { SlashCommandBuilder, MessageFlags, ChatInputCommandInteraction, ActionRowBuilder, StringSelectMenuBuilder, PermissionFlagsBits, TextChannel, ThreadChannel } = require("discord.js");
-const { getVoiceConnection, joinVoiceChannel } = require("@discordjs/voice");
-const { Soundcloud } = require("soundcloud.ts");
+import {
+    SlashCommandBuilder,
+    MessageFlags,
+    ActionRowBuilder,
+    StringSelectMenuBuilder,
+    TextChannel,
+    ThreadChannel,
+} from "discord.js";
+import {
+    getVoiceConnection,
+    joinVoiceChannel,
+} from "@discordjs/voice";
+import {
+    Soundcloud,
+} from "soundcloud.ts";
 
-const { get_logger } = require("../../utils/logger.js");
-const { getNowPlayingEmbed } = require("./nowplaying.js");
-const { generateSessionId } = require("../../utils/random.js");
-const { get_emojis, get_emoji } = require("../../utils/rpg.js");
-const { search_until, IsValidURL, getQueue, youHaveToJoinVC_Embed, fixStructure, getPlayingPlayers, URLAvaliable } = require("../../utils/music/music.js");
-const { formatMinutesSeconds } = require("../../utils/timestamp.js");
-const { embed_error_color, musicPlayingPlayerLimit } = require("../../utils/config.js");
-const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
-const DogClient = require("../../utils/customs/client.js");
+import {
+    get_logger,
+} from "../../utils/logger.js";
+import {
+    getNowPlayingEmbed,
+} from "./nowplaying.js";
+import {
+    generateSessionId,
+} from "../../utils/random.js";
+import {
+    get_emojis,
+    get_emoji,
+} from "../../utils/rpg.js";
+import {
+    search_until,
+    IsValidURL,
+    getQueue,
+    youHaveToJoinVC_Embed,
+    fixStructure,
+    getPlayingPlayers,
+    URLAvaliable,
+} from "../../utils/music/music.js";
+import {
+    formatMinutesSeconds,
+} from "../../utils/timestamp.js";
+import {
+    embed_error_color,
+    musicPlayingPlayerLimit,
+} from "../../utils/config.js";
+import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 
 const DEBUG = false;
 
@@ -18,12 +51,9 @@ const DEBUG = false;
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
 
-module.exports = {
-    perm: [
-        [PermissionFlagsBits.ViewChannel],
-        [PermissionFlagsBits.SendMessages],
-    ],
-    data: new SlashCommandBuilder()
+/** @type {import("../../utils/types.js").Slash<["guild"]>} */
+export const playSlash = {
+    builder: new SlashCommandBuilder()
         .setName("play")
         .setNameLocalizations({
             "zh-TW": "播放",
@@ -113,11 +143,13 @@ module.exports = {
     //         })
     //         .setRequired(false),
     // )
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-     */
+    permissions: {
+        bot: ["ViewChannel", "SendMessages"],
+    },
+    allowedContext: ["guild"],
+    stage: "beta",
+    music: true,
+
     async execute(interaction, client) {
         const query = interaction.options.getString("query", false) ?? "wellerman";
         const next = interaction.options.getBoolean("next", false) ?? false;

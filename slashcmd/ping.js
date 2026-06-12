@@ -1,11 +1,15 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction } = require("discord.js");
+import {
+    SlashCommandBuilder,
+} from "discord.js";
 
-const { embed_default_color } = require("../utils/config.js");
-const DogClient = require("../utils/customs/client.js");
-const EmbedBuilder = require("../utils/customs/embedBuilder.js");
+import {
+    embed_default_color,
+} from "../utils/config.js";
+import EmbedBuilder from "../utils/customs/embedBuilder.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../utils/types.js").Slash} */
+export const pingSlash = {
+    builder: new SlashCommandBuilder()
         .setName("ping")
         .setNameLocalizations({
             "zh-CN": "ping",
@@ -16,11 +20,9 @@ module.exports = {
             "zh-CN": "取得机器人延迟",
             "zh-TW": "取得機器人延遲"
         }),
-    /**
-     * 
-     * @param {ChatInputCommandInteraction} interaction 
-     * @param {DogClient} client
-     */
+    allowedContext: ["dm", "guild"],
+    stage: "beta",
+
     async execute(interaction, client) {
         const start = Date.now();
 

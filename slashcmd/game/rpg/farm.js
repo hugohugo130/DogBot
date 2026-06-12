@@ -1,12 +1,47 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, User, BaseInteraction, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
+import {
+    SlashCommandBuilder,
+    SlashCommandSubcommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    User,
+    ChatInputCommandInteraction,
+    MessageFlags,
+    BaseInteraction
+} from "discord.js";
 
-const { get_name_of_id, get_id_of_name, get_emojis, is_cooldown_finished, userHaveNotEnoughItems, wrong_job_embed, farm_slots, subtract_item, add_item } = require("../../../utils/rpg.js");
-const { load_rpg_data, save_rpg_data, load_farm_data, save_farm_data } = require("../../../utils/file.js");
-const { convertToSecondTimestamp, DateNow, DateNowSecond } = require("../../../utils/timestamp.js");
-const { randint } = require("../../../utils/random.js");
-const { embed_default_color, embed_error_color, rpg_lvlUp_per, probabilities } = require("../../../utils/config.js");
-const DogClient = require("../../../utils/customs/client.js");
-const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
+import {
+    get_name_of_id,
+    get_id_of_name,
+    get_emojis,
+    is_cooldown_finished,
+    userHaveNotEnoughItems,
+    wrong_job_embed,
+    farm_slots, subtract_item,
+    add_item,
+} from "../../../utils/rpg.js";
+import {
+    load_rpg_data,
+    save_rpg_data,
+    load_farm_data,
+    save_farm_data,
+} from "../../../utils/file.js";
+import {
+    convertToSecondTimestamp,
+    DateNow,
+    DateNowSecond,
+} from "../../../utils/timestamp.js";
+import {
+    randint,
+} from "../../../utils/random.js";
+import {
+    embed_default_color,
+    embed_error_color,
+    rpg_lvlUp_per,
+    probabilities,
+} from "../../../utils/config.js";
+import DogClient from "../../../utils/customs/client.js";
+import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 
 /**
  * @typedef FarmData
@@ -23,7 +58,7 @@ const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
  * @param {DogClient | null} [client]
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>]>}
  */
-async function get_farm_info_embed(user, interaction = null, client = global._client) {
+export async function get_farm_info_embed(user, interaction = null, client = global._client) {
     const [farm_data, [emoji_farmer, emoji_hoe, emoji_update]] = await Promise.all([
         load_farm_data(user.id),
         get_emojis(["farmer", "hoe", "update"], client),
@@ -134,8 +169,9 @@ function get_harvest_items(amount) {
     return result;
 };
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../../utils/types.js").Slash} */
+export const farmSlash = {
+    builder: new SlashCommandBuilder()
         .setName("farm")
         .setDescription("farm related commands")
         .setNameLocalizations({
@@ -238,13 +274,9 @@ module.exports = {
                 "en-US": "Water the farmland",
             })
         ),
+    allowedContext: ["dm", "guild"],
+    stage: "beta",
 
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-     * @returns {Promise<any>}
-     */
     async execute(interaction, client) {
         const user = interaction.user;
         const userId = user.id;
@@ -409,7 +441,7 @@ module.exports = {
             }
 
             case "water": {
-                const { is_finished, endsAts } = is_cooldown_finished(cooldown_key, rpg_data);
+                const { is_finished, endsAts } = await is_cooldown_finished(cooldown_key, rpg_data);
 
                 if (!is_finished) {
                     const embed = new EmbedBuilder()
@@ -456,5 +488,4 @@ module.exports = {
             }
         };
     },
-    get_farm_info_embed,
 };

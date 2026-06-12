@@ -1,29 +1,41 @@
-const { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
-const { getVoiceConnection } = require("@discordjs/voice");
+import {
+    SlashCommandBuilder,
+    MessageFlags,
+} from "discord.js";
+import {
+    getVoiceConnection,
+} from "@discordjs/voice";
 
-const { get_emojis } = require("../../utils/rpg.js");
-const { getQueue, noMusicIsPlayingEmbed, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
-const { embed_error_color } = require("../../utils/config.js");
-const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
-const DogClient = require("../../utils/customs/client.js");
+import {
+    get_emojis,
+} from "../../utils/rpg.js";
+import {
+    getQueue,
+    noMusicIsPlayingEmbed,
+    youHaveToJoinVC_Embed,
+} from "../../utils/music/music.js";
+import {
+    embed_error_color,
+} from "../../utils/config.js";
+import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../utils/types.js").Slash<["guild"]>} */
+export const resumeSlash = {
+    builder: new SlashCommandBuilder()
         .setName("resume")
-        .setDescription("Resume music playback")
         .setNameLocalizations({
             "zh-TW": "繼續播放",
             "zh-CN": "继续播放"
         })
+        .setDescription("Resume music playback")
         .setDescriptionLocalizations({
             "zh-TW": "繼續音樂播放",
             "zh-CN": "继续音乐播放"
         }),
-    /**
-     * 
-     * @param {ChatInputCommandInteraction} interaction 
-     * @param {DogClient} client
-     */
+    allowedContext: ["guild"],
+    stage: "beta",
+    music: true,
+
     async execute(interaction, client) {
         const voiceChannel = (
             interaction.member

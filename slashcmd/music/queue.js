@@ -1,12 +1,34 @@
-const { ChatInputCommandInteraction, SlashCommandBuilder, SlashCommandSubcommandBuilder, ButtonStyle, BaseInteraction, ActionRowBuilder, ButtonBuilder, MessageFlags } = require("discord.js");
+import {
+    SlashCommandBuilder,
+    SlashCommandSubcommandBuilder,
+    ButtonStyle,
+    ActionRowBuilder,
+    ButtonBuilder,
+    MessageFlags,
+    BaseInteraction,
+} from "discord.js";
 
-const { get_emojis } = require("../../utils/rpg.js");
-const { getQueue, MusicQueue, queueListTrackPerPage, youHaveToJoinVC_Embed } = require("../../utils/music/music.js");
-const { formatMinutesSeconds } = require("../../utils/timestamp.js");
-const { get_lang_data } = require("../../utils/language.js");
-const { embed_default_color, embed_error_color } = require("../../utils/config.js");
-const EmbedBuilder = require("../../utils/customs/embedBuilder");
-const DogClient = require("../../utils/customs/client");
+import {
+    get_emojis,
+} from "../../utils/rpg.js";
+import {
+    MusicQueue,
+    getQueue,
+    youHaveToJoinVC_Embed,
+    queueListTrackPerPage,
+} from "../../utils/music/music.js";
+import {
+    formatMinutesSeconds,
+} from "../../utils/timestamp.js";
+import {
+    get_lang_data,
+} from "../../utils/language.js";
+import {
+    embed_default_color,
+    embed_error_color,
+} from "../../utils/config.js";
+import EmbedBuilder from "../../utils/customs/embedBuilder.js";
+import DogClient from "../../utils/customs/client.js";
 
 /**
  * Get queue list embed
@@ -16,7 +38,7 @@ const DogClient = require("../../utils/customs/client");
  * @param {DogClient | null} [client]
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>]>}
  */
-async function getQueueListEmbedRow(queue, currentPage = 1, interaction = null, client = global._client) {
+export async function getQueueListEmbedRow(queue, currentPage = 1, interaction = null, client = global._client) {
     const [
         emoji_cross,
         emoji_playGrad,
@@ -99,14 +121,19 @@ ${queueString}`)
     return [embed, row];
 };
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../utils/types.js").Slash<["guild"]>} */
+export const queueSlash = {
+    builder: new SlashCommandBuilder()
         .setName("queue")
         .setNameLocalizations({
             "zh-CN": "音乐队列",
             "zh-TW": "音樂佇列"
         })
         .setDescription("queue")
+        .setNameLocalizations({
+            "zh-CN": "音乐队列",
+            "zh-TW": "音樂佇列"
+        })
         .addSubcommand(new SlashCommandSubcommandBuilder() // list
             .setName("list")
             .setNameLocalizations({
@@ -145,11 +172,10 @@ module.exports = {
                     .setRequired(false),
             ),
         ),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-    */
+    allowedContext: ["guild"],
+    stage: "beta",
+    music: true,
+
     execute: async function (interaction, client) {
         if (!interaction.guildId) return await interaction.reply({
             embeds: [await youHaveToJoinVC_Embed(interaction, client)],
@@ -200,5 +226,4 @@ module.exports = {
             }
         };
     },
-    getQueueListEmbedRow,
 };

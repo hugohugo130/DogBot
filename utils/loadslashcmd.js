@@ -1,11 +1,42 @@
-const fsp = require("fs").promises;
-const path = require("path");
-const { Collection } = require("discord.js");
+import fsp from "fs/promises";
+import path from "path";
+import {
+    pathToFileURL,
+} from "node:url";
+import {
+    Collection,
+} from "discord.js";
 
-const { readdir } = require("./file.js");
-const { get_logger } = require("./logger.js");
+import {
+    readdir,
+} from "./file.js";
+import {
+    get_logger,
+} from "./logger.js";
+
+const DEBUG = false;
 
 const logger = get_logger();
+
+/**
+ * 
+ * @param { { [s: string]: any } | ArrayLike<any> } module
+ * @returns {import("./types.js").Slash | null}
+ */
+function findSlashFromModule(module) {
+    for (const exp of Object.values(module)) {
+        if (
+            exp &&
+            typeof exp === "object" &&
+            "builder" in exp &&
+            ("execute" in exp || "subCommands" in exp)
+        ) {
+            return exp;
+        };
+    };
+
+    return null;
+};
 
 /**
  * Process a command directory
@@ -36,17 +67,20 @@ async function processDirectory(bot, dirPath) {
                 commands.push(...subCommands);
             };
         } else if (item.endsWith(".js")) {
-            delete require.cache[require.resolve(itemPath)];
+            const module = await import(pathToFileURL(itemPath).href);
 
-            const command = require(itemPath);
-            if ("data" in command && "execute" in command) {
+            let command = findSlashFromModule(module);
+
+            if (DEBUG) logger.debug(`Loading: ${itemPath}`);
+
+            if (command) {
                 if (commands instanceof Collection) {
-                    commands.set(command.data.name, command);
+                    commands.set(command.builder.name, command);
                 } else {
-                    commands.push(command.data.toJSON());
+                    commands.push(command.builder.toJSON());
                 };
             } else {
-                logger.warn(`[警告] ${itemPath} 中的指令缺少必要的 "data" 和 "execute" 屬性。`);
+                logger.warn(`[警告] ${itemPath} 中的指令缺少必要的 "builder" 和 ("execute" 或 "subCommands") 屬性。`);
             };
         };
     };
@@ -85,6 +119,6 @@ async function loadslashcmd_array() {
     return Array.from(commands);
 };
 
-module.exports = {
+export {
     loadslashcmd,
 };

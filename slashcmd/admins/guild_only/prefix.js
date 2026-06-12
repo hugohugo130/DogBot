@@ -1,11 +1,24 @@
-const { SlashCommandBuilder, SlashCommandSubcommandBuilder, MessageFlags, ChatInputCommandInteraction } = require("discord.js");
+import {
+    SlashCommandBuilder,
+    SlashCommandSubcommandBuilder,
+    MessageFlags,
+} from "discord.js";
 
-const { addPrefix, rmPrefix, getPrefixes } = require("../../../utils/file.js");
-const { embed_default_color, reserved_prefixes } = require("../../../utils/config.js");
-const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
+import {
+    addPrefix,
+    rmPrefix,
+    getPrefixes,
+} from "../../../utils/file.js";
+import {
+    embed_default_color,
+    reserved_prefixes,
+} from "../../../utils/config.js";
+import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 
-module.exports = {
-    data: new SlashCommandBuilder()
+
+/** @type {import("../../../utils/types.js").Slash<["guild"]>} */
+export const prefixSlash = {
+    builder: new SlashCommandBuilder()
         .setName("prefix")
         .setDescription("prefix")
         .setNameLocalizations({
@@ -79,19 +92,15 @@ module.exports = {
                 "zh-CN": "列出所有前綴",
                 "zh-TW": "列出所有前綴",
             }),
-        )
-        .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @returns {Promise<any>}
-     */
-    async execute(interaction) {
-        if (!interaction.guild) return await interaction.reply({ content: "你不在伺服器內執行這個指令！", flags: MessageFlags.Ephemeral });
+        ),
+    // .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
+    allowedContext: ["guild"],
+    stage: "beta",
 
+    async execute(interaction) {
         const subcommand = interaction.options.getSubcommand();
 
-        const prefix = interaction.options.getString("prefix")?.trim();
+        const prefix = interaction.options.getString("prefix", false)?.trim();
 
         if (subcommand === "add") {
             if (!prefix) return;
@@ -134,4 +143,4 @@ module.exports = {
             await interaction.editReply({ embeds: [embed] });
         }
     },
-};
+}

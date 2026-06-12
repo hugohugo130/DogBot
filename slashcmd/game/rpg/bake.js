@@ -1,9 +1,37 @@
-import { SlashCommandBuilder, SlashCommandSubcommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, Collection } from "discord.js";
+import {
+    SlashCommandBuilder,
+    SlashCommandSubcommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    MessageFlags,
+    Collection,
+    ChatInputCommandInteraction,
+} from "discord.js";
 
-import { notEnoughItemEmbed, wrong_job_embed, get_emojis, bake, name, oven_slots, food_data, get_name_of_id, add_item } from "../../../utils/rpg.js";
-import { load_rpg_data, save_rpg_data, load_bake_data, save_bake_data } from "../../../utils/file.js";
-import { generateSessionId } from "../../../utils/random.js";
-import { embed_error_color, embed_default_color } from "../../../utils/config.js";
+import {
+    notEnoughItemEmbed,
+    wrong_job_embed,
+    get_emojis,
+    bake,
+    oven_slots,
+    food_data,
+    get_name_of_id,
+    add_item,
+} from "../../../utils/rpg.js";
+import {
+    load_rpg_data,
+    save_rpg_data,
+    load_bake_data,
+    save_bake_data,
+} from "../../../utils/file.js";
+import {
+    generateSessionId,
+} from "../../../utils/random.js";
+import {
+    embed_error_color,
+    embed_default_color,
+} from "../../../utils/config.js";
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 import DogClient from "../../../utils/customs/client.js";
 
@@ -47,7 +75,7 @@ export function divide(amount, by) {
 
 /**
  * Handle /bake bake
- * @param {ChatInputCommandInteraction} interaction
+ * @param {import("../../../utils/types.js").ChatInputCommandInteraction} interaction
  * @param {string} userId
  * @param {string} item_id
  * @param {number} amount
@@ -196,8 +224,9 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
  * @property {number} end_time
  */
 
-export default {
-    data: new SlashCommandBuilder()
+/** @type {import("../../../utils/types.js").Slash} */
+export const bakeSlash = {
+    builder: new SlashCommandBuilder()
         .setName("bake")
         .setDescription("烤箱相關指令")
         .setNameLocalizations({
@@ -356,12 +385,9 @@ export default {
                     .setRequired(false),
             ),
         ),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-     * @returns {Promise<any>}
-     */
+    allowedContext: ["guild"],
+    stage: "beta",
+
     async execute(interaction, client) {
         const userId = interaction.user.id;
 

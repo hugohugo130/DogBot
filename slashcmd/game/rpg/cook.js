@@ -1,12 +1,44 @@
-const { SlashCommandBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, ChatInputCommandInteraction, ContainerBuilder, TextDisplayBuilder, SeparatorBuilder, SeparatorSpacingSize } = require("discord.js");
+import {
+    SlashCommandBuilder,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    MessageFlags,
+    ChatInputCommandInteraction,
+    ContainerBuilder,
+    TextDisplayBuilder,
+    SeparatorBuilder,
+    SeparatorSpacingSize,
+} from "discord.js";
 
-const { notEnoughItemEmbed, wrong_job_embed, userHaveNotEnoughItems, get_name_of_id, get_emojis, get_emoji, cook, food_data, subtract_item } = require("../../../utils/rpg.js");
-const { load_rpg_data, save_rpg_data } = require("../../../utils/file.js");
-const { generateSessionId } = require("../../../utils/random.js");
-const { wait_for_client } = require("../../../utils/wait_for_client.js");
-const { container_default_color, embed_error_color, cookClickAmount } = require("../../../utils/config.js");
-const EmbedBuilder = require("../../../utils/customs/embedBuilder.js");
-const DogClient = require("../../../utils/customs/client.js");
+import {
+    notEnoughItemEmbed,
+    wrong_job_embed,
+    userHaveNotEnoughItems,
+    get_name_of_id,
+    get_emojis,
+    get_emoji,
+    cook,
+    food_data,
+    subtract_item,
+} from "../../../utils/rpg.js";
+import {
+    load_rpg_data,
+    save_rpg_data,
+} from "../../../utils/file.js";
+import {
+    generateSessionId,
+} from "../../../utils/random.js";
+import {
+    wait_for_client,
+} from "../../../utils/wait_for_client.js";
+import {
+    container_default_color,
+    embed_error_color,
+    cookClickAmount,
+} from "../../../utils/config.js";
+import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
+import DogClient from "../../../utils/customs/client.js";
 
 /**
  * Get Cooking Container
@@ -18,7 +50,7 @@ const DogClient = require("../../../utils/customs/client.js");
  * @param {DogClient | null} [client] - Discord Client
  * @returns {Promise<ContainerBuilder>}
  */
-async function getCookingContainer(inputed_foods, item_needed, userId, sessionId, progress = 0, client = global._client) {
+export async function getCookingContainer(inputed_foods, item_needed, userId, sessionId, progress = 0, client = global._client) {
     if (!client) client = await wait_for_client();
 
     const [emoji_cooking, emoji_drumstick] = await get_emojis(["cooking", "drumstick"], client);
@@ -69,7 +101,7 @@ async function getCookingContainer(inputed_foods, item_needed, userId, sessionId
  * @param {DogClient | null} [client] - Discord Client
  * @returns {Promise<ContainerBuilder>}
  */
-async function getCookingResultContainer(output_food, amount, client = global._client) {
+export async function getCookingResultContainer(output_food, amount, client = global._client) {
     const [emoji_check, emoji_drumstick, emoji_food] = await get_emojis(["check", "drumstick", "food"], client);
 
     const food_name = get_name_of_id(output_food);
@@ -94,8 +126,9 @@ async function getCookingResultContainer(output_food, amount, client = global._c
     return container;
 };
 
-module.exports = {
-    data: new SlashCommandBuilder()
+/** @type {import("../../../utils/types.js").Slash} */
+export const cookSlash = {
+    builder: new SlashCommandBuilder()
         .setName("cook")
         .setNameLocalizations({
             "zh-TW": "烹飪",
@@ -148,12 +181,9 @@ module.exports = {
                 })
                 .setRequired(false),
         ),
-    /**
-     *
-     * @param {ChatInputCommandInteraction} interaction
-     * @param {DogClient} client
-     * @returns {Promise<any>}
-     */
+    allowedContext: ["dm", "guild"],
+    stage: "beta",
+
     async execute(interaction, client) {
         const userId = interaction.user.id;
 
@@ -239,6 +269,4 @@ module.exports = {
             flags: MessageFlags.IsComponentsV2,
         });
     },
-    getCookingContainer,
-    getCookingResultContainer,
 };

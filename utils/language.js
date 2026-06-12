@@ -1,6 +1,11 @@
-import { Locale } from "discord.js";
+import {
+    Locale,
+    PermissionFlagsBits,
+} from "discord.js";
 
-import { get_logger } from "./logger.js";
+import {
+    get_logger,
+} from "./logger.js";
 
 /**
  * all keys are lowercase
@@ -8,12 +13,65 @@ import { get_logger } from "./logger.js";
  * 
  * 所有鍵都是小寫的
  * {0} {1} {2} ... 是文字需要的變量
- * @type {{ [k: Locale[any]]: {[k: string]: {[k: string]: string}}}}
+ * @type {{ [k: Locale[any]]: { [k: string]: { [k: string]: string } } }}
  */
 const language = {
     [Locale.EnglishUS]: {
         "embed": {
             "footer": "DogBot · Made by hugo",
+        },
+        "permissions": {
+            "add_reactions": "Add Reactions",
+            "administrator": "Administrator",
+            "attach_files": "Attach Files",
+            "ban_members": "Ban Members",
+            "bypass_slowmode": "Bypass Slowmode",
+            "change_nickname": "Change Nickname",
+            "connect": "Connect",
+            "create_events": "Create Events",
+            "create_guild_expressions": "Create Expressions",
+            "create_instant_invite": "Create Invite",
+            "create_private_threads": "Create Private Threads",
+            "create_public_threads": "Create Public Threads",
+            "deafen_members": "Deafen Members",
+            "embed_links": "Embed Links",
+            "kick_members": "Kick Members",
+            "manage_channels": "Manage Channels",
+            "manage_events": "Manage Events",
+            "manage_guild": "Manage Server",
+            "manage_guild_expressions": "Manage Expressions",
+            "manage_messages": "Manage Messages",
+            "manage_nicknames": "Manage Nicknames",
+            "manage_roles": "Manage Roles",
+            "manage_threads": "Manage Threads and Posts",
+            "manage_webhooks": "Manage Webhooks",
+            "mention_everyone": "Mention @everyone, @here, and All Roles",
+            "moderate_members": "Timeout Members",
+            "move_members": "Move Members",
+            "mute_members": "Mute Members",
+            "pin_messages": "Pin Messages",
+            "priority_speaker": "Priority Speaker",
+            "read_message_history": "Read Message History",
+            "request_to_speak": "Request to Speak",
+            "send_messages": "Send Messages and Create Posts",
+            "send_messages_in_threads": "Send Messages in Threads and Posts",
+            "send_polls": "Create Polls",
+            "send_tts_messages": "Send Text-to-Speech Messages",
+            "send_voice_messages": "Send Voice Messages",
+            "speak": "Speak",
+            "stream": "Video",
+            "use_application_commands": "Use Application Commands",
+            "use_embedded_activities": "Use Activities",
+            "use_external_apps": "Use External Apps",
+            "use_external_emojis": "Use External Emoji",
+            "use_external_sounds": "Use External Sounds",
+            "use_external_stickers": "Use External Stickers",
+            "use_soundboard": "Use Soundboard",
+            "use_vad": "Use Voice Activity",
+            "view_audit_log": "View Audit Log",
+            "view_channel": "View Channels",
+            "view_creator_monetization_analytics": "View Creator Monetization Analytics",
+            "view_guild_insights": "View Server Insights",
         },
         "fightjob_name": {
             "soldier": "soldier",
@@ -104,6 +162,59 @@ Since <t:{1}:R>`,
         "embed": {
             "footer": "狗狗機器犬 ∙ 由哈狗製作",
         },
+        "permissions": {
+            "add_reactions": "新增反應",
+            "administrator": "管理者",
+            "attach_files": "附加檔案",
+            "ban_members": "對成員停權",
+            "bypass_slowmode": "略過慢速模式",
+            "change_nickname": "更改暱稱",
+            "connect": "連接",
+            "create_events": "建立活動",
+            "create_guild_expressions": "建立表情符號",
+            "create_instant_invite": "建立邀請",
+            "create_private_threads": "建立私人討論串",
+            "create_public_threads": "建立公開討論串",
+            "deafen_members": "讓成員拒聽",
+            "embed_links": "嵌入連結",
+            "kick_members": "踢出成員",
+            "manage_channels": "管理頻道",
+            "manage_events": "管理活動",
+            "manage_guild": "管理伺服器",
+            "manage_guild_expressions": "管理表情符號",
+            "manage_messages": "管理訊息",
+            "manage_nicknames": "管理暱稱",
+            "manage_roles": "管理身分組",
+            "manage_threads": "管理討論串和貼文",
+            "manage_webhooks": "管理 Webhooks",
+            "mention_everyone": "提及 @everyone、@here 和所有身分組",
+            "moderate_members": "禁言成員",
+            "move_members": "移動成員",
+            "mute_members": "將成員靜音",
+            "pin_messages": "釘選訊息",
+            "priority_speaker": "優先發言者",
+            "read_message_history": "讀取訊息歷史",
+            "request_to_speak": "請求發言",
+            "send_messages": "傳送訊息和建立貼文",
+            "send_messages_in_threads": "在討論串和貼文中傳送訊息",
+            "send_polls": "建立投票",
+            "send_tts_messages": "傳送文字朗讀訊息",
+            "send_voice_messages": "傳送語音訊息",
+            "speak": "說話",
+            "stream": "視訊",
+            "use_application_commands": "使用應用程式指令",
+            "use_embedded_activities": "使用活動",
+            "use_external_apps": "使用外部應用程式",
+            "use_external_emojis": "使用外部表情符號",
+            "use_external_sounds": "使用外部音效",
+            "use_external_stickers": "使用外部貼圖",
+            "use_soundboard": "使用音效板",
+            "use_vad": "使用語音活動",
+            "view_audit_log": "檢視審核記錄",
+            "view_channel": "檢視頻道",
+            "view_creator_monetization_analytics": "檢視創作者營利分析",
+            "view_guild_insights": "檢視 Server Insights"
+        },
         "fightjob_name": {
             "soldier": "戰士",
             "magician": "魔法師",
@@ -192,11 +303,66 @@ Since <t:{1}:R>`,
 
 const logger = get_logger();
 
+/** @type {Omit<Record<keyof typeof PermissionFlagsBits, string>, "ManageEmojisAndStickers">} */
+export const PermissionTranslationKeyMapping = {
+    AddReactions: 'add_reactions',
+    Administrator: 'administrator',
+    AttachFiles: 'attach_files',
+    BanMembers: 'ban_members',
+    BypassSlowmode: 'bypass_slowmode',
+    ChangeNickname: 'change_nickname',
+    Connect: 'connect',
+    CreateEvents: 'create_events',
+    CreateGuildExpressions: 'create_guild_expressions',
+    CreateInstantInvite: 'create_instant_invite',
+    CreatePrivateThreads: 'create_private_threads',
+    CreatePublicThreads: 'create_public_threads',
+    DeafenMembers: 'deafen_members',
+    EmbedLinks: 'embed_links',
+    KickMembers: 'kick_members',
+    ManageChannels: 'manage_channels',
+    ManageEvents: 'manage_events',
+    ManageGuild: 'manage_guild',
+    ManageGuildExpressions: 'manage_guild_expressions',
+    ManageMessages: 'manage_messages',
+    ManageNicknames: 'manage_nicknames',
+    ManageRoles: 'manage_roles',
+    ManageThreads: 'manage_threads',
+    ManageWebhooks: 'manage_webhooks',
+    MentionEveryone: 'mention_everyone',
+    ModerateMembers: 'moderate_members',
+    MoveMembers: 'move_members',
+    MuteMembers: 'mute_members',
+    PinMessages: 'pin_messages',
+    PrioritySpeaker: 'priority_speaker',
+    ReadMessageHistory: 'read_message_history',
+    RequestToSpeak: 'request_to_speak',
+    SendMessages: 'send_messages',
+    SendMessagesInThreads: 'send_messages_in_threads',
+    SendPolls: 'send_polls',
+    SendTTSMessages: 'send_tts_messages',
+    SendVoiceMessages: 'send_voice_messages',
+    Speak: 'speak',
+    Stream: 'stream',
+    UseApplicationCommands: 'use_application_commands',
+    UseEmbeddedActivities: 'use_embedded_activities',
+    UseExternalApps: 'use_external_apps',
+    UseExternalEmojis: 'use_external_emojis',
+    UseExternalSounds: 'use_external_sounds',
+    UseExternalStickers: 'use_external_stickers',
+    UseSoundboard: 'use_soundboard',
+    UseVAD: 'use_vad',
+    ViewAuditLog: 'view_audit_log',
+    ViewChannel: 'view_channel',
+    ViewCreatorMonetizationAnalytics: 'view_creator_monetization_analytics',
+    ViewGuildInsights: 'view_guild_insights',
+};
+
 /**
  * 檢查所有語言中的翻譯鍵是否完整
  * 收集所有語言中所有分類及其鍵，然後逐個語言檢查每個分類中是否有相應的鍵
  */
-function check_language_keys() {
+export function check_language_keys() {
     /** @type {string[]} */
     const locales = Object.values(Locale);
 
@@ -330,7 +496,7 @@ function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
  * @param {...any} replace - 文字中需要的變量
  * @returns {string}
  */
-function get_lang_data(lang, category, key, ...replace) {
+export function get_lang_data(lang, category, key, ...replace) {
     const default_lang = Locale.ChineseTW;
 
     if (!replace) replace = [];
@@ -352,9 +518,4 @@ function get_lang_data(lang, category, key, ...replace) {
     };
 
     return lang_value;
-};
-
-export {
-    check_language_keys,
-    get_lang_data,
 };
