@@ -6,6 +6,32 @@ import util from "util";
 
 const app = express();
 
+/** @type {import("http").Server | null} */
+let server = null;
+
+async function shutdown_server() {
+    if (server !== null) {
+        await new Promise((resolve) => {
+            server?.close(() => {
+                console.log("Server closed");
+                resolve(0);
+            });
+        });
+
+        server.closeIdleConnections();
+
+        // server.closeAllConnections(); 
+    };
+
+    process.exit(0);
+};
+
+// Signal Termination (kill)
+process.on("SIGTERM", async () => shutdown_server());
+
+// Signal Interrupt (Ctrl + C)
+process.on("SIGINT", async () => shutdown_server());
+
 const BETA = false;
 
 const PORT = BETA
@@ -154,6 +180,6 @@ app.post("/copy", (req, res) => {
 });
 
 // 伺服器 啟動！
-app.listen(PORT, () => {
+server = app.listen(PORT, () => {
     console.log(`REST API 伺服器已啟動，埠號 ${PORT}\n目錄：${FILES_DIR}`);
 });
