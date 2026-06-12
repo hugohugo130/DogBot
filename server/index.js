@@ -1,12 +1,22 @@
-const express = require("express");
-const multer = require("multer");
-const fs = require("fs");
-const path = require("path");
-const util = require("util");
+import express from "express";
+import multer from "multer";
+import fs from "fs";
+import path from "path";
+import util from "util";
+
 const app = express();
 
-const PORT = 3001;
+const BETA = false;
+
+const PORT = BETA
+    ? 3004  // BETA: true  - 測試環境
+    : 3003; // BETA: false - 正式環境
+
 const FILES_DIR = "/db";
+
+if (!fs.existsSync(FILES_DIR)) {
+    fs.mkdirSync(FILES_DIR); // 如果目錄不存在，則創建目錄
+};
 
 app.use(express.json());
 
@@ -108,7 +118,8 @@ app.post("/mkdir", (req, res) => {
     console.log(`[${time()}] ${action}：POST /mkdir ${req.body.dir || ""} - by ${req.ip}`);
     const dir = req.body.dir;
     if (!dir) return res.status(400).json({ error: "No dir specified" });
-    const fullPath = path.isAbsolute(dir) ? dir : path.join(FILES_DIR, dir);
+
+    const fullPath = path.join(FILES_DIR, dir);
     try {
         fs.mkdirSync(fullPath, { recursive: true });
         res.json({ message: `Directory created: ${fullPath}` });
