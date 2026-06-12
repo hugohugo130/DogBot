@@ -28,6 +28,9 @@ const args = process.argv.slice(2);
 const debug = args.includes("--debug");
 const isBeta = args.includes("--beta");
 
+global.debug = debug;
+global.isBeta = isBeta;
+
 const TOKEN = !isBeta
     ? process.env.TOKEN
     : process.env.BETA_TOKEN;

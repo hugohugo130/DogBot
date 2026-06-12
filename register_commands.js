@@ -1,15 +1,34 @@
-import { loadEnvFile } from "node:process";
-import { REST, Routes } from "discord.js";
-import { Logger } from "winston";
+import {
+    loadEnvFile,
+} from "node:process";
+import {
+    REST,
+    Routes,
+} from "discord.js";
+import {
+    Logger,
+} from "winston";
 
-import { BotID, BETA_BotID } from "./utils/config.js";
-import { loadslashcmd } from "./utils/loadslashcmd.js";
-import { get_logger } from "./utils/logger.js";
-import { should_register_cmd, update_cmd_hash } from "./utils/auto_register.js";
+import {
+    BotID,
+    BETA_BotID,
+} from "./utils/config.js";
+import {
+    loadslashcmd,
+} from "./utils/loadslashcmd.js";
+import {
+    get_logger,
+} from "./utils/logger.js";
+import {
+    should_register_cmd,
+    update_cmd_hash,
+} from "./utils/auto_register.js";
 import util from "util";
 
 const args = process.argv.slice(2);
-const isBeta = args.includes("--beta");
+const isBeta = global.isBeta ?? args.includes("--beta");
+
+global.isBeta = isBeta;
 
 /**
  * Log something
