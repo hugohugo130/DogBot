@@ -1,12 +1,19 @@
-import { VoiceChannel } from "discord.js";
-import { join } from "path";
+import {
+    VoiceChannel,
+} from "discord.js";
+import {
+    join,
+} from "path";
 
 // functions for config
 const cwd = process.cwd;
+const isBeta = (global.isBeta ?? process.argv.slice(2).includes("--beta"));
 
 // Online Database Info
 const DEFAULT_IP = "192.168.0.156";
-const DEFAULT_PORT = 3003;
+const DEFAULT_PORT = isBeta
+    ? 3004 // BETA: true  - 測試環境
+    : 3003 // BETA: false - 正式環境
 
 // Database
 const INDENT = 4;
@@ -92,11 +99,13 @@ class RPGDatabase {
     };
 };
 
+// #region [typedef]
+
 /**
  * @typedef {Object} MarryInfo
- * @property {boolean} status   - 是否已結婚
+ * @property {boolean} status     - 是否已結婚
  * @property {string | null} with - 和誰結婚
- * @property {number} time       - 結婚時間戳
+ * @property {number} time        - 結婚時間戳
  */
 
 /**
@@ -183,6 +192,8 @@ class RPGDatabase {
  * @property {number} loopStatus
  * @property {boolean} paused
  */
+
+// #endregion
 
 const DATABASE_FILES = [
     "database.json",
@@ -320,8 +331,10 @@ const dc_send_ignore_keywords = ["金額超過上限", "GuildMembersTimeout", "M
 const console_ignore_keywords = ["金額超過上限", "GuildMembersTimeout"];
 
 // Bot info
-const BotID = "1422212094274830470"; // 狗狗機器犬
-const BETA_BotID = "1509140015534309386"; // 孵化中的幼犬
+const BotID = !isBeta
+    ? "1422212094274830470" // 狗狗機器犬
+    : "1509140015534309386"; // 孵化中的幼犬
+
 const BotName = "狗狗機器犬"; // 預設為 client.user.tag
 const authorName = "哈狗";
 
@@ -560,51 +573,51 @@ const probabilities = {
 // #endregion
 
 
-/** @type {Object.<string, { command: string[], emoji: string, desc: string, name: string }>} */
+/** @type {{ [k in import("./types.js").JobNames]: { command: string[], emoji: string, desc: string, name: string  }}} */
 const jobs = {
-    "fisher": { // 漁夫
+    "fisher": { // fisher 漁夫
         "command": ["fish"],
         "emoji": "fisher",
         "desc": "是個需要勞力的職業，你必須要努力勤奮的抓魚，才會獲得收益",
         "name": "漁夫",
     },
-    "pharmacist": { // 藥劑師
+    "pharmacist": { // pharmacist 藥劑師
         "command": ["brew"],
         "emoji": "potion",
         "desc": "這個世界神秘力量的來源，製作藥水以及科學實驗來幫助成長",
         "name": "藥劑師",
     },
-    "farmer": { // 農夫
+    "farmer": { // farmer 農夫
         "command": ["/farm"],
         "emoji": "farmer",
         "desc": "和漁夫是差不多辛勤的職業，只是會遇到颱風之類的災難",
         "name": "農夫",
     },
-    "cook": { // 廚師
+    "cook": { // cook 廚師
         "command": ["/bake", "/cook"],
         "emoji": "cook",
         "desc": "需購買食材，烘烤食物並轉賣來獲得收益 (新手不建議)",
         "name": "廚師",
     },
-    "miner": { // 礦工
+    "miner": { // miner 礦工
         "command": ["mine"],
         "emoji": "ore",
         "desc": "這個世界各類金屬的來源，挖取原礦並轉賣給鐵匠",
         "name": "礦工",
     },
-    "herder": { // 牧農
+    "herder": { // herder 牧農
         "command": ["herd"],
         "emoji": "cow",
         "desc": "肉類的來源，養殖各類動物",
         "name": "牧農",
     },
-    "blacksmith": { // 鐵匠
+    "blacksmith": { // blacksmith 鐵匠
         "command": ["/smelt"],
         "emoji": "anvil",
         "desc": "熔煉各類原礦轉換成有價值的礦物 (新手不建議)",
         "name": "鐵匠",
     },
-    "lumberjack": { // 伐木工
+    "lumberjack": { // lumberjack 伐木工
         "command": ["fell"],
         "emoji": "wood",
         "desc": "在森林中砍伐木頭，是木頭的來源",
@@ -693,7 +706,6 @@ export {
     console_ignore_keywords,
 
     BotID,
-    BETA_BotID,
     BotName,
     authorName,
 

@@ -11,7 +11,6 @@ import {
 
 import {
     BotID,
-    BETA_BotID,
 } from "./utils/config.js";
 import {
     loadslashcmd,
@@ -62,7 +61,7 @@ async function registcmd(quiet = true, logger = false, updateHash = true, beta =
     loadEnvFile();
 
     const token_key = beta ? "BETA_TOKEN" : "TOKEN";
-    const botID = beta ? BETA_BotID : BotID;
+    const botID = BotID;
 
     if (!process.env[token_key]) throw new Error("no bot token provided in .env");
     if (!botID) throw new Error("no bot id provided");
