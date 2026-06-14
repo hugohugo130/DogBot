@@ -1,16 +1,29 @@
-const { Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Message, User, StringSelectMenuOptionBuilder, Guild, BaseInteraction } = require("discord.js");
-const util = require("util");
+import {
+    Events,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    StringSelectMenuBuilder,
+    Message,
+    User,
+    StringSelectMenuOptionBuilder,
+    Guild,
+    BaseInteraction,
+} from "discord.js";
+import {
+    inspect,
+} from "util";
 
-const {
+import {
     get_logger,
-} = require("../../utils/logger.js");
-const {
+} from "../../utils/logger.js";
+import {
     randint,
-} = require("../../utils/random.js");
-const {
+} from "../../utils/random.js";
+import {
     convertToSecondTimestamp,
-} = require("../../utils/timestamp.js");
-const {
+} from "../../utils/timestamp.js";
+import {
     get_loophole_embed,
     get_emoji,
     ls_function,
@@ -42,15 +55,16 @@ const {
     BetterEval,
     add_item,
     subtract_item,
-} = require("../../utils/rpg.js");
-const {
+    valid_job_id,
+} from "../../utils/rpg.js";
+import {
     load_rpg_data,
     save_rpg_data,
     load_shop_data,
     save_shop_data,
     loadData,
-} = require("../../utils/file.js");
-const {
+} from "../../utils/file.js";
+import {
     embed_default_color,
     embed_warn_color,
     embed_error_color,
@@ -68,18 +82,18 @@ const {
     daily_sign_guildIDs,
     fightjobs,
     RPGDatabase,
-} = require("../../utils/config.js");
-const {
+} from "../../utils/config.js";
+import {
     get_help_command,
-} = require("./interactions.js");
-const {
+} from "./interactions.js";
+import {
     mentions_users,
-} = require("../../utils/message.js");
-const {
+} from "../../utils/message.js";
+import {
     hasSignedTodayOrBrokeSign,
-} = require("../dailySign.js");
-const EmbedBuilder = require("../../utils/customs/embedBuilder.js");
-const DogClient = require("../../utils/customs/client.js");
+} from "../dailySign.js";
+import EmbedBuilder from "../../utils/customs/embedBuilder.js";
+import DogClient from "../../utils/customs/client.js";
 
 const logger = get_logger();
 
@@ -300,7 +314,7 @@ const redirect_data = {
 const rpg_work = [... new Set(
     [
         ...Object.keys(rpg_cooldown),
-        ...Object.values(redirect_data).filter(key => key in Object.keys(rpg_cooldown)),
+        ...Object.values(redirect_data).filter(key => key in rpg_cooldown),
     ]
         .filter(work_id => !Object.keys(redirect_data).includes(work_id)),
 )];
@@ -1238,7 +1252,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
                 for (const [command, time] of Object.entries(filtered_lastRunTimestamp)) {
                     if (!rpg_cooldown[command]) continue;
 
-                    const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
+                    const { is_finished, remaining_time } = await is_cooldown_finished(command, rpg_data);
                     const field_name = command;
 
                     const target_time = Math.floor(Date.now() / 1000 + remaining_time / 1000);
@@ -1284,7 +1298,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
                 for (const [command, time] of Object.entries(filtered_lastRunTimestamp)) {
                     if (!rpg_cooldown[command]) continue;
 
-                    const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
+                    const { is_finished, remaining_time } = await is_cooldown_finished(command, rpg_data);
                     const field_name = command;
 
                     const target_time = Math.floor(Date.now() / 1000 + remaining_time / 1000);
@@ -1767,7 +1781,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                             };
                         };
                     } catch (err) {
-                        const errorStack = util.inspect(err, { depth: null });
+                        const errorStack = inspect(err, { depth: null });
 
                         errors.push(errorStack);
                     };
@@ -2320,12 +2334,16 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             const job = rpg_data.job;
 
             if (job) {
-                const job_name = jobs?.[job]?.name;
+                const job_data = valid_job_id(job)
+                    ? jobs[job]
+                    : { name: job, desc: null };
+
+                const job_name = job_data.name;
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_job_color)
                     .setTitle(`${emoji_job} | 你是一名 ${job_name}`)
-                    .setDescription(jobs[job].desc)
+                    .setDescription(job_data.desc)
                     .setEmbedFooter(userid);
 
                 const change_job_button = new ButtonBuilder()
@@ -2716,7 +2734,7 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
             };
         };
 
-        const { is_finished, remaining_time } = is_cooldown_finished(command, rpg_data);
+        const { is_finished, remaining_time } = await is_cooldown_finished(command, rpg_data);
 
         // 冷卻
         if (!is_finished) {
@@ -2819,86 +2837,89 @@ function get_random_result(category) {
     return { failed: is_failed, item: selectedItem, amount };
 }
 
-module.exports = {
-    name: Events.MessageCreate,
-    /**
-     *
-     * @param {DogClient} client
-     * @param {Message} message
-     */
-    execute: async function (client, message) {
-        if (message.author.bot) return;
+const event_name = Events.MessageCreate;
 
-        const userId = message.author.id;
-        const guildID = message.guild?.id ?? null;
+export { event_name as name };
 
-        /** @type {string[]} */
-        let inpref = guildID ? [] : ["&"];
+/**
+ *
+ * @param {DogClient} client
+ * @param {Message} message
+ */
+export async function execute(client, message) {
+    if (message.author.bot) return;
 
-        if (guildID) {
-            let data;
+    const userId = message.author.id;
+    const guildID = message.guild?.id ?? null;
 
-            [data, inpref] = await Promise.all([
-                loadData(guildID),
-                InPrefix(guildID, message.content.trim()),
-            ]);
+    /** @type {string[]} */
+    let inpref = guildID ? [] : ["&"];
 
-            if (!data["rpg"] || !inpref?.length) return;
-        };
+    if (guildID) {
+        let data;
 
-        if (client.lock.rpg_handler.hasOwnProperty(userId)) {
-            const emoji_cross = await get_emoji("crosS", client);
+        [data, inpref] = await Promise.all([
+            loadData(guildID),
+            InPrefix(guildID, message.content.trim()),
+        ]);
 
-            const running_cmd = client.lock.rpg_handler[userId];
+        if (!data["rpg"] || !inpref?.length) return;
+    };
 
-            if (!running_cmd) delete client.lock.rpg_handler[userId];
+    if (client.lock.rpg_handler.hasOwnProperty(userId)) {
+        const emoji_cross = await get_emoji("crosS", client);
 
-            const embed = new EmbedBuilder()
-                .setColor(embed_error_color)
-                .setTitle(`${emoji_cross} | 你已經在執行 ${running_cmd} 指令了`);
+        const running_cmd = client.lock.rpg_handler[userId];
 
-            return await message.reply({ embeds: [embed] });
-        };
+        if (!running_cmd) delete client.lock.rpg_handler[userId];
 
-        try {
-            const command = message.content.split(" ")[0].toLowerCase();
+        const embed = new EmbedBuilder()
+            .setColor(embed_error_color)
+            .setTitle(`${emoji_cross} | 你已經在執行 ${running_cmd} 指令了`);
 
-            if (rpg_commands[command]) {
-                let cmdName = command;
+        return await message.reply({ embeds: [embed] });
+    };
 
-                for (const pref of inpref) {
-                    cmdName = cmdName.replace(pref, "");
-                };
+    try {
+        const command = message.content.split(" ")[0].toLowerCase();
 
-                client.lock.rpg_handler[userId] = cmdName;
+        if (rpg_commands[command]) {
+            let cmdName = command;
+
+            for (const pref of inpref) {
+                cmdName = cmdName.replace(pref, "");
             };
 
-            // 超時機制
-            const TIMEOUT = 30000; // 30 秒超時
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error("指令執行超時")), TIMEOUT);
-            });
-
-            await Promise.race([
-                rpg_handler({ client, message, dm: !guildID }),
-                timeoutPromise,
-            ]);
-        } catch (error) {
-            const errorStack = util.inspect(error, { depth: null });
-
-            if (error instanceof Error && error.message === "指令執行超時") {
-                logger.error(`RPG 指令執行超時: userId=${userId}, command=${client.lock.rpg_handler[userId]}`);
-            } else {
-                logger.error(`處理rpg遊戲訊息時發生錯誤: ${errorStack}`);
-            };
-
-            const loophole_embeds = await get_loophole_embed(errorStack, null, client);
-            await message.reply({ embeds: loophole_embeds });
-        } finally {
-            delete client.lock.rpg_handler[userId];
+            client.lock.rpg_handler[userId] = cmdName;
         };
-    },
 
+        // 超時機制
+        const TIMEOUT = 30000; // 30 秒超時
+        const timeoutPromise = new Promise((_, reject) => {
+            setTimeout(() => reject(new Error("指令執行超時")), TIMEOUT);
+        });
+
+        await Promise.race([
+            rpg_handler({ client, message, dm: !guildID }),
+            timeoutPromise,
+        ]);
+    } catch (error) {
+        const errorStack = inspect(error, { depth: null });
+
+        if (error instanceof Error && error.message === "指令執行超時") {
+            logger.error(`RPG 指令執行超時: userId=${userId}, command=${client.lock.rpg_handler[userId]}`);
+        } else {
+            logger.error(`處理rpg遊戲訊息時發生錯誤: ${errorStack}`);
+        };
+
+        const loophole_embeds = await get_loophole_embed(errorStack, null, client);
+        await message.reply({ embeds: loophole_embeds });
+    } finally {
+        delete client.lock.rpg_handler[userId];
+    };
+};
+
+export {
     rpg_cooldown,
     rpg_work,
     rpg_commands,
@@ -2911,4 +2932,3 @@ module.exports = {
     find_redirect_targets_from_id,
     MockMessage,
 };
-
