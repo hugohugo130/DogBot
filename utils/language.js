@@ -509,7 +509,7 @@ export function get_lang_data(lang, category, key, ...replace) {
     const lang_category = get_lang_category(lang, category, default_lang);
 
     /** @type {string} */
-    let lang_value = lang_category[key] ?? language[default_lang]?.[category]?.[key];
+    let lang_value = lang_category[key] ?? language[default_lang]?.[category]?.[key] ?? `${lang}.${category}.${key}`;
 
     if (replace?.length > 0) {
         for (let i = 0; i < replace.length; i++) {
