@@ -21,6 +21,9 @@ const language = {
             "footer": "DogBot · Made by hugo",
         },
         "permissions": {
+            "bot_no_permission": "Bot is missing the following permissions:",
+            "user_no_permission": "You are missing the following permissions:",
+            "cant_get_permission": "I can't get your permissions",
             "add_reactions": "Add Reactions",
             "administrator": "Administrator",
             "attach_files": "Attach Files",
@@ -163,6 +166,9 @@ Since <t:{1}:R>`,
             "footer": "狗狗機器犬 ∙ 由哈狗製作",
         },
         "permissions": {
+            "bot_no_permission": "機器人缺少以下權限：",
+            "user_no_permission": "你缺少了以下權限：",
+            "cant_get_permission": "我無法取得你的權限",
             "add_reactions": "新增反應",
             "administrator": "管理者",
             "attach_files": "附加檔案",
@@ -303,7 +309,7 @@ Since <t:{1}:R>`,
 
 const logger = get_logger();
 
-/** @type {Omit<Record<keyof typeof PermissionFlagsBits, string>, "ManageEmojisAndStickers">} */
+/** @type {Record<import("./types").PermissionTexts, string>} */
 export const PermissionTranslationKeyMapping = {
     AddReactions: 'add_reactions',
     Administrator: 'administrator',

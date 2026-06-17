@@ -1,12 +1,31 @@
-const util = require("util");
-const Discord = require("discord.js");
-const { escapeMarkdown, PermissionFlagsBits, Events, ChatInputCommandInteraction, MessageFlags } = require("discord.js");
+import {
+    inspect,
+} from "node:util";
+import {
+    escapeMarkdown,
+    Events,
+    MessageFlags,
+    GuildMember,
+    DMChannel,
+} from "discord.js";
 
-const { get_logger } = require("../utils/logger.js");
-const { get_loophole_embed } = require("../utils/rpg.js");
-const { get_me } = require("../utils/discord.js");
-const EmbedBuilder = require("../utils/customs/embedBuilder.js");
-const DogClient = require("../utils/customs/client.js");
+import {
+    get_logger,
+} from "../utils/logger.js";
+import {
+    get_emoji,
+    get_loophole_embed,
+} from "../utils/rpg.js";
+import {
+    get_me,
+} from "../utils/discord.js";
+import {
+    get_lang_data,
+    PermissionTranslationKeyMapping,
+} from "../utils/language.js";
+import EmbedBuilder from "../utils/customs/embedBuilder.js";
+import DogClient from "../utils/customs/client.js";
+import { adminIDs, ownerID } from "../utils/config.js";
 
 // function parseOptions(options) {
 //     if (!options || options.length === 0) return "";
@@ -40,10 +59,10 @@ function getFullCommandPath(options) {
 /**
  *
  * @param {any} options
- * @returns {readonly Discord.CommandInteractionOption<Discord.CacheType>[]}
+ * @returns {readonly import('discord.js').CommandInteractionOption<import('discord.js').CacheType>[]}
  */
 function getFinalOptions(options) {
-    /** @type {readonly Discord.CommandInteractionOption<Discord.CacheType>[] | undefined}*/
+    /** @type {readonly import('discord.js').CommandInteractionOption<import('discord.js').CacheType>[] | undefined}*/
     let current = options;
 
     while (current && current.length > 0 && (current[0].type === 1 || current[0].type === 2)) {
@@ -56,91 +75,190 @@ function getFinalOptions(options) {
 const logger = get_logger();
 const backend_logger = get_logger({ backend: true });
 
-module.exports = {
-    name: Events.InteractionCreate,
-    /**
-     *
-     * @param {DogClient} client
-     * @param {ChatInputCommandInteraction} interaction
-     * @returns {Promise<any>}
-     */
-    async execute(client, interaction) {
-        if (!interaction?.isChatInputCommand?.()) return;
+const name = Events.InteractionCreate;
+/**
+ *
+ * @param {DogClient} client
+ * @param {import("discord.js").Interaction} interaction
+ * @returns {Promise<any>}
+ */
+const execute = async function (client, interaction) {
+    if (!interaction.isChatInputCommand?.()) return;
 
-        const { user, guild, channel, commandName } = interaction;
+    const { user, member, guild, channel, commandName, locale } = interaction;
 
-        if (!guild || !channel) return;
+    const username = user.globalName || user.username;
+    const command = client.commands.get(commandName);
 
-        const username = user.globalName || user.username;
-        const command = client.commands.get(commandName);
+    if (!command) {
+        logger.error(`找不到名為 ${commandName} 的指令`);
+        return;
+    };
 
-        if (!command) {
-            logger.error(`找不到名為 ${commandName} 的指令`);
-            return;
+    const isDM = (
+        guild === null &&
+        member === null &&
+        channel?.isDMBased()
+    );
+
+    const { stage, allowedContext, permissions: cmd_perms, execute } = command;
+
+    if (isDM && !allowedContext.includes("dm")) {
+        const emoji_cross = await get_emoji("crosS", client);
+
+        return await interaction.reply({
+            content: `${emoji_cross} | 此指令無法在私訊中使用`,
+            flags: MessageFlags.Ephemeral,
+        });
+    } else if (!isDM && !allowedContext.includes("guild")) {
+        const emoji_cross = await get_emoji("crosS", client);
+
+        return await interaction.reply({
+            content: `${emoji_cross} | 此指令無法在伺服器中使用`,
+            flags: MessageFlags.Ephemeral,
+        });
+    };
+
+    switch (stage) {
+        case "admin": {
+            if (!adminIDs.includes(user.id)) {
+                const emoji_cross = await get_emoji("crosS", client);
+
+                return await interaction.reply({
+                    content: `${emoji_cross} | 此指令僅限機器人管理員使用`,
+                    flags: MessageFlags.Ephemeral,
+                });
+            };
+        }
+
+        case "owner": {
+            if (ownerID !== user.id) {
+                const emoji_cross = await get_emoji("crosS", client);
+
+                return await interaction.reply({
+                    content: `${emoji_cross} | 此指令僅限機器人擁有者使用`,
+                    flags: MessageFlags.Ephemeral,
+                });
+            };
         };
+    };
 
-        const subPath = getFullCommandPath(interaction.options.data);
-        const finalOptions = getFinalOptions(interaction.options.data);
-        const optionsStr = finalOptions.map(option => `${option.name}: ${option.value}`).join(", ");
-        const fullCommand = [commandName, ...subPath].join(" ");
+    const subPath = getFullCommandPath(interaction.options.data);
+    const finalOptions = getFinalOptions(interaction.options.data);
+    const optionsStr = finalOptions.map(option => `${option.name}: ${option.value}`).join(", ");
+    const fullCommand = [commandName, ...subPath].join(" ");
 
-        try {
-            if (!("permissionsFor" in channel)) return;
+    try {
+        logger.info(`${username} 正在執行斜線指令: ${fullCommand}${optionsStr ? `, 選項: ${optionsStr}` : ""}`);
 
-            const botMember = await get_me(guild);
-            const channelPermission = channel.permissionsFor(botMember);
+        const e_fullCommand = escapeMarkdown(fullCommand);
+        const e_optionsStr = escapeMarkdown(optionsStr || "無");
+        const e_guildName = guild ? escapeMarkdown(`${guild.name} (${guild.id})`) : null;
+        const e_channelName = channel ? escapeMarkdown(`${!channel.isDMBased() ? channel.name : "私訊頻道"} (${channel.id})`) : null;
 
-            logger.info(`${username} 正在執行斜線指令: ${fullCommand}${optionsStr ? `, 選項: ${optionsStr}` : ""}`);
+        const embed = new EmbedBuilder()
+            .setTitle("指令執行")
+            .addFields({ name: "指令執行者", value: user.toString() })
+            .addFields({ name: "指令名稱", value: e_fullCommand })
+            .addFields({ name: "選項", value: e_optionsStr })
+            .addFields({ name: "伺服器", value: e_guildName || "私訊" })
+            .addFields({ name: "頻道", value: e_channelName || "無資料" });
 
-            const e_fullCommand = escapeMarkdown(fullCommand);
-            const e_optionsStr = escapeMarkdown(optionsStr || "無");
-            const e_guildName = escapeMarkdown(`${guild.name} (${guild.id})`);
-            const e_channelName = escapeMarkdown(`${channel.name} (${channel.id})`);
+        backend_logger.info(embed);
 
-            const embed = new EmbedBuilder()
-                .setTitle("指令執行")
-                .addFields({ name: "指令執行者", value: user.toString() })
-                .addFields({ name: "指令名稱", value: e_fullCommand })
-                .addFields({ name: "選項", value: e_optionsStr })
-                .addFields({ name: "伺服器", value: e_guildName })
-                .addFields({ name: "頻道", value: e_channelName });
+        if (guild && member && channel && !channel.isDMBased()) {
+            const [botMember, emoji_cross] = await Promise.all([
+                get_me(guild),
+                get_emoji("crosS", client),
+            ]);
 
-            backend_logger.info(embed);
+            const lang_bot_no_permission = get_lang_data(locale, "permissions", "bot_no_permission");
+            const lang_user_no_permission = get_lang_data(locale, "permissions", "user_no_permission");
+            const lang_cant_get_permission = get_lang_data(locale, "permissions", "cant_get_permission");
+
+            const botChannelPermission = channel.permissionsFor(botMember);
+            const userPermission = channel.permissionsFor(
+                member instanceof GuildMember
+                    ? member
+                    : member.user.id
+            );
+
+            if (!userPermission) {
+                return await interaction.reply({
+                    content: `${emoji_cross} | 我無法取得你的權限`,
+                    flags: MessageFlags.Ephemeral,
+                });
+            };
 
             // interaction#reply 需要 read message history 權限
-            /** @type {bigint[]} */
-            const permissionNeeded = [PermissionFlagsBits.ReadMessageHistory];
+            /** @type {{ bot: import("../utils/types").PermissionTexts[], user: import("../utils/types").PermissionTexts[] }} */
+            const permissionNeeded = {
+                "bot": ["ReadMessageHistory", ...(cmd_perms?.bot ?? [])],
+                "user": cmd_perms?.user ?? [],
+            };
 
-            if (command.perm?.length) permissionNeeded.push(...command.perm);
+            /**
+             * @param {"bot" | "user"} key
+             * @param {import("discord.js").PermissionsBitField} perms
+             * @returns {import("../utils/types").PermissionTexts[]}
+             */
+            const getMissingPermissions = (key, perms) =>
+                permissionNeeded[key].filter(
+                    perm => !perms.has(perm)
+                );
 
-            const missingPerms = permissionNeeded.filter(perm => !channelPermission.has(perm));
+            /**
+             * @param {import("../utils/types").PermissionTexts} perm
+             * @return {string}
+             */
+            const translatePermissionNames = (perm) => {
+                const translation_key = PermissionTranslationKeyMapping[perm];
 
-            const permKeys = Object.keys(PermissionFlagsBits);
+                return get_lang_data(locale, "permissions", translation_key);
+            };
 
-            if (missingPerms.length > 0) {
+            /** @type {{ bot: import("../utils/types").PermissionTexts[], user: import("../utils/types").PermissionTexts[] }} */
+            const missingPermissions = {
+                bot: getMissingPermissions("bot", botChannelPermission),
+                user: getMissingPermissions("user", userPermission),
+            };
+
+            /**
+             * @param {"bot" | "user"} key
+             * @returns {string}
+             */
+            const getMissingPermText = (key) => missingPermissions[key].map(p => `\`${translatePermissionNames(p)}\``).join('、');
+
+            const missingPermText =  /** @type {[key: "bot" | "user", label: string][]} */ ([["bot", lang_bot_no_permission], ["user", lang_user_no_permission]])
+                .map(([key, label]) => missingPermissions[key].length ? `${emoji_cross} | ${label}\n${getMissingPermText(key)}` : "")
+                .filter(Boolean)
+                .join('\n')
+                .trim();
+
+            if (missingPermText !== "") {
                 try {
                     if (!interaction.replied || !interaction.deferred) await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
-                    return await interaction.followUp({ // @ts-ignore
-                        content: `機器人缺少以下權限:\n${missingPerms.map(perm => `\`${permKeys.find(key => PermissionFlagsBits[key] === perm) ?? perm}\``).join("\n")}`.slice(0, 2000),
+                    return await interaction.followUp({
+                        content: missingPermText.slice(0, 2000),
                         flags: MessageFlags.Ephemeral,
                     });
                 } catch { };
             };
-
-            if (!("execute" in command)) return;
-
-            await command.execute(interaction, client);
-        } catch (error) {
-            const errorStack = util.inspect(error, { depth: null });
-
-            if (errorStack.includes("Unknown Interaction")) return;
-            logger.error(`執行斜線指令 ${fullCommand} 時出錯：${errorStack}`);
-
-            const embeds = await get_loophole_embed(errorStack, interaction, client);
-            try {
-                await interaction.followUp({ content: "", embeds, components: [], flags: MessageFlags.Ephemeral });
-            } catch { };
         };
-    },
+
+        await execute(interaction, client);
+    } catch (error) {
+        const errorStack = inspect(error, { depth: null });
+
+        if (errorStack.includes("Unknown Interaction")) return;
+        logger.error(`執行斜線指令 ${fullCommand} 時出錯：${errorStack}`);
+
+        const embeds = await get_loophole_embed(errorStack, interaction, client);
+        try {
+            await interaction.followUp({ content: "", embeds, components: [], flags: MessageFlags.Ephemeral });
+        } catch { };
+    };
 };
+
+export { name, execute };

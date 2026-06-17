@@ -337,6 +337,8 @@ const BotID = !isBeta
 
 const BotName = "狗狗機器犬"; // 預設為 client.user.tag
 const authorName = "哈狗";
+const ownerID = "898836485397180426";
+const adminIDs = [ownerID];
 
 // RPG
 const rpg_lvlUp_per = 50;
@@ -371,7 +373,6 @@ const cookClickAmount = 10 // 10次
 
 // misc
 const daily_sign_guildIDs = ["1422545977226690683"];
-const admins = ["898836485397180426"];
 const reserved_prefixes = [`<@${BotID}>`];
 const enable_auto_register_cmd = true;
 
@@ -573,7 +574,7 @@ const probabilities = {
 // #endregion
 
 
-/** @type {{ [k in import("./types.js").JobNames]: { command: string[], emoji: string, desc: string, name: string  }}} */
+/** @type {{ [k in import("./types").JobNames]: { command: string[], emoji: string, desc: string, name: string  }}} */
 const jobs = {
     "fisher": { // fisher 漁夫
         "command": ["fish"],
@@ -708,6 +709,8 @@ export {
     BotID,
     BotName,
     authorName,
+    ownerID,
+    adminIDs,
 
     enable_auto_register_cmd,
     auto_register_cmd_file,
@@ -733,7 +736,6 @@ export {
     cookClickAmount,
 
     daily_sign_guildIDs,
-    admins,
     reserved_prefixes,
     temp_folder,
 
