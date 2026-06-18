@@ -1839,10 +1839,31 @@ export async function execute(client, interaction) {
                     case "page": {
                         if (typeof options !== "string") break;
 
-                        const [embed, row] = await getQueueListEmbedRow(queue, parseInt(options) ?? 1, interaction, client);
+                        const [embed, rows] = await getQueueListEmbedRow(queue, parseInt(options) ?? 1, interaction, client);
 
-                        await interaction.update({ embeds: [embed], components: [row] });
+                        await interaction.update({ embeds: [embed], components: rows });
                         break;
+                    }
+
+                    case "clear_queue": {
+                        if (queue.tracks.length < 1) {
+                            const emoji_cross = await get_emoji("crosS", client);
+
+                            const embed = new EmbedBuilder()
+                                .setColor(embed_error_color)
+                                .setTitle(`${emoji_cross} | 佇列是空的`)
+                                .setEmbedFooter(interaction);
+
+                            return await interaction.reply({ embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
+                        };
+
+                        queue.tracks.length = 0; // 清空佇列的列表
+
+                        const emoji_bin = await get_emoji("bin", client);
+
+                        await interaction.update({
+                            content: `${emoji_bin} | ${user.username} 清空了佇列`,
+                        });
                     }
                 };
 

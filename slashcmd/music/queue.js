@@ -36,19 +36,21 @@ import DogClient from "../../utils/customs/client.js";
  * @param {number} [currentPage=1]
  * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
- * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>]>}
+ * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>[]]>}
  */
 export async function getQueueListEmbedRow(queue, currentPage = 1, interaction = null, client = global._client) {
     const [
         emoji_cross,
         emoji_playGrad,
         emoji_skip,
-        emoji_update
+        emoji_update,
+        emoji_bin,
     ] = await get_emojis([
         "crosS",
         "playGrad",
         "skip",
-        "update"
+        "update",
+        "bin"
     ], client);
 
     const currentTrack = queue.currentTrack;
@@ -61,6 +63,7 @@ export async function getQueueListEmbedRow(queue, currentPage = 1, interaction =
     const lang_next_page = get_lang_data(locale, "/queue", "list.next_page"); // 下一頁
     const lang_update = get_lang_data(locale, "/queue", "list.update"); // 更新
     const lang_list_empty = get_lang_data(locale, "/queue", "list.empty"); // 清單是空的
+    const lang_clear_queue = get_lang_data(locale, "music", "nowplaying.clear_queue"); // 清空佇列
 
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
@@ -93,7 +96,7 @@ ${queueString}`)
         embed.setTitle(`${emoji_cross} | ${lang_list_empty}`);
     };
 
-    const row =
+    const row1 =
         /** @type {ActionRowBuilder<ButtonBuilder>} */
         (new ActionRowBuilder()
             .addComponents(
@@ -110,18 +113,29 @@ ${queueString}`)
                     .setLabel(lang_next_page)
                     .setDisabled(currentPage >= pages)
                     .setStyle(ButtonStyle.Primary),
+            ));
 
+    const row2 =
+        /** @type {ActionRowBuilder<ButtonBuilder>} */
+        (new ActionRowBuilder()
+            .addComponents(
                 new ButtonBuilder()
                     .setCustomId(`music|any|page|${currentPage}`)
                     .setEmoji(emoji_update)
                     .setLabel(lang_update)
                     .setStyle(ButtonStyle.Success),
+
+                new ButtonBuilder()
+                    .setCustomId(`music|any|clear_queue`)
+                    .setEmoji(emoji_bin)
+                    .setLabel(lang_clear_queue)
+                    .setStyle(ButtonStyle.Danger),
             ));
 
-    return [embed, row];
+    return [embed, [row1, row2]];
 };
 
-/** @type {import("../../utils/types.js").Slash<["guild"]>} */
+/** @type {import("../../utils/types").Slash<["guild"]>} */
 export const queueSlash = {
     builder: new SlashCommandBuilder()
         .setName("queue")
@@ -189,12 +203,12 @@ export const queueSlash = {
 
         switch (interaction.options.getSubcommand()) {
             case "list": {
-                const [_, [embed, row]] = await Promise.all([
+                const [_, [embed, rows]] = await Promise.all([
                     interaction.deferReply(),
                     getQueueListEmbedRow(queue, 1, interaction, client),
                 ]);
 
-                return await interaction.editReply({ embeds: [embed], components: [row] });
+                return await interaction.editReply({ embeds: [embed], components: rows });
             }
 
             case "remove": {
