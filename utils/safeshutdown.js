@@ -1,10 +1,22 @@
-const { shutdown } = require("./logger.js");
-const { saveDvoiceData } = require("./file.js");
-const { getCacheManager } = require("./cache.js");
-const { uploadAllDatabaseFiles } = require("./onlineDB.js");
-const { saveAllMusicStates } = require("./music/persistence.js");
-const { BotName } = require("./config.js");
-const DogClient = require("./customs/client.js");
+import {
+    shutdown,
+} from "./logger.js";
+import {
+    saveDvoiceData,
+} from "./file.js";
+import {
+    getCacheManager,
+} from "./cache.js";
+import {
+    uploadAllDatabaseFiles,
+} from "./onlineDB.js";
+import {
+    saveAllMusicStates,
+} from "./music/persistence.js";
+import {
+    BotName,
+} from "./config.js";
+import DogClient from "./customs/client.js";
 
 /**
  * exit the process safely.
@@ -18,12 +30,12 @@ async function safeshutdown(client) {
         await saveAllMusicStates();
         console.log("成功保存音樂狀態！");
 
-        const [success, _] = await Promise.allSettled([
-            uploadAllDatabaseFiles(),
-            shutdown(true, 200),
-        ]);
+        await uploadAllDatabaseFiles();
+        console.log("已上載所有資料庫檔案");
 
-        console.log(success.status === "fulfilled" ? "已上載所有資料庫檔案" : `上載資料庫檔案失敗，下次請選擇上載資料庫檔案或無操作！\n${success.reason}`);
+        await shutdown(true, 200);
+        console.log("已關閉所有logger");
+
         await client?.destroy?.();
         console.log(`🛑 ${client?.name || BotName || client?.user?.tag} 已關機！`);
     } finally {
@@ -32,6 +44,6 @@ async function safeshutdown(client) {
     };
 };
 
-module.exports = {
+export {
     safeshutdown,
 };
