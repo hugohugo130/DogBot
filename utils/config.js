@@ -64,6 +64,14 @@ class RPGDatabase {
     };
 
     /**
+     * @param {any} obj
+     * @returns {boolean}
+     */
+    static isRPGDatabase(obj) {
+        return obj instanceof RPGDatabase;
+    };
+
+    /**
      * Merge two objects
      * @param {Object | RPGDatabase} new_data
      * @returns {RPGDatabase} Modified RPGDatabase

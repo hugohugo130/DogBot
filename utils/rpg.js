@@ -1,17 +1,32 @@
-const { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder, Emoji, BaseInteraction, escapeMarkdown, Message, ApplicationEmoji, Locale } = require("discord.js");
-const util = require("util");
+import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    StringSelectMenuBuilder,
+    escapeMarkdown,
+    Message,
+    ApplicationEmoji,
+    Locale,
+    BaseInteraction,
+} from "discord.js";
+import util from "util";
 
-const {
+import {
+    loadData,
+    load_rpg_data,
+    get_probability_of_id,
+} from "./file.js";
+import {
     wait_for_client,
-} = require("./wait_for_client.js");
-const {
+} from "./wait_for_client.js";
+import {
     get_logger,
-} = require("./logger.js");
-const {
+} from "./logger.js";
+import {
     convertToSecondTimestamp,
     DateNowSecond,
-} = require("./timestamp.js");
-const {
+} from "./timestamp.js";
+import {
     embed_default_color,
     embed_error_color,
     embed_fell_color,
@@ -21,12 +36,12 @@ const {
     workCmdJobs,
     PrivacySettings,
     RPGDatabase,
-} = require("./config.js");
-const {
+} from "./config.js";
+import {
     get_lang_data,
-} = require("./language.js");
-const EmbedBuilder = require("./customs/embedBuilder.js");
-const DogClient = require("./customs/client.js");
+} from "./language.js";
+import EmbedBuilder from "./customs/embedBuilder.js";
+import DogClient from "./customs/client.js";
 
 const logger = get_logger();
 
@@ -855,8 +870,6 @@ const name_reverse = Object.entries(name).reduce((acc, [key, value]) => {
 );
 
 function check_item_data() {
-    const { get_probability_of_id } = require("./file.js");
-
     const all_items = [...new Set([
         ...Object.values(mine_gets),
         ...Object.values(ingots),
@@ -870,7 +883,7 @@ function check_item_data() {
     ]
         .flat()
         .filter(item => !item.startsWith("#"))
-        .filter(item => !jobs[item])
+        .filter(item => !(item in jobs))
         .filter(item => !Object.keys(animal_products).includes(item))
         .filter(item => !Object.values(animals).includes(item))
     )];
@@ -914,8 +927,8 @@ function check_item_data() {
 /**
  * Get the item name of the item ID
  * @param {string} id
- * @param {string | *} default_value
- * @returns {string | *} id or default_value
+ * @param {string | any} default_value
+ * @returns {string | any} id or default_value
  */
 function get_name_of_id(id, default_value = id) {
     return name[id] || default_value;
@@ -924,8 +937,8 @@ function get_name_of_id(id, default_value = id) {
 /**
  * Get the item ID of the item name
  * @param {string} id
- * @param {string | *} default_value
- * @returns {string | *} id or default_value
+ * @param {string | any} default_value
+ * @returns {string | any} id or default_value
  */
 function get_id_of_name(id, default_value = id) {
     return name_reverse[id] || default_value;
@@ -938,8 +951,6 @@ function get_id_of_name(id, default_value = id) {
  * @returns {Promise<number>}
  */
 async function get_number_of_items(name, userid) {
-    const { load_rpg_data } = require("./file.js");
-
     const rpg_data = await load_rpg_data(userid);
     const items = rpg_data.inventory;
 
@@ -1174,9 +1185,10 @@ async function get_emojis(names, client = global._client) {
  * @returns {Promise<EmbedBuilder>}
  */
 async function get_cooldown_embed(remaining_time, action, count, interaction = null, client = global._client) {
-    const { rpg_actions } = require("../cogs/rpg/msg_handler.js");
-
-    const emoji = await get_emoji("crosS", client);
+    const [emoji, { rpg_actions }] = await Promise.all([
+        get_emoji("crosS", client),
+        import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href),
+    ]);
 
     const timestamp = Math.floor(Date.now() / 1000) + Math.floor(remaining_time / 1000);
     const time = `<t:${timestamp}:T> (<t:${timestamp}:R>)`;
@@ -1196,10 +1208,10 @@ async function get_cooldown_embed(remaining_time, action, count, interaction = n
  * Get work cooldown time
  * @param {string} command_name
  * @param {RPGDatabase} rpg_data
- * @returns {number}
+ * @returns {Promise<number>}
  */
-function get_cooldown_time(command_name, rpg_data) {
-    const { rpg_cooldown } = require("../cogs/rpg/msg_handler.js");
+async function get_cooldown_time(command_name, rpg_data) {
+    const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href);
 
     return BetterEval(rpg_cooldown[command_name].replace("{c}", String(rpg_data.count[command_name])));
 };
@@ -1208,10 +1220,10 @@ function get_cooldown_time(command_name, rpg_data) {
  * 檢查指令是否已經冷卻完畢
  * @param {string} command_name - 指令名稱
  * @param {RPGDatabase} rpg_data - 用戶的RPG數據
- * @returns {{ is_finished: boolean, remaining_time: number, endsAtms: number, endsAts: number }} - is_finished:如果已冷卻完畢返回true，否則返回false - remaining_time: 剩餘時間
+ * @returns {Promise<{ is_finished: boolean, remaining_time: number, endsAtms: number, endsAts: number }>} - is_finished:如果已冷卻完畢返回true，否則返回false - remaining_time: 剩餘時間
  */
-function is_cooldown_finished(command_name, rpg_data) {
-    const { rpg_cooldown } = require("../cogs/rpg/msg_handler.js");
+async function is_cooldown_finished(command_name, rpg_data) {
+    const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href);
 
     if (!rpg_cooldown[command_name]) return {
         is_finished: true,
@@ -1223,7 +1235,7 @@ function is_cooldown_finished(command_name, rpg_data) {
     const lastRunTimestamp = rpg_data.lastRunTimestamp[command_name] || 0;
     const now = Date.now();
     const time_diff = now - lastRunTimestamp;
-    const cooldown_time = get_cooldown_time(command_name, rpg_data) * 1000; // 轉換為毫秒
+    const cooldown_time = await get_cooldown_time(command_name, rpg_data) * 1000; // 轉換為毫秒
 
     return {
         is_finished: time_diff >= cooldown_time,
@@ -1542,15 +1554,16 @@ async function get_loophole_embed(text, interaction = null, client = global._cli
 
 /**
  * 
- * @param {string} userId
+ * @param {string | RPGDatabase} userIdOrRPGData
  * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
-async function job_delay_embed(userId, interaction = null, client = global._client) {
-    const { load_rpg_data } = require("./file.js");
+async function job_delay_embed(userIdOrRPGData, interaction = null, client = global._client) {
+    const rpg_data = userIdOrRPGData instanceof RPGDatabase
+        ? userIdOrRPGData
+        : await load_rpg_data(userIdOrRPGData);
 
-    const rpg_data = await load_rpg_data(userId);
     const lastRunTimestamp = rpg_data.lastRunTimestamp ?? {};
     const setJobTime = convertToSecondTimestamp(lastRunTimestamp.job ?? 0);
     const waitUntil = setJobTime + setJobDelay;
@@ -1656,15 +1669,13 @@ function amount_limit(amount) {
  * @param {BaseInteraction | null} [options.interaction=null]
  */
 async function ls_function({ client, message, rpg_data, mode = 0, PASS = false, interaction = null }) {
-    const { loadData } = require("./file.js");
-
     if (!message.author) return mode === 0 ? null : {};
 
     if (!rpg_data.privacy.includes(PrivacySettings.Inventory) && !PASS) {
         if (!message.guild) throw new Error("Invalid Guild of the message");
 
         const [guildData, emoji_bag] = await Promise.all([
-            loadData(message.guild?.id),
+            message.guild?.id ? loadData(message.guild.id) : null,
             get_emoji("bag", client),
         ]);
 
@@ -1776,8 +1787,6 @@ async function ls_function({ client, message, rpg_data, mode = 0, PASS = false, 
  * @returns {Promise<string>}
  */
 async function firstPrefix(guildID) {
-    const { loadData } = require("./file.js");
-
     const guildData = await loadData(guildID);
 
     const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
@@ -1792,8 +1801,6 @@ async function firstPrefix(guildID) {
  * @returns {Promise<string[]>}
  */
 async function InPrefix(guildID, prefix) {
-    const { loadData } = require("./file.js");
-
     const guildData = await loadData(guildID);
 
     const prefixes = (guildData.prefix ?? [])
@@ -1810,8 +1817,6 @@ async function InPrefix(guildID, prefix) {
  * @returns {Promise<false | string>}
  */
 async function startsWith_prefixes(guildID, str) {
-    const { loadData } = require("./file.js");
-
     const guildData = await loadData(guildID);
 
     const prefixes = (guildData.prefix ?? [])
@@ -1836,17 +1841,24 @@ const get_fightjob_name = (fj_id, locale = null) => get_lang_data(locale, "fight
 
 /**
  * Get the translation of a job by its ID
- * @param {string} job_id - ID of the job
+ * @param {import("./types").JobNames} job_id - ID of the job
  * @param {Locale | null} [locale=null] - the locale
  * @returns {string}
  */
 const get_job_name = (job_id, locale = null) => get_lang_data(locale, "job_name", job_id);
 
+/**
+ * 
+ * @param {string} job_id 
+ * @returns {job_id is import("./types").JobNames}
+ */
+const valid_job_id = (job_id) => job_id in jobs;
+
 const oven_slots = 6;
 const farm_slots = 4;
 const smelter_slots = 6;
 
-module.exports = {
+export {
     mine_gets,
     ingots,
     logs,
@@ -1903,4 +1915,5 @@ module.exports = {
     startsWith_prefixes,
     get_fightjob_name,
     get_job_name,
+    valid_job_id,
 };

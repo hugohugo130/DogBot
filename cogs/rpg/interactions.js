@@ -1523,9 +1523,11 @@ export async function execute(client, interaction) {
             case "job_confirm": {
                 const [_, __, job_id] = interaction.customId.split("|");
 
+                let rpg_data = await load_rpg_data(user.id);
+
                 const [emoji_job, delay_embed] = await Promise.all([
                     get_emoji("job", client),
-                    job_delay_embed(user.id, interaction, client),
+                    job_delay_embed(rpg_data, interaction, client),
                 ]);
 
                 if (delay_embed) return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
@@ -1533,8 +1535,6 @@ export async function execute(client, interaction) {
                 const job_name = valid_job_id(job_id)
                     ? get_job_name(job_id, locale)
                     : job_id;
-
-                let rpg_data = await load_rpg_data(user.id);
 
                 rpg_data.job = job_id;
 
