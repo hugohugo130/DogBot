@@ -5,6 +5,7 @@ import {
     ButtonBuilder,
     ButtonStyle,
     BaseInteraction,
+    Locale,
 } from "discord.js";
 import util from "util";
 
@@ -37,6 +38,7 @@ import {
 } from "../../utils/config.js";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
+import { get_lang_data } from "../../utils/language.js";
 
 /**
  * 生成 Discord 進度條
@@ -122,10 +124,11 @@ async function createProgressBar(start, played, end, debug = false, client = glo
 /**
  * 獲取音樂控制面板按鈕
  * @param {MusicQueue} queue - 音樂佇列
+ * @param {Locale | null} [locale=null] - Discord Locale
  * @param {DogClient | null} [client] - Discord 客戶端
  * @returns {Promise<ActionRowBuilder<ButtonBuilder>[]>}
  */
-async function getNowPlayingRows(queue, client = global._client) {
+async function getNowPlayingRows(queue, locale = null, client = global._client) {
     const [
         emoji_pauseGrad,
         emoji_playGrad,
@@ -134,7 +137,8 @@ async function getNowPlayingRows(queue, client = global._client) {
         emoji_goodbye,
         emoji_trending,
         emoji_shuffle,
-        emoji_refresh
+        emoji_refresh,
+        emoji_bin
     ] = await get_emojis([
         "pauseGrad",
         "playGrad",
@@ -144,28 +148,39 @@ async function getNowPlayingRows(queue, client = global._client) {
         "trending",
         "shuffle",
         "refresh",
+        "bin",
     ], client);
 
     let loopMode;
 
+    const lang_loopStatus = /** @type {Record<"disabled" | "track" | "all" | "auto", string>} */ (
+        Object.fromEntries(
+            ["disabled", "track", "all", "auto"]
+                .map((key) => [key, get_lang_data(locale, "music", `loop_status.${key}`)])
+        )
+    );
+    const lang_clear_queue = get_lang_data(locale, "music", "nowplaying.clear_queue");
+    const lang_update = get_lang_data(locale, "music", "nowplaying.update");
+    const lang_disconnect = get_lang_data(locale, "music", "nowplaying.disconnect");
+
     switch (queue.loopStatus) {
         case loopStatus.DISABLED: {
-            loopMode = "關閉";
+            loopMode = lang_loopStatus.disabled;
             break;
         }
 
         case loopStatus.TRACK: {
-            loopMode = "單曲";
+            loopMode = lang_loopStatus.track;
             break;
         }
 
         case loopStatus.ALL: {
-            loopMode = "全部";
+            loopMode = lang_loopStatus.all;
             break;
         }
 
         case loopStatus.AUTO: {
-            loopMode = "自動推薦";
+            loopMode = lang_loopStatus.auto;
             break;
         }
 
@@ -181,7 +196,7 @@ async function getNowPlayingRows(queue, client = global._client) {
 
     const IsTrendingOn = queue.loopStatus === loopStatus.AUTO;
 
-    const row1 =// all [ButtonStyle.Secondary]
+    const row1 = // first four buttons [ButtonStyle.Secondary]
         /** @type {ActionRowBuilder<ButtonBuilder>} */
         (new ActionRowBuilder()
             .addComponents(
@@ -205,6 +220,12 @@ async function getNowPlayingRows(queue, client = global._client) {
                     .setEmoji(emoji_refresh)
                     .setLabel(loopMode)
                     .setStyle(ButtonStyle.Secondary),
+
+                new ButtonBuilder()
+                    .setCustomId("music|any|clear_queue")
+                    .setEmoji(emoji_bin)
+                    .setLabel(lang_clear_queue) // 清空佇列 Clear Queue
+                    .setStyle(ButtonStyle.Danger),
             ));
 
     const row2 =
@@ -213,20 +234,20 @@ async function getNowPlayingRows(queue, client = global._client) {
             .addComponents(
                 new ButtonBuilder()
                     .setCustomId(`music|any|trending|${IsTrendingOn ? "off" : "on"}`) // option: off/on
-                    .setEmoji(emoji_trending)
-                    .setLabel("自動推薦")
+                    .setEmoji(emoji_trending) // 自動推薦 Auto Recommend
+                    .setLabel(lang_loopStatus.auto)
                     .setStyle(IsTrendingOn ? ButtonStyle.Success : ButtonStyle.Secondary), // Success按下去後關閉，Secondary按下去後啟用
 
                 new ButtonBuilder()
                     .setCustomId("refresh|any|nowplaying")
                     .setEmoji(emoji_loop)
-                    .setLabel("更新")
+                    .setLabel(lang_update) // 更新 Update
                     .setStyle(ButtonStyle.Success),
 
                 new ButtonBuilder()
                     .setCustomId("music|any|disconnect")
                     .setEmoji(emoji_goodbye)
-                    .setLabel("中斷連線")
+                    .setLabel(lang_disconnect) // 中斷連線 Disconnect
                     .setStyle(ButtonStyle.Danger)
             ));
 
@@ -252,7 +273,7 @@ export async function getNowPlayingEmbed(queue, currentTrack = null, interaction
 
     const [progressBar, rows, emoji] = await Promise.all([
         createProgressBar(0, playingAt, Math.floor(currentTrack.duration / 1000), false, client),
-        getNowPlayingRows(queue, client),
+        getNowPlayingRows(queue, interaction?.locale, client),
         queue.isPaused()
             ? await get_emoji("pauseGrad", client)
             : await get_emoji("playGrad", client),
@@ -277,7 +298,7 @@ ${emoji} ${formattedPlayingAt}${progressBar}${formattedDuration}
     return [embed, rows];
 };
 
-/** @type {import("../../utils/types.js").Slash<["guild"]>} */
+/** @type {import("../../utils/types").Slash<["guild"]>} */
 export const nowPlayingSlash = {
     builder: new SlashCommandBuilder()
         .setName("nowplaying")

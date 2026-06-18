@@ -8,7 +8,7 @@ import {
 } from "./logger.js";
 
 /**
- * all keys are lowercase
+ * all keys are in lowercase
  * {0} {1} {2} ... are placeholders
  * 
  * 所有鍵都是小寫的
@@ -159,6 +159,15 @@ Since <t:{1}:R>`,
             "remove.invalid_track": "Invalid track index",
             "remove.success": "Removed track",
         },
+        "music": {
+            "loop_status.disabled": "Disabled",
+            "loop_status.track": "Track",
+            "loop_status.all": "All",
+            "loop_status.auto": "Auto Recommend",
+            "nowplaying.clear_queue": "Clear Queue",
+            "nowplaying.update": "Update",
+            "nowplaying.disconnect": "Disconnect",
+        },
     },
 
     [Locale.ChineseTW]: {
@@ -303,6 +312,15 @@ Since <t:{1}:R>`,
 
             "remove.invalid_track": "沒有這首歌",
             "remove.success": "成功移除",
+        },
+        "music": {
+            "loop_status.disabled": "關閉",
+            "loop_status.track": "單曲",
+            "loop_status.all": "所有",
+            "loop_status.auto": "自動推薦",
+            "nowplaying.clear_queue": "清空佇列",
+            "nowplaying.update": "更新",
+            "nowplaying.disconnect": "中斷連線",
         },
     },
 };
