@@ -1,20 +1,61 @@
-const util = require("util");
-const axios = require("axios");
-const Discord = require("discord.js");
-const { createAudioResource, createAudioPlayer, joinVoiceChannel, getVoiceConnection, AudioPlayerStatus, VoiceConnection, AudioPlayer, StreamType, AudioResource, PlayerSubscription } = require("@discordjs/voice");
-const { fileTypeFromStream } = require("file-type");
-const { Readable } = require("node:stream");
-const { Collection, VoiceChannel, Guild, BaseInteraction } = require("discord.js");
+import {
+    createAudioResource,
+    createAudioPlayer,
+    joinVoiceChannel,
+    getVoiceConnection,
+    AudioPlayerStatus,
+    VoiceConnection,
+    AudioPlayer,
+    StreamType,
+    AudioResource,
+    PlayerSubscription,
+} from "@discordjs/voice";
+import {
+    fileTypeFromStream,
+} from "file-type";
+import {
+    Readable,
+} from "node:stream";
+import {
+    pathToFileURL,
+} from "node:url";
+import {
+    Collection,
+    VoiceChannel,
+    Guild,
+    BaseInteraction,
+} from "discord.js";
+import util from "util";
+import axios from "axios";
 
-const { musicSearchEngine, embed_error_color, embed_default_color } = require("../config.js");
-const { get_emoji } = require("../rpg.js");
-const { get_logger } = require("../logger.js");
-const { get_guild, get_channel, get_me } = require("../discord.js");
-const { formatMinutesSeconds } = require("../timestamp.js");
-const { wait_for_client } = require("../wait_for_client.js");
-const { generateSessionId, generateUUID } = require("../random.js");
-const EmbedBuilder = require("../customs/embedBuilder.js");
-const DogClient = require("../customs/client.js");
+import {
+    musicSearchEngine,
+    embed_error_color,
+    embed_default_color,
+} from "../config.js";
+import {
+    get_emoji,
+} from "../rpg.js";
+import {
+    get_logger,
+} from "../logger.js";
+import {
+    get_guild,
+    get_channel,
+    get_me,
+} from "../discord.js";
+import {
+    formatMinutesSeconds,
+} from "../timestamp.js";
+import {
+    generateSessionId,
+    generateUUID,
+} from "../random.js";
+import {
+    createWriteStream,
+} from "../file.js";
+import EmbedBuilder from "../customs/embedBuilder.js";
+import DogClient from "../customs/client.js";
 
 const logger = get_logger();
 
@@ -269,6 +310,23 @@ class MusicTrack {
 
         return [this.stream, streamType];
     };
+
+    /**
+     * @param {string | null} [filename=null]
+     * @returns {Promise<[string, string]>}
+     */
+    async saveFile(filename = null) {
+        if (!filename) filename = `${this.uuid}.mp3`;
+
+        const [stream, streamType] = await this.prepareStream();
+        const fileStream = createWriteStream(filename);
+        stream.pipe(fileStream);
+
+        return new Promise((resolve, reject) => {
+            fileStream.on("finish", () => resolve([filename, streamType]));
+            fileStream.on("error", reject);
+        });
+    };
 };
 
 class MusicQueue {
@@ -314,10 +372,10 @@ class MusicQueue {
         /** @type {boolean} */
         this.paused = false;
 
-        /** @type {Discord.SendableChannels | null} */
+        /** @type {import('discord.js').SendableChannels | null} */
         this.textChannel = null;
 
-        /** @type {VoiceChannel | Discord.VoiceBasedChannel | null} */
+        /** @type {VoiceChannel | import('discord.js').VoiceBasedChannel | null} */
         this.voiceChannel = null;
 
         /** @type {VoiceConnection | null} */
@@ -762,7 +820,7 @@ class MusicQueue {
 
     /**
      * Set the voice channel of the queue.
-     * @param {VoiceChannel | Discord.VoiceBasedChannel | null} voiceChannel
+     * @param {VoiceChannel | import('discord.js').VoiceBasedChannel | null} voiceChannel
      * @returns {void}
      */
     setVoiceChannel(voiceChannel) {
@@ -771,7 +829,7 @@ class MusicQueue {
 
     /**
      * Set the text channel of the queue.
-     * @param {Discord.SendableChannels | null} [textChannel=null]
+     * @param {import('discord.js').SendableChannels | null} [textChannel=null]
      * @returns {void}
      */
     setTextChannel(textChannel = null) {
@@ -1076,7 +1134,7 @@ async function fetchAudioStream(original_url) {
 async function getStream({ track, url, source }) {
     let engine;
     try {
-        engine = require(`./${source?.toLowerCase() ?? "soundcloud"}.js`);
+        engine = await import(new URL(`./${source?.toLowerCase() ?? "soundcloud"}.js`, import.meta.url).href);
     } catch { };
 
     if (!url && "url" in track) {
@@ -1108,15 +1166,15 @@ async function search_until(query, amount = 25, customURL = false) {
     let results = [];
 
     for (const engine of musicSearchEngine) {
-        const file = require(`./${engine}.js`);
+        const file = await import(new URL(`./${engine}.js`, import.meta.url).href);
 
         if (!file) {
             logger.error(`找不到 搜索引擎 ${engine} 的 API模塊: ${engine}.js`);
             continue;
         };
 
-        if (!file.search_tracks) {
-            logger.warn(`API模塊 ${engine}.js 沒有搜索歌曲的 search_tracks 函數`);
+        if (!file.search_tracks || typeof file.search_tracks !== "function") {
+            logger.warn(`API模塊 ${engine}.js 沒有搜索歌曲的 search_tracks 函數 / 並非函數`);
             continue;
         };
 
@@ -1144,7 +1202,7 @@ async function search_until(query, amount = 25, customURL = false) {
 
                 const audioData = await getAudioFileData(query, true);
 
-                output.push(audioData);
+                output.unshift(audioData); // 等同於 output.splice(0, 0, audioData)，意思是插入到列表開頭
             };
         } catch (err) {
             const errorStack = util.inspect(err, { depth: null });
@@ -1224,7 +1282,7 @@ function IsValidURL(str) {
         'i', // 不區分大小寫
     );
 
-    return !!pattern.test(str);
+    return !!str && !!pattern.test(str);
 };
 
 /**
@@ -1254,24 +1312,24 @@ async function URLAvaliable(url, statusCodeMatch = null) {
  *
  * @overload
  * @param {null} queue
- * @param {BaseInteraction| null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  *
  * @overload
  * @param {MusicQueue} queue
- * @param {BaseInteraction| null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  *
  * @overload
  * @param {MusicQueue | null} queue
- * @param {BaseInteraction| null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  *
  * @param {MusicQueue | null} queue
- * @param {BaseInteraction| null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  */
 async function noMusicIsPlayingEmbed(queue, interaction = null, client = global._client) {
@@ -1302,7 +1360,7 @@ async function youHaveToJoinVC_Embed(interaction = null, client = global._client
         .setEmbedFooter(interaction);
 };
 
-module.exports = {
+export {
     getQueue,
     getQueues,
     getPlayingPlayers,
