@@ -105,19 +105,6 @@ export const playSlash = {
                 })
                 .setRequired(false),
         )
-        .addBooleanOption(option => // play_audio_url
-            option.setName("play_audio_url")
-                .setNameLocalizations({
-                    "zh-TW": "萬物皆可播",
-                    "zh-CN": "万物皆可播",
-                })
-                .setDescription("Download the audio from the url and play it as much as possible")
-                .setDescriptionLocalizations({
-                    "zh-TW": "從連結下載音訊並盡可能播放",
-                    "zh-CN": "从链接下载音频并尽可能播放",
-                })
-                .setRequired(false),
-        )
         .addBooleanOption(option => // hide
             option.setName("hide")
                 .setNameLocalizations({
@@ -154,7 +141,6 @@ export const playSlash = {
     async execute(interaction, client) {
         const query = interaction.options.getString("query", false) ?? "wellerman";
         const next = interaction.options.getBoolean("next", false) ?? false;
-        const play_audio_url = interaction.options.getBoolean("play_audio_url", false) ?? false;
         const custom_track_name = interaction.options.getString("track_name", false) ?? null;
         const hide = interaction.options.getBoolean("hide", false) ?? false;
         // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
@@ -227,7 +213,7 @@ export const playSlash = {
 
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
-        const will_play_audio_url = play_audio_url && IsValidURL(query);
+        const will_play_audio_url = IsValidURL(query);
         const converted_gdrive_custom_url_or_query = will_play_audio_url && GDriveDirectLink(query);
         const custom_url_or_query = converted_gdrive_custom_url_or_query || query;
 
