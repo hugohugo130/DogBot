@@ -8,7 +8,7 @@ WORKDIR /app
 RUN apt install -y curl \
     python3 make g++ git
 
-# 安裝ffmpeg
+# 安裝ffmpeg & ffprobe
 COPY --from=ffmpeg-builder /ffmpeg /usr/local/bin/
 COPY --from=ffmpeg-builder /ffprobe /usr/local/bin/
 

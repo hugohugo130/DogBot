@@ -17,8 +17,9 @@ import {
     Readable,
 } from "node:stream";
 import {
-    pathToFileURL,
-} from "node:url";
+    spawn,
+    exec as callbackExec
+} from "node:child_process";
 import {
     Collection,
     VoiceChannel,
@@ -372,10 +373,10 @@ class MusicQueue {
         /** @type {boolean} */
         this.paused = false;
 
-        /** @type {import('discord.js').SendableChannels | null} */
+        /** @type {import("discord.js").SendableChannels | null} */
         this.textChannel = null;
 
-        /** @type {VoiceChannel | import('discord.js').VoiceBasedChannel | null} */
+        /** @type {VoiceChannel | import("discord.js").VoiceBasedChannel | null} */
         this.voiceChannel = null;
 
         /** @type {VoiceConnection | null} */
@@ -820,7 +821,7 @@ class MusicQueue {
 
     /**
      * Set the voice channel of the queue.
-     * @param {VoiceChannel | import('discord.js').VoiceBasedChannel | null} voiceChannel
+     * @param {VoiceChannel | import("discord.js").VoiceBasedChannel | null} voiceChannel
      * @returns {void}
      */
     setVoiceChannel(voiceChannel) {
@@ -829,7 +830,7 @@ class MusicQueue {
 
     /**
      * Set the text channel of the queue.
-     * @param {import('discord.js').SendableChannels | null} [textChannel=null]
+     * @param {import("discord.js").SendableChannels | null} [textChannel=null]
      * @returns {void}
      */
     setTextChannel(textChannel = null) {
@@ -919,49 +920,49 @@ function isSoundCloudTrack(object) {
     return (
         object &&
         typeof object === "object" &&
-        'comment_count' in object &&
-        'full_duration' in object &&
-        'downloadable' in object &&
-        'created_at' in object &&
-        'description' in object &&
-        'media' in object &&
-        'title' in object &&
-        'publisher_metadata' in object &&
-        'duration' in object &&
-        'has_downloads_left' in object &&
-        'artwork_url' in object &&
-        'public' in object &&
-        'streamable' in object &&
-        'tag_list' in object &&
-        'genre' in object &&
-        'id' in object &&
-        'reposts_count' in object &&
-        'state' in object &&
-        'label_name' in object &&
-        'last_modified' in object &&
-        'commentable' in object &&
-        'policy' in object &&
-        'visuals' in object &&
-        'kind' in object &&
-        'purchase_url' in object &&
-        'sharing' in object &&
-        'uri' in object &&
-        'secret_token' in object &&
-        'download_count' in object &&
-        'likes_count' in object &&
-        'urn' in object &&
-        'license' in object &&
-        'purchase_title' in object &&
-        'display_date' in object &&
-        'embeddable_by' in object &&
-        'release_date' in object &&
-        'user_id' in object &&
-        'monetization_model' in object &&
-        'waveform_url' in object &&
-        'permalink' in object &&
-        'permalink_url' in object &&
-        'user' in object &&
-        'playback_count' in object
+        "comment_count" in object &&
+        "full_duration" in object &&
+        "downloadable" in object &&
+        "created_at" in object &&
+        "description" in object &&
+        "media" in object &&
+        "title" in object &&
+        "publisher_metadata" in object &&
+        "duration" in object &&
+        "has_downloads_left" in object &&
+        "artwork_url" in object &&
+        "public" in object &&
+        "streamable" in object &&
+        "tag_list" in object &&
+        "genre" in object &&
+        "id" in object &&
+        "reposts_count" in object &&
+        "state" in object &&
+        "label_name" in object &&
+        "last_modified" in object &&
+        "commentable" in object &&
+        "policy" in object &&
+        "visuals" in object &&
+        "kind" in object &&
+        "purchase_url" in object &&
+        "sharing" in object &&
+        "uri" in object &&
+        "secret_token" in object &&
+        "download_count" in object &&
+        "likes_count" in object &&
+        "urn" in object &&
+        "license" in object &&
+        "purchase_title" in object &&
+        "display_date" in object &&
+        "embeddable_by" in object &&
+        "release_date" in object &&
+        "user_id" in object &&
+        "monetization_model" in object &&
+        "waveform_url" in object &&
+        "permalink" in object &&
+        "permalink_url" in object &&
+        "user" in object &&
+        "playback_count" in object
     );
 };
 
@@ -1025,15 +1026,12 @@ async function getAudioFileData(url, stream = false) {
     const uri = url.split("/").pop()?.split("?")[0];
 
     const response = await axios.get(url);
-    const content_disposition = response.headers['content-disposition'];
-    const match = content_disposition.match(/filename="(.+)"/);
+    const content_disposition = response.headers["content-disposition"];
+    const match = content_disposition?.match(/filename="(.+)"/);
 
     await response.data?.destroy?.();
 
-    const filename = match
-        ? match[1]
-        : uri
-        || "unknown";
+    const filename = match?.[1] || uri || "unknown";
 
     return {
         id: `a${generateSessionId(8)}${Date.now().toFixed(5)}`,
@@ -1057,7 +1055,7 @@ async function getAudioFileData(url, stream = false) {
 async function withTimeout(promiseOrFn, ms, error = true) {
     let timeoutId;
 
-    const actualPromise = typeof promiseOrFn === 'function'
+    const actualPromise = typeof promiseOrFn === "function"
         ? promiseOrFn()
         : Promise.resolve(promiseOrFn);
 
@@ -1089,7 +1087,7 @@ async function fetchAudioStream(original_url) {
 
     const response = await fetch(redirected_url, {
         headers: {
-            'User-Agent': 'Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36'
+            "User-Agent": "Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36"
         },
     });
 
@@ -1198,16 +1196,23 @@ async function search_until(query, amount = 25, customURL = false) {
             };
 
             if (customURL && IsValidURL(query) && Array.isArray(output)) {
-                query = await get_redirected_url(query);
+                const url = await get_redirected_url(query);
 
-                const audioData = await getAudioFileData(query, true);
+                const [audioData, duration] = await Promise.all([
+                    getAudioFileData(url, true),
+                    getAudioDuration(url),
+                ]);
+
+                if (duration) {
+                    audioData.duration = duration;
+                };
 
                 output.unshift(audioData); // 等同於 output.splice(0, 0, audioData)，意思是插入到列表開頭
             };
         } catch (err) {
             const errorStack = util.inspect(err, { depth: null });
 
-            logger.warn(`使用音樂搜索引擎 ${engine}.js 搜索時出錯，忽略: ${errorStack}`);
+            logger.warn(`使用音樂搜索引擎 ${engine}.js 搜索時出錯，忽略。\n${errorStack}`);
             continue;
         };
 
@@ -1216,8 +1221,8 @@ async function search_until(query, amount = 25, customURL = false) {
             continue;
         };
 
+        tracks = [...new Set(output)];
         tracks = output.slice(0, amount);
-        tracks = [...new Set(tracks)];
         tracks = await fixStructure(tracks);
 
         results.push(...tracks);
@@ -1238,48 +1243,48 @@ async function search_until(query, amount = 25, customURL = false) {
  */
 function IsValidURL(str) {
     const pattern = new RegExp(
-        '^(?:' + // 開頭，非捕獲組開始
+        "^(?:" + // 開頭，非捕獲組開始
         // 方案 URI
-        '[a-zA-Z][a-zA-Z0-9+.-]*:(?:\\/\\/[^\\n\\r]+|[^\\n\\r]+)' + // 通訊協定 scheme:，後可接 // 或直接內容
-        '|' + // 或
+        "[a-zA-Z][a-zA-Z0-9+.-]*:(?:\\/\\/[^\\n\\r]+|[^\\n\\r]+)" + // 通訊協定 scheme:，後可接 // 或直接內容
+        "|" + // 或
         // 協議相對 URL
-        '\\/\\/[^\\n\\r]+' + // 以 // 開頭（省略通訊協定）
-        '|' + // 或
+        "\\/\\/[^\\n\\r]+" + // 以 // 開頭（省略通訊協定）
+        "|" + // 或
         // 絕對路徑
-        '\\/[^\\n\\r]*' + // 以 / 開頭的絕對路徑
-        '|' + // 或
+        "\\/[^\\n\\r]*" + // 以 / 開頭的絕對路徑
+        "|" + // 或
         // 相對路徑
-        '\\.{1,2}\\/[^\\n\\r]*' + // 以 ./ 或 ../ 開頭的相對路徑
-        '|' + // 或
+        "\\.{1,2}\\/[^\\n\\r]*" + // 以 ./ 或 ../ 開頭的相對路徑
+        "|" + // 或
         // 僅查詢字串
-        '\\?[^\\n\\r]*' + // 僅查詢字串（? 開頭）
-        '|' + // 或
+        "\\?[^\\n\\r]*" + // 僅查詢字串（? 開頭）
+        "|" + // 或
         // 僅片段識別碼
-        '\\#[^\\n\\r]*' + // 僅片段識別碼（# 開頭）
-        '|' + // 或
+        "\\#[^\\n\\r]*" + // 僅片段識別碼（# 開頭）
+        "|" + // 或
         // IPv6、IPv4 或 localhost
-        '(?:' + // 非捕獲組
-        '(?:\\[[0-9a-fA-F:]+\\]|\\d{1,3}(?:\\.\\d{1,3}){3}|localhost)' + // IPv6 位址、IPv4 位址、localhost
-        '(?::\\d+)?' + // 可選連接埠
-        '(?:(?:\\/|\\?|\\#)[^\\n\\r]*)?' + // 可選路徑 / 查詢 / 片段
-        ')' +
-        '|' + // 或
+        "(?:" + // 非捕獲組
+        "(?:\\[[0-9a-fA-F:]+\\]|\\d{1,3}(?:\\.\\d{1,3}){3}|localhost)" + // IPv6 位址、IPv4 位址、localhost
+        "(?::\\d+)?" + // 可選連接埠
+        "(?:(?:\\/|\\?|\\#)[^\\n\\r]*)?" + // 可選路徑 / 查詢 / 片段
+        ")" +
+        "|" + // 或
         // 完整網域名稱
-        '(?:' +
-        '(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+' + // 子域名（至少一層）
-        '[a-zA-Z]{2,}\\.?' + // 頂級域名（至少兩個字母），可選結尾點
-        '(?::\\d+)?' + // 可選連接埠
-        '(?:(?:\\/|\\?|\\#)[^\\n\\r]*)?' + // 可選路徑 / 查詢 / 片段
-        ')' +
-        '|' + // 或
+        "(?:" +
+        "(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\\.)+" + // 子域名（至少一層）
+        "[a-zA-Z]{2,}\\.?" + // 頂級域名（至少兩個字母），可選結尾點
+        "(?::\\d+)?" + // 可選連接埠
+        "(?:(?:\\/|\\?|\\#)[^\\n\\r]*)?" + // 可選路徑 / 查詢 / 片段
+        ")" +
+        "|" + // 或
         // 主機名稱（不含點）
-        '(?:' +
-        '[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?' + // 主機名稱（字母開頭，可含連字號）
-        '(?::\\d+)?' + // 可選連接埠
-        '(?:(?:\\/|\\?|\\#)[^\\n\\r]*)?' + // 可選路徑 / 查詢 / 片段
-        ')' +
-        ')$', // 結尾
-        'i', // 不區分大小寫
+        "(?:" +
+        "[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?" + // 主機名稱（字母開頭，可含連字號）
+        "(?::\\d+)?" + // 可選連接埠
+        "(?:(?:\\/|\\?|\\#)[^\\n\\r]*)?" + // 可選路徑 / 查詢 / 片段
+        ")" +
+        ")$", // 結尾
+        "i", // 不區分大小寫
     );
 
     return !!str && !!pattern.test(str);
@@ -1309,7 +1314,7 @@ function GDriveDirectLink(sharingURL) {
  */
 async function URLAvaliable(url, statusCodeMatch = null) {
     try {
-        const response = await fetch(url, { method: 'HEAD' });
+        const response = await fetch(url, { method: "HEAD" });
         return (
             response.ok
             && (
@@ -1323,6 +1328,79 @@ async function URLAvaliable(url, statusCodeMatch = null) {
         return false;
     };
 };
+
+async function IsFFprobeInstalled() {
+    const exec = util.promisify(callbackExec);
+
+    try {
+        await exec("ffprobe -version");
+        return true;
+    } catch (error) {
+        return false;
+    };
+};
+
+/**
+ * @param {string} url
+ * @param {number} [timeoutMs=15000]
+ * @returns {Promise<number | null>}
+ */
+async function getAudioDuration(url, timeoutMs = 15000) {
+    return new Promise((resolve, reject) => {
+        if (!IsFFprobeInstalled()) {
+            reject(new Error("ffprobe is not installed"));
+        };
+
+        const args = [
+            "-v", "quiet",
+            "-print_format", "json",
+            "-show_entries", "format=duration",
+            "-rw_timeout", "10000000", // 10秒
+            "-user_agent", "Mozilla/5.0 (compatible; Dogbot/2.0)",
+            "-threads", "1",
+            url,
+        ];
+
+        const proc = spawn("ffprobe", args);
+        if (DEBUG) logger.debug(`Spawmed ffprobe process, PID: ${proc.pid}`);
+        let stdout = "";
+        let stderr = "";
+
+        proc.stdout.on("data", (data) => { stdout += data; });
+        proc.stderr.on("data", (data) => { stderr += data; });
+
+        const timer = setTimeout(() => {
+            proc.kill("SIGKILL");
+            reject(new Error(`ffprobe timed out (${timeoutMs}ms)`));
+        }, timeoutMs);
+
+        proc.on("close", (code) => {
+            clearTimeout(timer);
+            logger.debug(`Process ended! With exit code ${code}`);
+
+            if (code !== 0) {
+                reject(new Error(`ffprobe exit code ${code}: ${stderr}`));
+                return;
+            };
+
+            try {
+                logger.debug(`Parsing JSON...`);
+                const { format } = JSON.parse(stdout);
+                const dur = parseFloat(format?.duration);
+                logger.debug(`Got duration: ${dur ? `${dur}s (${dur * 1000}ms)` : dur}`);
+
+                resolve(Number.isFinite(dur) ? dur * 1000 : null);
+            } catch (e) {
+                reject(new Error("Failed to parse ffprobe JSON"));
+            };
+        });
+
+        proc.on("error", (err) => {
+            clearTimeout(timer);
+            reject(err);
+        });
+    });
+}
 
 /**
  *
@@ -1388,6 +1466,8 @@ export {
     IsValidURL,
     GDriveDirectLink,
     URLAvaliable,
+    IsFFprobeInstalled,
+    getAudioDuration,
     noMusicIsPlayingEmbed,
     youHaveToJoinVC_Embed,
     MusicQueue,

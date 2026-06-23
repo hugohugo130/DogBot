@@ -2,14 +2,13 @@ import "./utils/check.env.js"; // check .env file
 import { inspect } from "util";
 import { loadEnvFile } from "node:process";
 
-import get_areadline from "./utils/readline.js";
-import { Events, Collection } from "discord.js";
 import { get_logger } from "./utils/logger.js";
+import { Events, Collection } from "discord.js";
 import { load_cogs } from "./utils/load_cogs.js";
 import { check_item_data } from "./utils/rpg.js";
 import { registcmd } from "./register_commands.js";
-import { getQueues } from "./utils/music/music.js";
 import { getCacheManager } from "./utils/cache.js";
+import { musicSearchEngine } from "./utils/config.js";
 import { loadslashcmd } from "./utils/loadslashcmd.js";
 import { safeshutdown } from "./utils/safeshutdown.js";
 import { hot_reload_cogs } from "./utils/hot_reload.js";
@@ -18,9 +17,11 @@ import { getServerIPSync } from "./utils/getSeverIPSync.js";
 import { should_register_cmd } from "./utils/auto_register.js";
 import { check_help_rpg_info } from "./cogs/rpg/interactions.js";
 import { saveAllMusicStates } from "./utils/music/persistence.js";
+import { getQueues, IsFFprobeInstalled } from "./utils/music/music.js";
 import { checkDBFilesExists, checkDBFilesCorrupted } from "./utils/check_db_files.js";
 import { checkAllDatabaseFilesContent, uploadAllDatabaseFiles } from "./utils/onlineDB.js";
 import DogClient from "./utils/customs/client.js";
+import get_areadline from "./utils/readline.js";
 
 loadEnvFile(); // load .env file
 
@@ -219,6 +220,10 @@ client.once(Events.ClientReady, async () => {
     global.preloadResponse = new Collection();
 
     await checkDBFilesCorrupted();
+    if (musicSearchEngine.length > 0 && !(await IsFFprobeInstalled())) {
+        logger.warn(`如果FFprobe沒有安裝，那麼將無法偵測音樂功能中，播放自定義URL的音訊長度`);
+    };
+
     if (!debug) await checkAllDatabaseFilesContent();
 
     check_help_rpg_info();
