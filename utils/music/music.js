@@ -1286,6 +1286,22 @@ function IsValidURL(str) {
 };
 
 /**
+ * Convert Google Drive sharing URL to direct download URL
+ * @param {string} sharingURL
+ * @returns {string | null} null if URL is invalid
+ */
+function GDriveDirectLink(sharingURL) {
+    const idExtractor = /\/d\/(.+?)(?:\/|#|\?|$)/;
+    const result = idExtractor.exec(sharingURL);
+
+    if (!result) {
+        return null;
+    };
+
+    return `https://drive.google.com/uc?export=download&id=${result[1]}`;
+};
+
+/**
  *
  * @param {string} url
  * @param {number | null} [statusCodeMatch=null]
@@ -1370,6 +1386,7 @@ export {
     search_until,
     fetchAudioStream,
     IsValidURL,
+    GDriveDirectLink,
     URLAvaliable,
     noMusicIsPlayingEmbed,
     youHaveToJoinVC_Embed,

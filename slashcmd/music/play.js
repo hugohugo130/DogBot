@@ -35,6 +35,7 @@ import {
     fixStructure,
     getPlayingPlayers,
     URLAvaliable,
+    GDriveDirectLink,
 } from "../../utils/music/music.js";
 import {
     formatMinutesSeconds,
@@ -51,7 +52,7 @@ const DEBUG = false;
 let sc = global._sc ?? new Soundcloud();
 global._sc = sc;
 
-/** @type {import("../../utils/types.js").Slash<["guild"]>} */
+/** @type {import("../../utils/types").Slash<["guild"]>} */
 export const playSlash = {
     builder: new SlashCommandBuilder()
         .setName("play")
@@ -227,14 +228,19 @@ export const playSlash = {
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
         const will_play_audio_url = play_audio_url && IsValidURL(query);
-        if (DEBUG) logger.debug(`自定義url: ${will_play_audio_url}`);
+        const converted_gdrive_custom_url_or_query = will_play_audio_url && GDriveDirectLink(query);
+        const custom_url_or_query = converted_gdrive_custom_url_or_query || query;
+
+        if (DEBUG) logger.debug(`是否自定義url: ${will_play_audio_url}`);
+        if (DEBUG) logger.debug(`轉換後的gdrive url: ${converted_gdrive_custom_url_or_query}`);
+        if (DEBUG) logger.debug(`使用的自定義url: ${custom_url_or_query}`);
 
         let audioerr = null;
-        try {
+        try { // 檢查自定義url是否可訪問
             if (will_play_audio_url) {
                 if (DEBUG) logger.debug(`正在檢查自定義url是否可訪問`);
 
-                if (!(await URLAvaliable(query))) {
+                if (!(await URLAvaliable(custom_url_or_query))) {
                     throw new Error("URL無法訪問，請檢查拼字或稍後再試");
                 };
             };
@@ -245,14 +251,14 @@ export const playSlash = {
         if (will_play_audio_url && audioerr) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setDescription(`${emoji_cross} | 播放自定義url時遇到問題: \n\`${audioerr}\``.slice(0, 4090))
+                .setDescription(`${emoji_cross} | 播放自定義url (<${custom_url_or_query}>) 時遇到問題: \n\`${audioerr}\``.slice(0, 4090))
                 .setEmbedFooter(interaction);
 
             return await interaction.editReply({ content: "", embeds: [embed] });
         };
 
         if (DEBUG) logger.debug(`正在搜尋曲目`);
-        const tracks = await search_until(query, 25, will_play_audio_url);
+        const tracks = await search_until(custom_url_or_query, 25, will_play_audio_url);
 
         if (DEBUG) logger.debug(`搜到了${tracks.length}首曲目`);
 
@@ -260,6 +266,7 @@ export const playSlash = {
 
         if (tracks.length === 1) {
             const track = (await fixStructure(tracks))[0];
+
             if (custom_track_name) track.title = custom_track_name;
 
             const queue = getQueue(guildId);
