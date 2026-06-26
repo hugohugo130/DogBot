@@ -1157,10 +1157,13 @@ async function getStream({ track, url, source }) {
  *
  * @param {string} query
  * @param {number} amount
- * @param {boolean} customURL
+ * @param {object} [customURLData={}]
+ * @param {boolean} [customURLData.enable=false]
+ * @param {boolean} [customURLData.URLOnly=false]
+ * @param {number | null} [customURLData.duration=null]
  * @returns {Promise<(MusicTrack | {id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean})[]>}
  */
-async function search_until(query, amount = 25, customURL = false) {
+async function search_until(query, amount = 25, { enable: customURL = false, URLOnly = false, duration: file_duration = null } = {}) {
     let results = [];
 
     for (const engine of musicSearchEngine) {
@@ -1180,34 +1183,21 @@ async function search_until(query, amount = 25, customURL = false) {
         let output = [];
 
         try {
-            if (file.get_track_info
-                && typeof file.get_track_info === "function"
-                && file.validateURL
-                && typeof file.validateURL === "function"
-                && file.validateURL(query)
-            ) {
-                try {
-                    output.push(await file.get_track_info(query));
-                } catch {
+            if (!URLOnly) {
+                if (file.get_track_info
+                    && typeof file.get_track_info === "function"
+                    && file.validateURL
+                    && typeof file.validateURL === "function"
+                    && file.validateURL(query)
+                ) {
+                    try {
+                        output.push(await file.get_track_info(query));
+                    } catch {
+                        output = await file.search_tracks(query);
+                    };
+                } else {
                     output = await file.search_tracks(query);
                 };
-            } else {
-                output = await file.search_tracks(query);
-            };
-
-            if (customURL && IsValidURL(query) && Array.isArray(output)) {
-                const url = await get_redirected_url(query);
-
-                const [audioData, duration] = await Promise.all([
-                    getAudioFileData(url, true),
-                    getAudioDuration(url),
-                ]);
-
-                if (duration) {
-                    audioData.duration = duration;
-                };
-
-                output.unshift(audioData); // 等同於 output.splice(0, 0, audioData)，意思是插入到列表開頭
             };
         } catch (err) {
             const errorStack = util.inspect(err, { depth: null });
@@ -1228,12 +1218,28 @@ async function search_until(query, amount = 25, customURL = false) {
         results.push(...tracks);
 
         if (results.length >= amount) {
-            results = results.slice(0, amount);
             break;
         };
     };
 
-    return results;
+    if (customURL && IsValidURL(query)) {
+        const url = await get_redirected_url(query);
+
+        const [audioData, duration] = await Promise.all([
+            getAudioFileData(url, true),
+            file_duration || getAudioDuration(url),
+        ]);
+
+        if (duration) {
+            audioData.duration = duration;
+        };
+
+        const fixed_audioData = (await fixStructure([audioData]))[0];
+
+        results.unshift(fixed_audioData); // 等同於 results.splice(0, 0, audioData)，意思是插入到列表開頭
+    };
+
+    return results.slice(0, amount);
 };
 
 /**
@@ -1376,7 +1382,7 @@ async function getAudioDuration(url, timeoutMs = 15000) {
 
         proc.on("close", (code) => {
             clearTimeout(timer);
-            logger.debug(`Process ended! With exit code ${code}`);
+            if (DEBUG) logger.debug(`Process ended! With exit code ${code}`);
 
             if (code !== 0) {
                 reject(new Error(`ffprobe exit code ${code}: ${stderr}`));
@@ -1384,10 +1390,12 @@ async function getAudioDuration(url, timeoutMs = 15000) {
             };
 
             try {
-                logger.debug(`Parsing JSON...`);
+                if (DEBUG) logger.debug(`Parsing JSON...`);
+
                 const { format } = JSON.parse(stdout);
                 const dur = parseFloat(format?.duration);
-                logger.debug(`Got duration: ${dur ? `${dur}s (${dur * 1000}ms)` : dur}`);
+
+                if (DEBUG) logger.debug(`Got duration: ${dur ? `${dur}s (${dur * 1000}ms)` : dur}`);
 
                 resolve(Number.isFinite(dur) ? dur * 1000 : null);
             } catch (e) {

@@ -44,6 +44,9 @@ import {
     embed_error_color,
     musicPlayingPlayerLimit,
 } from "../../utils/config.js";
+import {
+    get_lang_data,
+} from "../../utils/language.js";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 
 const DEBUG = false;
@@ -76,10 +79,23 @@ export const playSlash = {
                     "zh-TW": "使用關鍵字來搜尋音樂、支持第三方連結播放",
                     "zh-CN": "使用关键字来搜索音乐、支持第三方链接播放",
                 })
-                .setRequired(true)
+                .setRequired(false)
             // .setAutocomplete(true),
         )
-        .addStringOption(option => // name
+        .addAttachmentOption(option => // file
+            option.setName("file")
+                .setNameLocalizations({
+                    "zh-TW": "檔案",
+                    "zh-CN": "文件",
+                })
+                .setDescription("Upload a file to play")
+                .setDescriptionLocalizations({
+                    "zh-TW": "上傳檔案來播放",
+                    "zh-CN": "上传文件来播放",
+                })
+                .setRequired(false),
+        )
+        .addStringOption(option => // track_name
             option.setName("track_name")
                 .setNameLocalizations({
                     "zh-TW": "曲目名稱",
@@ -139,13 +155,49 @@ export const playSlash = {
     music: true,
 
     async execute(interaction, client) {
-        const query = interaction.options.getString("query", false) ?? "wellerman";
+        const query = interaction.options.getString("query", false) ?? null;
+        const file = interaction.options.getAttachment("file", false) ?? null;
         const next = interaction.options.getBoolean("next", false) ?? false;
         const custom_track_name = interaction.options.getString("track_name", false) ?? null;
         const hide = interaction.options.getBoolean("hide", false) ?? false;
         // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
 
-        const logger = get_logger();
+        if (!query && !file) {
+            // 你必須提供一個搜尋字串或文件來播放
+            // You must provide a query or file to play
+            const lang_no_query = get_lang_data(interaction.locale, "/play", "no_query");
+
+            const emoji_cross = await get_emoji("crosS", client);
+
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | ${lang_no_query}`)
+                .setEmbedFooter(interaction);
+
+            return await interaction.reply({
+                embeds: [embed],
+                flags: MessageFlags.Ephemeral,
+            });
+        };
+
+        const isAudioFile = file?.contentType?.startsWith('audio/');
+        if (file && !isAudioFile) {
+            // 你必須提供一個音頻文件
+            // You must provide an audio file
+            const lang_not_audio_file = get_lang_data(interaction.locale, "/play", "not_audio_file");
+
+            const emoji_cross = await get_emoji("crosS", client);
+
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | ${lang_not_audio_file}`)
+                .setEmbedFooter(interaction);
+
+            return await interaction.reply({
+                embeds: [embed],
+                flags: MessageFlags.Ephemeral,
+            });
+        };
 
         const voiceChannel = (
             interaction.member
@@ -165,6 +217,8 @@ export const playSlash = {
             });
         };
 
+        const logger = get_logger();
+
         if (getPlayingPlayers().size >= musicPlayingPlayerLimit) {
             if (DEBUG) logger.debug(`達到了播放器數量: ${musicPlayingPlayerLimit}`);
 
@@ -181,6 +235,14 @@ export const playSlash = {
                 flags: !hide ? undefined : MessageFlags.Ephemeral,
             })
         };
+
+        const custom_file_duration = file?.duration
+            ? file?.duration * 1000
+            : null;
+
+        const queryOrURL =
+            /** @type {string} */
+            (query || file?.url);
 
         const voiceConnection = getVoiceConnection(guildId);
 
@@ -213,9 +275,9 @@ export const playSlash = {
 
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
-        const will_play_audio_url = IsValidURL(query);
-        const converted_gdrive_custom_url_or_query = will_play_audio_url && GDriveDirectLink(query);
-        const custom_url_or_query = converted_gdrive_custom_url_or_query || query;
+        const will_play_audio_url = IsValidURL(queryOrURL);
+        const converted_gdrive_custom_url_or_query = will_play_audio_url && GDriveDirectLink(queryOrURL);
+        const custom_url_or_query = converted_gdrive_custom_url_or_query || queryOrURL;
 
         if (DEBUG) logger.debug(`是否自定義url: ${will_play_audio_url}`);
         if (DEBUG) logger.debug(`轉換後的gdrive url: ${converted_gdrive_custom_url_or_query}`);
@@ -244,7 +306,11 @@ export const playSlash = {
         };
 
         if (DEBUG) logger.debug(`正在搜尋曲目`);
-        const tracks = await search_until(custom_url_or_query, 25, will_play_audio_url);
+        const tracks = await search_until(custom_url_or_query, 25, {
+            enable: will_play_audio_url,
+            URLOnly: !!file,
+            duration: custom_file_duration,
+        });
 
         if (DEBUG) logger.debug(`搜到了${tracks.length}首曲目`);
 
