@@ -1368,7 +1368,7 @@ async function getAudioDuration(url, timeoutMs = 15000) {
         ];
 
         const proc = spawn("ffprobe", args);
-        if (DEBUG) logger.debug(`Spawmed ffprobe process, PID: ${proc.pid}`);
+        if (DEBUG) logger.debug(`spawned ffprobe process, PID: ${proc.pid}`);
         let stdout = "";
         let stderr = "";
 

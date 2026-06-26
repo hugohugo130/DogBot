@@ -223,8 +223,12 @@ client.once(Events.ClientReady, async () => {
     global.sendQueue = [];
     global.preloadResponse = new Collection();
 
-    await checkDBFilesCorrupted();
-    if (musicSearchEngine.length > 0 && !(await IsFFprobeInstalled())) {
+    const [_, ffprobeInstalled] = await Promise.all([
+        checkDBFilesCorrupted(),
+        IsFFprobeInstalled(),
+    ]);
+
+    if (musicSearchEngine.length && !ffprobeInstalled) {
         logger.warn(`如果FFprobe沒有安裝，那麼將無法偵測音樂功能中，播放自定義URL的音訊長度`);
     };
 
