@@ -1841,7 +1841,7 @@ export async function execute(client, interaction) {
 
                         const [embed, rows] = await getQueueListEmbedRow(queue, parseInt(options) ?? 1, interaction, client);
 
-                        await interaction.update({ embeds: [embed], components: rows });
+                        await interaction.update({ content: "", embeds: [embed], components: rows });
                         break;
                     }
 
@@ -1863,6 +1863,7 @@ export async function execute(client, interaction) {
 
                         await interaction.update({
                             content: `${emoji_bin} | ${user.username} 清空了佇列`,
+                            embeds: [],
                         });
                     }
                 };
