@@ -100,14 +100,18 @@ const split_line = "=".repeat(10);
 logger.info(`${split_line}機器人正在啟動....${split_line}`);
 
 client.once(Events.ClientReady, async () => {
-    get_areadline(true)?.on("line", async (input) => {
+    const rl = get_areadline(true);
+
+    rl.on("line", async (input) => {
         input = input.trim();
 
         const [command, ...args] = input.split(" ");
 
         switch (command) {
             case "stop": {
+                rl.close();
                 await safeshutdown(client);
+
                 break;
             }
 
