@@ -55,6 +55,9 @@ import {
 import {
     createWriteStream,
 } from "../file.js";
+import {
+    asleep,
+} from "../sleep.js";
 import EmbedBuilder from "../customs/embedBuilder.js";
 import DogClient from "../customs/client.js";
 
@@ -269,8 +272,16 @@ class MusicTrack {
         /** @type {Readable | null} */
         this.stream = stream;
 
+        /** @type {string | null} */
+        this.streamType = null;
+
         /** @type {any} */
         this.original_track = original_track;
+
+        /** @type {boolean} */
+        this._streamPreparing = false;
+
+        this.prepareStream();
     };
 
     toJSON() {
@@ -300,16 +311,34 @@ class MusicTrack {
      * @param {boolean} [force=false] - Must prepare?
      */
     async prepareStream(force = false) {
-        let streamType = null;
+        if (this._streamPreparing) {
+            const start = Date.now();
+            const wait = 20000; // ms
+            const end = start + wait;
 
-        if (force || !this.stream || this.stream.closed) {
-            [this.stream, streamType] = await getStream({
-                track: this,
-                source: this.source,
-            });
+            while (Date.now() < end) {
+                if (this.stream) {
+                    return [this.stream, this.streamType];
+                };
+
+                await asleep(500);
+            };
         };
 
-        return [this.stream, streamType];
+        try {
+            this._streamPreparing = true;
+
+            if (force || !this.stream || this.stream.closed) {
+                [this.stream, this.streamType] = await getStream({
+                    track: this,
+                    source: this.source,
+                });
+            };
+
+            return [this.stream, this.streamType];
+        } finally {
+            this._streamPreparing = false;
+        };
     };
 
     /**
@@ -1161,9 +1190,10 @@ async function getStream({ track, url, source }) {
  * @param {boolean} [customURLData.enable=false]
  * @param {boolean} [customURLData.URLOnly=false]
  * @param {number | null} [customURLData.duration=null]
+ * @param {string | null} [customURLData.track_name=null]
  * @returns {Promise<(MusicTrack | {id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean})[]>}
  */
-async function search_until(query, amount = 25, { enable: customURL = false, URLOnly = false, duration: file_duration = null } = {}) {
+async function search_until(query, amount = 25, { enable: customURL = false, URLOnly = false, duration: file_duration = null, track_name = null } = {}) {
     let results = [];
 
     for (const engine of musicSearchEngine) {
@@ -1232,6 +1262,10 @@ async function search_until(query, amount = 25, { enable: customURL = false, URL
 
         if (duration) {
             audioData.duration = duration;
+        };
+
+        if (track_name) {
+            audioData.title = track_name;
         };
 
         const fixed_audioData = (await fixStructure([audioData]))[0];
