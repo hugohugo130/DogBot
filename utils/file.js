@@ -1,13 +1,22 @@
-const { Logger } = require("winston");
-const { AxiosError } = require("axios");
-const { VoiceChannel } = require("discord.js");
-const fs = require("fs");
-const fsp = fs.promises;
-const path = require("path");
-const util = require("util");
-const axios = require("axios");
+import path from "path";
+import util from "util";
+import axios from "axios";
+import fs from "fs";
+import fsp from "fs/promises";
+import {
+    Logger,
+} from "winston";
+import {
+    AxiosError,
+} from "axios";
+import {
+    VoiceChannel,
+} from "discord.js";
 
-const {
+import {
+    getServerIPSync,
+} from "./getSeverIPSync.js";
+import {
     INDENT,
     DATABASE_FILES,
     DEFAULT_VALUES,
@@ -25,18 +34,18 @@ const {
     dvoice_data_file,
     temp_folder,
     RPGDatabase,
-} = require("./config.js");
-const {
+} from "./config.js";
+import {
     get_logger,
     getCallerModuleName,
-} = require("./logger.js");
-const {
+} from "./logger.js";
+import {
     asleep,
-} = require("./sleep.js");
-const {
+} from "./sleep.js";
+import {
     CacheTypes,
     getCacheManager,
-} = require("./cache.js");
+} from "./cache.js";
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
@@ -96,12 +105,11 @@ function readFileSync(file_path, options = { encoding: "utf-8" }) {
         const default_value = DEFAULT_VALUES.single[filename];
 
         const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
-            // @ts-ignore
             return acc || category[filename];
-        }, undefined);
+        }, {});
 
         if (!default_value) {
-            if (!other_category_default_value) logger.warn(`警告：資料庫檔案 ${filename} 缺失預設值，請及時補充。`);
+            if (!Object.keys(other_category_default_value).length) logger.warn(`警告：資料庫檔案 ${filename} 缺失預設值，請及時補充。`);
             return stringify({});
         } else {
             writeJsonSync(file_path, stringify(default_value));
@@ -324,8 +332,6 @@ function join_db_folder(filename) {
  * @returns {Promise<[same: boolean, localContent: string | null, remoteContent: string | null]>}
  */
 async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
-    const { getServerIPSync } = require("./getSeverIPSync.js");
-
     let localContent = null;
     let remoteContent = null;
 
@@ -685,8 +691,10 @@ async function load_rpg_data(userid) {
         const data = await readJson(rpg_database_file);
 
         if (!data[userid]) {
-            await save_rpg_data(userid, rpg_emptyeg);
-            return new RPGDatabase(rpg_emptyeg);
+            const empty_rpg_class = new RPGDatabase(rpg_emptyeg);
+            await save_rpg_data(userid, empty_rpg_class);
+
+            return new RPGDatabase(empty_rpg_class);
         };
 
         const userData = order_data(data[userid], rpg_emptyeg);
@@ -980,7 +988,7 @@ async function get_temp_folder() {
     return temp_folder;
 };
 
-module.exports = {
+export {
     // file operations
     createWriteStream,
     createReadStream,
