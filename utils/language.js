@@ -78,10 +78,10 @@ const language = {
             "view_guild_insights": "View Server Insights",
         },
         "fightjob_name": {
-            "soldier": "soldier",
-            "magician": "magician",
-            "ninja": "ninja",
-            "tank": "tank",
+            "soldier": "Soldier",
+            "magician": "Magician",
+            "ninja": "Ninja",
+            "tank": "Tank",
         },
         "job_name": {
             "fisher": "Fisher",
