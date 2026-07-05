@@ -12,8 +12,8 @@ import {
 import DogClient from "./utils/customs/client.js";
 
 declare global {
-    var _cacheManager: CacheManager | null | undefined;
-    var _client: DogClient | null | undefined;
+    var _cacheManager: CacheManager | null;
+    var _client: DogClient | null;
     var _areadline: Interface | null | undefined;
     var _sc: Soundcloud | null | undefined;
     var debug: boolean | undefined;

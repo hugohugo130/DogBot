@@ -1,13 +1,31 @@
-const { joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
+import {
+    joinVoiceChannel,
+    getVoiceConnection,
+} from "@discordjs/voice";
 
-const { get_logger } = require("../logger.js");
-const { get_channel } = require("../discord.js");
-const { readJson, writeJson, exists } = require("../file.js");
-const { getQueues, getQueue, MusicTrack } = require("./music.js");
-const { music_status_file } = require("../config.js");
-const DogClient = require("../customs/client.js");
+import {
+    get_logger,
+} from "../logger.js";
+import {
+    get_channel,
+} from "../discord.js";
+import {
+    readJson,
+    writeJson,
+    exists,
+} from "../file.js";
+import {
+    getQueues,
+    getQueue,
+    MusicTrack,
+} from "./music.js";
+import {
+    music_status_file,
+} from "../config.js";
+import DogClient from "../customs/client.js";
 
 const DEBUG = false;
+
 const logger = get_logger();
 
 async function saveAllMusicStates() {
@@ -116,6 +134,7 @@ async function restoreAllMusicStates(client) {
 
         if (textChannel?.isSendable()) queue.setTextChannel(textChannel);
         if (!queue.voiceChannel) queue.setVoiceChannel(voiceChannel);
+
         queue.setConnection(connection);
         queue.setLoopStatus(state.loopStatus);
 
@@ -136,6 +155,7 @@ async function restoreAllMusicStates(client) {
 
             logger.error(`[音樂持久化] 恢復伺服器 ${guildId} 的音樂狀態時發生錯誤: ${errorMessage}`);
             queue.destroy();
+
             delete musicData[guildId];
             modified = true;
         };
@@ -148,7 +168,7 @@ async function restoreAllMusicStates(client) {
     logger.info(`[音樂持久化] 完成！共恢復 ${restoredCount} 個伺服器的音樂狀態`);
 };
 
-module.exports = {
+export {
     saveAllMusicStates,
     loadAllMusicStates,
     restoreAllMusicStates,

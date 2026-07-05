@@ -260,7 +260,7 @@ const CacheTypes = Object.freeze({
     FARM: 'farm',
 });
 
-module.exports = {
+export {
     getCacheManager,
     CacheManager,
     CacheTypes,

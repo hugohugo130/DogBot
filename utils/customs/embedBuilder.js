@@ -1,14 +1,23 @@
-const Discord = require("discord.js");
-const { EmbedBuilder: djsEmbedBuilder, BaseInteraction, Locale } = require("discord.js");
+import {
+    BaseInteraction,
+    EmbedBuilder as djsEmbedBuilder,
+    Locale,
+} from "discord.js";
 
-const { isDigit } = require("../message.js");
-const { RPGDatabase } = require("../config.js");
-const DogClient = require("./client.js");
+import {
+    isDigit,
+} from "../message.js";
+import {
+    RPGDatabase,
+} from "../config.js";
+import {
+    get_lang_data,
+} from "../language.js";
+import DogClient from "./client.js";
 
-class EmbedBuilder extends djsEmbedBuilder {
+export default class EmbedBuilder extends djsEmbedBuilder {
     /**
-     *
-     * @param {Discord.EmbedData | Discord.APIEmbed} [data]
+     * @param {import('discord.js').EmbedData | import('discord.js').APIEmbed} [data]
      */
     constructor(data) {
         super(data);
@@ -26,8 +35,6 @@ class EmbedBuilder extends djsEmbedBuilder {
      * @returns {EmbedBuilder}
      */
     setEmbedFooter(interaction = null, { text = "", rpg_data = null, force = false, client = global._client } = {}) {
-        const { get_lang_data } = require("../language.js");
-
         if (interaction && typeof interaction === "object" && !(interaction instanceof BaseInteraction)) { // interaction應為config
             const { text: _text = "", rpg_data: _rpg_data = null, force: _force = false, client: _client = global._client } = interaction;
 
@@ -86,5 +93,3 @@ class EmbedBuilder extends djsEmbedBuilder {
         return this;
     };
 };
-
-module.exports = EmbedBuilder;

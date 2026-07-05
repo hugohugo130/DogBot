@@ -1,17 +1,36 @@
-import { diffLines } from "diff";
-import { AxiosError } from "axios";
-import { Collection } from "discord.js";
 import fs from "fs";
 import path from "path";
 import axios from "axios";
 import FormData from "form-data";
 import util from "util";
+import {
+    diffLines,
+} from "diff";
+import {
+    AxiosError,
+} from "axios";
+import {
+    Collection,
+} from "discord.js";
 
+import {
+    existsSync,
+    compareLocalRemote,
+    join_db_folder,
+    readFile,
+    stringify,
+} from "./file.js";
+import {
+    onlineDB_Files,
+    DATABASE_FILES,
+} from "./config.js";
+import {
+    getServerIPSync,
+} from "./getSeverIPSync.js";
+import {
+    get_logger,
+} from "./logger.js";
 import get_areadline from "./readline.js";
-import { getServerIPSync } from "./getSeverIPSync.js";
-import { get_logger } from "./logger.js";
-import { existsSync, compareLocalRemote, join_db_folder, readFile, stringify } from "./file.js";
-import { onlineDB_Files, DATABASE_FILES } from "./config.js";
 
 function getServerURL() {
     const { IP: serverIP, PORT } = getServerIPSync();
@@ -297,7 +316,7 @@ async function checkAllDatabaseFilesContent() {
     ]);
 
     // 不需要 global.preloadResponse 了
-    global.preloadResponse = null;
+    delete global.preloadResponse;
 
     if (executed) console.log("=".repeat(30));
 };

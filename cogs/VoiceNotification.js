@@ -1,71 +1,76 @@
-const { Events, Colors, MessageFlags } = require("discord.js");
+import {
+    Events,
+    Colors,
+    MessageFlags,
+} from "discord.js";
 
-const { loadData } = require("../utils/file.js");
-const EmbedBuilder = require("../utils/customs/embedBuilder.js");
+import {
+    loadData,
+} from "../utils/file.js";
+import EmbedBuilder from "../utils/customs/embedBuilder.js";
 
-module.exports = {
-    name: Events.VoiceStateUpdate,
-    /**
-     * @param {import("discord.js").VoiceState} oldState
-     * @param {import("discord.js").VoiceState} newState
-     */
-    execute: async function (oldState, newState) {
-        const guild = newState.guild;
-        const member = newState.member;
-        const user = member?.user;
+export const name = Events.VoiceStateUpdate;
 
-        if (!user || user.bot) return;
+/**
+ * @param {import("discord.js").VoiceState} oldState
+ * @param {import("discord.js").VoiceState} newState
+ */
+export async function execute(oldState, newState) {
+    const guild = newState.guild;
+    const member = newState.member;
+    const user = member?.user;
 
-        const guildData = await loadData(guild.id);
-        if (!guildData["voiceNotification"]) return;
+    if (!user || user.bot) return;
 
-        if (
-            oldState.channel === null
-            && newState.channel !== null
-        ) { // 加入
-            const channel = newState.channel;
+    const guildData = await loadData(guild.id);
+    if (!guildData["voiceNotification"]) return;
 
-            const embed = new EmbedBuilder()
-                .setColor(Colors.Green)
-                .setDescription(`:inbox_tray: ${member.toString()}`)
-                .setTimestamp();
+    if (
+        oldState.channel === null
+        && newState.channel !== null
+    ) { // 加入
+        const channel = newState.channel;
 
-            await channel.send({ embeds: [embed], flags: [MessageFlags.SuppressNotifications] });
+        const embed = new EmbedBuilder()
+            .setColor(Colors.Green)
+            .setDescription(`:inbox_tray: ${member.toString()}`)
+            .setTimestamp();
 
-        } else if (
-            oldState.channel !== null
-            && newState.channel === null
-        ) { // 離開
-            const channel = oldState.channel;
+        await channel.send({ embeds: [embed], flags: [MessageFlags.SuppressNotifications] });
 
-            const embed = new EmbedBuilder()
-                .setColor(Colors.Red)
-                .setDescription(`:outbox_tray: ${member.toString()}`)
-                .setTimestamp();
+    } else if (
+        oldState.channel !== null
+        && newState.channel === null
+    ) { // 離開
+        const channel = oldState.channel;
 
-            await channel.send({ embeds: [embed], flags: [MessageFlags.SuppressNotifications] })
+        const embed = new EmbedBuilder()
+            .setColor(Colors.Red)
+            .setDescription(`:outbox_tray: ${member.toString()}`)
+            .setTimestamp();
 
-        } else if (
-            oldState.channel !== null
-            && newState.channel !== null
-            && oldState.channel != newState.channel
-        ) { // 移動
-            const before_channel = oldState.channel;
-            const after_channel = newState.channel;
+        await channel.send({ embeds: [embed], flags: [MessageFlags.SuppressNotifications] })
 
-            const before_embed = new EmbedBuilder()
-                .setColor(Colors.Blue)
-                .setDescription(`:arrows_counterclockwise: ${member.toString()} (:outbox_tray: ➜ ${after_channel.toString()})`)
-                .setTimestamp();
+    } else if (
+        oldState.channel !== null
+        && newState.channel !== null
+        && oldState.channel != newState.channel
+    ) { // 移動
+        const before_channel = oldState.channel;
+        const after_channel = newState.channel;
 
-            await before_channel.send({ embeds: [before_embed], flags: [MessageFlags.SuppressNotifications] });
+        const before_embed = new EmbedBuilder()
+            .setColor(Colors.Blue)
+            .setDescription(`:arrows_counterclockwise: ${member.toString()} (:outbox_tray: ➜ ${after_channel.toString()})`)
+            .setTimestamp();
 
-            const after_embed = new EmbedBuilder()
-                .setColor(Colors.Blue)
-                .setDescription(`:arrows_counterclockwise: ${member.toString()} (${before_channel.toString()} ➜ :inbox_tray:`)
-                .setTimestamp();
+        await before_channel.send({ embeds: [before_embed], flags: [MessageFlags.SuppressNotifications] });
 
-            await after_channel.send({ embeds: [after_embed], flags: [MessageFlags.SuppressNotifications] });
-        };
-    },
+        const after_embed = new EmbedBuilder()
+            .setColor(Colors.Blue)
+            .setDescription(`:arrows_counterclockwise: ${member.toString()} (${before_channel.toString()} ➜ :inbox_tray:`)
+            .setTimestamp();
+
+        await after_channel.send({ embeds: [after_embed], flags: [MessageFlags.SuppressNotifications] });
+    };
 };

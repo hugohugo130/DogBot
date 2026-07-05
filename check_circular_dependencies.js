@@ -1,5 +1,15 @@
-const fs = require('fs');
-const path = require('path');
+import {
+    readFileSync,
+    existsSync,
+    readdirSync,
+    statSync,
+} from "fs";
+import {
+    dirname,
+    resolve,
+    extname,
+    join,
+} from "path";
 
 /**
  * 循環依賴檢測工具
@@ -15,12 +25,12 @@ const dependencies = new Map(); // 檔案依賴圖
 const circularDeps = []; // 循環依賴列表
 
 /**
- * 提取檔案中的所有**頂層** require 語句（排除函數內的 require）
+ * 提取檔案中的所有**頂層** require 語句和 import 語句（排除函數內的動態載入）
  * @param {string} filePath
  */
 function extractRequires(filePath) {
     try {
-        const content = fs.readFileSync(filePath, {
+        const content = readFileSync(filePath, {
             encoding: "utf-8",
         });
 
@@ -33,6 +43,14 @@ function extractRequires(filePath) {
         cleanContent = cleanContent.replace(/["'`](?:[^"'`\\]|\\.)*["'`]/g, '""');
 
         const requires = [];
+
+        // 提取所有靜態 import 語句（它們必須在頂層）
+        const importPattern = /import\s+(?:.+\s+from\s+)?['"](\.\.?\/[^'"]+)['"]/g;
+        let match;
+        while ((match = importPattern.exec(cleanContent)) !== null) {
+            requires.push(match[1]);
+        }
+
         const lines = content.split('\n');
 
         let braceDepth = 0; // 追蹤大括號深度
@@ -46,7 +64,7 @@ function extractRequires(filePath) {
             // 跳過註解
             if (trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
                 continue;
-            };
+            }
 
             // 檢測函數定義
             if (/\bfunction\s+\w+\s*\(/.test(line) ||
@@ -55,7 +73,7 @@ function extractRequires(filePath) {
                 /\w+\s*=>\s*{/.test(line) ||
                 /\basync\s+function\s+\w+\s*\(/.test(line)) {
                 inFunction = true;
-            };
+            }
 
             // 計算大括號深度
             for (const char of line) {
@@ -66,25 +84,32 @@ function extractRequires(filePath) {
                 }
                 if (char === '(') parenDepth++;
                 if (char === ')') parenDepth--;
-            };
+            }
 
-            // 只在頂層（不在函數內）時才提取 require
+            // 只在頂層（不在函數內）時才提取 require 和動態 import
             if (!inFunction && braceDepth === 0) {
+                // require()
                 const requirePattern = /require\s*\(\s*['"](\.\.?\/[^'"]+)['"]\s*\)/g;
-                let match;
+                let reqMatch;
+                while ((reqMatch = requirePattern.exec(line)) !== null) {
+                    requires.push(reqMatch[1]);
+                }
 
-                while ((match = requirePattern.exec(line)) !== null) {
-                    requires.push(match[1]);
-                };
-            };
-        };
+                // 動態 import()
+                const dynImportPattern = /import\s*\(\s*['"](\.\.?\/[^'"]+)['"]\s*\)/g;
+                let dynMatch;
+                while ((dynMatch = dynImportPattern.exec(line)) !== null) {
+                    requires.push(dynMatch[1]);
+                }
+            }
+        }
 
         return requires;
     } catch (error) {
         if (error instanceof Error) console.error(`無法讀取檔案 ${filePath}:`, error.message);
         return [];
-    };
-};
+    }
+}
 
 /**
  * 解析相對路徑為絕對路徑
@@ -92,20 +117,20 @@ function extractRequires(filePath) {
  * @param {string} requirePath
  */
 function resolvePath(fromFile, requirePath) {
-    const dir = path.dirname(fromFile);
-    let resolved = path.resolve(dir, requirePath);
+    const dir = dirname(fromFile);
+    let resolved = resolve(dir, requirePath);
 
     // 如果沒有副檔名，嘗試加上 .js
-    if (!path.extname(resolved)) {
-        if (fs.existsSync(resolved + '.js')) {
+    if (!extname(resolved)) {
+        if (existsSync(resolved + '.js')) {
             resolved += '.js';
-        } else if (fs.existsSync(resolved + '/index.js')) {
-            resolved = path.join(resolved, 'index.js');
-        };
-    };
+        } else if (existsSync(resolved + '/index.js')) {
+            resolved = join(resolved, 'index.js');
+        }
+    }
 
     return resolved.replace(/\\/g, '/');
-};
+}
 
 /**
  * 遞迴掃描所有 JS 檔案
@@ -113,13 +138,13 @@ function resolvePath(fromFile, requirePath) {
  * @param {string[]} fileList
  */
 function scanDirectory(dir, fileList = []) {
-    const files = fs.readdirSync(dir, {
+    const files = readdirSync(dir, {
         encoding: "utf-8",
     });
 
     files.forEach(file => {
-        const filePath = path.join(dir, file);
-        const stat = fs.statSync(filePath);
+        const filePath = join(dir, file);
+        const stat = statSync(filePath);
 
         if (stat.isDirectory()) {
             // 忽略 node_modules 和 .git
@@ -132,7 +157,7 @@ function scanDirectory(dir, fileList = []) {
     });
 
     return fileList;
-};
+}
 
 /**
  * 建立依賴圖
@@ -147,14 +172,14 @@ function buildDependencyGraph(files) {
 
         requires.forEach(req => {
             const resolved = resolvePath(file, req);
-            if (fs.existsSync(resolved)) {
+            if (existsSync(resolved)) {
                 deps.push(resolved);
-            };
+            }
         });
 
         dependencies.set(file, deps);
     });
-};
+}
 
 /**
  * 檢測循環依賴 (DFS)
@@ -171,7 +196,7 @@ function detectCircular(file, visiting = new Set(), visited = new Set(), path = 
         const circle = path.slice(circleStart).concat(file);
         circularDeps.push(circle);
         return;
-    };
+    }
 
     visiting.add(file);
     path.push(file);
@@ -183,7 +208,7 @@ function detectCircular(file, visiting = new Set(), visited = new Set(), path = 
 
     visiting.delete(file);
     visited.add(file);
-};
+}
 
 /**
  * 格式化輸出路徑
@@ -191,7 +216,7 @@ function detectCircular(file, visiting = new Set(), visited = new Set(), path = 
  */
 function formatPath(fullPath) {
     return fullPath.replace(process.cwd().replace(/\\/g, '/'), '.');
-};
+}
 
 /**
  * 主函數
@@ -267,21 +292,6 @@ function main() {
             console.log(`  • ${formatPath(file)} (出現 ${count} 次)`);
         });
     }
-
-    // 生成報告檔案
-    const report = {
-        scanDate: new Date().toISOString(),
-        totalFiles: allFiles.length,
-        circularDependencies: uniqueCircles.length,
-        circles: uniqueCircles.map(circle => circle.map(formatPath))
-    };
-
-    fs.writeFileSync(
-        'circular-dependencies-report.json',
-        JSON.stringify(report, null, 2)
-    );
-
-    console.log('\n\n📄 詳細報告已保存至: circular-dependencies-report.json');
 }
 
 // 執行

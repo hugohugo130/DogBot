@@ -1,8 +1,16 @@
-const path = require("path");
-const crypto = require("crypto");
+import path from "path";
+import crypto from "crypto";
 
-const { exists, readFile, readdir, writeFile } = require("./file.js");
-const { enable_auto_register_cmd, auto_register_cmd_file } = require("./config.js");
+import {
+    exists,
+    readFile,
+    readdir,
+    writeFile,
+} from "./file.js";
+import {
+    enable_auto_register_cmd,
+    auto_register_cmd_file,
+} from "./config.js";
 
 const DEBUG = false;
 
@@ -83,7 +91,7 @@ async function update_cmd_hash() {
 };
 
 
-module.exports = {
+export {
     should_register_cmd,
     update_cmd_hash,
 };

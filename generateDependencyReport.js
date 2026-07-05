@@ -1,1 +1,5 @@
-console.log(require("@discordjs/voice").generateDependencyReport())
+import {
+    generateDependencyReport,
+} from "@discordjs/voice";
+
+console.log(generateDependencyReport());

@@ -1,4 +1,6 @@
-const { downloadAllFiles } = require("./utils/onlineDB.js");
+import {
+    downloadAllFiles,
+} from "./utils/onlineDB.js";
 
 (async () => {
     await downloadAllFiles();

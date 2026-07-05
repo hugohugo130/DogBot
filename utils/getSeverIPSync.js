@@ -1,9 +1,20 @@
 import fs from "fs";
-import { execSync } from "child_process";
+import {
+    execSync,
+} from "child_process";
 
-import { writeJsonSync, readFileSync } from "./file.js";
-import { get_logger } from "./logger.js";
-import { DEFAULT_IP, DEFAULT_PORT, serverIPFile } from "./config.js";
+import {
+    writeJsonSync,
+    readFileSync,
+} from "./file.js";
+import {
+    get_logger,
+} from "./logger.js";
+import {
+    DEFAULT_IP,
+    DEFAULT_PORT,
+    serverIPFile,
+} from "./config.js";
 
 const logger = get_logger();
 

@@ -1,7 +1,11 @@
-const { Client } = require("discord.js");
+import {
+    Client,
+} from "discord.js";
 
-const { asleep } = require("./sleep.js");
-const DogClient = require("./customs/client.js");
+import {
+    asleep,
+} from "./sleep.js";
+import DogClient from "./customs/client.js";
 
 const client_ready = (client = global._client) => client?.isReady?.();
 
@@ -71,6 +75,6 @@ async function wait_until_ready(client = global._client, timeout = 10000, wait =
         : null;
 };
 
-module.exports = {
+export {
     wait_for_client,
 };

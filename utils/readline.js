@@ -1,4 +1,4 @@
-const readlinep = require("readline/promises");
+import readlinep from "readline/promises";
 
 /**
  * @overload
@@ -14,7 +14,7 @@ const readlinep = require("readline/promises");
  * Get readline/promises interface object
  * @param {boolean} [createInterface=true] - Whether to create Interface when the rl is not exists.
  */
-function get_areadline(createInterface = true) {
+export default function get_areadline(createInterface = true) {
     if (global._areadline) return global._areadline;
 
     /** @type {null | readlinep.Interface} */
@@ -30,8 +30,4 @@ function get_areadline(createInterface = true) {
     global._areadline = rl;
 
     return rl;
-};
-
-module.exports = {
-    get_areadline,
 };

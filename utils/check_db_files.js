@@ -1,10 +1,31 @@
-const { User, Guild } = require("discord.js");
+import {
+    User,
+    Guild,
+} from "discord.js";
 
-const { DATABASE_FILES, DEFAULT_VALUES, priorityGuildIDs } = require("./config.js");
-const { readJson, writeJson, exists, basename, join_db_folder, load_rpg_data, save_rpg_data, loadData, saveData } = require("./file.js");
-const { get_logger } = require("./logger.js");
-const { wait_for_client } = require("./wait_for_client.js");
-const DogClient = require("./customs/client.js");
+import {
+    DATABASE_FILES,
+    DEFAULT_VALUES,
+    priorityGuildIDs,
+} from "./config.js";
+import {
+    readJson,
+    writeJson,
+    exists,
+    basename,
+    join_db_folder,
+    load_rpg_data,
+    save_rpg_data,
+    loadData,
+    saveData,
+} from "./file.js";
+import {
+    get_logger,
+} from "./logger.js";
+import {
+    wait_for_client,
+} from "./wait_for_client.js";
+import DogClient from "./customs/client.js";
 
 const logger = get_logger();
 const logger_nodc = get_logger({ nodc: true });
@@ -271,7 +292,7 @@ async function checkDBFilesDefault(client = global._client) {
     logger.info(`資料庫檔案檢查完成, 耗時 ${Date.now() - start_time}ms`);
 };
 
-module.exports = {
+export {
     checkDBFilesExists,
     checkDBFilesCorrupted,
     checkDBFilesDefault,

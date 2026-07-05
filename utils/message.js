@@ -1,4 +1,12 @@
-const { Collection, Message, User } = require("discord.js");
+import {
+    Collection,
+    Message,
+    User,
+} from "discord.js";
+
+import {
+    get_user,
+} from "./discord.js";
 
 /**
  * Check whether a string is digit
@@ -19,8 +27,6 @@ function isDigit(string) {
  * @returns {Promise<Collection<string, User>>}
  */
 async function mentions_users(message) {
-    const { get_user } = require("./discord.js");
-
     if (!message.content) return new Collection();
 
     const userIDs = message.content.split(" ")
@@ -55,7 +61,7 @@ async function mentions_users(message) {
     );
 };
 
-module.exports = {
+export {
     isDigit,
     mentions_users,
 };

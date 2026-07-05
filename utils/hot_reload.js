@@ -1,6 +1,10 @@
-const { load_cogs } = require("./load_cogs.js");
-const { wait_for_client } = require("./wait_for_client.js");
-const DogClient = require("./customs/client.js");
+import {
+    load_cogs,
+} from "./load_cogs.js";
+import {
+    wait_for_client,
+} from "./wait_for_client.js";
+import DogClient from "./customs/client.js";
 
 /**
  * Hot reload cogs
@@ -17,6 +21,6 @@ async function hot_reload_cogs({ quiet = false, client = global._client } = {}) 
     return await load_cogs(client, quiet);
 };
 
-module.exports = {
+export {
     hot_reload_cogs,
 };

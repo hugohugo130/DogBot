@@ -1,19 +1,36 @@
-const { Events, Message } = require("discord.js");
+import {
+    Events,
+    Message,
+} from "discord.js";
 
-const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
-const { add_money, get_emoji } = require("../utils/rpg.js");
-const { randint } = require("../utils/random.js");
-const { wait_for_client } = require("../utils/wait_for_client.js");
-const { daily_sign_guildIDs, embed_default_color, RPGDatabase } = require("../utils/config.js");
-const DogClient = require("../utils/customs/client.js");
-const EmbedBuilder = require("../utils/customs/embedBuilder.js");
+import {
+    load_rpg_data,
+    save_rpg_data,
+} from "../utils/file.js";
+import {
+    add_money,
+    get_emoji,
+} from "../utils/rpg.js";
+import {
+    randint,
+} from "../utils/random.js";
+import {
+    wait_for_client,
+} from "../utils/wait_for_client.js";
+import {
+    daily_sign_guildIDs,
+    embed_default_color,
+    RPGDatabase,
+} from "../utils/config.js";
+import DogClient from "../utils/customs/client.js";
+import EmbedBuilder from "../utils/customs/embedBuilder.js";
 
 /**
  * 判斷用戶今天是否已簽到和斷簽
  * @param {Date | string | number | null} lastSignTime - 上次簽到時間
  * @returns {[boolean, boolean]} [今天是否已簽到, 是否斷簽]
  */
-function hasSignedTodayOrBrokeSign(lastSignTime) {
+export function hasSignedTodayOrBrokeSign(lastSignTime) {
     // 沒有簽到過，不算斷簽
     if (!lastSignTime) return [false, false];
 
@@ -47,7 +64,7 @@ function hasSignedTodayOrBrokeSign(lastSignTime) {
  * @param {DogClient | null} [client=null] - Discord Client
  * @returns {Promise<boolean>} true if signed successfully, otherwise false
  */
-async function sign(rpg_data, message, client = null) {
+export async function sign(rpg_data, message, client = null) {
     if (!client) client = await wait_for_client();
     const user = message.author;
 
@@ -108,21 +125,18 @@ async function sign(rpg_data, message, client = null) {
     return true;
 };
 
-module.exports = {
-    name: Events.MessageCreate,
-    /**
-     *
-     * @param {DogClient} client - Discord Client
-     * @param {Message} message - Message Object
-     */
-    execute: async function (client, message) {
-        const { author: user, guild } = message;
+export const name = Events.MessageCreate;
 
-        if (user.bot || !guild || !daily_sign_guildIDs.includes(guild.id)) return;
+/**
+ *
+ * @param {DogClient} client - Discord Client
+ * @param {Message} message - Message Object
+ */
+export async function execute(client, message) {
+    const { author: user, guild } = message;
 
-        const rpg_data = await load_rpg_data(user.id);
-        await sign(rpg_data, message, client);
-    },
-    hasSignedTodayOrBrokeSign,
-    sign,
+    if (user.bot || !guild || !daily_sign_guildIDs.includes(guild.id)) return;
+
+    const rpg_data = await load_rpg_data(user.id);
+    await sign(rpg_data, message, client);
 };

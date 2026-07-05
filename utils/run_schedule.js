@@ -1,11 +1,22 @@
-const path = require("path");
-const util = require("util");
+import path from "path";
+import util from "util";
+import {
+    pathToFileURL,
+} from "node:url";
 
-const { wait_for_client } = require("./wait_for_client.js");
-const { asleep } = require("./sleep.js");
-const { get_logger } = require("./logger.js");
-const { readSchedule } = require("./file.js");
-const DogClient = require("./customs/client.js");
+import {
+    wait_for_client,
+} from "./wait_for_client.js";
+import {
+    asleep,
+} from "./sleep.js";
+import {
+    get_logger,
+} from "./logger.js";
+import {
+    readSchedule,
+} from "./file.js";
+import DogClient from "./customs/client.js";
 
 const logger = get_logger({ nodc: true });
 
@@ -61,7 +72,7 @@ async function setup_schedule(per_sec, execute, file, client = null, ...args) {
     // #region [worker]
     // const workerScript = `
     //     parentPort.once("message", async ({ per_sec, args }) => {
-    //         await interval(per_sec, require("${__filename}").scheduleFunc, ...args);
+    //         await interval(per_sec, await import(pathToFileURL("${__filename}").href).scheduleFunc, ...args);
     //     });
     // `;
 
@@ -118,7 +129,7 @@ async function scheduleFunc(client, file, per) {
 
     run_lock[basename] = true;
     try {
-        const schedule = require(file);
+        const schedule = await import(pathToFileURL(file).href);
 
         if (schedule.execute) {
             await schedule.execute(client);
@@ -137,7 +148,7 @@ async function scheduleFunc(client, file, per) {
  * @param {DogClient | null} [client]
  * @returns {Promise<number>} Number of schedule set up
  */
-async function run_schedule(client=global._client) {
+async function run_schedule(client = global._client) {
     const [everysec, everymin, every5min] = await readSchedule();
 
     for (const file of everysec) {
@@ -155,6 +166,6 @@ async function run_schedule(client=global._client) {
     return everysec.length + everymin.length + every5min.length;
 };
 
-module.exports = {
+export {
     run_schedule,
 };

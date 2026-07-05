@@ -1,8 +1,14 @@
-const Discord = require("discord.js");
-const { Message, Guild, GuildMember, User } = require("discord.js");
+import {
+    Message,
+    Guild,
+    GuildMember,
+    User,
+} from "discord.js";
 
-const { wait_for_client } = require("./wait_for_client.js")
-const DogClient = require("../utils/customs/client.js");
+import {
+    wait_for_client,
+} from "./wait_for_client.js";
+import DogClient from "../utils/customs/client.js";
 
 /**
  * Get all members in a guild by its ID
@@ -11,7 +17,7 @@ const DogClient = require("../utils/customs/client.js");
  * @param {DogClient | null} [client] - DogClient
  * @returns {Promise<GuildMember[]>}
  */
-async function get_members_of_guild(guildID, fetch = true, client = global._client) {
+export async function get_members_of_guild(guildID, fetch = true, client = global._client) {
     if (!client) client = await wait_for_client();
 
     const guild = await get_guild(guildID, client);
@@ -30,7 +36,7 @@ async function get_members_of_guild(guildID, fetch = true, client = global._clie
  * @param {DogClient | null} [client]
  * @returns {Promise<User[]>}
  */
-async function get_users_of_guild(guildID, client = global._client) {
+export async function get_users_of_guild(guildID, client = global._client) {
     if (!client) client = await wait_for_client();
 
     const members = await get_members_of_guild(guildID, true, client);
@@ -44,7 +50,7 @@ async function get_users_of_guild(guildID, client = global._client) {
  * @param {DogClient | null} [client]
  * @returns {Promise<User | null>}
  */
-async function get_user(userID, client = global._client) {
+export async function get_user(userID, client = global._client) {
     try {
         if (!client) client = await wait_for_client();
 
@@ -64,7 +70,7 @@ async function get_user(userID, client = global._client) {
  * @param {Guild} guild
  * @returns {Promise<GuildMember>}
  */
-async function get_me(guild) {
+export async function get_me(guild) {
     return (
         guild.members.me
         || await guild.members.fetchMe()
@@ -77,7 +83,7 @@ async function get_me(guild) {
  * @param {DogClient | null} [client]
  * @returns {Promise<Guild | null>}
  */
-async function get_guild(guildID, client = global._client) {
+export async function get_guild(guildID, client = global._client) {
     if (!client) client = await wait_for_client();
 
     try {
@@ -94,9 +100,9 @@ async function get_guild(guildID, client = global._client) {
  * Get all channels in a guild
  * @param {Guild} guild
  * @param {boolean} fetch_first
- * @returns {Promise<Discord.Channel[]>}
+ * @returns {Promise<import("discord.js").Channel[]>}
 */
-async function get_channels(guild, fetch_first = false) {
+export async function get_channels(guild, fetch_first = false) {
     if (!guild) return [];
 
     let channels = fetch_first
@@ -115,9 +121,9 @@ async function get_channels(guild, fetch_first = false) {
  * @param {any} channelId
  * @param {Guild | null} [guild=null]
  * @param {boolean} [fetch_first=false]
- * @returns {Promise<Discord.Channel | Discord.VoiceBasedChannel | null | undefined>}
+ * @returns {Promise<import("discord.js").Channel | import("discord.js").VoiceBasedChannel | null | undefined>}
  */
-async function get_channel(channelId, guild = null, fetch_first = false) {
+export async function get_channel(channelId, guild = null, fetch_first = false) {
     try {
         if (!channelId) return null;
 
@@ -144,7 +150,7 @@ async function get_channel(channelId, guild = null, fetch_first = false) {
  * @param {DogClient | null} [client=null]
  * @returns {Promise<Message | null>}
  */
-async function get_message_by_guild(guild, messageId, fetch = false, client = null) {
+export async function get_message_by_guild(guild, messageId, fetch = false, client = null) {
     if (!client) client = await wait_for_client();
 
     const channels_fetched = fetch
@@ -173,13 +179,13 @@ async function get_message_by_guild(guild, messageId, fetch = false, client = nu
 
 /**
  * Get message by its ID and channel
- * @param {import("discord.js").SendableChannels} channel
+ * @param {import("discord.js").TextBasedChannel} channel
  * @param {string} messageId
  * @param {boolean} [fetch=false]
  * @param {DogClient | null} [client=null]
  * @returns {Promise<Message | null>}
  */
-async function get_message_by_channel(channel, messageId, fetch = false, client = null) {
+export async function get_message_by_channel(channel, messageId, fetch = false, client = null) {
     if (!client) client = await wait_for_client();
 
     try {
@@ -201,11 +207,11 @@ async function get_message_by_channel(channel, messageId, fetch = false, client 
 
 /**
  *
- * @param {Discord.VoiceChannel} voiceChannel
+ * @param {import("discord.js").VoiceChannel} voiceChannel
  * @param {Guild} guild
  * @returns {import("@discordjs/voice").CreateVoiceConnectionOptions & import("@discordjs/voice").JoinVoiceChannelOptions & Omit<import("@discordjs/voice").JoinConfig, "group">}
  */
-const VCJoinConfig = (voiceChannel, guild) => {
+export const VCJoinConfig = (voiceChannel, guild) => {
     return {
         "channelId": voiceChannel.id,
         "guildId": guild.id,
@@ -213,18 +219,4 @@ const VCJoinConfig = (voiceChannel, guild) => {
         "selfMute": false,
         "adapterCreator": guild.voiceAdapterCreator,
     };
-};
-
-module.exports = {
-    get_members_of_guild,
-    get_users_of_guild,
-    get_user,
-    get_me,
-    get_guild,
-    get_channels,
-    get_channel,
-    get_message_by_guild,
-    get_message_by_channel,
-
-    VCJoinConfig,
 };

@@ -1,9 +1,18 @@
-const { Events } = require("discord.js");
-const { joinVoiceChannel, getVoiceConnection } = require("@discordjs/voice");
+import {
+    Events,
+} from "discord.js";
+import {
+    joinVoiceChannel,
+    getVoiceConnection,
+} from "@discordjs/voice";
 
-const { get_logger } = require("../utils/logger.js");
-const { getQueue } = require("../utils/music/music.js");
-const DogClient = require("../utils/customs/client.js");
+import {
+    get_logger,
+} from "../utils/logger.js";
+import {
+    getQueue,
+} from "../utils/music/music.js";
+import DogClient from "../utils/customs/client.js";
 
 const logger = get_logger();
 
@@ -13,39 +22,38 @@ const channels = [
     ["953638043846320158", "1365629151188484176"], // 瑪西亞の語音聊天頻道
 ];
 
-module.exports = {
-    name: Events.ClientReady,
-    once: true,
-    /**
-     *
-     * @param {DogClient} client
-     */
-    execute: async function (client) {
-        for (const [guildID, channelID] of channels) {
-            try {
-                const guild = await client.guilds.fetch(guildID);
-                if (!guild) return;
+const name = Events.ClientReady;
+const once = true;
 
-                const voiceChannel = await guild.channels.fetch(channelID);
-                if (!voiceChannel?.isVoiceBased()) return;
+/**
+ *
+ * @param {DogClient} client
+ */
+const execute = async function (client) {
+    for (const [guildID, channelID] of channels) {
+        try {
+            const guild = await client.guilds.fetch(guildID);
+            if (!guild) return;
 
-                const queue = getQueue(guildID, true);
+            const voiceChannel = await guild.channels.fetch(channelID);
+            if (!voiceChannel?.isVoiceBased()) return;
 
-                const connection = getVoiceConnection(guildID) ?? joinVoiceChannel({
-                    channelId: voiceChannel.id,
-                    guildId: guild.id,
-                    selfDeaf: true,
-                    selfMute: false,
-                    adapterCreator: guild.voiceAdapterCreator,
-                });
+            const queue = getQueue(guildID, true);
 
-                queue.setVoiceChannel(voiceChannel);
-                queue.setConnection(connection);
+            const connection = getVoiceConnection(guildID) ?? joinVoiceChannel({
+                channelId: voiceChannel.id,
+                guildId: guild.id,
+                selfDeaf: true,
+                selfMute: false,
+                adapterCreator: guild.voiceAdapterCreator,
+            });
 
-                logger.info(`✅ Joined voice channel ${voiceChannel.name}`);
-            } catch {
-                continue;
-            };
-        };
-    },
+            queue.setVoiceChannel(voiceChannel);
+            queue.setConnection(connection);
+
+            logger.info(`✅ Joined voice channel ${voiceChannel.name}`);
+        } catch { };
+    };
 };
+
+export { name, once, execute };

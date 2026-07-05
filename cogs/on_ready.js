@@ -1,12 +1,27 @@
-const { Events, ActivityType } = require("discord.js");
-const util = require("util");
+import {
+    inspect,
+} from "node:util";
+import {
+    Events,
+    ActivityType,
+} from "discord.js";
 
-const { get_logger } = require("../utils/logger.js");
-const { run_schedule } = require("../utils/run_schedule.js");
-const { safeshutdown } = require("../utils/safeshutdown.js");
-const { checkDBFilesDefault } = require("../utils/check_db_files.js");
-const { restoreAllMusicStates } = require("../utils/music/persistence.js");
-const DogClient = require("../utils/customs/client.js");
+import {
+    get_logger,
+} from "../utils/logger.js";
+import {
+    run_schedule,
+} from "../utils/run_schedule.js";
+import {
+    safeshutdown,
+} from "../utils/safeshutdown.js";
+import {
+    checkDBFilesDefault,
+} from "../utils/check_db_files.js";
+import {
+    restoreAllMusicStates,
+} from "../utils/music/persistence.js";
+import DogClient from "../utils/customs/client.js";
 
 const logger = get_logger();
 
@@ -22,51 +37,52 @@ async function handle_shutdown(sign, client) {
     try {
         await safeshutdown(client);
     } catch (error) {
-        const errorStack = util.inspect(error, { depth: null });
+        const errorStack = inspect(error, { depth: null });
 
         logger.error(`安全關閉時發生錯誤: ${errorStack}`);
         process.exit(1);
     };
 };
 
-module.exports = {
-    name: Events.ClientReady,
-    once: true,
-    /**
-     *
-     * @param {DogClient} client - Discord Client
-     */
-    execute: async function (client) {
-        global._client = client;
+const name = Events.ClientReady;
+const once = true;
 
-        await client.on_ready();
+/**
+ *
+ * @param {DogClient} client - Discord Client
+ */
+const execute = async function (client) {
+    global._client = client;
 
-        const schedules = await run_schedule(client);
-        logger.info(`已加載 ${schedules} 個排程`);
+    await client.on_ready();
 
-        logger.info(`機器人 ${client.name} 啟動成功`);
-        logger.info(`好欸！已經有${client.guilds.cache.size}個伺服器在使用${client.name}了！`);
+    const schedules = await run_schedule(client);
+    logger.info(`已加載 ${schedules} 個排程`);
 
-        process.on("SIGTERM", async () => {
-            await handle_shutdown("SIGTERM", client);
-        });
+    logger.info(`機器人 ${client.name} 啟動成功`);
+    logger.info(`好欸！已經有${client.guilds.cache.size}個伺服器在使用${client.name}了！`);
 
-        process.on("SIGINT", async () => {
-            await handle_shutdown("SIGINT", client);
-        });
+    process.on("SIGTERM", async () => {
+        await handle_shutdown("SIGTERM", client);
+    });
 
-        await Promise.all([
-            client.user?.setPresence({
-                activities: [
-                    {
-                        name: `啟動時間: ${new Date().toLocaleString()}`,
-                        type: ActivityType.Custom,
-                    },
-                ],
-            }),
-            checkDBFilesDefault(client),
-        ]);
+    process.on("SIGINT", async () => {
+        await handle_shutdown("SIGINT", client);
+    });
 
-        await restoreAllMusicStates(client);
-    },
-}
+    await Promise.all([
+        client.user?.setPresence({
+            activities: [
+                {
+                    name: `啟動時間: ${new Date().toLocaleString()}`,
+                    type: ActivityType.Custom,
+                },
+            ],
+        }),
+        checkDBFilesDefault(client),
+    ]);
+
+    await restoreAllMusicStates(client);
+};
+
+export { name, once, execute };

@@ -1,6 +1,8 @@
-const axios = require("axios");
+import axios from "axios";
 
-const { get_logger } = require("../logger.js");
+import {
+    get_logger,
+} from "../logger.js";
 
 const APIVersion = 3.0;
 
@@ -29,7 +31,7 @@ function raise_for_status(responseData) {
  * @param {string} search 
  * @param {string} format 
  * @param {number} limit 
- * @returns {Promise<axios.AxiosResponse>}
+ * @returns {Promise<import("axios").AxiosResponse>}
  */
 async function search_tracks(search, format = "json", limit = 30) {
     const client_id = process.env.JAMENDO_MUSIC_clientID;
@@ -50,7 +52,7 @@ async function search_tracks(search, format = "json", limit = 30) {
     return response;
 };
 
-module.exports = {
+export {
     // built-in tools
     raise_for_status,
 

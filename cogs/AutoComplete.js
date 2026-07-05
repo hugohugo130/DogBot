@@ -1,8 +1,19 @@
-const { Events, AutocompleteInteraction } = require("discord.js");
+import {
+    Events,
+} from "discord.js";
 
-const { wrong_job_embed, get_name_of_id, bake, smeltable_recipe, cook, recipes } = require("../utils/rpg.js");
-const { load_rpg_data } = require("../utils/file.js");
-const DogClient = require("../utils/customs/client.js");
+import {
+    wrong_job_embed,
+    get_name_of_id,
+    bake,
+    smeltable_recipe,
+    cook,
+    recipes,
+} from "../utils/rpg.js";
+import {
+    load_rpg_data,
+} from "../utils/file.js";
+import DogClient from "../utils/customs/client.js";
 
 const smeltable_items = smeltable_recipe.reduce((acc, item) => {
     const key = item.input.item;
@@ -34,154 +45,148 @@ const cookable_items = cook.reduce((acc, item) => {
     ({})
 );
 
-module.exports = {
-    name: Events.InteractionCreate,
-    /**
-     *
-     * @param {DogClient} client
-     * @param {AutocompleteInteraction} interaction
-     * @returns {Promise<any>}
-     */
-    execute: async function (client, interaction) {
-        if (!interaction.isAutocomplete()) return;
+export const name = Events.InteractionCreate;
 
-        const { user } = interaction;
+/**
+ * @param {DogClient} client
+ * @param {import("discord.js").Interaction} interaction
+ */
+export async function execute(client, interaction) {
+    if (!interaction.isAutocomplete()) return;
 
-        const userid = user.id;
-        const focusedValue = interaction.options.getFocused();
+    const { user } = interaction;
 
-        switch (interaction.commandName) {
-            case "play": {
-                // const choices = await searchVideos(focusedValue);
-                // try {
-                //     await interaction.respond(choices);
-                // } catch (err) {
-                //     if (err.toString().toLowerCase().includes("unknown interaction")) return;
-                //     logger.error(err);
-                // };
-            }
+    const userid = user.id;
+    const focusedValue = interaction.options.getFocused();
 
-            case "bake": {
-                const rpg_data = await load_rpg_data(userid);
+    switch (interaction.commandName) {
+        case "play": {
+            // const choices = await searchVideos(focusedValue);
+            // try {
+            //     await interaction.respond(choices);
+            // } catch (err) {
+            //     if (err.toString().toLowerCase().includes("unknown interaction")) return;
+            //     logger.error(err);
+            // };
+        }
 
-                const [wrong_job, _] = await wrong_job_embed(rpg_data, "/bake", userid, interaction, client);
-                if (wrong_job) return await interaction.respond([
-                    { name: wrong_job.data.title ?? "", value: "nothing" }
-                ]);
+        case "bake": {
+            const rpg_data = await load_rpg_data(userid);
 
-                const choices = Object.keys(rpg_data.inventory)
-                    .filter(item =>
-                        Object.keys(bake).includes(item)
-                        && (
-                            item.startsWith(focusedValue)
-                            || get_name_of_id(item).startsWith(focusedValue)
-                        )
+            const [wrong_job, _] = await wrong_job_embed(rpg_data, "/bake", userid, interaction, client);
+            if (wrong_job) return await interaction.respond([
+                { name: wrong_job.data.title ?? "", value: "nothing" }
+            ]);
+
+            const choices = Object.keys(rpg_data.inventory)
+                .filter(item => item in bake
+                    && (
+                        item.startsWith(focusedValue)
+                        || get_name_of_id(item).startsWith(focusedValue)
                     )
-                    .slice(0, 25)
-                    .map(item => ({ name: get_name_of_id(item), value: item }));
+                )
+                .slice(0, 25)
+                .map(item => ({ name: get_name_of_id(item), value: item }));
 
-                await interaction.respond(choices);
+            await interaction.respond(choices);
 
-                break;
-            }
+            break;
+        }
 
-            case "smelt": {
-                const rpg_data = await load_rpg_data(userid);
+        case "smelt": {
+            const rpg_data = await load_rpg_data(userid);
 
-                const [wrong_job, _] = await wrong_job_embed(rpg_data, "/smelt", userid, interaction, client);
-                if (wrong_job) return await interaction.respond([
-                    { name: wrong_job.data.title ?? "", value: "nothing" }
-                ]);
-                const choices = Object.keys(rpg_data.inventory)
-                    .filter(item =>
-                        Object.keys(smeltable_items).includes(item)
-                        && (
-                            item.startsWith(focusedValue)
-                            || get_name_of_id(item).startsWith(focusedValue)
-                        )
+            const [wrong_job, _] = await wrong_job_embed(rpg_data, "/smelt", userid, interaction, client);
+            if (wrong_job) return await interaction.respond([
+                { name: wrong_job.data.title ?? "", value: "nothing" }
+            ]);
+            const choices = Object.keys(rpg_data.inventory)
+                .filter(item => item in smeltable_items
+                    && (
+                        item.startsWith(focusedValue)
+                        || get_name_of_id(item).startsWith(focusedValue)
                     )
-                    .slice(0, 25)
-                    .map(item => {
-                        const smelt_data = smeltable_items[item];
+                )
+                .slice(0, 25)
+                .map(item => {
+                    const smelt_data = smeltable_items[item];
 
-                        const I_item_id = item;
-                        const { I_amount, O_item_id, O_amount } = smelt_data;
+                    const I_item_id = item;
+                    const { I_amount, O_item_id, O_amount } = smelt_data;
+
+                    return {
+                        name: `${get_name_of_id(I_item_id)} x${I_amount} => ${get_name_of_id(O_item_id)} x${O_amount}`,
+                        value: item,
+                    };
+                });
+
+            await interaction.respond(choices);
+
+            break;
+        }
+
+        case "cook": {
+            const rpg_data = await load_rpg_data(userid);
+
+            const [wrong_job, _] = await wrong_job_embed(rpg_data, "/cook", userid, interaction, client);
+            if (wrong_job) return await interaction.respond([
+                { name: wrong_job.data.title ?? "", value: "nothing" },
+            ]);
+
+            const choices = Object.entries(cookable_items)
+                .filter(([output, data]) => {
+                    const itemsInInventory = Object.keys(rpg_data.inventory);
+                    const requiredItems = data.input.map(data => data.name);
+                    const hasAllRequiredItems = requiredItems.every(item => itemsInInventory.includes(item));
+                    return hasAllRequiredItems && (output.startsWith(focusedValue) || get_name_of_id(output).startsWith(focusedValue));
+                })
+                .slice(0, 25)
+                .map(([output, _]) => {
+                    return {
+                        name: get_name_of_id(output),
+                        value: output,
+                    };
+                });
+
+            await interaction.respond(
+                choices.length
+                    ? choices
+                    : [
+                        {
+                            name: "你的背包裡沒有可以烹飪的食材ㄟ",
+                            value: "nothing",
+                        }
+                    ]
+            );
+
+            break;
+        }
+
+        case "make": {
+            await interaction.respond(
+                Object.entries(recipes)
+                    .map(([item_id, recipe]) => {
+                        const recipe_str = recipe.input.map(input => `${get_name_of_id(input.item) || input.item}x${input.amount}`
+                        ).join("、");
+
+                        const name = recipe.amount !== 1
+                            ? `${get_name_of_id(item_id)}x${recipe.amount} (${recipe_str})`
+                            : `${get_name_of_id(item_id)} (${recipe_str})`;
 
                         return {
-                            name: `${get_name_of_id(I_item_id)} x${I_amount} => ${get_name_of_id(O_item_id)} x${O_amount}`,
-                            value: item,
+                            name,
+                            value: item_id,
                         };
-                    });
-
-                await interaction.respond(choices);
-
-                break;
-            }
-
-            case "cook": {
-                const rpg_data = await load_rpg_data(userid);
-
-                const [wrong_job, _] = await wrong_job_embed(rpg_data, "/cook", userid, interaction, client);
-                if (wrong_job) return await interaction.respond([
-                    { name: wrong_job.data.title ?? "", value: "nothing" },
-                ]);
-
-                const choices = Object.entries(cookable_items)
-                    .filter(([output, data]) => {
-                        const itemsInInventory = Object.keys(rpg_data.inventory);
-                        const requiredItems = data.input.map(data => data.name);
-                        const hasAllRequiredItems = requiredItems.every(item => itemsInInventory.includes(item));
-                        return hasAllRequiredItems && (output.startsWith(focusedValue) || get_name_of_id(output).startsWith(focusedValue));
                     })
-                    .slice(0, 25)
-                    .map(([output, _]) => {
-                        return {
-                            name: get_name_of_id(output),
-                            value: output,
-                        };
-                    });
+                    .filter(({ name, value }) => {
+                        return (
+                            name.startsWith(focusedValue)
+                            || value.startsWith(focusedValue)
+                        );
+                    })
+            );
 
-                await interaction.respond(
-                    choices.length
-                        ? choices
-                        : [
-                            {
-                                name: "你的背包裡沒有可以烹飪的食材ㄟ",
-                                value: "nothing",
-                            }
-                        ],
-                );
-
-                break;
-            }
-
-            case "make": {
-                await interaction.respond(
-                    Object.entries(recipes)
-                        .map(([item_id, recipe]) => {
-                            const recipe_str = recipe.input.map(input =>
-                                `${get_name_of_id(input.item) || input.item}x${input.amount}`
-                            ).join("、");
-
-                            const name = recipe.amount !== 1
-                                ? `${get_name_of_id(item_id)}x${recipe.amount} (${recipe_str})`
-                                : `${get_name_of_id(item_id)} (${recipe_str})`;
-
-                            return {
-                                name,
-                                value: item_id,
-                            };
-                        })
-                        .filter(({ name, value }) => {
-                            return (
-                                name.startsWith(focusedValue)
-                                || value.startsWith(focusedValue)
-                            );
-                        }),
-                );
-
-                break;
-            }
-        };
-    },
-};
+            break;
+        }
+    };
+}

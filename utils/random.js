@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 /**
  * Return random integer in range [a, b], including both end points.
@@ -103,7 +103,7 @@ function generateMD5(input) {
 
 const generateUUID = crypto.randomUUID;
 
-module.exports = {
+export {
     randint,
     choice,
     choices,

@@ -1,13 +1,19 @@
-const Discord = require("discord.js");
-
-const { wait_for_client } = require("./wait_for_client.js");
-const { get_user, get_channels, get_guild } = require("./discord.js");
-const { get_logger } = require("./logger.js");
-const DogClient = require("../utils/customs/client.js");
+import {
+    wait_for_client,
+} from "./wait_for_client.js";
+import {
+    get_user,
+    get_channels,
+    get_guild,
+} from "./discord.js";
+import {
+    get_logger,
+} from "./logger.js";
+import DogClient from "../utils/customs/client.js";
 
 const logger = get_logger();
 
-module.exports = {
+export default {
     /**
      * 
      * @param {string} userID

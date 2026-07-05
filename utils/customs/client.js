@@ -1,7 +1,18 @@
-const Discord = require("discord.js")
-const { Client, GatewayIntentBits, Collection, Guild, GuildMember, Locale, Options, Partials } = require("discord.js");
+import {
+    Client,
+    GatewayIntentBits,
+    Collection,
+    Guild,
+    GuildMember,
+    Locale,
+    Options,
+    Partials,
+} from "discord.js";
 
-const { authorName, BotName } = require("../config.js");
+import {
+    authorName,
+    BotName,
+} from "../config.js";
 
 /**
  * @typedef OvenBakeSession
@@ -34,9 +45,9 @@ const { authorName, BotName } = require("../config.js");
  * @property {string} userId
  */
 
-class DogClient extends Client {
+export default class DogClient extends Client {
     constructor() {
-        /** @type {Discord.ClientOptions} */
+        /** @type {import("discord.js").ClientOptions} */
         const options = {
             intents: [
                 GatewayIntentBits.Guilds,
@@ -80,7 +91,7 @@ class DogClient extends Client {
         /** @type {Collection<string, import("../config.js").DvoiceData>} */
         this.dvoice = new Collection();
 
-        /** @type {Collection<string, any>} */
+        /** @type {Collection<string, import("../types").Slash>} */
         this.commands = new Collection();
 
         /** @type {Collection<string, any>} */
@@ -125,10 +136,10 @@ class DogClient extends Client {
      * @returns {Promise<void>}
      */
     async on_ready() {
-        const { loadDvoiceData } = require("../file.js");
-        const { loadslashcmd } = require("../loadslashcmd.js");
+        const { loadDvoiceData } = await import(new URL("../file.js", import.meta.url).href);
+        const { loadslashcmd } = await import(new URL("../loadslashcmd.js", import.meta.url).href);
 
-        if (!this.commands.size) this.commands = await loadslashcmd();
+        if (!this.commands.size) this.commands = await loadslashcmd(true);
         this.dvoice = new Collection(await loadDvoiceData());
 
         if (!this.name && this.user?.displayName) this.name = this.user.displayName;
@@ -219,5 +230,3 @@ class DogClient extends Client {
      */
     save_user_locale = (userId, locale) => this.locales.set(userId, locale);
 };
-
-module.exports = DogClient;

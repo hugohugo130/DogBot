@@ -1,12 +1,17 @@
-const util = require("util");
+import util from "util";
 
-const { get_logger } = require("../../utils/logger.js");
-const { load_rpg_data, save_rpg_data } = require("../../utils/file.js");
-const DogClient = require("../../utils/customs/client.js");
+import {
+    get_logger,
+} from "../../utils/logger.js";
+import {
+    load_rpg_data,
+    save_rpg_data,
+} from "../../utils/file.js";
+import DogClient from "../../utils/customs/client.js";
 
 const logger = get_logger();
 
-module.exports = {
+export default {
     /**
      * 
      * @param {DogClient} client 

@@ -55,7 +55,7 @@ function DateNowSecond() {
     return convertToSecondTimestamp(DateNow());
 };
 
-module.exports = {
+export {
     convertToSecondTimestamp,
     convertToSecond,
     formatMinutesSeconds,

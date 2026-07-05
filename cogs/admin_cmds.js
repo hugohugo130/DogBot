@@ -1,14 +1,34 @@
-const { Events, Message } = require("discord.js");
-const { exec } = require("child_process");
-const util = require("util");
+import {
+    Events,
+    Message,
+} from "discord.js";
+import {
+    exec,
+} from "child_process";
+import {
+    promisify,
+    inspect,
+} from "util";
 
-const { get_logger } = require("../utils/logger.js");
-const { get_id_of_name, get_name_of_id, get_loophole_embed, add_item } = require("../utils/rpg.js");
-const { load_rpg_data, save_rpg_data } = require("../utils/file.js");
-const { mentions_users } = require("../utils/message.js");
-const DogClient = require("../utils/customs/client.js");
+import {
+    get_logger,
+} from "../utils/logger.js";
+import {
+    get_id_of_name,
+    get_name_of_id,
+    get_loophole_embed,
+    add_item,
+} from "../utils/rpg.js";
+import {
+    load_rpg_data,
+    save_rpg_data,
+} from "../utils/file.js";
+import {
+    mentions_users,
+} from "../utils/message.js";
+import DogClient from "../utils/customs/client.js";
 
-const execPromise = util.promisify(exec);
+const execPromise = promisify(exec);
 const logger = get_logger();
 
 /**
@@ -108,151 +128,148 @@ async function handleGive2Command(message, args) {
     return message.reply(`done adding user ${user.toString()} 's inventory:\n${log}`);
 };
 
-module.exports = {
-    name: Events.MessageCreate,
-    /**
-     *
-     * @param {DogClient} client
-     * @param {Message} message
-     * @returns {Promise<any>}
-     */
-    execute: async function (client, message) {
-        try {
-            if (message.author.id !== "898836485397180426") return;
-            if (!message.content.startsWith("!")) return;
+export const name = Events.MessageCreate;
 
-            // 提取指令和參數
-            let args = message.content.split(" ");
-            args = args.map(arg => arg.trim());
-            args = args.filter(arg => arg !== "");
+/**
+ * @param {DogClient} client
+ * @param {Message} message
+ */
+export async function execute(client, message) {
+    try {
+        if (message.author.id !== "898836485397180426") return;
+        if (!message.content.startsWith("!")) return;
 
-            const command = args[0].substring(1); // 移除開頭的 "!"
-            const commandArgs = args.slice(1); // 獲取所有參數
+        // 提取指令和參數
+        let args = message.content.split(" ");
+        args = args.map(arg => arg.trim());
+        args = args.filter(arg => arg !== "");
 
-            const rpg_data = await load_rpg_data(message.author.id);
+        const command = args[0].substring(1); // 移除開頭的 "!"
+        const commandArgs = args.slice(1); // 獲取所有參數
 
-            // 使用 switch 處理不同的指令
-            switch (command) {
-                case "give":
-                    await handleGiveCommand(message, commandArgs);
-                    break;
+        const rpg_data = await load_rpg_data(message.author.id);
 
-                case "give2":
-                    let give2args = message.content.split(" ");
-                    give2args = give2args.map(arg => arg.trim());
-                    give2args = give2args.filter(arg => arg !== "");
-                    give2args = give2args.slice(1);
+        // 使用 switch 處理不同的指令
+        switch (command) {
+            case "give":
+                await handleGiveCommand(message, commandArgs);
+                break;
 
-                    const userMention = give2args[0];
-                    const object = give2args.slice(1).join(" ");
+            case "give2":
+                let give2args = message.content.split(" ");
+                give2args = give2args.map(arg => arg.trim());
+                give2args = give2args.filter(arg => arg !== "");
+                give2args = give2args.slice(1);
 
-                    await handleGive2Command(message, [userMention, object]);
-                    break;
+                const userMention = give2args[0];
+                const object = give2args.slice(1).join(" ");
 
-                case "run":
-                    await handleRunCommand(message, commandArgs);
-                    break;
+                await handleGive2Command(message, [userMention, object]);
+                break;
 
-                case "money":
-                    await handleMoneyCommand(message, commandArgs);
-                    break;
+            case "run":
+                await handleRunCommand(message, commandArgs);
+                break;
 
-                case "inv":
-                    await handleInvCommand(message, commandArgs);
-                    break;
+            case "money":
+                await handleMoneyCommand(message, commandArgs);
+                break;
 
-                case "resjob":
-                    rpg_data.job = null;
-                    if (rpg_data.lastRunTimestamp?.job) {
-                        if (!rpg_data.lastRunTimestamp) rpg_data.lastRunTimestamp = {};
-                        rpg_data.lastRunTimestamp.job = 0;
-                    };
+            case "inv":
+                await handleInvCommand(message, commandArgs);
+                break;
 
-                    await save_rpg_data(message.author.id, rpg_data);
-
-                    await message.reply("e, ok.");
-                    break;
-
-                case "resfjob":
-                    rpg_data.fightjob = null;
-
-                    await save_rpg_data(message.author.id, rpg_data);
-
-                    await message.reply("e ok!");
-                    break;
-            };
-
-            /**
-            * @param {Message} message
-            * @param {(any)[]} args
-            * @returns {Promise<Message>}
-            */
-            async function handleGiveCommand(message, args) {
-                if (args.length < 3) {
-                    return message.reply("用法: !give @user item amount");
+            case "resjob":
+                rpg_data.job = null;
+                if (rpg_data.lastRunTimestamp?.job) {
+                    if (!rpg_data.lastRunTimestamp) rpg_data.lastRunTimestamp = {};
+                    rpg_data.lastRunTimestamp.job = 0;
                 };
 
-                let [_, item, amount] = args;
-                item = get_id_of_name(item);
+                await save_rpg_data(message.author.id, rpg_data);
 
-                const user = (await mentions_users(message)).first();
+                await message.reply("e, ok.");
+                break;
 
-                if (!user) {
-                    return message.reply("請標記一個用戶！");
-                };
+            case "resfjob":
+                rpg_data.fightjob = null;
 
-                const rpg_data = add_item(await load_rpg_data(user.id), item, parseInt(amount));
-                await save_rpg_data(user.id, rpg_data);
+                await save_rpg_data(message.author.id, rpg_data);
 
-                return message.reply(`done adding user ${user.toString()} 's inventory: ${item}*${amount}`);
-            };
-
-            /**
-             * 
-             * @param {Message} message
-             * @param {(string | number)[]} args
-             * @returns {Promise<any>}
-             */
-            async function handleRunCommand(message, args) {
-                if (args.length === 0) {
-                    return message.reply("用法: !run COMMAND");
-                };
-
-                const cmd = args.join(" ");
-
-                try {
-                    if (process.platform === "linux") {
-                        message.reply(`執行指令: \`${cmd}\`\n請稍候...`);
-
-                        const { stdout, stderr } = await execPromise(cmd, {
-                            cwd: "/home/hugo/dogbot",
-                            timeout: 30000 // 30秒超時
-                        });
-
-                        let response = "**執行結果:**\n";
-
-                        if (stdout) {
-                            response += `\`\`\`\n${stdout.substring(0, 1800)}\`\`\``;
-                        };
-
-                        if (stderr) {
-                            response += `\n**錯誤輸出:**\n\`\`\`\n${stderr.substring(0, 1800)}\`\`\``;
-                        };
-
-                        return message.reply(response);
-                    } else {
-                        return message.reply("不支援的操作系統。");
-                    };
-                } catch (error) {
-                    if (error instanceof Error) await message.reply(`**執行失敗:**\n\`\`\`\n${error.message}\`\`\``);
-                    return;
-                };
-            };
-        } catch (err) {
-            const errorStack = util.inspect(err, { depth: null });
-
-            logger.error(`admin cmds 錯誤: ${errorStack}`);
-            await message.reply({ embeds: await get_loophole_embed(errorStack, null, client) });
+                await message.reply("e ok!");
+                break;
         };
-    },
+
+        /**
+        * @param {Message} message
+        * @param {(any)[]} args
+        * @returns {Promise<Message>}
+        */
+        async function handleGiveCommand(message, args) {
+            if (args.length < 3) {
+                return message.reply("用法: !give @user item amount");
+            };
+
+            let [_, item, amount] = args;
+            item = get_id_of_name(item);
+
+            const user = (await mentions_users(message)).first();
+
+            if (!user) {
+                return message.reply("請標記一個用戶！");
+            };
+
+            const rpg_data = add_item(await load_rpg_data(user.id), item, parseInt(amount));
+            await save_rpg_data(user.id, rpg_data);
+
+            return message.reply(`done adding user ${user.toString()} 's inventory: ${item}*${amount}`);
+        };
+
+        /**
+         *
+         * @param {Message} message
+         * @param {(string | number)[]} args
+         * @returns {Promise<any>}
+         */
+        async function handleRunCommand(message, args) {
+            if (args.length === 0) {
+                return message.reply("用法: !run COMMAND");
+            };
+
+            const cmd = args.join(" ");
+
+            try {
+                if (process.platform === "linux") {
+                    message.reply(`執行指令: \`${cmd}\`\n請稍候...`);
+
+                    const { stdout, stderr } = await execPromise(cmd, {
+                        cwd: "/home/hugo/dogbot",
+                        timeout: 30000 // 30秒超時
+                    });
+
+                    let response = "**執行結果:**\n";
+
+                    if (stdout) {
+                        response += `\`\`\`\n${stdout.substring(0, 1800)}\`\`\``;
+                    };
+
+                    if (stderr) {
+                        response += `\n**錯誤輸出:**\n\`\`\`\n${stderr.substring(0, 1800)}\`\`\``;
+                    };
+
+                    return message.reply(response);
+                } else {
+                    return message.reply("不支援的操作系統。");
+                };
+            } catch (error) {
+                if (error instanceof Error) await message.reply(`**執行失敗:**\n\`\`\`\n${error.message}\`\`\``);
+                return;
+            };
+        };
+    } catch (err) {
+        const errorStack = inspect(err, { depth: null });
+
+        logger.error(`admin cmds 錯誤: ${errorStack}`);
+        await message.reply({ embeds: await get_loophole_embed(errorStack, null, client) });
+    };
 }

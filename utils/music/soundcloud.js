@@ -1,9 +1,17 @@
-const util = require("util");
-const { Readable } = require("stream");
-const { Soundcloud } = require("soundcloud.ts");
+import util from "util";
+import {
+    Readable,
+} from "stream";
+import {
+    Soundcloud,
+} from "soundcloud.ts";
 
-const { get_logger } = require("../logger.js");
-const { fetchAudioStream } = require("./music.js");
+import {
+    get_logger,
+} from "../logger.js";
+import {
+    fetchAudioStream,
+} from "./music.js";
 
 /** @type {Soundcloud} */
 const sc = global._sc ?? new Soundcloud();
@@ -105,7 +113,7 @@ function validateURL(url = null, type = "all") {
     };
 };
 
-module.exports = {
+export {
     search_tracks,
     getAudioStream,
     get_track_info,

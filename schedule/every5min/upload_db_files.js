@@ -1,11 +1,15 @@
-const util = require("util");
+import util from "util";
 
-const { get_logger } = require("../../utils/logger.js");
-const { uploadChangedDatabaseFiles } = require("../../utils/onlineDB.js");
+import {
+    get_logger,
+} from "../../utils/logger.js";
+import {
+    uploadChangedDatabaseFiles,
+} from "../../utils/onlineDB.js";
 
 const logger = get_logger();
 
-module.exports = {
+export default {
     execute: async function () {
         try {
             await uploadChangedDatabaseFiles();

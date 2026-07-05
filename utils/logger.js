@@ -1,10 +1,24 @@
 import path from "path";
-import winston from "winston";
 import Transport from "winston-transport";
-import { EmbedBuilder as djsEmbedBuilder, MessageFlags, Embed, escapeMarkdown } from "discord.js";
+import winston from "winston";
+import {
+    EmbedBuilder as djsEmbedBuilder,
+    MessageFlags,
+    Embed,
+    escapeMarkdown,
+} from "discord.js";
 
-import { error_channel_id, warn_channel_id, log_channel_id, dc_send_ignore_keywords, backend_channel_id, console_ignore_keywords } from "./config.js";
-import { time2 } from "./time.js";
+import {
+    error_channel_id,
+    warn_channel_id,
+    log_channel_id,
+    dc_send_ignore_keywords,
+    backend_channel_id,
+    console_ignore_keywords,
+} from "./config.js";
+import {
+    time2,
+} from "./time.js";
 import DogClient from "./customs/client.js";
 
 // 全局管理器
@@ -89,7 +103,7 @@ class DiscordTransport extends Transport {
         if (info.message && any(dc_send_ignore_keywords.map(keyword => info.message.includes(keyword)))) return;
         if (info.stack && any(dc_send_ignore_keywords.map(keyword => info.stack.includes(keyword)))) return;
 
-        global.sendQueue.push(info);
+        if (global.sendQueue) global.sendQueue.push(info);
 
         if (callback && this.levels[info.level] <= this.levels[this.level]) callback();
 
@@ -124,7 +138,7 @@ class BackendTransport extends Transport {
         info.channel_id = this.channel_id;
 
         if (DEBUG) console.debug(`[DEBUG] [BackendTransport] pushed info to sendQueue: ${JSON.stringify(info, null, 4)}`);
-        global.sendQueue.push(info);
+        if (global.sendQueue) global.sendQueue.push(info);
 
         if (callback && this.levels[info.level] <= this.levels[this.level]) callback();
 
@@ -381,6 +395,10 @@ function get_logger(options = {}) {
  */
 async function process_send_queue(client) {
     const { default: EmbedBuilder } = await import(new URL("./customs/embedBuilder.js", import.meta.url).href);
+
+    if (!Array.isArray(global.sendQueue)) {
+        global.sendQueue = [];
+    };
 
     while (global.sendQueue.length > 0) {
         const info = global.sendQueue[0];

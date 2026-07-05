@@ -1,12 +1,23 @@
-const fs = require("fs");
-const fsp = fs.promises;
-const path = require("path");
-const util = require("util");
+import fsp from "fs/promises";
+import path from "path";
+import util from "util";
+import {
+    Events,
+} from "discord.js";
+import {
+    pathToFileURL,
+} from "node:url";
 
-const { readdir } = require("./file.js");
-const { get_logger } = require("./logger.js");
-const { cogsFolder } = require("./config.js");
-const DogClient = require("./customs/client.js");
+import {
+    readdir,
+} from "./file.js";
+import {
+    get_logger,
+} from "./logger.js";
+import {
+    cogsFolder,
+} from "./config.js";
+import DogClient from "./customs/client.js";
 
 /** @type {string[]} */
 const load_skiplist = [];
@@ -15,7 +26,7 @@ const logger = get_logger();
 /**
  *
  * @param {DogClient} client
- * @param {any} cog
+ * @param {{ name: keyof typeof Events, execute: Function, once?: boolean }} cog
  * @param {string} itemPath
  * @returns {Promise<number>}
  */
@@ -23,7 +34,7 @@ async function load_cog(client, cog, itemPath) {
     /**
      *
      * @param  {...any} args
-     * @returns
+     * @returns {Promise<void>}
      */
     async function run_execute(...args) {
         try {
@@ -76,8 +87,7 @@ async function processDirectory(client, dirPath, quiet = false) {
             loadedFiles += await processDirectory(client, itemPath);
         } else if (item.endsWith(".js")) {
             try {
-                delete require.cache[require.resolve(itemPath)];
-                const cog = require(itemPath);
+                const cog = await import(pathToFileURL(itemPath).href);
 
                 const res = await load_cog(client, cog, itemPath);
                 if (!res) continue;
@@ -114,6 +124,6 @@ async function load_cogs(client, quiet = false) {
     };
 };
 
-module.exports = {
+export {
     load_cogs,
 };

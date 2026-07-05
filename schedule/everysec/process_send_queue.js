@@ -1,7 +1,9 @@
-const { process_send_queue } = require("../../utils/logger.js");
-const DogClient = require("../../utils/customs/client.js");
+import {
+    process_send_queue,
+} from "../../utils/logger.js";
+import DogClient from "../../utils/customs/client.js";
 
-module.exports = {
+export default {
     /**
      *
      * @param {DogClient} client
