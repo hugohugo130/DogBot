@@ -23,6 +23,7 @@ import {
     get_emoji,
     get_job_name,
     get_fightjob_name,
+    valid_job_id,
 } from "../utils/rpg.js";
 import {
     get_lang_data,
@@ -188,7 +189,7 @@ export function getMsgInfoContainer(message, locale = null) {
         .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_edited_at}**:\n${editedAt ? `<t:${editedAt}:D><t:${editedAt}:T>\n(<t:${editedAt}:R>)` : lang_unedited}`))
 };
 
-/** @type {import("../utils/types.js").Slash} */
+/** @type {import("../utils/types").Slash} */
 export const infoSlash = {
     builder: new SlashCommandBuilder()
         .setName("info")
@@ -325,6 +326,7 @@ export const infoSlash = {
                 const lang_fightjob = get_lang_data(locale, "/info", "user.adventure_job"); // 冒險職業
                 const lang_badge = get_lang_data(locale, "/info", "user.badge"); // 稱號
                 const lang_relationship = get_lang_data(locale, "/info", "user.relationship"); // 感情狀態
+                const lang_banner = get_lang_data(locale, "/info", "user.banner") // 橫幅
 
                 const user = interaction.options.getUser("user") ?? interaction.user;
                 const userTag = user.tag;
@@ -349,18 +351,23 @@ export const infoSlash = {
                     : lang_single;
 
                 const createdAt = convertToSecondTimestamp(user.createdAt.getTime());
+                const jobData = valid_job_id(job)
+                    ? jobs[job]
+                    : null;
 
-                const [emojiOfTheJob, emojiOfTheFightJob] = await Promise.all([
-                    jobs[job]?.emoji
-                        ? `${await get_emoji(jobs[job].emoji)} `
+                const [fetched_user, emojiOfTheJob, emojiOfTheFightJob] = await Promise.all([
+                    client.users.fetch(user.id, { force: true }),
+
+                    jobData?.emoji
+                        ? await get_emoji(jobData.emoji)
                         : "",
 
                     fightjobs[fightjob]?.emoji
-                        ? `${await get_emoji(fightjobs[fightjob].emoji)} `
+                        ? await get_emoji(fightjobs[fightjob].emoji)
                         : "",
                 ]);
 
-                const nameOfTheJob = jobs[job]
+                const nameOfTheJob = jobData !== null && valid_job_id(job)
                     ? get_job_name(job, locale)
                     : job;
 
@@ -370,7 +377,7 @@ export const infoSlash = {
 
                 const user_data_embed = new EmbedBuilder()
                     .setColor(embed_default_color)
-                    .setThumbnail(user.displayAvatarURL({ size: 1024 }))
+                    .setThumbnail(fetched_user.displayAvatarURL({ size: 1024 }))
                     .setTitle(escapeMarkdown(userTag))
                     .setFields(
                         {
@@ -419,8 +426,24 @@ export const infoSlash = {
                         },
                     );
 
+                const userBannerURL = fetched_user.bannerURL({ size: 4096 });
+
+                const row =
+                    /** @type {ActionRowBuilder<ButtonBuilder>} */
+                    (new ActionRowBuilder());
+
+                const bannerBtn = userBannerURL
+                    ? new ButtonBuilder()
+                        .setLabel(lang_banner)
+                        .setURL(userBannerURL)
+                        .setStyle(ButtonStyle.Link)
+                    : null;
+
+                if (bannerBtn) row.addComponents(bannerBtn);
+
                 await interaction.editReply({
                     embeds: [user_data_embed, rpg_data_embed],
+                    components: row.components.length ? [row] : undefined,
                 });
                 break;
             }
