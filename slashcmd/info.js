@@ -396,12 +396,12 @@ export const infoSlash = {
                     .setFields(
                         {
                             name: `${emoji_job} ${lang_job}`,
-                            value: `${emojiOfTheJob}${nameOfTheJob}`,
+                            value: `${emojiOfTheJob} ${nameOfTheJob}`,
                             inline: true,
                         },
                         {
                             name: `${emoji_adventure} ${lang_fightjob}`,
-                            value: `${emojiOfTheFightJob}${nameOfTheFightJob}`,
+                            value: `${emojiOfTheFightJob} ${nameOfTheFightJob}`,
                             inline: true,
                         },
                         {
