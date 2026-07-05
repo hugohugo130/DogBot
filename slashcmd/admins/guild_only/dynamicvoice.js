@@ -20,7 +20,7 @@ import {
     PermissionTranslationKeyMapping,
 } from "../../../utils/language.js";
 
-/** @type {import("../../../utils/types.js").Slash<["guild"]>} */
+/** @type {import("../../../utils/types").Slash<["guild"]>} */
 export const dvoiceSlash = {
     builder: new SlashCommandBuilder()
         .setName("dvoice")
@@ -66,7 +66,7 @@ export const dvoiceSlash = {
         if (channel) {
             const botChannelPerm = me.permissionsIn(channel);
 
-            /** @type {(Exclude<keyof typeof PermissionFlagsBits, "ManageEmojisAndStickers">)[]} */
+            /** @type {import("../../../utils/types").PermissionTexts[]} */
             const permissionsNeeded = [
                 "ViewChannel",
                 "MoveMembers",

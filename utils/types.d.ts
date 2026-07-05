@@ -3,12 +3,29 @@ import {
     ChatInputCommandInteraction as djsChatInputCommandInteraction,
     Interaction,
 
-    PermissionResolvable,
+    PermissionFlagsBits,
 } from "discord.js";
 
 import DogClient from "./customs/client.js";
 
+// #region [Language]
+
+export type JobNames =
+    | "fisher"
+    | "pharmacist"
+    | "farmer"
+    | "cook"
+    | "miner"
+    | "herder"
+    | "blacksmith"
+    | "lumberjack";
+
+// #endregion [Language]
+
+
 // #region [Interactions]
+
+export type PermissionTexts = Exclude<keyof typeof PermissionFlagsBits, "ManageEmojisAndStickers">
 
 export type ChatInputCommandInteraction = ChatInputCommandInteractionFromContext<AllowedContextTuple>;
 
@@ -25,11 +42,7 @@ export enum CommandCategory {
 };
 
 // 允許的 context (組合使用元組聯合)
-type AllowedContextTuple =
-    | readonly ["dm"]
-    | readonly ["guild"]
-    | readonly ["dm", "guild"]
-// | readonly ["guild", "dm"];
+type AllowedContextTuple = ("dm" | "guild")[]
 
 // 根據 context 推斷 interaction 的 guild 屬性
 type ChatInputCommandInteractionFromContext<C extends AllowedContextTuple> =
@@ -58,8 +71,8 @@ export interface BaseSlash<C extends AllowedContextTuple = AllowedContextTuple> 
     category?: CommandCategory = "General";
     subCommands?: Record<string, SlashExecutor<C>>;
     permissions?: {
-        bot?: PermissionResolvable[];
-        user?: PermissionResolvable[];
+        bot?: PermissionTexts[];
+        user?: PermissionTexts[];
     };
     execute: SlashExecutor<C>;
 }

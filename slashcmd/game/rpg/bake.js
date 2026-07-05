@@ -75,7 +75,7 @@ export function divide(amount, by) {
 
 /**
  * Handle /bake bake
- * @param {import("../../../utils/types.js").ChatInputCommandInteraction} interaction
+ * @param {import("../../../utils/types").ChatInputCommandInteraction} interaction
  * @param {string} userId
  * @param {string} item_id
  * @param {number} amount
@@ -224,7 +224,7 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
  * @property {number} end_time
  */
 
-/** @type {import("../../../utils/types.js").Slash} */
+/** @type {import("../../../utils/types").Slash} */
 export const bakeSlash = {
     builder: new SlashCommandBuilder()
         .setName("bake")

@@ -21,7 +21,7 @@ import {
 } from "../../utils/config.js";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 
-/** @type {import("../../utils/types.js").Slash<["guild"]>} */
+/** @type {import("../../utils/types").Slash<["guild"]>} */
 export const disconnectSlash = {
     builder: new SlashCommandBuilder()
         .setName("disconnect")

@@ -126,7 +126,7 @@ export async function getCookingResultContainer(output_food, amount, client = gl
     return container;
 };
 
-/** @type {import("../../../utils/types.js").Slash} */
+/** @type {import("../../../utils/types").Slash} */
 export const cookSlash = {
     builder: new SlashCommandBuilder()
         .setName("cook")

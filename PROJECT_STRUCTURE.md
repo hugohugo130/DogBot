@@ -513,3 +513,5 @@ module.exports = {
 **文檔最後更新**: 2026/2/24
 **文檔版本**: 1.0.1
 **專案版本**: 1.0.1
+
+*Maintained by the core team. Update this guide when tooling, structure, or workflows change.*

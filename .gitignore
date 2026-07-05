@@ -135,14 +135,17 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-db/
-.bailurules/
-ai_update/
-database_recovery/
 temp/
+db/
+db_old/
+ai_update/
+.bailurules/
+database_recovery/
+PROJECT_STRUCTURE.md
 **/package-lock.json
 auto_register.cmd.data
 circular-dependencies-report.json
 error_reader.js
+.bailucode.md
 *test*
 *temp*

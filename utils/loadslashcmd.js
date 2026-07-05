@@ -21,7 +21,7 @@ const logger = get_logger();
 /**
  * 
  * @param { { [s: string]: any } | ArrayLike<any> } module
- * @returns {import("./types.js").Slash | null}
+ * @returns {import("./types").Slash | null}
  */
 function findSlashFromModule(module) {
     for (const exp of Object.values(module)) {

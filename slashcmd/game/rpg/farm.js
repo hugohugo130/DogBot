@@ -169,7 +169,7 @@ function get_harvest_items(amount) {
     return result;
 };
 
-/** @type {import("../../../utils/types.js").Slash} */
+/** @type {import("../../../utils/types").Slash} */
 export const farmSlash = {
     builder: new SlashCommandBuilder()
         .setName("farm")

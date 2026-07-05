@@ -170,7 +170,7 @@ async function smelt_smelt(interaction, item_id, amount, client = global._client
     else await interaction.followUp(replyOption);
 };
 
-/** @type {import("../../../utils/types.js").Slash} */
+/** @type {import("../../../utils/types").Slash} */
 export const smeltSlash = {
     builder: new SlashCommandBuilder()
         .setName("smelt")

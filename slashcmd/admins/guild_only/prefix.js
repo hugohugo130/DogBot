@@ -16,7 +16,7 @@ import {
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 
 
-/** @type {import("../../../utils/types.js").Slash<["guild"]>} */
+/** @type {import("../../../utils/types").Slash<["guild"]>} */
 export const prefixSlash = {
     builder: new SlashCommandBuilder()
         .setName("prefix")

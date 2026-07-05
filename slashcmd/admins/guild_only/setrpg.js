@@ -6,7 +6,7 @@ import {
     setRPG,
 } from "../../../utils/file.js";
 
-/** @type {import("../../../utils/types.js").Slash<["guild"]>} */
+/** @type {import("../../../utils/types").Slash<["guild"]>} */
 export const setRPGSlash = {
     builder: new SlashCommandBuilder()
         .setName("setrpg")

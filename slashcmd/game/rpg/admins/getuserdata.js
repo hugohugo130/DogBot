@@ -13,10 +13,10 @@ import {
     join_temp_folder,
 } from "../../../../utils/file.js";
 import {
-    admins,
+    adminIDs,
 } from "../../../../utils/config.js";
 
-/** @type {import("../../../../utils/types.js").Slash} */
+/** @type {import("../../../../utils/types").Slash} */
 export const getUserDataSlash = {
     builder: new SlashCommandBuilder()
         .setName("getuserdata")
@@ -46,7 +46,7 @@ export const getUserDataSlash = {
     stage: "admin",
 
     async execute(interaction) {
-        if (!admins.includes(interaction.user.id)) return;
+        if (!adminIDs.includes(interaction.user.id)) return;
 
         const user = interaction.options.getUser("user");
         if (!user) return;

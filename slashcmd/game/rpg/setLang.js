@@ -8,7 +8,7 @@ import {
 
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 
-/** @type {import("../../../utils/types.js").Slash} */
+/** @type {import("../../../utils/types").Slash} */
 export const setLangSlash = {
     builder: new SlashCommandBuilder()
         .setName("set_language")

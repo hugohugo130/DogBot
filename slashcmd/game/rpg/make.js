@@ -25,7 +25,7 @@ import {
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 import DogClient from "../../../utils/customs/client.js";
 
-/** @type {import("../../../utils/types.js").Slash} */
+/** @type {import("../../../utils/types").Slash} */
 export const makeSlash = {
     builder: new SlashCommandBuilder()
         .setName("make")
