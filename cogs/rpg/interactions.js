@@ -2023,18 +2023,20 @@ export async function execute(client, interaction) {
                     firstPrefix(guild.id),
                 ]);
 
-                const enabled = rpg_data.daily_msg;
-                const changeToStatusText = enabled ? "關閉" : "開啟"
+                const before = rpg_data.daily_msg;
 
-                rpg_data.daily_msg = !enabled;
+                const nowStatus = !before;
+                rpg_data.daily_msg = nowStatus;
+
+                const changeToStatusText = nowStatus ? "開啟" : "關閉"
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_sign_color)
                     .setTitle(`${emoji_calendar} | 成功${changeToStatusText}簽到訊息`)
                     .setDescription(
-                        enabled
-                            ? `很抱歉這個私訊造成你的困擾，如果要再次打開這個訊息，請使用 \`${prefix}daily\` 或是點擊下方按鈕`
-                            : `當你到我們伺服器聊天ㄉ時候，就會收到這個簽到訊息，如果要關閉這個訊息，請使用 \`${prefix}daily\` 或是點擊下方按鈕`
+                        nowStatus
+                            ? `當你到我們伺服器聊天簽到ㄉ時候，就會收到這個簽到訊息，如果要關閉這個訊息，請使用 \`${prefix}daily\` 或是點擊下方按鈕`
+                            : `很抱歉這個私訊造成你的困擾，如果要再次打開這個訊息，請使用 \`${prefix}daily\` 或是點擊下方按鈕`
                     )
                     .setEmbedFooter(interaction);
 
@@ -2042,9 +2044,9 @@ export async function execute(client, interaction) {
                     /** @type {ActionRowBuilder<ButtonBuilder>} */
                     (new ActionRowBuilder()
                         .addComponents(
-                            new ButtonBuilder()
-                                .setCustomId(`daily|any|${enabled ? "disable" : "enable"}-dm`)
-                                .setLabel(`${enabled ? "不想" : "想"}收到機器犬的私訊ㄇ`)
+                            new ButtonBuilder() // 目前啟用，按按鈕就是停用: true -> enable
+                                .setCustomId(`daily|any|${nowStatus ? "disable" : "enable"}-dm`)
+                                .setLabel(`${nowStatus ? "不想" : "想"}收到機器犬的私訊ㄇ`)
                                 .setStyle(ButtonStyle.Secondary),
                         ));
 
