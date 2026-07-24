@@ -1319,16 +1319,16 @@ async function get_failed_embed(failed_reason, rpg_data, interaction = null, cli
  * @returns {number}
  */
 function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
-    if (amount_limit(rpg_data.money) || amount_limit(rpg_data.money + amount) || amount_limit(amount)) throw new Error("金額超過上限");
-
-    rpg_data.money += amount;
-    rpg_data.transactions.push({
-        timestamp: Math.floor(Date.now() / 1000),
-        originalUser,
-        targetUser,
-        amount,
-        type
-    });
+    if (!amount_limit(rpg_data.money) && !amount_limit(rpg_data.money + amount) && !amount_limit(amount)) {
+        rpg_data.money += amount;
+        rpg_data.transactions.push({
+            timestamp: Math.floor(Date.now() / 1000),
+            originalUser,
+            targetUser,
+            amount,
+            type
+        });
+    };
 
     return rpg_data.money;
 };
@@ -1344,16 +1344,16 @@ function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
  * @returns {number}
  */
 function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
-    if ((amount_limit(rpg_data.money) && amount_limit(rpg_data.money - amount)) || amount_limit(amount)) throw new Error("金額超過上限");
-
-    rpg_data.money -= amount;
-    rpg_data.transactions.push({
-        timestamp: Math.floor(Date.now() / 1000),
-        originalUser,
-        targetUser,
-        amount,
-        type
-    });
+    if (!amount_limit(rpg_data.money)) {
+        rpg_data.money -= amount;
+        rpg_data.transactions.push({
+            timestamp: Math.floor(Date.now() / 1000),
+            originalUser,
+            targetUser,
+            amount,
+            type
+        });
+    };
 
     return rpg_data.money;
 };

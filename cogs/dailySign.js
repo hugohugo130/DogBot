@@ -85,18 +85,13 @@ export async function sign(rpg_data, message, client = null) {
     const diff = 4; // ± 4
 
     const amount = randint(total - diff, total + diff);
-    try {
-        rpg_data.money = add_money({
-            rpg_data,
-            amount,
-            originalUser: "系統",
-            targetUser: user.toString(),
-            type: "每日簽到",
-        });
-    } catch (err) {
-        if (err instanceof Error && err.stack?.includes?.("金額超過上限")) return true;
-        throw err;
-    };
+    rpg_data.money = add_money({
+        rpg_data,
+        amount,
+        originalUser: "系統",
+        targetUser: user.toString(),
+        type: "每日簽到",
+    });
 
     rpg_data.daily = Date.now();
     daily_times++;
