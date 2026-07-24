@@ -164,7 +164,6 @@ client.once(Events.ClientReady, async () => {
                 switch (option) {
                     case "clear": {
                         const cachemgr = getCacheManager();
-                        if (!cachemgr) break;
 
                         cachemgr.clear();
                         logger.info(`[cacheManager] cleaned all caches successfully`);
@@ -173,7 +172,6 @@ client.once(Events.ClientReady, async () => {
 
                     case "stats": {
                         const cachemgr = getCacheManager();
-                        if (!cachemgr) break;
 
                         logger.info(inspect(cachemgr.getStats(), { depth: null }));
                         break;
