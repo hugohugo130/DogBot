@@ -103,6 +103,8 @@ export async function sign(rpg_data, message, client = null) {
 
     rpg_data.daily_times = daily_times;
 
+    let sign_msg_send_promise;
+
     if (rpg_data.daily_msg) {
         const emoji_calendar = await get_emoji("calendar", client);
 
@@ -112,14 +114,17 @@ export async function sign(rpg_data, message, client = null) {
             .setDescription(`你連續簽到了 \`${daily_times}\` 天，獲得了\`${amount}$\``)
             .setEmbedFooter(user.id);
 
-        try {
-            await user.send({ embeds: [embed] });
-        } catch { };
+        sign_msg_send_promise = user.send({ embeds: [embed] })
+            .catch(error => {
+                if (error.code === 50007) return;
+                throw error;
+            });
     };
 
     await Promise.all([
         message.react("💰"),
         save_rpg_data(user.id, rpg_data),
+        sign_msg_send_promise || null,
     ]);
 
     return true;
