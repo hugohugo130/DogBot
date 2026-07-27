@@ -1331,6 +1331,30 @@ function IsValidURL(str) {
 };
 
 /**
+ * Check whether a string is a valid URL and we support it
+ * @param {string} str
+ * @returns {Promise<boolean>}
+ */
+async function IsSupportMusicURL(str) {
+    if (!IsValidURL(str)) return false;
+
+    for (const engine_id of musicSearchEngine) {
+        try {
+            const engine = await import(new URL(`./${engine_id}`, import.meta.url).href);
+
+            const validateURL_function = engine.validateURL;
+            if (!validateURL_function) continue;
+
+            if (validateURL_function()) {
+                return true;
+            };
+        } catch { };
+    };
+
+    return false;
+}
+
+/**
  * Convert Google Drive sharing URL to direct download URL
  * @param {string} sharingURL
  * @returns {string | null} null if URL is invalid
@@ -1506,6 +1530,7 @@ export {
     search_until,
     fetchAudioStream,
     IsValidURL,
+    IsSupportMusicURL,
     GDriveDirectLink,
     URLAvaliable,
     IsFFprobeInstalled,

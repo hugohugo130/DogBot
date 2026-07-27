@@ -36,6 +36,7 @@ import {
     getPlayingPlayers,
     URLAvaliable,
     GDriveDirectLink,
+    IsSupportMusicURL,
 } from "../../utils/music/music.js";
 import {
     formatMinutesSeconds,
@@ -275,7 +276,7 @@ export const playSlash = {
 
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
-        const will_play_audio_url = IsValidURL(queryOrURL);
+        const will_play_audio_url = IsValidURL(queryOrURL) && !IsSupportMusicURL(queryOrURL);
         const converted_gdrive_custom_url_or_query = will_play_audio_url && GDriveDirectLink(queryOrURL);
         const custom_url_or_query = converted_gdrive_custom_url_or_query || queryOrURL;
 
