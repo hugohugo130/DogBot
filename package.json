@@ -1,6 +1,6 @@
 {
   "name": "dogbot",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "license": "PolyForm-Noncommercial-1.0.0",
   "main": "index.js",
   "type": "module",
