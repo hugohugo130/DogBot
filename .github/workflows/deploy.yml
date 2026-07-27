@@ -22,5 +22,13 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             cd /home/hugo/${{ secrets.REPO_NAME }}
-            git pull
-            docker restart ${{ secrets.DOCKER_NAME }}
+
+            git fetch origin main
+            slashcmd_changes=$(git diff --name-only HEAD origin/main | grep "slashcmd/")
+            git pull origin main
+
+            if [ ! -z "$slashcmd_changes"]; then
+              docker restart ${{ secrets.DOCKER_NAME }}
+            else
+              echo "reload cogs" | docker exec -i ${{ secrets.DOCKER_NAME }} sh -c "cat >> /proc/1/fd/0"
+            fi
