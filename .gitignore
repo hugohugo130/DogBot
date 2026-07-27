@@ -142,7 +142,6 @@ ai_update/
 .bailurules/
 database_recovery/
 PROJECT_STRUCTURE.md
-**/package-lock.json
 auto_register.cmd.data
 circular-dependencies-report.json
 error_reader.js
