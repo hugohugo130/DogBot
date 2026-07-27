@@ -7,6 +7,7 @@ WORKDIR /app
 # 還有編譯依賴 (某些套件會需要)
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
+        curl \
         fluidsynth \
         python3 make g++ git && \
     rm -rf /var/lib/apt/lists/*
