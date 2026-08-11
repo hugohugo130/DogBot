@@ -9,11 +9,6 @@ import {
 const cwd = process.cwd;
 const isBeta = (global.isBeta ?? process.argv.slice(2).includes("--beta"));
 
-// Online Database Info
-const DEFAULT_IP = "192.168.0.156";
-const DEFAULT_PORT = isBeta
-    ? 3004 // BETA: true  - 測試環境
-    : 3003 // BETA: false - 正式環境
 
 // Database
 const INDENT = 4;
@@ -209,7 +204,6 @@ const DATABASE_FILES = [
     "rpg_shop.json",
     "bake_db.json",
     "smelt_db.json",
-    "serverIP.json",
     "dvoice_db.json",
     "rpg_farm.json",
     "music.json",
@@ -225,11 +219,11 @@ const DATABASE_FILES = [
  *     "smelt_db.json": Array<any>,
  *     [k: string]: object | Array<any>,
  *   },
- *   "single": {
- *     "serverIP.json": { IP: string, PORT: number },
- *     "dvoice_db.json": [[string], DvoiceData][],
- *     [k: string]: object | Array<any>,
- *   },
+  *   "single": {
+  *     "dvoice_db.json": [[string], DvoiceData][],
+  *     [k: string]: object | Array<any>,
+  *   },
+
  *   "guild": {
  *     "database.json": GuildDatabase,
  *     [k: string]: object | Array<any>,
@@ -272,14 +266,11 @@ const DEFAULT_VALUES = {
         "bake_db.json": [],
         "smelt_db.json": [],
     },
-    "single": {
-        "serverIP.json": {
-            IP: DEFAULT_IP,
-            PORT: DEFAULT_PORT,
-        },
-        "music.json": {},
-        "dvoice_db.json": [],
-    },
+     "single": {
+         "music.json": {},
+         "dvoice_db.json": [],
+     },
+
     "guild": {
         "database.json": {
             "rpg": true,
@@ -296,18 +287,6 @@ const DEFAULT_VALUES = {
     },
 };
 
-const onlineDB_Files = [
-    "database.json",
-    "rpg_database.json",
-    "rpg_shop.json",
-    "bake_db.json",
-    "smelt_db.json",
-    "dvoice_db.json",
-    "rpg_farm.json",
-    "music.json",
-];
-
-// Database order
 const priorityUserIDs = ["898836485397180426", "1245902419750289538"];
 const priorityGuildIDs = ["1422545977226690683", "1218367644307034112"];
 
@@ -327,7 +306,6 @@ const bake_data_file = join(database_folder, "bake_db.json");
 const smelt_data_file = join(database_folder, "smelt_db.json");
 const dvoice_data_file = join(database_folder, "dvoice_db.json");
 const music_status_file = join(database_folder, "music.json")
-const serverIPFile = join(database_folder, "serverIP.json");
 const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
 
 // Logger
@@ -678,15 +656,12 @@ const PrivacySettings = Object.freeze({
 export {
     RPGDatabase,
 
-    DEFAULT_IP,
-    DEFAULT_PORT,
 
     INDENT,
     database_folder,
 
     DATABASE_FILES,
     DEFAULT_VALUES,
-    onlineDB_Files,
 
     priorityUserIDs,
     priorityGuildIDs,
@@ -699,7 +674,6 @@ export {
     smelt_data_file,
     dvoice_data_file,
     music_status_file,
-    serverIPFile,
 
     cogsFolder,
     musicFileFolder,

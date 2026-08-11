@@ -1,23 +1,17 @@
 import path from "path";
 import util from "util";
-import axios from "axios";
 import fs from "fs";
 import fsp from "fs/promises";
 import {
     Logger,
 } from "winston";
 import {
-    AxiosError,
-} from "axios";
-import {
     VoiceChannel,
 } from "discord.js";
 
 import {
-    getServerIPSync,
-} from "./getSeverIPSync.js";
-import {
     INDENT,
+
     DATABASE_FILES,
     DEFAULT_VALUES,
     database_folder,
@@ -331,84 +325,6 @@ function join_db_folder(filename) {
  * @param {number} maxRetries
  * @returns {Promise<[same: boolean, localContent: string | null, remoteContent: string | null]>}
  */
-async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
-    let localContent = null;
-    let remoteContent = null;
-
-    const basename_filename = path.basename(filename);
-    const local_filepath = join_db_folder(basename_filename);
-
-    // 獲取遠端伺服器地址
-    const { IP: serverIP, PORT } = global._client?.serverIP || getServerIPSync();
-    const SERVER_URL = `http://${serverIP}:${PORT}`;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        // 讀取本地檔案
-        try {
-            if (await exists(local_filepath)) {
-                localContent = await readFile(local_filepath, {
-                    encoding: "utf-8",
-                    return: null,
-                });
-
-                // 嘗試解析並格式化 JSON 以便比較
-                try {
-                    localContent = stringify(safeJSONParse(localContent));
-                } catch (e) {
-                    // 不是 JSON 格式，保持原樣
-                };
-            } else {
-                localContent = null;
-            }
-        } catch (err) {
-            if (err instanceof Error) log.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
-            localContent = null;
-        };
-
-        // 從遠端伺服器獲取檔案
-        try {
-            const url = `${SERVER_URL}/files/${basename_filename}`;
-
-            let response;
-
-            const resp = global.preloadResponse.get(url);
-            if (resp) {
-                response = resp;
-            };
-
-            if (!response?.data) {
-                response = await axios.get(url);
-            };
-
-            remoteContent = stringify(response.data);
-        } catch (err) {
-            if (err instanceof AxiosError && err.response?.status === 404) {
-                log.warn(`遠端檔案不存在: ${basename_filename}`);
-                remoteContent = null;
-            } else if (err instanceof AxiosError && (err.code === "ECONNRESET" || err.message?.includes("socket hang up"))) {
-                if (attempt < maxRetries) {
-                    log.warn(`連接遠端伺服器時中斷，正在重試 (${attempt}/${maxRetries})...`);
-                    await asleep(1000);
-                    continue;
-                } else {
-                    if (err instanceof Error) log.error(`獲取遠端檔案內容時遇到錯誤: ${err.message}`);
-                    remoteContent = null;
-                };
-            } else {
-                if (err instanceof Error) log.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
-                remoteContent = null;
-            };
-        };
-
-        break;
-    };
-
-    // 比較內容
-    const same = !!(localContent && remoteContent && util.isDeepStrictEqual(localContent, remoteContent));
-
-    return [same, localContent, remoteContent];
-};
-
 /**
  *
  * @param {string} filename
@@ -1016,7 +932,6 @@ export {
     // tools
     join_folder,
     join_db_folder,
-    compareLocalRemote,
     find_default_value,
     get_probability_of_id,
     order_data,

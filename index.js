@@ -13,13 +13,11 @@ import { loadslashcmd } from "./utils/loadslashcmd.js";
 import { safeshutdown } from "./utils/safeshutdown.js";
 import { hot_reload_cogs } from "./utils/hot_reload.js";
 import { check_language_keys } from "./utils/language.js";
-import { getServerIPSync } from "./utils/getSeverIPSync.js";
 import { should_register_cmd } from "./utils/auto_register.js";
 import { check_help_rpg_info } from "./cogs/rpg/interactions.js";
 import { saveAllMusicStates } from "./utils/music/persistence.js";
 import { getQueues, IsFFprobeInstalled } from "./utils/music/music.js";
 import { checkDBFilesExists, checkDBFilesCorrupted } from "./utils/check_db_files.js";
-import { checkAllDatabaseFilesContent, uploadAllDatabaseFiles } from "./utils/onlineDB.js";
 import DogClient from "./utils/customs/client.js";
 import get_areadline from "./utils/readline.js";
 
@@ -136,7 +134,6 @@ client.once(Events.ClientReady, async () => {
             }
 
             case "uploadall": {
-                await uploadAllDatabaseFiles();
                 logger.info(`done uploading all database files`)
 
                 break;
@@ -219,7 +216,6 @@ client.once(Events.ClientReady, async () => {
     global._client = null;
     global._areadline = null;
     global.sendQueue = [];
-    global.preloadResponse = new Collection();
 
     const [_, ffprobeInstalled] = await Promise.all([
         checkDBFilesCorrupted(),
@@ -230,14 +226,10 @@ client.once(Events.ClientReady, async () => {
         logger.warn(`如果FFprobe沒有安裝，那麼將無法偵測音樂功能中，播放自定義URL的音訊長度`);
     };
 
-    if (!debug) await checkAllDatabaseFilesContent();
-
     check_help_rpg_info();
     check_language_keys();
     check_item_data();
     await checkDBFilesExists();
-
-    client.serverIP = getServerIPSync();
 
     const cogs = await load_cogs(client);
     logger.info(`✅ Loaded ${cogs} cogs`);

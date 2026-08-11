@@ -116,8 +116,6 @@ export default class DogClient extends Client {
         /** @type {Collection<string, number>} */
         this.counting_warning_cooldown = new Collection();
 
-        /** @type {{ IP: string, PORT: number }} */
-        this.serverIP = { IP: "192.168.0.156", "PORT": 3003 };
 
         /** @type {string} */
         this.name = BotName; // will be set when the client is ready and BotName is not set
