@@ -2,8 +2,8 @@ import "./utils/check.env.js"; // check .env file
 import { inspect } from "util";
 import { loadEnvFile } from "node:process";
 
+import { Events } from "discord.js";
 import { get_logger } from "./utils/logger.js";
-import { Events, Collection } from "discord.js";
 import { load_cogs } from "./utils/load_cogs.js";
 import { check_item_data } from "./utils/rpg.js";
 import { registcmd } from "./register_commands.js";
@@ -13,7 +13,9 @@ import { loadslashcmd } from "./utils/loadslashcmd.js";
 import { safeshutdown } from "./utils/safeshutdown.js";
 import { hot_reload_cogs } from "./utils/hot_reload.js";
 import { check_language_keys } from "./utils/language.js";
+import { create_tables } from "./utils/db/create_tables.js";
 import { should_register_cmd } from "./utils/auto_register.js";
+import { update_items } from "./utils/db/update_items_table.js";
 import { check_help_rpg_info } from "./cogs/rpg/interactions.js";
 import { saveAllMusicStates } from "./utils/music/persistence.js";
 import { getQueues, IsFFprobeInstalled } from "./utils/music/music.js";
@@ -26,6 +28,7 @@ loadEnvFile(); // load .env file
 const args = process.argv.slice(2);
 const debug = args.includes("--debug");
 const isBeta = args.includes("--beta");
+const noCache = args.includes("--no-cache");
 
 global.debug = debug;
 global.isBeta = isBeta;
@@ -217,7 +220,9 @@ client.once(Events.ClientReady, async () => {
     global._areadline = null;
     global.sendQueue = [];
 
-    const [_, ffprobeInstalled] = await Promise.all([
+    await create_tables(noCache);
+    const [_, __, ffprobeInstalled] = await Promise.all([
+        update_items(),
         checkDBFilesCorrupted(),
         IsFFprobeInstalled(),
     ]);

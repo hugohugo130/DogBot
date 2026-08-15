@@ -1,11 +1,15 @@
-import { importModules } from "../customs/custom_import.js";
 import { connectPool } from "./db.js";
+import { get_logger } from "../logger.js";
+import { importModules } from "../customs/custom_import.js";
 
 export async function update_items(cache = true) {
-    const { name, tags } = await importModules("../rpg.js", cache);
+    const logger = get_logger();
+    logger.info("正在檢查並更新items表");
+
+    const { name, tags } = /** @type {import("../rpg.js")} */ (await importModules("../rpg.js", cache));
 
     const currentIds = Object.keys(name)
-        .filter(e => !(e in tags)); // 排除 tags
+        .filter(e => !(e.includes("#"))); // 排除 tags
 
     const currentIdSet = new Set(currentIds);
 
@@ -15,7 +19,7 @@ export async function update_items(cache = true) {
         await client.begin();
 
         // 從資料庫抓取所有item_id
-        const { rows: dbRows } = /** @type {{rows: {item_id: string}[]}} */ (await client.get(["item_id"]));
+        const dbRows = /** @type { {item_id: string}[] }} */ (await client.get(["item_id"]));
 
         const dbIds = dbRows.map(row => String(row.item_id));
         const dbIdSet = new Set(dbIds);
@@ -31,18 +35,20 @@ export async function update_items(cache = true) {
                 return `($${i + 1})`;
             }).join(', ');
 
+            const command = `INSERT INTO items (item_id) VALUES ${placeholders} ON CONFLICT (item_id) DO NOTHING`;
             await client.query(
-                `INSERT INTO items (item_id) VALUES ${placeholders} ON CONFLICT (item_id) DO NOTHING`,
-                flatParams
+                command,
+                flatParams,
             );
         };
 
         // 4. 需要 DELETE 的：資料庫有 & 目前沒有
         const toDelete = dbIds.filter(id => !currentIdSet.has(id));
         if (toDelete.length > 0) {
+            const command = 'DELETE FROM items WHERE item_id = ANY($1::text[])'; // 使用 ::text[] 來取得 text 類型的 item_id
             await client.query(
-                'DELETE FROM items WHERE item_id = ANY($1::text[])',  // 使用 ::text[] 來取得 text 類型的 item_id
-                [toDelete]
+                command,
+                [toDelete],
             );
         };
 
@@ -53,4 +59,6 @@ export async function update_items(cache = true) {
     } finally {
         client.release();
     };
+
+    logger.info("已成功檢查並更新items表");
 };
