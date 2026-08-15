@@ -9,7 +9,7 @@ import { getCallerModuleName } from "../logger.js";
  */
 export async function importModules(module, cache = true) {
     if (!(URL.canParse(module) && new URL(module).protocol === 'file:')) {
-        let caller_path = getCallerModuleName()
+        let caller_path = getCallerModuleName("url", [import.meta.url])
             .split('?expire')[0];
 
         try {

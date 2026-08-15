@@ -2,6 +2,9 @@ import path from "path";
 import Transport from "winston-transport";
 import winston from "winston";
 import {
+    pathToFileURL,
+} from "node:url";
+import {
     EmbedBuilder as djsEmbedBuilder,
     MessageFlags,
     Embed,
@@ -213,29 +216,85 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
 };
 
 /**
+ * 取得呼叫者檔案資訊
+ * @param {string[]} [skipURLs=[]] 額外要跳過的檔案 URL（例如 importModules 所在的檔案）
+ * @returns {[string, string] | [null, null]} [檔案名稱, file:// URL]
+ */
+function getCallerFile(skipURLs = []) {
+    /** @type {[null, null]} */
+    const no_result = [null, null];
+
+    // #region [method 1]
+
+    const originalPrepareStackTrace = Error.prepareStackTrace;
+
+    try {
+        Error.prepareStackTrace = (err, stack) => stack; // Override to get stack frames
+
+        const err = new Error();
+        const stack = /** @type {NodeJS.CallSite[]} */ (/** @type {unknown} */ (err.stack));
+
+        if (!stack) return no_result;
+
+        const currentFileURL = import.meta.url;
+        const skipSet = new Set([currentFileURL, ...skipURLs]);
+
+        for (const callSite of stack) {
+            const fileName = callSite.getFileName();
+            if (!fileName) continue;
+
+            const fileURL = fileName.startsWith("file://")
+                ? fileName
+                : pathToFileURL(fileName).href;
+
+            if (skipSet.has(fileURL)) continue;
+
+            // 第一個不同檔案即為呼叫者
+            const callerFileURL = decodeURIComponent(fileURL); // 處理中文等編碼
+            const fullPath = decodeURIComponent(new URL(callerFileURL).pathname);
+
+            // Windows 路徑需移除開頭多餘的 '/'
+            const normalizedPath = process.platform === 'win32'
+                ? fullPath.slice(1)
+                : fullPath;
+
+            const callerFileName = path.basename(normalizedPath, '.js');
+
+            return [callerFileName, callerFileURL];
+        };
+    } catch {
+    } finally {
+        Error.prepareStackTrace = originalPrepareStackTrace; // Restore original
+    };
+
+    // #endregion
+
+    return no_result;
+};
+
+/**
  * Get the module name of the caller (who calls this function)
  * @overload
- * @param {"list"} depth
+ * @param {"list"} mode
  * @returns {string[]}
  *
  * @overload
- * @param {number | null} [depth]
+ * @param {"full" | "url" | null} [mode=1]
+ * @param {string[]} [skipURLs=[]] 額外要跳過的檔案 URL
  * @returns {string}
  *
- * @overload
- * @param {number | null | "list"} [depth]
- * @returns {string | string[]}
- *
- * @param {number | null | "list"} [depth]
+ * @param {any | "list" | "full" | "url" | null} [mode=1]
+ * @param {string[]} [skipURLs=[]] 額外要跳過的檔案 URL
+ * @returns {any}
  */
-function getCallerModuleName(depth = 4) {
+export function getCallerModuleName(mode = 1, skipURLs = []) {
     const unknown_word = "unknown";
 
-    if (!depth) {
+    if (!mode) {
         return new Error().stack || unknown_word;
     };
 
-    if (depth === "list") {
+    if (mode === "list") {
         const err = new Error();
 
         const callers = [];
@@ -257,65 +316,23 @@ function getCallerModuleName(depth = 4) {
         return callers;
     };
 
-    // #region [method 1]
+    const [callerFile, callerFileURL] = getCallerFile(skipURLs);
 
-    const originalPrepareStackTrace = Error.prepareStackTrace;
-    let callerFile;
+    if (!callerFileURL) return callerFile;
 
-    try {
-        Error.prepareStackTrace = (err, stack) => stack; // Override to get stack frames
-
-        const err = new Error();
-
-        const stack = /** @type {NodeJS.CallSite[]} */ (/** @type {unknown} */ (err.stack));
-        Error.prepareStackTrace = originalPrepareStackTrace; // Restore original
-
-        if (!stack) return unknown_word;
-
-        const currentFile = stack.shift()?.getFileName();
-
-        while (stack.length) {
-            callerFile = stack.shift()?.getFileName();
-
-            if (currentFile !== callerFile) { // Find the first different file in the stack
-                break;
-            };
-        };
-
-        const fullPath = callerFile
-            ? decodeURIComponent(callerFile) // 支援中文檔案名稱
-            : callerFile;
-
-        return fullPath ? path.basename(fullPath, ".js") : unknown_word;
-    } catch {
-    } finally {
-        Error.prepareStackTrace = originalPrepareStackTrace; // Restore original
+    if (mode === "full") {
+        // 回傳完整路徑（去掉 file:// 前綴，轉為系統路徑）
+        const fullPath = decodeURIComponent(new URL(callerFileURL).pathname);
+        // Windows 路徑需要去除開頭的 '/'
+        return process.platform === 'win32' ? fullPath.slice(1) : fullPath;
     };
 
-    // #endregion
-
-    // #region [method 2]
-
-    try {
-        const err = new Error();
-
-        const stackLines = err.stack?.split("\n");
-        if (!stackLines) return unknown_word;
-
-        const callerLine = stackLines[depth] || stackLines[stackLines.length - 1];
-
-        const match = callerLine.match(/\((.*):\d+:\d+\)$/) ||
-            callerLine.match(/(.*):\d+:\d+$/);
-
-        if (match) {
-            const fullPath = match[1];
-            return fullPath ? path.basename(fullPath, ".js") : unknown_word;
-        };
-    } catch {
-        return unknown_word;
+    if (mode === "url") {
+        // 回傳完整的 file:// URL（含編碼）
+        return decodeURIComponent(callerFileURL);
     };
 
-    // #endregion
+    return callerFile;
 };
 
 /**
@@ -323,9 +340,9 @@ function getCallerModuleName(depth = 4) {
  * @param {{ name?: string, backend?: boolean, nodc?: boolean }} [options={}]
  * @returns {winston.Logger}
  */
-function get_logger(options = {}) {
+export function get_logger(options = {}) {
     let {
-        name = getCallerModuleName(4),
+        name = getCallerModuleName(),
         backend = false,
         nodc = false,
     } = options;
@@ -393,7 +410,7 @@ function get_logger(options = {}) {
  * 處理發送佇列
  * @param {DogClient} client
  */
-async function process_send_queue(client) {
+export async function process_send_queue(client) {
     const { default: EmbedBuilder } = await import(new URL("./customs/embedBuilder.js", import.meta.url).href);
 
     if (!Array.isArray(global.sendQueue)) {
@@ -465,7 +482,7 @@ async function process_send_queue(client) {
  * @param {number} [wait]
  * @returns {Promise<void>}
  */
-async function shutdown(quiet = false, wait = 1000) {
+export async function shutdown(quiet = false, wait = 1000) {
     for (const [name, logger] of loggerManager) {
         logger.end(() => {
             if (!quiet) console.log(`Logger ${name} closed`);
@@ -474,11 +491,4 @@ async function shutdown(quiet = false, wait = 1000) {
 
     // 等待所有傳輸完成
     await new Promise(resolve => setTimeout(resolve, wait));
-};
-
-export {
-    get_logger,
-    getCallerModuleName,
-    process_send_queue,
-    shutdown,
 };
