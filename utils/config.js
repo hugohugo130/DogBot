@@ -60,7 +60,7 @@ class RPGDatabase {
 
     /**
      * @param {any} obj
-     * @returns {boolean}
+     * @returns {obj is RPGDatabase}
      */
     static isRPGDatabase(obj) {
         return obj instanceof RPGDatabase;
