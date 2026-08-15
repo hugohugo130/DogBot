@@ -1,4 +1,4 @@
-export const TABLES = /** @type {const} */ (["items", "inventory"]);
+export const TABLES = /** @type {const} */ (["items", "inventory", "rpg_transactions"]);
 
 /**
  * @type {{ [k in typeof TABLES[number]]: { CREATE?: string } }}
@@ -33,6 +33,24 @@ export const TABLES_METADATA = {
                 CONSTRAINT inventory_item_id_fkey foreign KEY (item_id)
                     REFERENCES items (item_id) ON DELETE RESTRICT
             );
-            `
+            `,
     },
+    "rpg_transactions": {
+        "CREATE":
+            `
+            CREATE TABLE rpg_transactions (
+                id BIGSERIAL PRIMARY KEY,
+                timestamp TIMESTAMPTZ NOT NULL,
+                original_user BIGINT NOT NULL,
+                target_user BIGINT NOT NULL,
+                type TEXT NOT NULL,
+                -- amount NUMERIC(15, 4) NOT NULL
+                amount DOUBLE PRECISION NOT NULL
+            );
+
+            -- 建立索引以優化常見的查詢情境
+            CREATE INDEX idx_transactions_users ON rpg_transactions (original_user, target_user);
+            CREATE INDEX idx_transactions_timestamp ON rpg_transactions (timestamp DESC);
+            `,
+    }
 };
