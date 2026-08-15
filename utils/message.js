@@ -1,11 +1,13 @@
 import {
     Collection,
+    Guild,
     Message,
     User,
 } from "discord.js";
 
 import {
     get_user,
+    get_user_by_username,
 } from "./discord.js";
 
 /**
@@ -24,9 +26,10 @@ function isDigit(string) {
 /**
  * Get the users mentioned in a message
  * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} message
+ * @param {Guild | null} [guild=null]
  * @returns {Promise<Collection<string, User>>}
  */
-async function mentions_users(message) {
+async function mentions_users(message, guild = null) {
     if (!message.content) return new Collection();
 
     const userIDs = message.content.split(" ")
@@ -39,24 +42,33 @@ async function mentions_users(message) {
 
             return userID.trim();
         })
-        .filter(userID => isDigit(userID) && Boolean(userID));
+        .filter(userID => !!userID && (isDigit(userID) || /^[a-z0-9_.]+$/.test(userID)));
 
     /**
-     * @type {Promise<[string, User | null]>[]}
+     * @type {Promise<[string | null, User | null]>[]}
      */
     const promises = userIDs.map(
         /**
          * @param {string} userid
-         * @returns {Promise<[string, User | null]>}
+         * @returns {Promise<[string | null, User | null]>}
          */
-        async (userid) => [userid, await get_user(userid)],
+        async (userid) => {
+            const user = isDigit(userid)
+                ? await get_user(userid)
+                : await get_user_by_username(userid);
+
+            return [
+                user?.id ?? null,
+                user
+            ];
+        },
     );
 
     return (
         /** @type {Collection<string, User>} */
         (new Collection(
             (await Promise.all(promises))
-                .filter(([_, user]) => user !== null)
+                .filter(([key, user]) => key !== null && user !== null)
         ))
     );
 };

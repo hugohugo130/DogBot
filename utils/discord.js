@@ -54,12 +54,27 @@ export async function get_user(userID, client = global._client) {
     try {
         if (!client) client = await wait_for_client();
 
-        if (!userID) return null;
-
         return (
             client.users.cache.get(userID)
             || await client.users.fetch(userID)
         );
+    } catch {
+        return null;
+    };
+
+};
+
+/**
+ * Get user by its username
+ * @param {string} username
+ * @param {DogClient | null} [client]
+ * @returns {Promise<User | null>}
+ */
+export async function get_user_by_username(username, client = global._client) {
+    try {
+        if (!client) client = await wait_for_client();
+
+        return client.users.cache.find(u => u.username === username) ?? null;
     } catch {
         return null;
     };
