@@ -137,8 +137,6 @@ const _pool = new Pool({
     Client: PoolClient,
 }); // .env需填寫 DATABASE_URL
 
-export { _pool as pool };
-
 /**
  * @param {Pool} [pool]
  * @returns {Promise<PoolClient>}
@@ -146,4 +144,11 @@ export { _pool as pool };
 export async function connectPool(pool = _pool) {
     // @ts-expect-error - Pool 已經設定 Client 為 PoolClient
     return await pool.connect();
+};
+
+/**
+ * @returns {Pool}
+ */
+export function getPool() {
+    return _pool;
 };
