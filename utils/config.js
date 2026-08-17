@@ -32,7 +32,7 @@ class RPGDatabase {
     /** @type {string | null} */
     badge = null;
 
-    /** @type {import("./config.js").MarryInfo} */
+    /** @type {MarryInfo} */
     marry = {
         status: false,
         with: null,
@@ -44,7 +44,7 @@ class RPGDatabase {
     /** @type {{ [k: string]: number}} */
     inventory = {};
 
-    /** @type {import("./config.js").TransactionsInfo[]} */
+    /** @type {TransactionsInfo[]} */
     transactions = [];
     /** @type {{ [k: string]: number}} */
     count = {};
@@ -52,7 +52,7 @@ class RPGDatabase {
     privacy = [];
 
     /**
-     * @param {import("./config.js").RpgDatabase | RPGDatabase} data
+     * @param {RpgDatabase | RPGDatabase} data
      */
     constructor(data) {
         Object.assign(this, structuredClone(data));
@@ -80,7 +80,7 @@ class RPGDatabase {
     };
 
     /**
-     * @returns {import("./config.js").RpgDatabase}
+     * @returns {RpgDatabase}
      */
     toJSON() {
         return {
