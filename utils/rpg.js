@@ -1313,18 +1313,18 @@ async function get_failed_embed(failed_reason, rpg_data, interaction = null, cli
  * @param {Object} options - 選項
  * @param {RPGDatabase} options.rpg_data
  * @param {number} options.amount
- * @param {string} options.originalUser 來源用戶 (系統 或者 "<@id>")
- * @param {string} options.targetUser 目標用戶 (只能是 "<@id>")
+ * @param {string} options.original_user 來源用戶 (系統 或者 "<@id>")
+ * @param {string} options.target_user 目標用戶 (只能是 "<@id>")
  * @param {string} options.type 交易類型
  * @returns {number}
  */
-function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
+function add_money({ rpg_data, amount, original_user, target_user, type }) {
     if (!amount_limit(rpg_data.money) && !amount_limit(rpg_data.money + amount) && !amount_limit(amount)) {
         rpg_data.money += amount;
         rpg_data.transactions.push({
             timestamp: Math.floor(Date.now() / 1000),
-            originalUser,
-            targetUser,
+            original_user,
+            target_user,
             amount,
             type
         });
@@ -1338,18 +1338,18 @@ function add_money({ rpg_data, amount, originalUser, targetUser, type }) {
  * @param {Object} options - 選項
  * @param {RPGDatabase} options.rpg_data
  * @param {number} options.amount
- * @param {string} options.originalUser 來源用戶 (系統 或者 "<@id>")
- * @param {string} options.targetUser 目標用戶 (只能是 "<@id>")
+ * @param {string} options.original_user 來源用戶 (系統 或者 "<@id>")
+ * @param {string} options.target_user 目標用戶 (只能是 "<@id>")
  * @param {string} options.type 交易類型
  * @returns {number}
  */
-function remove_money({ rpg_data, amount, originalUser, targetUser, type }) {
+function remove_money({ rpg_data, amount, original_user, target_user, type }) {
     if (!amount_limit(rpg_data.money)) {
         rpg_data.money -= amount;
         rpg_data.transactions.push({
             timestamp: Math.floor(Date.now() / 1000),
-            originalUser,
-            targetUser,
+            original_user,
+            target_user,
             amount,
             type
         });

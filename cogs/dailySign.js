@@ -88,8 +88,8 @@ export async function sign(rpg_data, message, client = null) {
     rpg_data.money = add_money({
         rpg_data,
         amount,
-        originalUser: "系統",
-        targetUser: user.toString(),
+        original_user: "系統",
+        target_user: user.toString(),
         type: "每日簽到",
     });
 

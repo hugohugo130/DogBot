@@ -114,8 +114,8 @@ class RPGDatabase {
 /**
  * @typedef {Object} TransactionsInfo
  * @property {number} timestamp
- * @property {string} originalUser
- * @property {string} targetUser
+ * @property {string} original_user
+ * @property {string} target_user
  * @property {string} type
  * @property {number} amount
  */

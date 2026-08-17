@@ -139,8 +139,8 @@ async function show_transactions(userid) {
     */
     return transactions
         .slice(-10)
-        .map(({ timestamp, originalUser, targetUser, amount, type }) =>
-            `- <t:${timestamp}:R> ${originalUser} \`>\` ${targetUser} \`${amount?.toLocaleString()}$\` (${type})`
+        .map(({ timestamp, original_user, target_user, amount, type }) =>
+            `- <t:${timestamp}:R> ${original_user} \`>\` ${target_user} \`${amount?.toLocaleString()}$\` (${type})`
         ).join("\n");
 };
 
@@ -815,16 +815,16 @@ export async function execute(client, interaction) {
                 rpg_data.money = remove_money({
                     rpg_data,
                     amount: amount,
-                    originalUser: `<@${user.id}>`,
-                    targetUser: `<@${targetUserId}>`,
+                    original_user: `<@${user.id}>`,
+                    target_user: `<@${targetUserId}>`,
                     type: `付款給`,
                 });
 
                 target_user_rpg_data.money = add_money({
                     rpg_data: target_user_rpg_data,
                     amount: amount,
-                    originalUser: `<@${user.id}>`,
-                    targetUser: `<@${targetUserId}>`,
+                    original_user: `<@${user.id}>`,
+                    target_user: `<@${targetUserId}>`,
                     type: `付款給`,
                 });
 
@@ -1003,8 +1003,8 @@ export async function execute(client, interaction) {
                 rpg_data.money = add_money({
                     rpg_data,
                     amount: total_price,
-                    originalUser: "系統",
-                    targetUser: `<@${user.id}>`,
+                    original_user: "系統",
+                    target_user: `<@${user.id}>`,
                     type: "出售物品所得",
                 })
 
@@ -1116,8 +1116,8 @@ export async function execute(client, interaction) {
                 buyerRPGData.money = remove_money({
                     rpg_data: buyerRPGData,
                     amount: total_price,
-                    originalUser: `<@${buyerUserId}>`,
-                    targetUser: `<@${targetUserId}>`,
+                    original_user: `<@${buyerUserId}>`,
+                    target_user: `<@${targetUserId}>`,
                     type: `購買物品付款`,
                 });
 
@@ -1126,8 +1126,8 @@ export async function execute(client, interaction) {
                 targetUserRPGData.money = add_money({
                     rpg_data: targetUserRPGData,
                     amount: total_price,
-                    originalUser: `<@${buyerUserId}>`,
-                    targetUser: `<@${targetUserId}>`,
+                    original_user: `<@${buyerUserId}>`,
+                    target_user: `<@${targetUserId}>`,
                     type: `購買物品付款`,
                 });
 
