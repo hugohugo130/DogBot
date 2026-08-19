@@ -48,7 +48,7 @@ class RPGDatabase {
     transactions = [];
     /** @type {{ [k: string]: number}} */
     count = {};
-    /** @type {string[]} */
+    /** @type {(PrivacySettings[keyof PrivacySettings])[]} */
     privacy = [];
 
     /**
