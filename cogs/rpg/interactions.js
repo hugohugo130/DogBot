@@ -879,10 +879,11 @@ export async function execute(client, interaction) {
                     get_emojis(["shield", "bag", "pet"], client),
                 ]);
 
-                const privacy = interaction.values;
+                const privacy = /** @type {(PrivacySettings[keyof PrivacySettings])[]} */
+                    (interaction.values // @ts-ignore
+                        .filter(e => Object.values(PrivacySettings).includes(e)));
 
-                rpg_data.privacy = privacy;
-                rpg_data.privacy.sort((a, b) => {
+                privacy.sort((a, b) => {
                     /** @type {{[key: string]: number}} */
                     const order = {
                         [PrivacySettings.Money]: 0,
@@ -892,6 +893,8 @@ export async function execute(client, interaction) {
 
                     return order[a] - order[b];
                 });
+
+                rpg_data.privacy = privacy;
 
                 await save_rpg_data(user.id, rpg_data);
 
