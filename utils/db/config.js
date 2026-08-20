@@ -5,7 +5,7 @@ export const TABLES = /** @type {const} */ ([
     "rpg_transactions",
     "rpg_cooldowns",
     "rpg_user_counts",
-    "rpg_user_privacy"
+    "rpg_user_privacy",
 ]);
 
 /**
@@ -79,17 +79,16 @@ export const TABLES_METADATA = {
             `
             CREATE TABLE rpg_transactions (
                 id BIGSERIAL PRIMARY KEY,
-                timestamp TIMESTAMPTZ NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL,
                 original_user TEXT NOT NULL,
                 target_user TEXT NOT NULL,
                 type TEXT NOT NULL,
-                -- amount NUMERIC(15, 4) NOT NULL
-                amount DOUBLE PRECISION NOT NULL
+                amount NUMERIC(15) NOT NULL
             );
 
             -- 建立索引以優化常見的查詢情境
             CREATE INDEX idx_transactions_users ON rpg_transactions (original_user, target_user);
-            CREATE INDEX idx_transactions_timestamp ON rpg_transactions (timestamp DESC);
+            CREATE INDEX idx_transactions_timestamp ON rpg_transactions (created_at DESC);
             `,
     },
     "rpg_cooldowns": {
