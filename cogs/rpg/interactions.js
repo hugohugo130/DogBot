@@ -118,6 +118,9 @@ import {
 import {
     wait_for_client,
 } from "../../utils/wait_for_client.js";
+import {
+    load_transactions,
+} from "../../utils/db/rpg.js";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
 
@@ -129,7 +132,8 @@ const logger = get_logger();
  * @returns {Promise<string>}
  */
 async function show_transactions(userid) {
-    const { transactions = [] } = await load_rpg_data(userid);
+    // const { transactions = [] } = await load_rpg_data(userid);
+    const transactions = await load_transactions(userid);
 
     /* transactions 列表中的每個字典應該包含:
     timestamp: 時間戳記 (Unix timestamp) 單位: 秒
