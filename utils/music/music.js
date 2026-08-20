@@ -658,6 +658,8 @@ class MusicQueue {
                 this.addTrack(track, 0); // 把 意外地再次播放了可能不同的曲目 放進佇列的開頭
             };
 
+            this.play_lock = true;
+
             if (DEBUG) this.debug(`has connection: ${!!this.connection}`);
             if (DEBUG) this.debug(`has voiceChannel: ${!!this.voiceChannel}`);
 
