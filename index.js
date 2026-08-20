@@ -65,7 +65,7 @@ process.on("uncaughtException", (error) => {
     if (errorStack.includes("Missing Access")) return;
     if (errorStack.includes("Missing Permissions")) return;
     if (errorStack.includes("Unknown interaction")) return;
-    if (/^Error: getaddrinfo ENOTFOUND c-.+.discord.media$/.test(errorStack)) {
+    if (/^Error: getaddrinfo ENOTFOUND c-[0-9a-z\-]+\.discord\.media$/.test(errorStack)) {
         return logger.warn("臭臭的Discord又開始斷線了");
     };
 
