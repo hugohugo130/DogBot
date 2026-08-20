@@ -129,6 +129,7 @@ export class PoolClient extends PGClient {
      */
     release(err) {
         // Pool 會自動注入代碼
+        throw new Error("not injected? WHY! TELL ME WHY!");
     };
 };
 
