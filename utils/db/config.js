@@ -97,6 +97,8 @@ export const TABLES_METADATA = {
                 user_id BIGINT NOT NULL,
                 cooldown_key TEXT NOT NULL,
                 last_run_at TIMESTAMPTZ NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
                 CONSTRAINT rpg_cooldowns_pkey PRIMARY KEY (user_id, cooldown_key),
                 CONSTRAINT rpg_cooldowns_user_id_fkey FOREIGN KEY (user_id)
@@ -110,6 +112,8 @@ export const TABLES_METADATA = {
                 user_id BIGINT NOT NULL,
                 count_key TEXT NOT NULL,
                 count_value INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
                 CONSTRAINT rpg_user_counts_pkey PRIMARY KEY (user_id, count_key),
                 CONSTRAINT rpg_user_counts_user_id_fkey FOREIGN KEY (user_id)
@@ -123,6 +127,8 @@ export const TABLES_METADATA = {
             CREATE TABLE rpg_user_privacy (
                 user_id BIGINT NOT NULL,
                 privacy_key TEXT NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
                 CONSTRAINT rpg_user_privacy_pkey PRIMARY KEY (user_id, privacy_key),
                 CONSTRAINT rpg_user_privacy_user_id_fkey FOREIGN KEY (user_id)
