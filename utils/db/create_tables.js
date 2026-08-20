@@ -25,8 +25,8 @@ export async function create_tables(cache = true) {
             // 上面檢查的時候已經有begin過了
             // await client.begin();
 
+            logger.info(`創建資料庫表: ${table_name}`);
             await client.query(command);
-            logger.info(`已創建資料庫表: ${table_name}`);
         } catch (err) {
             await client.rollback();
             throw err;
