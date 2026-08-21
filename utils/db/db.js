@@ -128,6 +128,7 @@ export class PoolClient extends PGClient {
      * @param {Error | boolean} [err]
      */
     release(err) {
+        // 避免 Typescript 不知道 PoolClient 其實有 release() method
         // Pool 會自動注入代碼
         throw new Error("not injected? WHY! TELL ME WHY!");
     };
