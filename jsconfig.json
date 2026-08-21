@@ -2,6 +2,7 @@
     "compilerOptions": {
         "checkJs": true,
         "allowJs": true,
+        "allowImportingTsExtensions": true,
         "strictNullChecks": true,
         "strictFunctionTypes": true,
         "skipLibCheck": true,
