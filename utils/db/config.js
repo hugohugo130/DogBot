@@ -22,8 +22,7 @@ export const TABLES_METADATA = {
                 CONSTRAINT item_pkey primary key (item_id),
                 -- 限制只能有小寫字母和底線，且長度在 1 到 100 個字元之間
                 CONSTRAINT chk_item_id_format
-                    CHECK (item_id ~ '^[a-z_]+$' AND length(item_id) <= 100),
-                )
+                    CHECK (item_id ~ '^[a-z_]+$' AND length(item_id) <= 100)
             );
             `,
     },
@@ -31,9 +30,9 @@ export const TABLES_METADATA = {
         "CREATE": `
             CREATE TABLE rpg_users (
                 user_id BIGINT NOT NULL,
-                money BIGINT NOT NULL DEFAULT 0,
-                hunger SMALLINT NOT NULL DEFAULT 0,
-                daily TIMESTAMPTZ NULL,
+                money BIGINT NOT NULL DEFAULT 1000,
+                hunger SMALLINT NOT NULL DEFAULT 20,
+                daily TIMESTAMPTZ NULL DEFAULT to_timestamp(0),
                 daily_times SMALLINT NOT NULL DEFAULT 0,
                 daily_msg BOOLEAN NOT NULL DEFAULT false,
                 job TEXT NULL,
@@ -83,7 +82,7 @@ export const TABLES_METADATA = {
                 original_user TEXT NOT NULL,
                 target_user TEXT NOT NULL,
                 type TEXT NOT NULL,
-                amount NUMERIC(15) NOT NULL
+                amount BIGINT NOT NULL
             );
 
             -- 建立索引以優化常見的查詢情境
