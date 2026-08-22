@@ -107,7 +107,7 @@ export class PoolClient extends PGClient {
 
     /**
      * @param {string[] | string} columns
-     * @returns {Promise<any>}
+     * @returns {Promise<any[]>}
      */
     async get(columns = "*") {
         this.#check_table_name();
