@@ -141,6 +141,7 @@ db_old/
 ai_update/
 .bailurules/
 database_recovery/
+eslint.config.mjs
 PROJECT_STRUCTURE.md
 auto_register.cmd.data
 circular-dependencies-report.json
