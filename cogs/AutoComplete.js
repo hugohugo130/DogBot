@@ -11,8 +11,9 @@ import {
     recipes,
 } from "../utils/rpg.js";
 import {
+    load_inventory,
     load_rpg_data,
-} from "../utils/file.js";
+} from "../utils/db/rpg.js";
 import DogClient from "../utils/customs/client.js";
 
 const smeltable_items = smeltable_recipe.reduce((acc, item) => {
@@ -78,7 +79,9 @@ export async function execute(client, interaction) {
                 { name: wrong_job.data.title ?? "", value: "nothing" }
             ]);
 
-            const choices = Object.keys(rpg_data.inventory)
+            const inventory = await load_inventory(userid);
+
+            const choices = inventory.keys().toArray()
                 .filter(item => item in bake
                     && (
                         item.startsWith(focusedValue)
@@ -100,7 +103,10 @@ export async function execute(client, interaction) {
             if (wrong_job) return await interaction.respond([
                 { name: wrong_job.data.title ?? "", value: "nothing" }
             ]);
-            const choices = Object.keys(rpg_data.inventory)
+
+            const inventory = await load_inventory(userid);
+
+            const choices = Object.keys(inventory)
                 .filter(item => item in smeltable_items
                     && (
                         item.startsWith(focusedValue)
@@ -133,9 +139,11 @@ export async function execute(client, interaction) {
                 { name: wrong_job.data.title ?? "", value: "nothing" },
             ]);
 
+            const inventory = await load_inventory(userid);
+
             const choices = Object.entries(cookable_items)
                 .filter(([output, data]) => {
-                    const itemsInInventory = Object.keys(rpg_data.inventory);
+                    const itemsInInventory = Object.keys(inventory);
                     const requiredItems = data.input.map(data => data.name);
                     const hasAllRequiredItems = requiredItems.every(item => itemsInInventory.includes(item));
                     return hasAllRequiredItems && (output.startsWith(focusedValue) || get_name_of_id(output).startsWith(focusedValue));
