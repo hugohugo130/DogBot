@@ -1,6 +1,6 @@
 import { RPGDatabase } from "../config.js";
 import { connectPool, getPool } from "./db.js";
-import { RPGData } from "./tables.ts";
+import { RPGData, RPGInventory } from "./tables.ts";
 
 /** @import { TransactionsInfo } from '../config.js' */
 
@@ -129,7 +129,7 @@ export async function save_rpg_data(userid, rpg_data) {
 /**
  * 從 SQL 資料庫中 讀取 RPG 揹包資料
  * @param {string} userid
- * @returns {Promise<RPGDatabase['inventory']>}
+ * @returns {Promise<RPGInventory>}
  */
 export async function load_inventory(userid) {
     const table_name = /** @type {const} */ "inventory";
@@ -146,16 +146,18 @@ export async function load_inventory(userid) {
         [userid],
     ));
 
-    return rows.reduce((acc, row) => {
+    const data = rows.reduce((acc, row) => {
         acc[row.item_id] = Number(row.amount); // 預設返回字符串
         return acc;
     }, /** @type {{ [k: string]: number }} */({}));
+
+    return new RPGInventory(data);
 };
 
 /**
  * 保存 RPG 揹包資料 到 SQL 資料庫
  * @param {string} userid
- * @param {RPGDatabase['inventory']} inventory
+ * @param {RPGInventory} inventory
  * @returns {Promise<void>}
  */
 export async function save_inventory(userid, inventory) {
@@ -171,7 +173,7 @@ export async function save_inventory(userid, inventory) {
             updated_at = NOW();
     `;
 
-    const entries = Object.entries(inventory);
+    const entries = Object.entries(inventory.toObject());
 
     if (!entries.length) return;
 
@@ -211,7 +213,7 @@ export async function load_transactions(userid, amount = 10) {
     `;
 
     const pool = getPool();
-    const { rows } = /** @type {{ rows: import("./tables").RPGTransactions[] }} */ (await pool.query(
+    const { rows } = /** @type {{ rows: import("./tables").RPGTransactionsSQLRow[] }} */ (await pool.query(
         command,
         [userid],
     ));
@@ -273,10 +275,10 @@ export async function load_cooldown(userid, cooldown_key) {
     `;
 
     const pool = getPool();
-    const { rows } = await pool.query(
+    const { rows } = /** @type {{ rows: import("./tables").RPGCooldownsSQLRow[]} } */ (await pool.query(
         command,
         [userid, cooldown_key],
-    );
+    ));
 
     return rows.length ? rows[0].last_run_at : null;
 };
@@ -288,7 +290,7 @@ export async function load_cooldown(userid, cooldown_key) {
  * @param {Date} last_run_at
  * @returns {Promise<void>}
  */
-export async function save_cooldown(userid, cooldown_key, last_run_at) {
+export async function set_cooldown(userid, cooldown_key, last_run_at) {
     const table_name = /** @type {const} */ "rpg_cooldowns";
 
     const command = `
@@ -310,6 +312,30 @@ export async function save_cooldown(userid, cooldown_key, last_run_at) {
 // #region [rpg_user_counts]
 
 /**
+ * @param {string} count_key
+ * @param {string} userid
+ * @returns {Promise<number | null>}
+ */
+export async function get_count(count_key, userid) {
+    const table_name = /** @type {const} */ "rpg_user_counts";
+
+    const command = `
+        SELECT count_value
+        FROM ${table_name}
+        WHERE user_id = $1 AND count_key = $2
+        LIMIT 1
+    `;
+
+    const pool = getPool();
+    const { rows } = /** @type {{ rows: {count_value: number}[] }} */ (await pool.query(
+        command,
+        [userid, count_key],
+    ));
+
+    return rows[0]?.count_value ?? null;
+};
+
+/**
  * 讀取使用者的所有計數
  * @param {string} userid
  * @returns {Promise<Record<string, number>>}
@@ -324,10 +350,10 @@ export async function load_user_counts(userid) {
     `;
 
     const pool = getPool();
-    const { rows } = await pool.query(
+    const { rows } = /** @type {{ rows: import("./tables.ts").RPGUserCountsSQLRow[] }} */ (await pool.query(
         command,
         [userid],
-    );
+    ));
 
     return rows.reduce((acc, row) => {
         acc[row.count_key] = Number(row.count_value);
