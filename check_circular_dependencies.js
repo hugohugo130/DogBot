@@ -34,24 +34,28 @@ function extractRequires(filePath) {
             encoding: "utf-8",
         });
 
-        // 移除所有註解
-        let cleanContent = content
+        // 移除註解，但**保留**字串字面量（因為 import 的檔案路徑就寫在字串中）
+        const commentClean = content
             .replace(/\/\*[\s\S]*?\*\//g, '') // 移除多行註解
             .replace(/\/\/.*/g, ''); // 移除單行註解
 
-        // 移除所有字串字面量（避免誤判）
-        cleanContent = cleanContent.replace(/["'`](?:[^"'`\\]|\\.)*["'`]/g, '""');
-
         const requires = [];
 
-        // 提取所有靜態 import 語句（它們必須在頂層）
-        const importPattern = /import\s+(?:.+\s+from\s+)?['"](\.\.?\/[^'"]+)['"]/g;
+        // 提取所有靜態 import 的 `from "..."` 語句
+        // 涵蓋：`import { x } from "./foo.js"` 以及多行寫法的續行 `} from "./foo.js"`
+        const fromPattern = /\bfrom\s+['"](\.\.?\/[^'"]+)['"]/g;
         let match;
-        while ((match = importPattern.exec(cleanContent)) !== null) {
+        while ((match = fromPattern.exec(commentClean)) !== null) {
             requires.push(match[1]);
         }
 
-        const lines = content.split('\n');
+        // 提取裸 import 語句：`import "./foo.js"`
+        const bareImportPattern = /import\s+['"](\.\.?\/[^'"]+)['"]/g;
+        while ((match = bareImportPattern.exec(commentClean)) !== null) {
+            requires.push(match[1]);
+        }
+
+        const lines = commentClean.split('\n');
 
         let braceDepth = 0; // 追蹤大括號深度
         let parenDepth = 0; // 追蹤小括號深度
