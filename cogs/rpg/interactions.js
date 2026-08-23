@@ -84,6 +84,7 @@ import {
     cookClickAmount,
     embed_sign_color,
     fightjobs,
+    default_prefix,
 } from "../../utils/config.js";
 import {
     getQueueListEmbedRow,
@@ -653,7 +654,7 @@ export async function get_help_command(category, command_name, guildID = null, i
     if (!command_data) return null;
 
     if (!client) client = await wait_for_client();
-    const prefix = guildID ? await firstPrefix(guildID) : "&";
+    const prefix = guildID ? await firstPrefix(guildID) : default_prefix;
 
     /*
     Field name: 使用方法
@@ -670,11 +671,11 @@ export async function get_help_command(category, command_name, guildID = null, i
         ? command_data.usage.map((info, i) => {
             const value = info.value
                 .replace(/{author}/g, client.author)
-                .replace("&", prefix);
+                .replace(default_prefix, prefix);
 
             const name = info.name
                 .replace(/{author}/g, client.author)
-                .replace("&", prefix);
+                .replace(default_prefix, prefix);
 
             return `${i + 1}. ${name}\n\`\`\`${value}\`\`\``;
         }).join("\n")

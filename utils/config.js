@@ -159,10 +159,10 @@ const DEFAULT_VALUES = {
         "bake_db.json": [],
         "smelt_db.json": [],
     },
-     "single": {
-         "music.json": {},
-         "dvoice_db.json": [],
-     },
+    "single": {
+        "music.json": {},
+        "dvoice_db.json": [],
+    },
 
     "guild": {
         "database.json": {
@@ -223,6 +223,7 @@ const adminIDs = [ownerID];
 const rpg_lvlUp_per = 50;
 const setJobDelay = 604800 // 24 * 24 * 60 * 7 = 604800
 const max_hunger = 20;
+const default_prefix = "&";
 
 /** @type {string[]} */
 const cannot_sell = [];
@@ -590,6 +591,7 @@ export {
     rpg_lvlUp_per,
     setJobDelay,
     max_hunger,
+    default_prefix,
     cannot_sell,
 
     // counting

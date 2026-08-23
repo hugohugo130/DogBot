@@ -77,6 +77,7 @@ import {
     INVITE_LINK,
     daily_sign_guildIDs,
     fightjobs,
+    default_prefix,
 } from "../../utils/config.js";
 import {
     mentions_users,
@@ -2603,7 +2604,7 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
     let allowedPrefix;
 
     if (dm || !guildID) {
-        allowedPrefix = "&";
+        allowedPrefix = default_prefix;
         if (!content.startsWith(allowedPrefix)) return;
     } else {
         allowedPrefix = await startsWith_prefixes(guildID, content);
@@ -2902,7 +2903,7 @@ export async function execute(client, message) {
     const guildID = message.guild?.id ?? null;
 
     /** @type {string[]} */
-    let inpref = guildID ? [] : ["&"];
+    let inpref = guildID ? [] : [default_prefix];
 
     if (guildID) {
         let data;
