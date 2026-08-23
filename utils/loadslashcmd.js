@@ -5,6 +5,7 @@ import {
 } from "node:url";
 import {
     Collection,
+    ContextMenuCommandBuilder,
 } from "discord.js";
 
 import {
@@ -99,7 +100,7 @@ async function processDirectory(bot, dirPath) {
  *
  * @param {boolean} [bot=true] true返回collection, false返回array
  */
-async function loadslashcmd(bot = true) {
+export async function loadslashcmd(bot = true) {
     if (!bot) return await loadslashcmd_array();
 
     const commandsPath = path.join(process.cwd(), "slashcmd");
@@ -119,6 +120,25 @@ async function loadslashcmd_array() {
     return Array.from(commands);
 };
 
-export {
-    loadslashcmd,
+/**
+ * @returns {Promise<any[]>}
+ */
+export async function get_context_menus() {
+    const context_menus = [];
+    const dirpath = path.join(process.cwd(), "context_menus");
+
+    const context_menu_files = (await readdir(dirpath, {
+        encoding: "utf-8",
+        recursive: true,
+    })).filter(file => file.endsWith(".js"));
+
+    for (const file of context_menu_files) {
+        const data = await import(pathToFileURL(path.join(dirpath, file)).href);
+
+        const context_menu = data?.default;
+
+        if (context_menu instanceof ContextMenuCommandBuilder) context_menus.push(context_menu.toJSON());
+    };
+
+    return context_menus;
 };

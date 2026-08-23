@@ -13,6 +13,7 @@ import {
     BotID,
 } from "./utils/config.js";
 import {
+    get_context_menus,
     loadslashcmd,
 } from "./utils/loadslashcmd.js";
 import {
@@ -68,18 +69,18 @@ async function registcmd(quiet = true, logger = false, updateHash = true, beta =
 
     if (logger === true) logger = get_logger();
 
-    const commands = Array.from(await loadslashcmd(false));
+    const commands = [...Array.from(await loadslashcmd(false)), ...await get_context_menus()];
     const rest = new REST().setToken(process.env[token_key]);
 
     try {
-        if (!quiet) log(logger, `正在註冊 ${commands.length} 個斜線指令...`);
+        if (!quiet) log(logger, `正在註冊 ${commands.length} 個斜線指令和右鍵選單...`);
 
         const data = await rest.put(
             Routes.applicationCommands(botID),
             { body: commands },
         );
 
-        if (!quiet) log(logger, `已註冊 ${Array.isArray(data) ? data.length : null} 個斜線指令!`);
+        if (!quiet) log(logger, `已註冊 ${Array.isArray(data) ? data.length : null} 個斜線指令和右鍵選單!`);
 
         // 註冊成功後更新 hash 文件
         if (updateHash) {
@@ -108,7 +109,7 @@ if (import.meta.main) { // 等於 (require.main === module)
 
         if (res || force) {
             try {
-                await registcmd(quiet, false, true); // 註冊成功後自動更新 hash
+                await registcmd(quiet, false); // 註冊成功後自動更新 hash
                 console.log("命令註冊完成！");
             } catch (error) {
                 console.error(`命令註冊失敗，hash 文件未更新\n${util.inspect(error, { depth: null })}`);
