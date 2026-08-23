@@ -163,18 +163,22 @@ export async function save_inventory(userid, inventory) {
     const table_name = /** @type {const} */ "inventory";
 
     const command = `
+        WITH deleted AS (
+            DELETE FROM ${table_name}
+            WHERE user_id = $1::bigint
+                AND item_id != ALL($2::text[])
+        )
         INSERT INTO ${table_name} (user_id, item_id, amount)
         SELECT $1::bigint, item_id, amount
         FROM UNNEST($2::text[], $3::bigint[]) AS t(item_id, amount)
         ON CONFLICT (user_id, item_id)
-        DO UPDATE SET
-            amount = EXCLUDED.amount,
-            updated_at = NOW();
+            DO UPDATE SET amount = EXCLUDED.amount
     `;
 
-    const entries = Object.entries(inventory.toObject());
-
-    if (!entries.length) return;
+    const entries = inventory
+        .entries()
+        .toArray()
+        .filter(([, amount]) => amount > 0); // 不保存數量為 0 的物品
 
     // 拆分成兩個平行陣列
     const item_ids = entries.map(([item_id, _]) => item_id);

@@ -24,7 +24,6 @@ import {
     load_inventory,
     save_inventory,
     load_rpg_data,
-    save_rpg_data,
 } from "../../../utils/db/rpg.js";
 import {
     generateSessionId,
@@ -106,7 +105,7 @@ export async function getCookingResultContainer(output_food, amount, client = gl
 
     const food_name = get_name_of_id(output_food);
 
-    // 创建显示内容
+    // 創建顯示內容
     const fill_hunger = food_data[output_food];
 
     const container = new ContainerBuilder()

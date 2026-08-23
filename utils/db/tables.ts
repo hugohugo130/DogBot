@@ -79,6 +79,12 @@ export type RPGUserPrivacySQLRow = (BaseData & {
 
 // #endregion [SQL returned data]
 
+function assertValidAmount(amount: number): void {
+    if (!Number.isSafeInteger(amount) || amount <= 0) {
+        throw new Error("Amount must be a positive safe integer");
+    };
+};
+
 type MarryInfo = import("../config.js").MarryInfo;
 
 export type RPGUserData = Omit<RPGUsers, "user_id">;
@@ -183,19 +189,29 @@ export class RPGInventory extends Collection<string, number> {
 
         if (data instanceof RPGInventory) {
             for (const [key, value] of data) {
+                if (value === 0) continue;
+                if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
+                    throw new Error("Amount must be a positive safe integer");
+                };
                 this.set(key, value);
             };
         } else if (data) {
             for (const [key, value] of Object.entries(data)) {
+                if (value === 0) continue;
+                if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
+                    throw new Error("Amount must be a positive safe integer");
+                };
                 this.set(key, value);
             };
         };
     };
 
     add_item(item: string, amount: number) {
-        item = get_id_of_name(item);
+        assertValidAmount(amount);
 
-        if (!get_name_of_id(item, null)) {
+        const item_id = get_id_of_name(item);
+
+        if (!get_name_of_id(item_id, null)) {
             throw new Error("Item not found");
         };
 
@@ -203,18 +219,20 @@ export class RPGInventory extends Collection<string, number> {
             throw new Error("Amount must be non-negative");
         };
 
-        const current = this.get(item) ?? 0;
-        this.set(item, current + amount);
+        const current = this.get(item_id) ?? 0;
+        this.set(item_id, current + amount);
     };
 
     subtract_item(item: string, amount: number) {
-        item = get_id_of_name(item);
+        assertValidAmount(amount);
 
-        if (!get_name_of_id(item, null)) {
+        const item_id = get_id_of_name(item);
+
+        if (!get_name_of_id(item_id, null)) {
             throw new Error("Item not found");
         };
 
-        const current = this.get(item) ?? 0;
+        const current = this.get(item_id) ?? 0;
         if (current < amount) {
             throw new Error("Not enough item");
         };
@@ -222,14 +240,17 @@ export class RPGInventory extends Collection<string, number> {
         const next = current - amount;
 
         if (next === 0) {
-            this.delete(item);
+            this.delete(item_id);
         } else {
-            this.set(item, next);
+            this.set(item_id, next);
         };
     };
 
     add_random_item({ item, amount }: { item: string, amount: number }) {
+        assertValidAmount(amount);
+
         const item_name = get_name_of_id(item, null);
+
         if (!item_name) {
             throw new Error(`Item not found: ${item_name}`);
         };
