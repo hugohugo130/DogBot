@@ -1759,7 +1759,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 const food_meat_items = {};
 
                 // 遍歷背包中的物品並分類
-                for (const [item, amount] of Object.entries(inventory || {})) {
+                for (const [item, amount] of inventory.entries().toArray()) {
                     if (amount <= 0) continue;
                     // if (!Object.keys(foods).includes(item)) continue;
                     if (!Object.keys(food_data).includes(item)) continue;

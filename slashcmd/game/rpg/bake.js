@@ -483,7 +483,7 @@ export const bakeSlash = {
                     if (auto_amount === "amount" && first_food) {
                         amounts = divide(inventory.get(first_food) ?? 0, oven_remain_slots);
                     } else { // auto_amount === "foods"
-                        const entries = Object.entries(inventory)
+                        const entries = inventory.entries().toArray()
                             .filter(([key]) => key in bake)                    // 過濾掉不可烘烤的物品
                             .sort(([, valueA], [, valueB]) => valueB - valueA) // 按數量降序排序
                             .slice(0, oven_remain_slots);                      // 取前 {oven_remain_slots} 個物品
