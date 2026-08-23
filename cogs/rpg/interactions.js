@@ -582,6 +582,7 @@ export function check_help_rpg_info() {
     const commandsWithHelpInfo = Object.keys(help.group.rpg);
     const commands = Object.keys(rpg_commands)
         .filter(e => !["help", ...Object.keys(redirect_data), ...commandsWithHelpInfo].includes(e))
+        .filter(e => !["test"].includes(e))
 
     for (const cmd of commands) {
         logger.warn(`&${cmd} 缺少使用說明 (&help) 的數據`);
