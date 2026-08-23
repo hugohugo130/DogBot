@@ -22,6 +22,9 @@ import {
 import {
     time2,
 } from "./time.js";
+import {
+    get_channel,
+} from "./discord.js";
 import DogClient from "./customs/client.js";
 
 // 全局管理器
@@ -31,8 +34,6 @@ const loggerManager = new Map();
 const loggerManager_log = new Map();
 /** @type {Map<string, winston.Logger>} */
 const loggerManager_nodc = new Map();
-
-global.sendQueue = [];
 
 const DEBUG = false;
 
@@ -160,9 +161,11 @@ const consoleFormat = winston.format.combine(
                 "data" in info.message
             ) || (
                 console_ignore_keywords.filter((keyword) => {
-                    let msg = String(info.stack || info.message);
+                    try {
+                        let msg = String(info.stack || info.message);
 
-                    return msg.includes(keyword);
+                        return msg.includes(keyword);
+                    } catch { return false; }
                 }).length
             )
         ) {
@@ -408,9 +411,8 @@ export function get_logger(options = {}) {
 
 /**
  * 處理發送佇列
- * @param {DogClient} client
  */
-export async function process_send_queue(client) {
+export async function process_send_queue() {
     const { default: EmbedBuilder } = await import(new URL("./customs/embedBuilder.js", import.meta.url).href);
 
     if (!Array.isArray(global.sendQueue)) {
@@ -418,7 +420,8 @@ export async function process_send_queue(client) {
     };
 
     while (global.sendQueue.length > 0) {
-        const info = global.sendQueue[0];
+        const info = global.sendQueue.shift();
+        if (!info) continue;
         if (DEBUG) console.debug(`[DEBUG] [process_send_queue] handling send Queue ${JSON.stringify(info, null, 4)}`)
 
         try {
@@ -429,9 +432,8 @@ export async function process_send_queue(client) {
             const channel_id = info.channel_id || CHANNEL_MAPPING[info.level];
             const timestamp = Date.parse(info.timestamp);
 
-            const channel = await client.channels.fetch(channel_id);
-            if (!channel || !("send" in channel)) {
-                global.sendQueue.shift();
+            const channel = await get_channel(channel_id);
+            if (!channel?.isSendable()) {
                 continue;
             };
 
@@ -467,11 +469,8 @@ export async function process_send_queue(client) {
                     await send_msg(channel, level, color, logger_name, msg, timestamp);
                 };
             };
-
-            global.sendQueue.shift();
         } catch (error) {
             console.error("Failed to process queued message:", error);
-            global.sendQueue.shift();
         };
     };
 };
