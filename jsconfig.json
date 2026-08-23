@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "module": "esnext",
         "checkJs": true,
         "allowJs": true,
         "allowImportingTsExtensions": true,
@@ -10,6 +11,7 @@
     "exclude": [
         "node_modules",
         "**/node_modules",
+        "dist",
         "error_reader.js",
         "*test*.js",
     ]

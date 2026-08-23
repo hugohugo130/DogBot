@@ -30,6 +30,7 @@
     "winston": "^3.19.0"
   },
   "devDependencies": {
+    "eslint-plugin-command": "^4.0.0",
     "jscodeshift": "^17.3.0",
     "typescript": "^6.0.3"
   },
