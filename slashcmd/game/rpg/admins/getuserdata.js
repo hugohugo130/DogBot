@@ -8,13 +8,15 @@ import {
 } from "discord.js";
 
 import {
-    load_rpg_data,
     writeJson,
     join_temp_folder,
 } from "../../../../utils/file.js";
 import {
     adminIDs,
 } from "../../../../utils/config.js";
+import {
+    load_rpg_data,
+} from "../../../../utils/db/rpg.js";
 
 /** @type {import("../../../../utils/types").Slash} */
 export const getUserDataSlash = {

@@ -5,7 +5,6 @@ import {
     ButtonBuilder,
     ButtonStyle,
     User,
-    ChatInputCommandInteraction,
     MessageFlags,
     BaseInteraction
 } from "discord.js";
@@ -17,18 +16,21 @@ import {
     is_cooldown_finished,
     userHaveNotEnoughItems,
     wrong_job_embed,
-    farm_slots, subtract_item,
-    add_item,
+    farm_slots,
 } from "../../../utils/rpg.js";
 import {
-    load_rpg_data,
-    save_rpg_data,
     load_farm_data,
     save_farm_data,
 } from "../../../utils/file.js";
 import {
+    load_inventory,
+    load_rpg_data,
+    save_inventory,
+    save_rpg_data,
+    set_cooldown,
+} from "../../../utils/db/rpg.js";
+import {
     convertToSecondTimestamp,
-    DateNow,
     DateNowSecond,
 } from "../../../utils/timestamp.js";
 import {
@@ -284,9 +286,10 @@ export const farmSlash = {
 
         const cooldown_key = `farm_water`;
 
-        let rpg_data = await load_rpg_data(userId);
-        const [farm_data, [wrongJobEmbed, row]] = await Promise.all([
+        const rpg_data = await load_rpg_data(userId);
+        const [farm_data, inventory, [wrongJobEmbed, row]] = await Promise.all([
             load_farm_data(userId),
+            load_inventory(userId),
             wrong_job_embed(rpg_data, "/farm", userId, interaction, client),
         ]);
 
@@ -335,7 +338,7 @@ export const farmSlash = {
                     return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
-                if (userHaveNotEnoughItems(rpg_data, hoe, amount)) {
+                if (userHaveNotEnoughItems(inventory, hoe, amount)) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你沒有足夠的鋤頭`)
@@ -362,9 +365,10 @@ export const farmSlash = {
 
                 if (need_hunger) rpg_data.hunger -= need_hunger;
 
-                rpg_data = subtract_item(rpg_data, hoe, amount);
+                inventory.subtract_item(hoe, amount);
 
                 await Promise.all([
+                    save_inventory(userId, inventory),
                     save_rpg_data(userId, rpg_data),
                     save_farm_data(userId, farm_data),
                 ]);
@@ -423,13 +427,15 @@ export const farmSlash = {
                 const items = get_harvest_items(farmlands);
                 const items_str = Object.entries(items).map(([item, amount]) => `${amount} 個${get_name_of_id(item)}`).join("、");
                 for (const [item, amount] of Object.entries(items)) {
-                    rpg_data = add_item(rpg_data, item, amount);
+                    inventory.add_item(item, amount);
                 };
 
                 farm_data.farms = farm_data.farms.filter(farm => !completed_farms.includes(farm));
 
-                await save_rpg_data(userId, rpg_data);
-                await save_farm_data(userId, farm_data);
+                await Promise.all([
+                    save_inventory(userId, inventory),
+                    save_farm_data(userId, farm_data),
+                ]);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
@@ -441,7 +447,7 @@ export const farmSlash = {
             }
 
             case "water": {
-                const { is_finished, endsAts } = await is_cooldown_finished(cooldown_key, rpg_data);
+                const { is_finished, endsAts } = await is_cooldown_finished(cooldown_key, userId);
 
                 if (!is_finished) {
                     const embed = new EmbedBuilder()
@@ -472,11 +478,13 @@ export const farmSlash = {
                     farm_data.exp -= rpg_lvlUp_per * lvlUp;
                 };
 
-                rpg_data.lastRunTimestamp[cooldown_key] = DateNow();
                 farm_data.waterAt = DateNowSecond();
 
-                await save_rpg_data(userId, rpg_data);
-                await save_farm_data(userId, farm_data);
+                await Promise.all([
+                    set_cooldown(userId, cooldown_key, new Date()),
+                    save_rpg_data(userId, rpg_data),
+                    save_farm_data(userId, farm_data),
+                ]);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)

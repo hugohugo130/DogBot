@@ -1,3 +1,15 @@
+import {
+    Collection,
+} from "discord.js";
+
+import {
+    add_transaction,
+} from "./rpg.js";
+import {
+    get_id_of_name,
+    get_name_of_id,
+} from "../rpg.js";
+
 // #region [SQL returned data]
 
 type BaseData = {
@@ -6,7 +18,7 @@ type BaseData = {
     // updated_at: Date,
 };
 
-export type Items = {
+export type ItemsSQLRow = {
     item_id: string,
     created_at: Date
 };
@@ -39,7 +51,7 @@ export type Inventory = Omit<InventorySQLRow, "amount"> & {
     amount: number,
 };
 
-export type RPGTransactions = ({
+export type RPGTransactionsSQLRow = ({
     // id: string,
     timestamp: Date,
     original_user: string,
@@ -48,26 +60,30 @@ export type RPGTransactions = ({
     amount: string,
 });
 
-export type RPGCooldowns = (BaseData & {
+export type RPGCooldownsSQLRow = (BaseData & {
     cooldown_key: string,
     last_run_at: Date,
     // primary key: (user_id, cooldown_key)
 });
 
-export type RPGUserCounts = (BaseData & {
+export type RPGUserCountsSQLRow = (BaseData & {
     count_key: string,
     count_value: number,
     // primary key: (user_id, count_key)
 });
 
-export type RPGUserPrivacy = (BaseData & {
+export type RPGUserPrivacySQLRow = (BaseData & {
     privacy_key: string,
     // primary key: (user_id, privacy_key)
 });
 
 // #endregion [SQL returned data]
 
+type MarryInfo = import("../config.js").MarryInfo;
+
 export type RPGUserData = Omit<RPGUsers, "user_id">;
+export type RPGInventoryData = { [item_id: string]: number };
+export type RPGCooldownsData = { [item_id: string]: Date };
 
 export class RPGData {
     money: number = 1000;
@@ -89,17 +105,59 @@ export class RPGData {
         };
     };
 
-    static isRPGData(obj: any): obj is RPGData {
-        return obj instanceof RPGData;
-    };
-
-    /**
-     * Merge two objects
-     */
     concat(new_data: Partial<RPGUserData> | RPGData): RPGData {
         const data = new_data instanceof RPGData ? new_data.toJSON() : new_data;
 
         return new RPGData({ ...this.toJSON(), ...data });
+    };
+
+    async add_money({ amount, original_user, target_user, type }: { amount: number; original_user: string; target_user: string; type: string; }): Promise<number> {
+        this.money += amount;
+
+        await add_transaction({
+            timestamp: Math.floor(Date.now() / 1000),
+            original_user,
+            target_user,
+            amount,
+            type
+        });
+
+        return this.money;
+    };
+
+    async remove_money({ amount, original_user, target_user, type }: { amount: number; original_user: string; target_user: string; type: string; }): Promise<number> {
+        this.money -= amount;
+        await add_transaction({
+            timestamp: Math.floor(Date.now() / 1000),
+            original_user,
+            target_user,
+            amount,
+            type
+        });
+
+        return this.money;
+    };
+
+    getMarryInfo(): MarryInfo {
+        return {
+            status: this.married,
+            with: this.married_with,
+            time: this.married_at?.getTime() ?? 0,
+        };
+    };
+
+    setMarryInfo(data: MarryInfo): void {
+        const { status: married, with: married_with, time: married_at } = data;
+
+        this.married = married;
+        this.married_with = married_with;
+        this.married_at = new Date(married_at);
+    };
+
+    resetMarryInfo(): void {
+        this.married = false;
+        this.married_with = null;
+        this.married_at = null;
     };
 
     toJSON(): RPGUserData {
@@ -118,3 +176,70 @@ export class RPGData {
         };
     };
 };
+
+export class RPGInventory extends Collection<string, number> {
+    constructor(data?: RPGInventoryData | RPGInventory | null) {
+        super();
+
+        if (data instanceof RPGInventory) {
+            for (const [key, value] of data) {
+                this.set(key, value);
+            };
+        } else if (data) {
+            for (const [key, value] of Object.entries(data)) {
+                this.set(key, value);
+            };
+        };
+    };
+
+    add_item(item: string, amount: number) {
+        item = get_id_of_name(item);
+
+        if (!get_name_of_id(item, null)) {
+            throw new Error("Item not found");
+        };
+
+        if (amount < 0) {
+            throw new Error("Amount must be non-negative");
+        };
+
+        const current = this.get(item) ?? 0;
+        this.set(item, current + amount);
+    };
+
+    subtract_item(item: string, amount: number) {
+        item = get_id_of_name(item);
+
+        if (!get_name_of_id(item, null)) {
+            throw new Error("Item not found");
+        };
+
+        const current = this.get(item) ?? 0;
+        if (current < amount) {
+            throw new Error("Not enough item");
+        };
+
+        const next = current - amount;
+
+        if (next === 0) {
+            this.delete(item);
+        } else {
+            this.set(item, next);
+        };
+    };
+
+    add_random_item({ item, amount }: { item: string, amount: number }) {
+        const item_name = get_name_of_id(item, null);
+        if (!item_name) {
+            throw new Error(`Item not found: ${item_name}`);
+        };
+
+        this.add_item(item, amount);
+        return item_name;
+    };
+
+    toObject(): Record<string, number> {
+        return Object.fromEntries(this.entries());
+    };
+};
+

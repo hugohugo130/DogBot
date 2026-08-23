@@ -1,6 +1,5 @@
 import {
     SlashCommandBuilder,
-    ChatInputCommandInteraction,
     MessageFlags,
 } from "discord.js";
 
@@ -10,20 +9,17 @@ import {
     recipes,
     tags,
     get_id_of_name,
-    get_emoji,
-    subtract_item,
-    add_item,
 } from "../../../utils/rpg.js";
 import {
+    load_inventory,
     load_rpg_data,
     save_rpg_data,
-} from "../../../utils/file.js";
+} from "../../../utils/db/rpg.js";
 import {
     embed_error_color,
     embed_default_color,
 } from "../../../utils/config.js";
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
-import DogClient from "../../../utils/customs/client.js";
 
 /** @type {import("../../../utils/types").Slash} */
 export const makeSlash = {
@@ -72,9 +68,10 @@ export const makeSlash = {
     async execute(interaction, client) {
         const userid = interaction.user.id;
 
-        let [_, rpg_data, [emoji_toolbox, emoji_cross]] = await Promise.all([
+        const [_, rpg_data, inventory, [emoji_toolbox, emoji_cross]] = await Promise.all([
             interaction.deferReply(),
             load_rpg_data(userid),
+            load_inventory(userid),
             get_emojis(["toolbox", "crosS"], client),
         ]);
 
@@ -119,7 +116,7 @@ export const makeSlash = {
                 const tag = need_item.slice(1);
 
                 for (const item of tags[tag]) {
-                    if (rpg_data.inventory[item]) {
+                    if (inventory.get(item)) {
                         item_id = item;
                         break;
                     };
@@ -131,7 +128,7 @@ export const makeSlash = {
         };
 
         for (const need_item in item_need) {
-            const have_amount = (rpg_data.inventory[need_item] || 0);
+            const have_amount = (inventory.get(need_item) ?? 0);
             if (have_amount < item_need[need_item]) {
                 item_missing.push({
                     name: get_name_of_id(need_item),
@@ -151,12 +148,12 @@ export const makeSlash = {
         };
 
         for (const need_item in item_need) {
-            rpg_data = subtract_item(rpg_data, need_item, item_need[need_item]);
+            inventory.subtract_item(need_item, item_need[need_item]);
         };
 
         const output_amount = recipes[item_id].amount * amount;
 
-        rpg_data = add_item(rpg_data, item_id, output_amount);
+        inventory.add_item(item_id, output_amount);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)

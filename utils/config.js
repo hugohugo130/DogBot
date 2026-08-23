@@ -14,128 +14,22 @@ const isBeta = (global.isBeta ?? process.argv.slice(2).includes("--beta"));
 const INDENT = 4;
 const database_folder = `${cwd()}/db`;
 
-class RPGDatabase {
-    /** @type {number} */
-    money = 1000;
-    /** @type {number} */
-    hunger = 20;
-    /** @type {number} */
-    daily = 0;
-    /** @type {number} */
-    daily_times = 0;
-    /** @type {boolean} */
-    daily_msg = false;
-    /** @type {string | null} */
-    job = null;
-    /** @type {string | null} */
-    fightjob = null;
-    /** @type {string | null} */
-    badge = null;
-
-    /** @type {MarryInfo} */
-    marry = {
-        status: false,
-        with: null,
-        time: 0,
-    };
-
-    /** @type {{ [k: string]: number}} */
-    lastRunTimestamp = {};
-    /** @type {{ [k: string]: number}} */
-    inventory = {};
-
-    /** @type {TransactionsInfo[]} */
-    transactions = [];
-    /** @type {{ [k: string]: number}} */
-    count = {};
-    /** @type {(PrivacySettings[keyof PrivacySettings])[]} */
-    privacy = [];
-
-    /**
-     * @param {RpgDatabase | RPGDatabase} data
-     */
-    constructor(data) {
-        Object.assign(this, structuredClone(data));
-    };
-
-    /**
-     * @param {any} obj
-     * @returns {obj is RPGDatabase}
-     */
-    static isRPGDatabase(obj) {
-        return obj instanceof RPGDatabase;
-    };
-
-    /**
-     * Merge two objects
-     * @param {Object | RPGDatabase} new_data
-     * @returns {RPGDatabase} Modified RPGDatabase
-     */
-    concat(new_data) {
-        if (new_data instanceof RPGDatabase) {
-            new_data = new_data.toJSON();
-        };
-
-        return new RPGDatabase({ ...new_data, ...this.toJSON() });
-    };
-
-    /**
-     * @returns {RpgDatabase}
-     */
-    toJSON() {
-        return {
-            money: this.money,
-            hunger: this.hunger,
-            daily: this.daily,
-            daily_times: this.daily_times,
-            daily_msg: this.daily_msg,
-            job: this.job,
-            fightjob: this.fightjob,
-            badge: this.badge,
-            marry: this.marry,
-            lastRunTimestamp: this.lastRunTimestamp,
-            inventory: this.inventory,
-            transactions: this.transactions,
-            count: this.count,
-            privacy: this.privacy,
-        };
-    };
-};
-
 // #region [typedef]
 
 /**
  * @typedef {Object} MarryInfo
  * @property {boolean} status     - 是否已結婚
  * @property {string | null} with - 和誰結婚
- * @property {number} time        - 結婚時間戳
+ * @property {number} time        - 結婚時間戳 (單位：毫秒)
  */
 
 /**
  * @typedef {Object} TransactionsInfo
- * @property {number} timestamp
+ * @property {number} timestamp   - 單位：秒
  * @property {string} original_user
  * @property {string} target_user
  * @property {string} type
  * @property {number} amount
- */
-
-/**
- * @typedef {Object} RpgDatabase
- * @property {number} money
- * @property {number} hunger
- * @property {number} daily
- * @property {number} daily_times
- * @property {boolean} daily_msg
- * @property {string | null} job
- * @property {string | null} fightjob
- * @property {string | null} badge
- * @property {MarryInfo} marry
- * @property {Object.<string, number>} lastRunTimestamp  - 最後一次運行一些操作的時間戳
- * @property {Object.<string, number>} inventory         - 背包；item_id: amount
- * @property {Array<TransactionsInfo>} transactions      - 交易記錄
- * @property {Object.<string, number>} count             - 工作次數
- * @property {Array<string>} privacy                     - 隱私設定
  */
 
 /**
@@ -212,18 +106,17 @@ const DATABASE_FILES = [
 /**
  * @type {{
  *   "user": {
- *     "rpg_database.json": RpgDatabase,
+ *     "rpg_database.json": any,
  *     "rpg_shop.json": RpgShop,
  *     "rpg_farm.json": RpgFarm,
  *     "bake_db.json": Array<any>,
  *     "smelt_db.json": Array<any>,
  *     [k: string]: object | Array<any>,
  *   },
-  *   "single": {
-  *     "dvoice_db.json": [[string], DvoiceData][],
-  *     [k: string]: object | Array<any>,
-  *   },
-
+ *   "single": {
+ *     "dvoice_db.json": [[string], DvoiceData][],
+ *     [k: string]: object | Array<any>,
+ *   },
  *   "guild": {
  *     "database.json": GuildDatabase,
  *     [k: string]: object | Array<any>,
@@ -654,9 +547,6 @@ const PrivacySettings = Object.freeze({
 });
 
 export {
-    RPGDatabase,
-
-
     INDENT,
     database_folder,
 

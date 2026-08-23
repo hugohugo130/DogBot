@@ -17,12 +17,14 @@ import {
     get_id_of_name,
     get_name_of_id,
     get_loophole_embed,
-    add_item,
 } from "../utils/rpg.js";
 import {
+    load_inventory,
     load_rpg_data,
+    save_inventory,
     save_rpg_data,
-} from "../utils/file.js";
+    set_cooldown,
+} from "../utils/db/rpg.js";
 import {
     mentions_users,
 } from "../utils/message.js";
@@ -55,14 +57,13 @@ async function handleMoneyCommand(message, args) {
 };
 
 /**
- * 
  * @param {Message} message
- * @param {(string | number)[]} args
+ * @param {string[]} args
  * @returns {Promise<Message>}
  */
 async function handleInvCommand(message, args) {
     const user = (await mentions_users(message)).first();
-    const item = args[1];
+    const item = args[0];
     const amount = typeof args[1] === "number"
         ? args[1]
         : parseInt(args[1]);
@@ -71,16 +72,15 @@ async function handleInvCommand(message, args) {
     if (isNaN(amount)) return message.reply("amount must be a number");
     if (!user) return message.reply("請標記一個用戶！");
 
-    const rpg_data = await load_rpg_data(user.id);
-    rpg_data.inventory[item] = amount;
+    const inventory = await load_inventory(user.id);
+    inventory.set(item, amount);
 
-    await save_rpg_data(user.id, rpg_data);
+    await save_inventory(user.id, inventory);
 
     return await message.reply(`done setting ${user.toString()}'s ${item} to ${amount}`);
 };
 
 /**
- * 
  * @param {Message} message
  * @param {Array<any>} args
  * @returns {Promise<Message>}
@@ -109,13 +109,13 @@ async function handleGive2Command(message, args) {
         return message.reply("請標記一個用戶！");
     };
 
-    let rpg_data = await load_rpg_data(user.id);
+    const inventory = await load_inventory(user.id);
     let log = "";
     for (let [item, amount] of Object.entries(object)) {
         item = get_id_of_name(item);
 
         try {
-            add_item(rpg_data, item, parseInt(amount));
+            inventory.add_item(item, parseInt(amount));
             log += `added ${get_name_of_id(item)}\\*${amount} to user ${user.toString()}'s inventory\n`;
         } catch (err) {
             if (err instanceof Error) await message.reply(`error adding item ${item} to user ${user.toString()}'s inventory: ${err.message}`);
@@ -123,7 +123,7 @@ async function handleGive2Command(message, args) {
         };
     };
 
-    await save_rpg_data(user.id, rpg_data);
+    await save_inventory(user.id, inventory);
 
     return message.reply(`done adding user ${user.toString()} 's inventory:\n${log}`);
 };
@@ -181,12 +181,10 @@ export async function execute(client, message) {
 
             case "resjob":
                 rpg_data.job = null;
-                if (rpg_data.lastRunTimestamp?.job) {
-                    if (!rpg_data.lastRunTimestamp) rpg_data.lastRunTimestamp = {};
-                    rpg_data.lastRunTimestamp.job = 0;
-                };
-
-                await save_rpg_data(message.author.id, rpg_data);
+                await Promise.all([
+                    set_cooldown(message.author.id, "job", new Date(0)),
+                    save_rpg_data(message.author.id, rpg_data),
+                ]);
 
                 await message.reply("e, ok.");
                 break;
@@ -219,8 +217,9 @@ export async function execute(client, message) {
                 return message.reply("請標記一個用戶！");
             };
 
-            const rpg_data = add_item(await load_rpg_data(user.id), item, parseInt(amount));
-            await save_rpg_data(user.id, rpg_data);
+            const inventory = await load_inventory(user.id);
+            inventory.add_item(item, parseInt(amount));
+            await save_inventory(user.id, inventory);
 
             return message.reply(`done adding user ${user.toString()} 's inventory: ${item}*${amount}`);
         };

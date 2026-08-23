@@ -1,4 +1,3 @@
-import { RPGDatabase } from "../config.js";
 import { connectPool, getPool } from "./db.js";
 import { RPGData, RPGInventory } from "./tables.ts";
 
@@ -284,6 +283,33 @@ export async function load_cooldown(userid, cooldown_key) {
 };
 
 /**
+ * 讀取所有冷卻的數據
+ * @param {string} userid
+ * @returns {Promise<{ [cooldown_key: string]: Date }>}
+ */
+export async function get_cooldowns(userid) {
+    const table_name = /** @type {const} */ "rpg_cooldowns";
+
+    const command = `
+        SELECT last_run_at
+        FROM ${table_name}
+        WHERE user_id = $1
+        LIMIT 1
+    `;
+
+    const pool = getPool();
+    const { rows } = /** @type {{ rows: import("./tables").RPGCooldownsSQLRow[]} } */ (await pool.query(
+        command,
+        [userid],
+    ));
+
+    return rows.reduce((acc, cooldowns) => {
+        acc[cooldowns.cooldown_key] = cooldowns.last_run_at;
+        return acc;
+    }, /** @type {{ [cooldown_key: string]: Date }} */({}))
+};
+
+/**
  * 更新某個冷卻 key 的最後執行時間
  * @param {string} userid
  * @param {string} cooldown_key
@@ -333,6 +359,30 @@ export async function get_count(count_key, userid) {
     ));
 
     return rows[0]?.count_value ?? null;
+};
+
+/**
+ * 設定某個key的計數
+ * @param {string} userid
+ * @param {string} count_key
+ * @param {number} count
+ */
+export async function set_count(userid, count_key, count) {
+    const table_name = /** @type {const} */ "rpg_user_counts";
+
+    const command = `
+        INSERT INTO ${table_name} (user_id, count_key, count_value)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (user_id, count_key)
+        DO UPDATE SET
+            count_value = EXCLUDED.count_value
+    `;
+
+    const pool = getPool();
+    await pool.query(
+        command,
+        [userid, count_key, count],
+    );
 };
 
 /**
@@ -483,19 +533,3 @@ export async function delete_user_privacy(userid) {
 };
 
 // #endregion [rpg_user_privacy]
-
-// /**
-//  * @param {string} userid
-//  * @param {RPGDatabase | import("../config.js").RpgDatabase} rpg_data
-//  * @returns {Promise<void>}
-//  */
-// export async function save_rpg_data(userid, rpg_data) {
-//     if (RPGDatabase.isRPGDatabase(rpg_data)) {
-//         rpg_data = rpg_data.toJSON();
-//     };
-
-//     await Promise.all([
-//         save_inventory(userid, rpg_data.inventory),
-
-//     ]);
-// };

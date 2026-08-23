@@ -37,21 +37,16 @@ import {
 import {
     load_shop_data,
     save_shop_data,
-    load_rpg_data,
-    save_rpg_data,
     load_bake_data,
     save_bake_data,
     load_smelt_data,
     save_smelt_data,
-    find_default_value,
 } from "../../utils/file.js";
 import {
     job_delay_embed,
     choose_job_row,
     get_name_of_id,
     get_emoji,
-    add_money,
-    remove_money,
     userHaveNotEnoughItems,
     notEnoughItemEmbed,
     firstPrefix,
@@ -65,8 +60,6 @@ import {
     get_id_of_name,
     get_fightjob_name,
     get_job_name,
-    subtract_item,
-    add_item,
     valid_job_id,
 } from "../../utils/rpg.js";
 import {
@@ -87,7 +80,6 @@ import {
     embed_job_color,
     cookBurntOverTime,
     cookBurntWeight,
-    jobs,
     PrivacySettings,
     cookClickAmount,
     embed_sign_color,
@@ -120,6 +112,12 @@ import {
 } from "../../utils/wait_for_client.js";
 import {
     load_transactions,
+    load_rpg_data,
+    save_rpg_data,
+    load_inventory,
+    set_cooldown,
+    save_inventory,
+    save_user_privacy,
 } from "../../utils/db/rpg.js";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
@@ -132,7 +130,6 @@ const logger = get_logger();
  * @returns {Promise<string>}
  */
 async function show_transactions(userid) {
-    // const { transactions = [] } = await load_rpg_data(userid);
     const transactions = await load_transactions(userid);
 
     /* transactions 列表中的每個字典應該包含:
@@ -816,16 +813,14 @@ export async function execute(client, interaction) {
                     return await message.reply({ embeds: [embed] });
                 };
 
-                rpg_data.money = remove_money({
-                    rpg_data,
+                rpg_data.remove_money({
                     amount: amount,
                     original_user: `<@${user.id}>`,
                     target_user: `<@${targetUserId}>`,
                     type: `付款給`,
                 });
 
-                target_user_rpg_data.money = add_money({
-                    rpg_data: target_user_rpg_data,
+                target_user_rpg_data.add_money({
                     amount: amount,
                     original_user: `<@${user.id}>`,
                     target_user: `<@${targetUserId}>`,
@@ -873,9 +868,8 @@ export async function execute(client, interaction) {
             case "rpg_privacy_menu": {
                 if (!(interaction instanceof StringSelectMenuInteraction)) return;
 
-                const [_, rpg_data, [emoji_shield, emoji_backpack, emoji_pet]] = await Promise.all([
+                const [_, [emoji_shield, emoji_backpack, emoji_pet]] = await Promise.all([
                     interaction.deferUpdate(),
-                    load_rpg_data(user.id),
                     get_emojis(["shield", "bag", "pet"], client),
                 ]);
 
@@ -883,24 +877,11 @@ export async function execute(client, interaction) {
                     (interaction.values // @ts-ignore
                         .filter(e => Object.values(PrivacySettings).includes(e)));
 
-                privacy.sort((a, b) => {
-                    /** @type {{[key: string]: number}} */
-                    const order = {
-                        [PrivacySettings.Money]: 0,
-                        [PrivacySettings.Inventory]: 1,
-                        [PrivacySettings.Partner]: 2
-                    };
-
-                    return order[a] - order[b];
-                });
-
-                rpg_data.privacy = privacy;
-
-                await save_rpg_data(user.id, rpg_data);
+                await save_user_privacy(user.id, privacy);
 
                 let text = "無";
-                if (rpg_data.privacy.length > 0) {
-                    text = rpg_data.privacy
+                if (privacy.length) {
+                    text = privacy
                         .join("、")
                         .replace(PrivacySettings.Money, "金錢")
                         .replace(PrivacySettings.Inventory, "背包")
@@ -927,21 +908,21 @@ export async function execute(client, interaction) {
                             description: "擁有的金錢數量、交易記錄",
                             value: PrivacySettings.Money,
                             emoji: "💰",
-                            default: rpg_data.privacy.includes(PrivacySettings.Money),
+                            default: privacy.includes(PrivacySettings.Money),
                         },
                         {
                             label: "背包",
                             description: "背包內的物品",
                             value: PrivacySettings.Inventory,
                             emoji: emoji_backpack,
-                            default: rpg_data.privacy.includes(PrivacySettings.Inventory),
+                            default: privacy.includes(PrivacySettings.Inventory),
                         },
                         {
                             label: "夥伴",
                             description: "夥伴的清單",
                             value: PrivacySettings.Partner,
                             emoji: emoji_pet,
-                            default: rpg_data.privacy.includes(PrivacySettings.Partner),
+                            default: privacy.includes(PrivacySettings.Partner),
                         }
                     ]);
 
@@ -983,7 +964,7 @@ export async function execute(client, interaction) {
                 const res = await ls_function({
                     client: client,
                     message,
-                    rpg_data,
+                    userid: user.id,
                     mode: 1,
                     PASS: true,
                     interaction,
@@ -995,8 +976,9 @@ export async function execute(client, interaction) {
                 break;
             }
             case "sell": {
-                let [_, rpg_data] = await Promise.all([
+                let [_, inventory, rpg_data] = await Promise.all([
                     interaction.deferUpdate(),
+                    load_inventory(user.id),
                     load_rpg_data(user.id),
                 ]);
 
@@ -1005,10 +987,9 @@ export async function execute(client, interaction) {
                 const amount = parseInt(amount_str);
                 const total_price = Math.round(parseFloat(total_price_str));
 
-                rpg_data = subtract_item(rpg_data, item_id, amount);
+                inventory.subtract_item(item_id, amount);
 
-                rpg_data.money = add_money({
-                    rpg_data,
+                rpg_data.add_money({
                     amount: total_price,
                     original_user: "系統",
                     target_user: `<@${user.id}>`,
@@ -1090,9 +1071,10 @@ export async function execute(client, interaction) {
                 const amount = parseInt(amount_str);
                 const price = parseInt(price_str);
 
-                let [[emoji_cross, emoji_store], buyerRPGData, targetUserRPGData, targetUserShopData] = await Promise.all([
+                let [[emoji_cross, emoji_store], buyerRPGData, buyerInventory, targetUserRPGData, targetUserShopData] = await Promise.all([
                     get_emojis(["crosS", "store"], client),
                     load_rpg_data(buyerUserId),
+                    load_inventory(buyerUserId),
                     load_rpg_data(targetUserId),
                     load_shop_data(targetUserId),
                 ]);
@@ -1120,18 +1102,16 @@ export async function execute(client, interaction) {
                 const item_name = get_name_of_id(item);
                 const total_price = price * amount;
 
-                buyerRPGData.money = remove_money({
-                    rpg_data: buyerRPGData,
+                buyerRPGData.remove_money({
                     amount: total_price,
                     original_user: `<@${buyerUserId}>`,
                     target_user: `<@${targetUserId}>`,
                     type: `購買物品付款`,
                 });
 
-                buyerRPGData = add_item(buyerRPGData, item, amount);
+                buyerInventory.add_item(item, amount);
 
-                targetUserRPGData.money = add_money({
-                    rpg_data: targetUserRPGData,
+                targetUserRPGData.add_money({
                     amount: total_price,
                     original_user: `<@${buyerUserId}>`,
                     target_user: `<@${targetUserId}>`,
@@ -1143,6 +1123,7 @@ export async function execute(client, interaction) {
 
                 await Promise.all([
                     save_rpg_data(buyerUserId, buyerRPGData),
+                    save_inventory(buyerUserId, buyerInventory),
                     save_rpg_data(targetUserId, targetUserRPGData),
                     save_shop_data(targetUserId, targetUserShopData),
                 ]);
@@ -1192,8 +1173,8 @@ export async function execute(client, interaction) {
                     return await interaction.editReply({ content: "", embeds: [error_embed], components: [] });
                 };
 
-                let [rpg_data, bake_data] = await Promise.all([
-                    load_rpg_data(user.id),
+                let [inventory, bake_data] = await Promise.all([
+                    load_inventory(user.id),
                     load_bake_data(user.id),
                 ]);
 
@@ -1214,7 +1195,7 @@ export async function execute(client, interaction) {
                 for (const need_item of item_need) {
                     const current_item_id = need_item.item;
                     const need_amount = need_item.amount;
-                    const have_amount = (rpg_data.inventory[current_item_id] || 0);
+                    const have_amount = (inventory.get(current_item_id) || 0);
 
                     if (have_amount < need_amount) {
                         item_missing.push({
@@ -1243,7 +1224,7 @@ export async function execute(client, interaction) {
                 // ============================================
 
                 for (const need_item of item_need) {
-                    rpg_data = subtract_item(rpg_data, need_item.item, need_item.amount);
+                    inventory.subtract_item(need_item.item, need_item.amount);
                 };
 
                 const output_item_id = bake[item_id];
@@ -1259,7 +1240,7 @@ export async function execute(client, interaction) {
                 });
 
                 const [_, __, emoji_drumstick] = await Promise.all([
-                    save_rpg_data(user.id, rpg_data),
+                    save_inventory(user.id, inventory),
                     save_bake_data(user.id, bake_data),
                     get_emoji("drumstick", client),
                 ]);
@@ -1278,9 +1259,9 @@ export async function execute(client, interaction) {
             }
             case "smelter_smelt": {
                 const [item_id, amount, coal_amount, duration, output_amount, session_id] = otherCustomIDs;
-                let [_, rpg_data, smelt_data, emoji_cross] = await Promise.all([
+                let [_, inventory, smelt_data, emoji_cross] = await Promise.all([
                     interaction.deferUpdate(),
-                    load_rpg_data(user.id),
+                    load_inventory(user.id),
                     load_smelt_data(user.id),
                     get_emoji("crosS", client),
                 ]);
@@ -1309,7 +1290,7 @@ export async function execute(client, interaction) {
                     const current_item_id = need_item.item;
                     const need_amount = need_item.amount;
 
-                    const not_enough_item = userHaveNotEnoughItems(rpg_data, current_item_id, need_amount);
+                    const not_enough_item = userHaveNotEnoughItems(inventory, current_item_id, need_amount);
                     if (not_enough_item) item_missing.push(not_enough_item);
                 };
 
@@ -1321,10 +1302,10 @@ export async function execute(client, interaction) {
                 // ==================檢查物品==================
 
                 for (const need_item of item_need) {
-                    rpg_data = subtract_item(rpg_data, need_item.item, need_item.amount);
+                    inventory.subtract_item(need_item.item, need_item.amount);
                 };
 
-                await save_rpg_data(user.id, rpg_data);
+                await save_inventory(user.id, inventory);
 
                 const smelt_recipe = smeltable_recipe.find(a => a.input.item === item_id);
                 if (!smelt_recipe) {
@@ -1387,7 +1368,7 @@ export async function execute(client, interaction) {
                     get_emojis(["crosS", "check"], client),
                 ]);
 
-                const marry_data = rpg_data.marry ?? {};
+                const marry_data = rpg_data.getMarryInfo();
                 const marry_with = marry_data.with ?? null;
                 const married = marry_data.status ?? false;
 
@@ -1409,11 +1390,14 @@ export async function execute(client, interaction) {
                     };
                 };
 
-                t_rpg_data.marry = rpg_data.marry = {
+                const married_data = {
                     status: true,
                     with: targetUserId,
                     time: Date.now(),
                 };
+
+                rpg_data.setMarryInfo(married_data);
+                t_rpg_data.setMarryInfo(married_data);
 
                 await Promise.all([
                     save_rpg_data(userId, rpg_data),
@@ -1431,8 +1415,6 @@ export async function execute(client, interaction) {
             case "divorce": {
                 const [with_UserId] = otherCustomIDs;
 
-                const marry_default_value = find_default_value("rpg_database.json")?.["marry"] ?? {};
-
                 const [_, emoji_cross, rpg_data, with_User_rpg_data] = await Promise.all([
                     interaction.deferReply(),
                     get_emoji("crosS", client),
@@ -1440,7 +1422,7 @@ export async function execute(client, interaction) {
                     load_rpg_data(with_UserId),
                 ]);
 
-                const marry_data = rpg_data.marry ?? {};
+                const marry_data = rpg_data.getMarryInfo();
                 const married = marry_data.status ?? false;
 
                 if (!married) {
@@ -1458,8 +1440,8 @@ export async function execute(client, interaction) {
                     .setDescription(`<@${user.id}> 和 <@${with_UserId}> 的婚姻關係已經結束了 :((`)
                     .setEmbedFooter(interaction);
 
-                rpg_data.marry = marry_default_value;
-                with_User_rpg_data.marry = marry_default_value;
+                rpg_data.resetMarryInfo();
+                with_User_rpg_data.resetMarryInfo(); // 記得兩邊都要重置
 
                 await Promise.all([
                     save_rpg_data(user.id, rpg_data),
@@ -1530,11 +1512,11 @@ export async function execute(client, interaction) {
             case "job_confirm": {
                 const [_, __, job_id] = interaction.customId.split("|");
 
-                let rpg_data = await load_rpg_data(user.id);
-
-                const [emoji_job, delay_embed] = await Promise.all([
+                const [emoji_job, delay_embed, rpg_data, inventory] = await Promise.all([
                     get_emoji("job", client),
-                    job_delay_embed(rpg_data, interaction, client),
+                    job_delay_embed(user.id, interaction, client),
+                    load_rpg_data(user.id),
+                    load_inventory(user.id),
                 ]);
 
                 if (delay_embed) return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
@@ -1546,11 +1528,10 @@ export async function execute(client, interaction) {
                 rpg_data.job = job_id;
 
                 if (job_id === "farmer") {
-                    rpg_data = add_item(rpg_data, "wooden_hoe", 4);
+                    inventory.add_item("wooden_hoe", 4);
                 };
 
-                if (!rpg_data.lastRunTimestamp) rpg_data.lastRunTimestamp = {};
-                rpg_data.lastRunTimestamp.job = Date.now();
+                await set_cooldown(user.id, "job", new Date());
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_job_color)
@@ -1560,6 +1541,7 @@ export async function execute(client, interaction) {
                 await Promise.all([
                     interaction.update({ embeds: [embed], components: [] }),
                     save_rpg_data(user.id, rpg_data),
+                    save_inventory(user.id, inventory),
                 ]);
 
                 break;
@@ -1941,20 +1923,20 @@ export async function execute(client, interaction) {
                 session.last_cook_time = Date.now();
 
                 let container;
-                let rpg_data;
+                let inventory;
 
                 if (session.cooked >= cookClickAmount) {
-                    [container, rpg_data] = await Promise.all([
+                    [container, inventory] = await Promise.all([
                         getCookingResultContainer(recipe.output, amount, client),
-                        load_rpg_data(user.id),
+                        load_inventory(user.id),
                     ]);
 
                     const output_item = recipe.output;
-                    rpg_data = add_item(rpg_data, output_item, amount);
+                    inventory.add_item(output_item, amount);
 
                     await Promise.all([
                         client.cook_sessions.delete(sessionId),
-                        save_rpg_data(user.id, rpg_data),
+                        save_inventory(user.id, inventory),
                     ]);
                 } else {
                     container = await getCookingContainer(inputed_foods, item_needed, user.id, sessionId, session.cooked, client);
@@ -2002,16 +1984,16 @@ export async function execute(client, interaction) {
                         return { name, amount };
                     })
 
-                let rpg_data = await load_rpg_data(user.id);
+                let inventory = await load_inventory(user.id);
 
                 for (const item of items) {
-                    rpg_data = add_item(rpg_data, item.name, item.amount);
+                    inventory.add_item(item.name, item.amount);
                 };
 
                 const [__, ___, ____, emoji_check] = await Promise.all([
                     interaction.message.delete(),
                     interaction.deferReply({ flags: MessageFlags.Ephemeral }),
-                    save_rpg_data(user.id, rpg_data),
+                    save_inventory(user.id, inventory),
                     get_emoji("check", client),
                 ]);
 

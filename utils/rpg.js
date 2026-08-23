@@ -13,7 +13,6 @@ import util from "util";
 
 import {
     loadData,
-    load_rpg_data,
     get_probability_of_id,
 } from "./file.js";
 import {
@@ -35,11 +34,19 @@ import {
     jobs,
     workCmdJobs,
     PrivacySettings,
-    RPGDatabase,
 } from "./config.js";
 import {
     get_lang_data,
 } from "./language.js";
+import {
+    importModules,
+} from "./customs/custom_import.js";
+import {
+    get_count,
+    load_cooldown,
+    load_inventory,
+    load_user_privacy,
+} from "./db/rpg.js";
 import EmbedBuilder from "./customs/embedBuilder.js";
 import DogClient from "./customs/client.js";
 
@@ -658,7 +665,7 @@ const weapons_armor = {
 };
 
 /** @type {{ [k: string]: string }} */
-let bake = {
+const bake = {
     raw_beef: "beef",
     raw_chicken: "chicken",
     raw_duck: "duck",
@@ -951,29 +958,25 @@ function get_id_of_name(id, default_value = id) {
  * @returns {Promise<number>}
  */
 async function get_number_of_items(name, userid) {
-    const rpg_data = await load_rpg_data(userid);
-    const items = rpg_data.inventory;
+    const inventory = await load_inventory(userid);
 
     // 如果輸入的是中文名稱，找到對應的英文key
     let item_key = get_id_of_name(name);
 
     if (!item_key) return 0;
 
-    if (!items[item_key]) return 0;
-    return items[item_key];
+    return inventory.get(item_key) ?? 0;
 };
 
 /**
  *
- * @param {RPGDatabase} rpg_data
+ * @param {import("./db/tables").RPGInventory} inventory
  * @param {string} item
  * @param {number} amount_needed
  * @returns {null | {item: string, amount: number}} 如果玩家有足夠的物品，回傳null，否則返回物品id和數量
  */
-function userHaveNotEnoughItems(rpg_data, item, amount_needed) {
-    const items = rpg_data.inventory;
-
-    const item_amount = items?.[item];
+function userHaveNotEnoughItems(inventory, item, amount_needed) {
+    const item_amount = inventory.get(item) ?? 0;
 
     if (item_amount && item_amount >= amount_needed) {
         return null;
@@ -1063,7 +1066,7 @@ function chunkArray(array, chunkSize) {
 
 /**
  * 
- * @param {RPGDatabase} rpg_data
+ * @param {import("./db/tables").RPGData} rpg_data
  * @param {string} command
  * @param {string} userId
  * @param {BaseInteraction | null} [interaction=null]
@@ -1185,10 +1188,10 @@ async function get_emojis(names, client = global._client) {
  * @returns {Promise<EmbedBuilder>}
  */
 async function get_cooldown_embed(remaining_time, action, count, interaction = null, client = global._client) {
-    const [emoji, { rpg_actions }] = await Promise.all([
+    const [emoji, { rpg_actions }] = /** @type {[string, import("../cogs/rpg/msg_handler.js") ]} */ (await Promise.all([
         get_emoji("crosS", client),
         import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href),
-    ]);
+    ]));
 
     const timestamp = Math.floor(Date.now() / 1000) + Math.floor(remaining_time / 1000);
     const time = `<t:${timestamp}:T> (<t:${timestamp}:R>)`;
@@ -1207,22 +1210,23 @@ async function get_cooldown_embed(remaining_time, action, count, interaction = n
 /**
  * Get work cooldown time
  * @param {string} command_name
- * @param {RPGDatabase} rpg_data
+ * @param {string} user_id
  * @returns {Promise<number>}
  */
-async function get_cooldown_time(command_name, rpg_data) {
-    const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href);
+async function get_cooldown_time(command_name, user_id) {
+    const { rpg_cooldown } = /** @type {import("../cogs/rpg/msg_handler.js")} */ (await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href));
+    const count = await get_count(command_name, user_id) ?? 0;
 
-    return BetterEval(rpg_cooldown[command_name].replace("{c}", String(rpg_data.count[command_name])));
+    return BetterEval(rpg_cooldown[command_name].replace("{c}", String(count)));
 };
 
 /**
  * 檢查指令是否已經冷卻完畢
  * @param {string} command_name - 指令名稱
- * @param {RPGDatabase} rpg_data - 用戶的RPG數據
- * @returns {Promise<{ is_finished: boolean, remaining_time: number, endsAtms: number, endsAts: number }>} - is_finished:如果已冷卻完畢返回true，否則返回false - remaining_time: 剩餘時間
+ * @param {string} user_id
+ * @returns {Promise<{ is_finished: boolean, remaining_time: number, endsAtms: number, endsAts: number }>} - is_finished: 冷卻是否結束 - remaining_time: 剩餘時間
  */
-async function is_cooldown_finished(command_name, rpg_data) {
+async function is_cooldown_finished(command_name, user_id) {
     const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href);
 
     if (!rpg_cooldown[command_name]) return {
@@ -1232,23 +1236,23 @@ async function is_cooldown_finished(command_name, rpg_data) {
         endsAts: 0,
     };
 
-    const lastRunTimestamp = rpg_data.lastRunTimestamp[command_name] || 0;
+    const cooldown = (await load_cooldown(user_id, command_name))?.getTime() ?? 0;
     const now = Date.now();
-    const time_diff = now - lastRunTimestamp;
-    const cooldown_time = await get_cooldown_time(command_name, rpg_data) * 1000; // 轉換為毫秒
+    const time_diff = now - cooldown;
+    const cooldown_time = await get_cooldown_time(command_name, user_id) * 1000; // 轉換為毫秒
 
     return {
         is_finished: time_diff >= cooldown_time,
         remaining_time: cooldown_time - time_diff,
-        endsAtms: lastRunTimestamp + cooldown_time,
-        endsAts: Math.floor((lastRunTimestamp + cooldown_time) / 1000),
+        endsAtms: cooldown + cooldown_time,
+        endsAts: Math.floor((cooldown + cooldown_time) / 1000),
     };
 };
 
 /**
  * 
  * @param {string} failed_reason
- * @param {RPGDatabase} rpg_data
+ * @param {import("./db/tables").RPGData} rpg_data
  * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
@@ -1306,102 +1310,6 @@ async function get_failed_embed(failed_reason, rpg_data, interaction = null, cli
         .setEmbedFooter(interaction, { text: "", rpg_data });
 
     return embed;
-};
-
-/**
- * 增加錢
- * @param {Object} options - 選項
- * @param {RPGDatabase} options.rpg_data
- * @param {number} options.amount
- * @param {string} options.original_user 來源用戶 (系統 或者 "<@id>")
- * @param {string} options.target_user 目標用戶 (只能是 "<@id>")
- * @param {string} options.type 交易類型
- * @returns {number}
- */
-function add_money({ rpg_data, amount, original_user, target_user, type }) {
-    if (!amount_limit(rpg_data.money) && !amount_limit(rpg_data.money + amount) && !amount_limit(amount)) {
-        rpg_data.money += amount;
-        rpg_data.transactions.push({
-            timestamp: Math.floor(Date.now() / 1000),
-            original_user,
-            target_user,
-            amount,
-            type
-        });
-    };
-
-    return rpg_data.money;
-};
-
-/**
- * 扣除錢
- * @param {Object} options - 選項
- * @param {RPGDatabase} options.rpg_data
- * @param {number} options.amount
- * @param {string} options.original_user 來源用戶 (系統 或者 "<@id>")
- * @param {string} options.target_user 目標用戶 (只能是 "<@id>")
- * @param {string} options.type 交易類型
- * @returns {number}
- */
-function remove_money({ rpg_data, amount, original_user, target_user, type }) {
-    if (!amount_limit(rpg_data.money)) {
-        rpg_data.money -= amount;
-        rpg_data.transactions.push({
-            timestamp: Math.floor(Date.now() / 1000),
-            original_user,
-            target_user,
-            amount,
-            type
-        });
-    };
-
-    return rpg_data.money;
-};
-
-/**
- * Add an item to the inventory
- * @param {RPGDatabase} rpg_data
- * @param {string} item
- * @param {number} amount
- * @returns {RPGDatabase} Modified rpg data
- */
-function add_item(rpg_data, item, amount) {
-    item = get_id_of_name(item);
-
-    if (!get_name_of_id(item, null)) {
-        throw new Error("Item not found");
-    };
-
-    if (!rpg_data.inventory[item]) rpg_data.inventory[item] = 0;
-
-    rpg_data.inventory[item] += amount;
-
-    return rpg_data;
-};
-
-/**
- * Reduce the amount of an item in the inventory
- * @param {RPGDatabase} rpg_data
- * @param {string} item
- * @param {number} amount
- * @returns {RPGDatabase} Modified rpg data
- */
-function subtract_item(rpg_data, item, amount) {
-    item = get_id_of_name(item);
-
-    if (!get_name_of_id(item, null)) {
-        throw new Error("Item not found");
-    };
-
-    if (!rpg_data.inventory[item] || rpg_data.inventory[item] < amount) {
-        throw new Error("Not enough item");
-    };
-
-    rpg_data.inventory[item] -= amount;
-
-    if (rpg_data.inventory[item] === 0) delete rpg_data.inventory[item];
-
-    return rpg_data;
 };
 
 /**
@@ -1553,19 +1461,16 @@ async function get_loophole_embed(text, interaction = null, client = global._cli
 };
 
 /**
- * 
- * @param {string | RPGDatabase} userIdOrRPGData
+ * @param {string} userId
  * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
-async function job_delay_embed(userIdOrRPGData, interaction = null, client = global._client) {
-    const rpg_data = userIdOrRPGData instanceof RPGDatabase
-        ? userIdOrRPGData
-        : await load_rpg_data(userIdOrRPGData);
+async function job_delay_embed(userId, interaction = null, client = global._client) {
+    const { load_cooldown } = /** @type {import("./db/rpg.js")} */ (await importModules("./db/rpg.js"));
 
-    const lastRunTimestamp = rpg_data.lastRunTimestamp ?? {};
-    const setJobTime = convertToSecondTimestamp(lastRunTimestamp.job ?? 0);
+    const job_cooldown = await load_cooldown(userId, "job");
+    const setJobTime = convertToSecondTimestamp(job_cooldown?.getTime() ?? 0);
     const waitUntil = setJobTime + setJobDelay;
     const now = DateNowSecond();
 
@@ -1644,7 +1549,7 @@ function amount_limit(amount) {
  * @param {Object} options
  * @param {DogClient} options.client
  * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
- * @param {RPGDatabase} options.rpg_data
+ * @param {string} options.userid
  * @param {1} options.mode
  * @param {boolean} [options.PASS=false]
  * @param {BaseInteraction | null} [options.interaction=null]
@@ -1654,7 +1559,7 @@ function amount_limit(amount) {
  * @param {Object} options
  * @param {DogClient} options.client
  * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
- * @param {RPGDatabase} options.rpg_data
+ * @param {string} options.userid
  * @param {0 | 1} [options.mode=0]
  * @param {boolean} [options.PASS=false]
  * @param {BaseInteraction | null} [options.interaction=null]
@@ -1663,15 +1568,17 @@ function amount_limit(amount) {
  * @param {Object} options
  * @param {DogClient} options.client
  * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
- * @param {RPGDatabase} options.rpg_data
+ * @param {string} options.userid
  * @param {0 | 1} [options.mode=0]
  * @param {boolean} [options.PASS=false]
  * @param {BaseInteraction | null} [options.interaction=null]
  */
-async function ls_function({ client, message, rpg_data, mode = 0, PASS = false, interaction = null }) {
+async function ls_function({ client, message, userid, mode = 0, PASS = false, interaction = null }) {
     if (!message.author) return mode === 0 ? null : {};
 
-    if (!rpg_data.privacy.includes(PrivacySettings.Inventory) && !PASS) {
+    const privacy = await load_user_privacy(userid);
+
+    if (!privacy.includes(PrivacySettings.Inventory) && !PASS) {
         if (!message.guild) throw new Error("Invalid Guild of the message");
 
         const [guildData, emoji_bag] = await Promise.all([
@@ -1702,71 +1609,87 @@ async function ls_function({ client, message, rpg_data, mode = 0, PASS = false, 
         return await message.reply({ embeds: [embed], components: [row] });
     };
 
-    const [emoji_bag, ore_emoji, farmer_emoji, cow_emoji, swords_emoji, potion_emoji] = await get_emojis(["bag", "ore", "farmer", "cow", "swords", "potion"], client);
+    const [inventory, emoji_bag] = await Promise.all([
+        load_inventory(userid),
+        get_emoji("bag", client),
+    ]);
 
-    // 分類物品
-    /** @type {Object.<string, number>} */
-    const ores = {};
-    /** @type {Object.<string, number>} */
-    const log_items = {};
-    /** @type {Object.<string, number>} */
-    const food_crops_items = {};
-    /** @type {Object.<string, number>} */
-    const food_meat_items = {}
-    /** @type {Object.<string, number>} */
-    const fish_items = {};
-    /** @type {Object.<string, number>} */
-    const weapons_armor_items = {};
-    /** @type {Object.<string, number>} */
-    const potions_items = {}
-    /** @type {Object.<string, number>} */
-    const other_items = {};
-
-    // 遍歷背包中的物品並分類
-    for (const [item, amount] of Object.entries(rpg_data.inventory || {})) {
-        if (!amount) continue;
-
-        if (Object.keys(mine_gets).includes(item) || Object.keys(ingots).includes(item)) {
-            ores[item] = amount;
-        } else if (Object.keys(logs).includes(item) || Object.keys(planks).includes(item) || Object.keys(wood_productions).includes(item)) {
-            log_items[item] = amount;
-        } else if (Object.keys(foods_crops).includes(item)) {
-            food_crops_items[item] = amount;
-        } else if (Object.keys(foods_meat).includes(item) && !Object.keys(fish).includes(item)) {
-            food_meat_items[item] = amount;
-        } else if (Object.keys(fish).includes(item)) {
-            fish_items[item] = amount;
-        } else if (Object.keys(weapons_armor).includes(item)) {
-            weapons_armor_items[item] = amount;
-        } else if (Object.keys(brew).includes(item)) {
-            potions_items[item] = amount;
-        } else {
-            other_items[item] = amount;
-        };
-    };
-
-    // 創建嵌入訊息
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
         .setTitle(`${emoji_bag} | 你的背包`)
-        .setTimestamp();
-
-    // 使用循環添加各類物品欄位
-    const categories = [
-        { items: ores, name: `${ore_emoji} 礦物` },
-        { items: log_items, name: "🪵 木材" },
-        { items: food_crops_items, name: `${farmer_emoji} 農作物` },
-        { items: food_meat_items, name: `${cow_emoji} 肉類` },
-        { items: fish_items, name: `🐟 魚類` },
-        { items: weapons_armor_items, name: `${swords_emoji} 武器 & 防具` },
-        { items: potions_items, name: `${potion_emoji} 藥水` },
-        { items: other_items, name: "📦 其他物品" }
-    ];
+        .setEmbedFooter(message.author.id);
 
     // 如果背包是空的
-    if (Object.keys(rpg_data.inventory || {}).length === 0) {
+    if (inventory.keys().toArray().length === 0) {
         embed.setTitle(`${emoji_bag} | 你的背包裡沒有東西`);
     } else {
+        const [
+            ore_emoji,
+            farmer_emoji,
+            cow_emoji,
+            swords_emoji,
+            potion_emoji,
+        ] = await get_emojis([
+            "ore",
+            "farmer",
+            "cow",
+            "swords",
+            "potion",
+        ], client);
+
+        // 分類物品
+        /** @type {Object.<string, number>} */
+        const ores = {};
+        /** @type {Object.<string, number>} */
+        const log_items = {};
+        /** @type {Object.<string, number>} */
+        const food_crops_items = {};
+        /** @type {Object.<string, number>} */
+        const food_meat_items = {}
+        /** @type {Object.<string, number>} */
+        const fish_items = {};
+        /** @type {Object.<string, number>} */
+        const weapons_armor_items = {};
+        /** @type {Object.<string, number>} */
+        const potions_items = {}
+        /** @type {Object.<string, number>} */
+        const other_items = {};
+
+        // 遍歷背包中的物品並分類
+        for (const [item, amount] of inventory) {
+            if (!amount) continue;
+
+            if (Object.keys(mine_gets).includes(item) || Object.keys(ingots).includes(item)) {
+                ores[item] = amount;
+            } else if (Object.keys(logs).includes(item) || Object.keys(planks).includes(item) || Object.keys(wood_productions).includes(item)) {
+                log_items[item] = amount;
+            } else if (Object.keys(foods_crops).includes(item)) {
+                food_crops_items[item] = amount;
+            } else if (Object.keys(foods_meat).includes(item) && !Object.keys(fish).includes(item)) {
+                food_meat_items[item] = amount;
+            } else if (Object.keys(fish).includes(item)) {
+                fish_items[item] = amount;
+            } else if (Object.keys(weapons_armor).includes(item)) {
+                weapons_armor_items[item] = amount;
+            } else if (Object.keys(brew).includes(item)) {
+                potions_items[item] = amount;
+            } else {
+                other_items[item] = amount;
+            };
+        };
+
+        // 使用循環添加各類物品欄位
+        const categories = [
+            { items: ores, name: `${ore_emoji} 礦物` },
+            { items: log_items, name: "🪵 木材" },
+            { items: food_crops_items, name: `${farmer_emoji} 農作物` },
+            { items: food_meat_items, name: `${cow_emoji} 肉類` },
+            { items: fish_items, name: `🐟 魚類` },
+            { items: weapons_armor_items, name: `${swords_emoji} 武器 & 防具` },
+            { items: potions_items, name: `${potion_emoji} 藥水` },
+            { items: other_items, name: "📦 其他物品" }
+        ];
+
         for (const category of categories) {
             if (Object.keys(category.items).length > 0) {
                 const itemsText = Object.entries(category.items)
@@ -1903,10 +1826,6 @@ export {
     get_cooldown_embed,
     is_cooldown_finished,
     get_failed_embed,
-    add_money,
-    remove_money,
-    add_item,
-    subtract_item,
     get_loophole_embed,
     amount_limit,
     ls_function,

@@ -15,10 +15,14 @@ import {
     get_logger,
 } from "../../../utils/logger.js";
 import {
+    load_inventory,
     load_rpg_data,
+    save_inventory,
+    save_rpg_data,
+} from "../../../utils/db/rpg.js";
+import {
     load_smelt_data,
     save_smelt_data,
-    save_rpg_data,
 } from "../../../utils/file.js";
 import {
     get_name_of_id,
@@ -31,7 +35,6 @@ import {
     smelter_slots,
     smeltable_recipe,
     bake,
-    add_item,
 } from "../../../utils/rpg.js";
 import {
     embed_error_color,
@@ -70,8 +73,8 @@ async function smelt_smelt(interaction, item_id, amount, client = global._client
 
     if (!client) client = await wait_for_client();
 
-    const [rpg_data, smelt_data, [emoji_cross, emoji_furnace]] = await Promise.all([
-        load_rpg_data(userId),
+    const [inventory, smelt_data, [emoji_cross, emoji_furnace]] = await Promise.all([
+        load_inventory(userId),
         load_smelt_data(userId),
         get_emojis(["crosS", "furnace"], client),
     ]);
@@ -97,7 +100,7 @@ async function smelt_smelt(interaction, item_id, amount, client = global._client
     };
 
     if (allMats) {
-        amount = Math.floor((rpg_data.inventory[item_id] || amount) / smelt_recipe.input.amount);
+        amount = Math.floor((inventory.get(item_id) || amount) / smelt_recipe.input.amount);
     };
 
     const input_amount = smelt_recipe.input.amount * amount;
@@ -122,7 +125,7 @@ async function smelt_smelt(interaction, item_id, amount, client = global._client
         const current_item_id = need_item.item;
         const need_amount = need_item.amount;
 
-        const not_enough_item = userHaveNotEnoughItems(rpg_data, current_item_id, need_amount)
+        const not_enough_item = userHaveNotEnoughItems(inventory, current_item_id, need_amount)
         if (not_enough_item) item_missing.push(not_enough_item);
     };
 
@@ -281,9 +284,10 @@ export const smeltSlash = {
         const userId = interaction.user.id;
         const subcommand = interaction.options.getSubcommand();
 
-        let rpg_data = await load_rpg_data(userId);
-        const [smelt_data, [wrongJobEmbed, row], [emoji_cross, emoji_furnace]] = await Promise.all([
+        const rpg_data = await load_rpg_data(userId);
+        const [smelt_data, inventory, [wrongJobEmbed, row], [emoji_cross, emoji_furnace]] = await Promise.all([
             load_smelt_data(userId),
+            load_inventory(userId),
             wrong_job_embed(rpg_data, "/smelt", userId, interaction, client),
             get_emojis(["crosS", "furnace"], client),
         ]);
@@ -366,12 +370,12 @@ export const smeltSlash = {
                 };
 
                 if (allAmount && !auto_amount) {
-                    amounts = [rpg_data.inventory[item_id] || 1];
+                    amounts = [inventory.get(item_id) || 1];
                 } else if (auto_amount) {
                     if (auto_amount === "amount") {
-                        amounts = divide(rpg_data.inventory[item_id], smelt_remain_slots);
+                        amounts = divide(inventory.get(item_id) ?? 0, smelt_remain_slots);
                     } else { // auto_amount === "foods"
-                        const entries = Object.entries(rpg_data.inventory)
+                        const entries = Object.entries(inventory)
                             .filter(([key]) => key in bake) // 過濾掉不可熔鍊的物品
                             .sort(([, valueA], [, valueB]) => valueB - valueA) // 按數量降序排序
                             .slice(0, smelt_remain_slots); // 取前 {smelt_remain_slots} 個物品
@@ -383,7 +387,7 @@ export const smeltSlash = {
 
                 const total_need_coal = Math.ceil(amounts.reduce((sum, amount) => sum + amount, 0) / 2);
 
-                const not_enough_items = userHaveNotEnoughItems(rpg_data, "coal", total_need_coal);
+                const not_enough_items = userHaveNotEnoughItems(inventory, "coal", total_need_coal);
                 if (not_enough_items) return await interaction.reply({ embeds: [await notEnoughItemEmbed(not_enough_items, interaction, client)], flags: MessageFlags.Ephemeral });
 
                 for (const [index, item] of items.entries()) {
@@ -466,7 +470,7 @@ export const smeltSlash = {
                 };
 
                 // 將熔鍊完成的物品加入背包
-                rpg_data = add_item(rpg_data, item.output_item_id, item.output_amount);
+                inventory.add_item(item.output_item_id, item.output_amount);
 
                 // 從煉金爐移除該物品
                 smelt_data.splice(index, 1);
@@ -474,7 +478,7 @@ export const smeltSlash = {
                 // 儲存資料
                 await Promise.all([
                     save_smelt_data(userId, smelt_data),
-                    save_rpg_data(userId, rpg_data),
+                    save_inventory(userId, inventory),
                 ]);
 
                 const embed = new EmbedBuilder()

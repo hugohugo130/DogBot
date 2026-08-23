@@ -17,7 +17,8 @@ import {
 } from "../utils/timestamp.js";
 import {
     load_rpg_data,
-} from "../utils/file.js";
+    load_user_privacy,
+} from "../utils/db/rpg.js";
 import {
     get_emojis,
     get_emoji,
@@ -332,12 +333,15 @@ export const infoSlash = {
                 const userTag = user.tag;
                 const userId = user.id;
 
-                const rpg_data = await load_rpg_data(userId);
-                const marry_data = rpg_data.marry || {};
+                const [rpg_data, privacy] = await Promise.all([
+                    load_rpg_data(userId),
+                    load_user_privacy(userId),
+                ]);
+                const marry_data = rpg_data.getMarryInfo();
                 const lang_marry_info = get_lang_data(locale, "/info", "user.marry_info", marry_data.with, convertToSecondTimestamp(marry_data.time));
                 const lang_sign_count = get_lang_data(locale, "/info", "user.sign_count", rpg_data.daily_times); // 連續簽到了 {0} 次
 
-                const show_money = rpg_data.privacy.includes("money");
+                const show_money = privacy.includes("money");
                 let money = show_money ? rpg_data.money ?? lang_no_data : lang_privacy;
                 if (typeof money === "number") money = `\`${money.toLocaleString(locale)}$\``
 
