@@ -106,7 +106,7 @@ export async function execute(client, interaction) {
 
             const inventory = await load_inventory(userid);
 
-            const choices = Object.keys(inventory)
+            const choices = inventory.keys().toArray()
                 .filter(item => item in smeltable_items
                     && (
                         item.startsWith(focusedValue)
@@ -143,7 +143,7 @@ export async function execute(client, interaction) {
 
             const choices = Object.entries(cookable_items)
                 .filter(([output, data]) => {
-                    const itemsInInventory = Object.keys(inventory);
+                    const itemsInInventory = inventory.keys().toArray();
                     const requiredItems = data.input.map(data => data.name);
                     const hasAllRequiredItems = requiredItems.every(item => itemsInInventory.includes(item));
                     return hasAllRequiredItems && (output.startsWith(focusedValue) || get_name_of_id(output).startsWith(focusedValue));
