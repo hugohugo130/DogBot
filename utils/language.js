@@ -165,6 +165,9 @@ Since <t:{1}:R>`,
             "no_query": "You must provide a query or file to play",
             "not_audio_file": "You must provide an audio file",
         },
+        "/ping": {
+            "update": "Update",
+        },
         "music": {
             "loop_status.disabled": "Disabled",
             "loop_status.track": "Track",
@@ -324,6 +327,9 @@ Since <t:{1}:R>`,
         "/play": {
             "no_query": "你必須提供一個搜尋字串或文件來播放",
             "not_audio_file": "你必須提供一個音頻文件",
+        },
+        "/ping": {
+            "update": "更新",
         },
         "music": {
             "loop_status.disabled": "關閉",

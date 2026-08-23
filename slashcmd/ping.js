@@ -1,10 +1,19 @@
 import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
     SlashCommandBuilder,
 } from "discord.js";
 
 import {
     embed_default_color,
 } from "../utils/config.js";
+import {
+    get_lang_data,
+} from "../utils/language.js";
+import {
+    get_emoji,
+} from "../utils/rpg.js";
 import EmbedBuilder from "../utils/customs/embedBuilder.js";
 
 /** @type {import("../utils/types").Slash} */
@@ -30,6 +39,9 @@ export const pingSlash = {
 
         const globalPing = Date.now() - start;
 
+        const lang_update = get_lang_data(interaction.locale, "/ping", "update");
+        const emoji_refresh = await get_emoji("refresh", client);
+
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .addFields(
@@ -38,6 +50,17 @@ export const pingSlash = {
             )
             .setEmbedFooter(interaction);
 
-        return await interaction.editReply({ content: `Pong! ${client.ws.ping}ms`, embeds: [embed] });
+        const row =
+            /** @type {ActionRowBuilder<ButtonBuilder>} */
+            (new ActionRowBuilder()
+                .setComponents(
+                    new ButtonBuilder()
+                        .setCustomId("update_ping")
+                        .setLabel(lang_update)
+                        .setEmoji(emoji_refresh)
+                        .setStyle(ButtonStyle.Success),
+                ));
+
+        return await interaction.editReply({ content: `Pong! ${client.ws.ping}ms`, embeds: [embed], components: [row] });
     },
 };
