@@ -2929,8 +2929,8 @@ export async function execute(client, message) {
         return await message.reply({ embeds: [embed] });
     };
 
-    const command = message.content.split(" ")[0].toLowerCase();
     try {
+        const command = message.content.split(" ")[0].toLowerCase();
 
         if (rpg_commands[command]) {
             let cmdName = command;
@@ -2958,7 +2958,7 @@ export async function execute(client, message) {
         if (error instanceof Error && error.message === "指令執行超時") {
             logger.error(`RPG 指令執行超時: userId=${userId}, command=${client.lock.rpg_handler[userId]}`);
         } else {
-            logger.error(`處理rpg遊戲訊息 ${command} 時發生錯誤: ${errorStack}`);
+            logger.error(`處理rpg遊戲訊息時發生錯誤: ${errorStack}`);
         };
 
         const loophole_embeds = await get_loophole_embed(errorStack, null, client);
