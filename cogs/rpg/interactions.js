@@ -619,7 +619,7 @@ export function get_help_embed(category, user, client, interaction = null) {
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId(`help|${user.id}|${category}`)
             .setPlaceholder(`指令教學`)
-            .addOptions(...options);
+            .addOptions(...options.slice(0, 25));
 
         const row =
             /** @type {ActionRowBuilder<StringSelectMenuBuilder>} */
