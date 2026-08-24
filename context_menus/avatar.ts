@@ -1,6 +1,8 @@
 import {
     ApplicationCommandType,
+    ApplicationIntegrationType,
     ContextMenuCommandBuilder,
+    InteractionContextType,
     MessageFlags,
 } from "discord.js";
 
@@ -14,7 +16,9 @@ export const avatarMenu: ContextMenu = {
             "zh-CN": "头像",
             "zh-TW": "頭貼",
         })
-        .setType(ApplicationCommandType.User),
+        .setType(ApplicationCommandType.User)
+        .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel)
+        .setIntegrationTypes(ApplicationIntegrationType.UserInstall),
 
     async execute(interaction) {
         if (!interaction.isUserContextMenuCommand()) return;
