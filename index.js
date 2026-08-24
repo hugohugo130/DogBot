@@ -9,7 +9,6 @@ import { check_item_data } from "./utils/rpg.js";
 import { registcmd } from "./register_commands.js";
 import { getCacheManager } from "./utils/cache.js";
 import { musicSearchEngine } from "./utils/config.js";
-import { loadslashcmd } from "./utils/loadslashcmd.js";
 import { safeshutdown } from "./utils/safeshutdown.js";
 import { hot_reload_cogs } from "./utils/hot_reload.js";
 import { check_language_keys } from "./utils/language.js";
@@ -245,10 +244,6 @@ client.once(Events.ClientReady, async () => {
     if (await should_register_cmd()) {
         await registcmd(true, true);
     };
-
-    client.commands = await loadslashcmd(true);
-
-    logger.info(`✅ Loaded ${client.commands.size} slash commands`);
 
     await client.login(TOKEN);
 
