@@ -7,7 +7,9 @@ import {
 } from "discord.js";
 
 import type { ContextMenu } from "../utils/types";
-import { getAvatarGallery } from "../slashcmd/avatar.js";
+import {
+    getAvatarGallery,
+} from "../slashcmd/avatar.js";
 
 export const avatarMenu: ContextMenu = {
     builder: new ContextMenuCommandBuilder()
