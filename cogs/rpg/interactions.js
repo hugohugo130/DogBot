@@ -21,6 +21,7 @@ import {
     TextChannel,
     ThreadChannel,
     BaseInteraction,
+    NewsChannel,
 } from "discord.js";
 import util from "util";
 
@@ -103,6 +104,7 @@ import {
 } from "../../slashcmd/game/rpg/cook.js";
 import {
     getBotInfoEmbed,
+    getChannelInfoEmbedRows,
     getMsgInfoContainer
 } from "../../slashcmd/info.js";
 import {
@@ -1672,6 +1674,23 @@ export async function execute(client, interaction) {
                             content: null,
                             components: [container],
                             flags: MessageFlags.IsComponentsV2,
+                        });
+
+                        break;
+                    }
+
+                    case "/info channel": {
+                        if (!channel || (
+                            channel instanceof ThreadChannel
+                            || channel instanceof NewsChannel
+                            || channel instanceof StageChannel
+                        )) return;
+
+                        const [embed, row] = await getChannelInfoEmbedRows(channel, locale);
+
+                        await interaction.update({
+                            embeds: [embed],
+                            // components: [row],
                         });
 
                         break;

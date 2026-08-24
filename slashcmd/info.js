@@ -10,6 +10,10 @@ import {
     SeparatorSpacingSize,
     MessageFlags,
     Message,
+    ChannelType,
+    NewsChannel,
+    StageChannel,
+    ThreadChannel,
 } from "discord.js";
 
 import {
@@ -151,8 +155,8 @@ export function getMsgInfoContainer(message, locale = null) {
     */
 
     const lang_id = get_lang_data(locale, "/info", "message.id");
-    const lang_channel = get_lang_data(locale, "/info", "message.channel");
     const lang_author = get_lang_data(locale, "/info", "message.author");
+    const lang_channel = get_lang_data(locale, "/info", "message.channel");
     const lang_content = get_lang_data(locale, "/info", "message.content");
     const lang_clickhere = get_lang_data(locale, "/info", "message.clickhere");
     const lang_no_content = get_lang_data(locale, "/info", "message.no_content");
@@ -188,6 +192,83 @@ export function getMsgInfoContainer(message, locale = null) {
         .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_attachment}**:\n${message.attachments.size ? message.attachments.map(a => a.url).join("\n") : lang_no_attachment}`))
         .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_created_at}**:\n${createdAt ? `<t:${createdAt}:D><t:${createdAt}:T>\n(<t:${createdAt}:R>)` : lang_unknown}`))
         .addTextDisplayComponents((textDisplay) => textDisplay.setContent(`**${lang_edited_at}**:\n${editedAt ? `<t:${editedAt}:D><t:${editedAt}:T>\n(<t:${editedAt}:R>)` : lang_unedited}`))
+};
+
+/**
+ * @param {Exclude<import("discord.js").TextBasedChannel, import("discord.js").PublicThreadChannel | import("discord.js").PrivateThreadChannel | NewsChannel | StageChannel>} channel
+ * @param {Locale | null} [locale]
+ * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>]>}
+*/
+export async function getChannelInfoEmbedRows(channel, locale = null) {
+    const emoji_refresh = await get_emoji("refresh");
+
+    const lang_id = get_lang_data(locale, "/info", "channel.id");
+    const lang_none = get_lang_data(locale, "/info", "channel.none");
+    const lang_update = get_lang_data(locale, "/info", "channel.update");
+    const lang_category = get_lang_data(locale, "/info", "channel.category");
+    const lang_created_at = get_lang_data(locale, "/info", "channel.created_at");
+    const lang_dm_channel = get_lang_data(locale, "/info", "channel.dm_channel");
+    const lang_description = get_lang_data(locale, "/info", "channel.description");
+    const lang_channel_info = get_lang_data(locale, "/info", "channel.channel_info");
+    const lang_text_channel = get_lang_data(locale, "/info", "channel.text_channel");
+    const lang_channel_type = get_lang_data(locale, "/info", "channel.channel_type");
+    const lang_channel_name = get_lang_data(locale, "/info", "channel.channel_name");
+    const lang_channel_position = get_lang_data(locale, "/info", "channel.position");
+    const lang_voice_channel = get_lang_data(locale, "/info", "channel.voice_channel");
+
+    const { id: channelID, createdAt } = channel;
+    const DMBased = channel.isDMBased();
+    const VoiceBased = channel.isVoiceBased();
+    const createdAtTimestamp = Math.floor((createdAt?.getTime() ?? 0) / 1000);
+    const type = channel.isDMBased()
+        ? lang_dm_channel
+        : channel.isVoiceBased()
+            ? lang_voice_channel
+            : lang_text_channel;
+
+    /** @type {Record<string, string>} */
+    const fields = {
+        [lang_id]: channelID,
+        [lang_channel_type]: type,
+    };
+
+    if (!DMBased) {
+        fields[lang_channel_name] = channel.name;
+    };
+
+    if (!DMBased && !VoiceBased) {
+        fields[lang_description] = channel.topic || lang_none;
+    };
+
+    if (createdAt) {
+        fields[lang_created_at] = `<t:${createdAtTimestamp}:D><t:${createdAtTimestamp}:T>`;
+    };
+
+    if (!DMBased) {
+        fields[lang_category] = channel.parent?.name ?? lang_none;
+        fields[lang_channel_position] = channel.position.toString();
+    };
+
+    const embed = new EmbedBuilder()
+        .setColor(embed_default_color)
+        .setTitle(lang_channel_info)
+        .setEmbedFooter(locale);
+
+    const row = /** @type {ActionRowBuilder<ButtonBuilder>} */
+        (new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId("refresh|any|/info channel")
+                    .setLabel(lang_update)
+                    .setEmoji(emoji_refresh)
+                    .setStyle(ButtonStyle.Success)
+            ));
+
+    for (const [name, value] of Object.entries(fields).slice(0, 25)) {
+        embed.addFields({ name, value, inline: false });
+    };
+
+    return [embed, row];
 };
 
 /** @type {import("../utils/types").Slash} */
@@ -275,16 +356,45 @@ export const infoSlash = {
                     })
                     .setRequired(false),
             ),
+        )
+        .addSubcommand(new SlashCommandSubcommandBuilder() // channel
+            .setName("channel")
+            .setNameLocalizations({
+                "zh-TW": "頻道",
+                "zh-CN": "频道",
+            })
+            .setDescription("Getting channel information")
+            .setDescriptionLocalizations({
+                "zh-TW": "查看頻道的資訊",
+                "zh-CN": "查看频道的资讯",
+            })
+            .addChannelOption(option =>
+                option.setName("channel")
+                    .setNameLocalizations({
+                        "zh-TW": "頻道",
+                        "zh-CN": "频道",
+                    })
+                    .setDescription("The target channel")
+                    .setDescriptionLocalizations({
+                        "zh-TW": "要查看的頻道",
+                        "zh-CN": "要看的频道",
+                    })
+                    .addChannelTypes(ChannelType.GuildText, ChannelType.GuildVoice)
+                    .setRequired(false),
+            ),
         ),
     allowedContext: ["dm", "guild"],
     stage: "beta",
 
     async execute(interaction, client) {
-        const subcommand = interaction.options.getSubcommand();
-        const channel = interaction.channel;
-        if (!channel) return;
+        const { channel, options } = interaction;
+        if (!channel || (
+            channel instanceof ThreadChannel
+            || channel instanceof NewsChannel
+            || channel instanceof StageChannel
+        )) return;
 
-        const given_msg_id = interaction.options.getString("message_id", false);
+        const subcommand = options.getSubcommand();
 
         const [_, [
             emoji_idCard,
@@ -329,7 +439,7 @@ export const infoSlash = {
                 const lang_relationship = get_lang_data(locale, "/info", "user.relationship"); // 感情狀態
                 const lang_banner = get_lang_data(locale, "/info", "user.banner") // 橫幅
 
-                const user = interaction.options.getUser("user") ?? interaction.user;
+                const user = options.getUser("user") ?? interaction.user;
                 const userTag = user.tag;
                 const userId = user.id;
 
@@ -569,9 +679,11 @@ export const infoSlash = {
             }
 
             case "message": {
+                const given_msg_id = options.getString("message_id", false);
+
                 const message = (
-                    (given_msg_id && await interaction.channel.messages.fetch(given_msg_id))
-                    || (await interaction.channel.messages.fetch({ limit: 2 })).reverse().first()
+                    (given_msg_id && await channel.messages.fetch(given_msg_id))
+                    || (await channel.messages.fetch({ limit: 2 })).reverse().first()
                 );
 
                 if (!message) {
@@ -580,13 +692,24 @@ export const infoSlash = {
 
                 const container = getMsgInfoContainer(message, locale);
 
-                // await interaction.editReply({ embeds: [embed] });
                 await interaction.editReply({
                     content: null,
                     components: [container],
                     flags: MessageFlags.IsComponentsV2,
                 });
 
+                break;
+            }
+
+            case "channel": {
+                const selected_channel = options.getChannel(
+                    "channel", false,
+                    [ChannelType.GuildText, ChannelType.GuildVoice, ChannelType.DM],
+                ) ?? channel;
+
+                const [embed, row] = await getChannelInfoEmbedRows(selected_channel, locale);
+
+                await interaction.editReply({ embeds: [embed], components: [row] });
                 break;
             }
         };
