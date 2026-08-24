@@ -164,7 +164,6 @@ const DEBUG = false;
     },
     "station_urn": "soundcloud:system-playlists:track-stations:973047190",
     "station_permalink": "track-stations:973047190",
-    "track_authorization": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW8iOiJISyIsInN1YiI6IiIsInJpZCI6IjJmMjRjZTgxLTU1NTctNDA0ZS05YWY3LWQwYmVmZDJjNzU2OSIsImlhdCI6MTc2NjU0NzkyOX0.RB83gVP3R6YzI_ZzSFH9qOwoSVZjSS4r1GOvQw1tktU",
     "monetization_model": "NOT_APPLICABLE",
     "policy": "SNIP",
     "user": {
