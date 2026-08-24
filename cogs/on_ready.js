@@ -55,6 +55,8 @@ const execute = async function (client) {
     global._client = client;
 
     await client.on_ready();
+    logger.info(`✅ Loaded ${client.commands.size} slash commands`);
+    logger.info(`✅ Loaded ${client.context_menus.size} context menus`);
 
     const schedules = await run_schedule(client);
     logger.info(`已加載 ${schedules} 個排程`);
