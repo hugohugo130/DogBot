@@ -1,5 +1,7 @@
 import {
     ButtonInteraction,
+    ContextMenuCommandBuilder,
+    ContextMenuCommandInteraction,
     ChatInputCommandInteraction as djsChatInputCommandInteraction,
     Interaction,
 
@@ -22,7 +24,6 @@ export type JobNames =
 
 // #endregion [Language]
 
-
 // #region [Interactions]
 
 export type PermissionTexts = Exclude<keyof typeof PermissionFlagsBits, "ManageEmojisAndStickers">
@@ -40,6 +41,8 @@ export enum CommandCategory {
     "Special",
     "Dev",
 };
+
+// #region [Slash]
 
 // 允許的 context (組合使用元組聯合)
 type AllowedContextTuple = ("dm" | "guild")[]
@@ -62,13 +65,13 @@ export type SlashExecutor<C extends AllowedContextTuple = AllowedContextTuple> =
     client: DogClient,
 ) => PromiseLike<unknown>;
 
-export interface BaseSlash<C extends AllowedContextTuple = AllowedContextTuple> {
+interface BaseSlash<C extends AllowedContextTuple = AllowedContextTuple> {
     builder: any;
     stage: "beta" | "stable" | "owner" | "admin";
     allowedContext: C;
-    music?: boolean = false;
-    alias?: string[] = [];
-    category?: CommandCategory = "General";
+    music?: boolean;
+    alias?: string[];
+    category?: CommandCategory;
     subCommands?: Record<string, SlashExecutor<C>>;
     permissions?: {
         bot?: PermissionTexts[];
@@ -81,5 +84,20 @@ export interface BaseSlash<C extends AllowedContextTuple = AllowedContextTuple> 
 export type Slash<C extends AllowedContextTuple = AllowedContextTuple> =
     | (BaseSlash<C> & Required<Pick<BaseSlash<C>, "execute">>)
     | (BaseSlash<C> & Required<Pick<BaseSlash<C>, "subCommands">>);
+
+// #endregion [Slash]
+
+// #region [Context Menus]
+type ContextMenuExecutor = (
+    interaction: ContextMenuCommandInteraction,
+    client: DogClient,
+) => PromiseLike<unknown>;
+
+export type ContextMenu = {
+    builder: ContextMenuCommandBuilder,
+    execute: ContextMenuExecutor,
+};
+
+// #endregion [Context Menus]
 
 // #endregion [Interactions]
