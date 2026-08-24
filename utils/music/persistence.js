@@ -52,7 +52,7 @@ async function saveAllMusicStates() {
 
     const data_length = Object.keys(allMusicData).length;
 
-    if (data_length) await writeJson(music_status_file, allMusicData);
+    await writeJson(music_status_file, allMusicData);
     logger.info(`[音樂持久化] 已保存 ${data_length} 個伺服器的音樂狀態`);
 };
 
