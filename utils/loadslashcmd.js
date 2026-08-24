@@ -5,7 +5,6 @@ import {
 } from "node:url";
 import {
     Collection,
-    ContextMenuCommandBuilder,
 } from "discord.js";
 
 import {
@@ -20,7 +19,6 @@ const DEBUG = false;
 const logger = get_logger();
 
 /**
- * 
  * @param { { [s: string]: any } | ArrayLike<any> } module
  * @returns {import("./types").Slash | null}
  */
@@ -31,6 +29,25 @@ function findSlashFromModule(module) {
             typeof exp === "object" &&
             "builder" in exp &&
             ("execute" in exp || "subCommands" in exp)
+        ) {
+            return exp;
+        };
+    };
+
+    return null;
+};
+
+/**
+ * @param { { [s: string]: any } | ArrayLike<any> } module
+ * @returns {import("./types").ContextMenu | null}
+ */
+function findContextMenuFromModule(module) {
+    for (const exp of Object.values(module)) {
+        if (
+            exp &&
+            typeof exp === "object" &&
+            "builder" in exp &&
+            "execute" in exp
         ) {
             return exp;
         };
@@ -121,23 +138,38 @@ async function loadslashcmd_array() {
 };
 
 /**
+ * @overload
+ * @param {true} returnArray
  * @returns {Promise<any[]>}
+ *
+ * @overload
+ * @param {false} returnArray
+ * @returns {Promise<Collection<string, import("./types").ContextMenu>>}
+ *
+ * @param {boolean} [returnArray=false]
+ * @returns {Promise<any[] | Collection<string, import("./types").ContextMenu>>}
  */
-export async function get_context_menus() {
-    const context_menus = [];
+export async function get_context_menus(returnArray = false) {
+    /** @type {import("discord.js").RESTPostAPIContextMenuApplicationCommandsJSONBody[] | Collection<string, import("./types").ContextMenu>} */
+    const context_menus = returnArray ? [] : new Collection();
     const dirpath = path.join(process.cwd(), "context_menus");
 
     const context_menu_files = (await readdir(dirpath, {
         encoding: "utf-8",
         recursive: true,
-    })).filter(file => file.endsWith(".js"));
+    })).filter(file => [".js", ".ts"].some(extension => file.endsWith(extension)));
 
     for (const file of context_menu_files) {
         const data = await import(pathToFileURL(path.join(dirpath, file)).href);
 
-        const context_menu = data?.default;
+        const context_menu = findContextMenuFromModule(data);
 
-        if (context_menu instanceof ContextMenuCommandBuilder) context_menus.push(context_menu.toJSON());
+        if (!context_menu || !["builder", "execute"].every(key => key in context_menu)) continue;
+
+        if (Array.isArray(context_menus))
+            context_menus.push(context_menu.builder.toJSON());
+        else
+            context_menus.set(context_menu.builder.name, context_menu);
     };
 
     return context_menus;
