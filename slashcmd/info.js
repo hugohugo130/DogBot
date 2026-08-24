@@ -265,7 +265,7 @@ export async function getChannelInfoEmbedRows(channel, locale = null) {
             ));
 
     for (const [name, value] of Object.entries(fields).slice(0, 25)) {
-        embed.addFields({ name, value, inline: false });
+        embed.addFields({ name, value, inline: true });
     };
 
     return [embed, row];
