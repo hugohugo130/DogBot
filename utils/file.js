@@ -1,5 +1,4 @@
 import path from "path";
-import util from "util";
 import fs from "fs";
 import fsp from "fs/promises";
 import {
@@ -20,7 +19,6 @@ import {
     scheduleEverymin,
     scheduleEverysec,
     database_file,
-    rpg_database_file,
     rpg_shop_file,
     rpg_farm_file,
     bake_data_file,

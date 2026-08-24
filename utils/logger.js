@@ -25,7 +25,6 @@ import {
 import {
     get_channel,
 } from "./discord.js";
-import DogClient from "./customs/client.js";
 
 // 全局管理器
 /** @type {Map<string, winston.Logger>} */

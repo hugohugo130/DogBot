@@ -8,13 +8,12 @@ import {
 import {
     wait_for_client,
 } from "./wait_for_client.js";
-import DogClient from "../utils/customs/client.js";
 
 /**
  * Get all members in a guild by its ID
  * @param {string} guildID - Guild ID
  * @param {boolean} [fetch=true] - 是否fetch
- * @param {DogClient | null} [client] - DogClient
+ * @param {import("../utils/customs/client.js").DogClient | null} [client] - import("../utils/customs/client.js").DogClient
  * @returns {Promise<GuildMember[]>}
  */
 export async function get_members_of_guild(guildID, fetch = true, client = global._client) {
@@ -33,7 +32,7 @@ export async function get_members_of_guild(guildID, fetch = true, client = globa
 /**
  * Get all users of a guild
  * @param {string} guildID
- * @param {DogClient | null} [client]
+ * @param {import("../utils/customs/client.js").DogClient | null} [client]
  * @returns {Promise<User[]>}
  */
 export async function get_users_of_guild(guildID, client = global._client) {
@@ -47,7 +46,7 @@ export async function get_users_of_guild(guildID, client = global._client) {
 /**
  * Get user by its ID
  * @param {string} userID
- * @param {DogClient | null} [client]
+ * @param {import("../utils/customs/client.js").DogClient | null} [client]
  * @returns {Promise<User | null>}
  */
 export async function get_user(userID, client = global._client) {
@@ -67,7 +66,7 @@ export async function get_user(userID, client = global._client) {
 /**
  * Get user by its username
  * @param {string} username
- * @param {DogClient | null} [client]
+ * @param {import("../utils/customs/client.js").DogClient | null} [client]
  * @returns {Promise<User | null>}
  */
 export async function get_user_by_username(username, client = global._client) {
@@ -95,7 +94,7 @@ export async function get_me(guild) {
 /**
  * Get a Guild object by its ID
  * @param {string} guildID
- * @param {DogClient | null} [client]
+ * @param {import("../utils/customs/client.js").DogClient | null} [client]
  * @returns {Promise<Guild | null>}
  */
 export async function get_guild(guildID, client = global._client) {
@@ -142,7 +141,7 @@ export async function get_channel(channelId, guild = null, fetch_first = false) 
     try {
         if (!channelId) return null;
 
-        /** @type {Guild | DogClient} */
+        /** @type {Guild | import("../utils/customs/client.js").DogClient} */
         const guild_or_client = guild ?? global._client ?? await wait_for_client();
 
         let channel = fetch_first
@@ -162,7 +161,7 @@ export async function get_channel(channelId, guild = null, fetch_first = false) 
  * @param {Guild} guild
  * @param {string} messageId
  * @param {boolean} [fetch=false]
- * @param {DogClient | null} [client=null]
+ * @param {import("../utils/customs/client.js").DogClient | null} [client=null]
  * @returns {Promise<Message | null>}
  */
 export async function get_message_by_guild(guild, messageId, fetch = false, client = null) {
@@ -197,7 +196,7 @@ export async function get_message_by_guild(guild, messageId, fetch = false, clie
  * @param {import("discord.js").TextBasedChannel} channel
  * @param {string} messageId
  * @param {boolean} [fetch=false]
- * @param {DogClient | null} [client=null]
+ * @param {import("../utils/customs/client.js").DogClient | null} [client=null]
  * @returns {Promise<Message | null>}
  */
 export async function get_message_by_channel(channel, messageId, fetch = false, client = null) {
