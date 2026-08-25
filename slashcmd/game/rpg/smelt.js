@@ -378,7 +378,7 @@ export const smeltSlash = {
                         amounts = divide(inventory.get(item_id) ?? 0, smelt_remain_slots);
                     } else { // auto_amount === "foods"
                         const entries = inventory.entries().toArray()
-                            .filter(([key]) => key in bake) // 過濾掉不可熔鍊的物品
+                            .filter(([key]) => smeltable_recipe.map(e => e.input.item).includes(key)) // 過濾掉不可熔鍊的物品
                             .sort(([, valueA], [, valueB]) => valueB - valueA) // 按數量降序排序
                             .slice(0, smelt_remain_slots); // 取前 {smelt_remain_slots} 個物品
 
