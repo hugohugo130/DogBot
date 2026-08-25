@@ -375,7 +375,7 @@ export const farmSlash = {
 
                 const success_embed = new EmbedBuilder()
                     .setColor(embed_default_color)
-                    .setTitle(`${emoji_check} | 成功使用了 ${amount} 個鐵鋤`)
+                    .setTitle(`${emoji_check} | 成功使用了 ${amount} 個${iron_hoe ? "鐵鋤" : "木鋤"}`)
                     .setDescription(`消耗 ${need_hunger} 點體力`)
                     .setEmbedFooter(interaction, { text: "", rpg_data });
 
