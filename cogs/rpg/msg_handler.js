@@ -1353,8 +1353,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
             const [target_users, [emoji_cross, emoji_top]] = await Promise.all([
                 mentions_users(message),
-                get_emoji("crosS", client),
-                get_emoji("top", client),
+                get_emojis(["crosS", "top"], client),
             ]);
 
             const target_user = target_users.first();
