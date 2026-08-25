@@ -817,21 +817,20 @@ export async function execute(client, interaction) {
                     return await message.reply({ embeds: [embed] });
                 };
 
-                await rpg_data.remove_money({
-                    amount: amount,
-                    original_user: `<@${user.id}>`,
-                    target_user: `<@${targetUserId}>`,
-                    type: `付款給`,
-                });
-
-                await target_user_rpg_data.add_money({
-                    amount: amount,
-                    original_user: `<@${user.id}>`,
-                    target_user: `<@${targetUserId}>`,
-                    type: `付款給`,
-                });
-
                 await Promise.all([
+                    rpg_data.remove_money({
+                        amount: amount,
+                        original_user: `<@${user.id}>`,
+                        target_user: `<@${targetUserId}>`,
+                        type: `付款給`,
+                    }),
+                    target_user_rpg_data.add_money({
+                        amount: amount,
+                        original_user: `<@${user.id}>`,
+                        target_user: `<@${targetUserId}>`,
+                        type: `付款給`,
+                        record_transaction: false,
+                    }),
                     save_rpg_data(user.id, rpg_data),
                     save_rpg_data(targetUserId, target_user_rpg_data),
                 ]);
@@ -1106,26 +1105,24 @@ export async function execute(client, interaction) {
                 const item_name = get_name_of_id(item);
                 const total_price = price * amount;
 
-                await buyerRPGData.remove_money({
-                    amount: total_price,
-                    original_user: `<@${buyerUserId}>`,
-                    target_user: `<@${targetUserId}>`,
-                    type: `購買物品付款`,
-                });
-
                 buyerInventory.add_item(item, amount);
-
-                await targetUserRPGData.add_money({
-                    amount: total_price,
-                    original_user: `<@${buyerUserId}>`,
-                    target_user: `<@${targetUserId}>`,
-                    type: `購買物品付款`,
-                });
-
                 if (!targetUserShopData.items[item].amount) targetUserShopData.items[item].amount = 0;
                 targetUserShopData.items[item].amount -= amount;
 
                 await Promise.all([
+                    buyerRPGData.remove_money({
+                        amount: total_price,
+                        original_user: `<@${buyerUserId}>`,
+                        target_user: `<@${targetUserId}>`,
+                        type: `購買物品付款`,
+                    }),
+                    targetUserRPGData.add_money({
+                        amount: total_price,
+                        original_user: `<@${buyerUserId}>`,
+                        target_user: `<@${targetUserId}>`,
+                        type: `購買物品付款`,
+                        record_transaction: false,
+                    }),
                     save_rpg_data(buyerUserId, buyerRPGData),
                     save_inventory(buyerUserId, buyerInventory),
                     save_rpg_data(targetUserId, targetUserRPGData),

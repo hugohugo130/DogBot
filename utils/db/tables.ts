@@ -117,29 +117,34 @@ export class RPGData {
         return new RPGData({ ...this.toJSON(), ...data });
     };
 
-    async add_money({ amount, original_user, target_user, type }: { amount: number; original_user: string; target_user: string; type: string; }): Promise<number> {
+    async add_money({ amount, original_user, target_user, type, record_transaction = true }: { amount: number; original_user: string; target_user: string; type: string; record_transaction?: boolean }): Promise<number> {
         this.money += amount;
 
-        await add_transaction({
-            timestamp: Math.floor(Date.now() / 1000),
-            original_user,
-            target_user,
-            amount,
-            type
-        });
+        if (record_transaction) {
+            await add_transaction({
+                timestamp: Math.floor(Date.now() / 1000),
+                original_user,
+                target_user,
+                amount,
+                type
+            });
+        };
 
         return this.money;
     };
 
-    async remove_money({ amount, original_user, target_user, type }: { amount: number; original_user: string; target_user: string; type: string; }): Promise<number> {
+    async remove_money({ amount, original_user, target_user, type, record_transaction = true }: { amount: number; original_user: string; target_user: string; type: string; record_transaction?: boolean }): Promise<number> {
         this.money -= amount;
-        await add_transaction({
-            timestamp: Math.floor(Date.now() / 1000),
-            original_user,
-            target_user,
-            amount,
-            type
-        });
+
+        if (record_transaction) {
+            await add_transaction({
+                timestamp: Math.floor(Date.now() / 1000),
+                original_user,
+                target_user,
+                amount,
+                type
+            });
+        };
 
         return this.money;
     };
