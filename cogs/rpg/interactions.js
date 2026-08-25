@@ -766,16 +766,16 @@ export async function execute(client, interaction) {
             }
             case "help": {
                 const [category, cmd = null] = otherCustomIDs;
+                let embed = null, row = null;
 
-                if (!(interaction instanceof StringSelectMenuInteraction) || !guild) return;
+                const choseValue = interaction.isStringSelectMenu()
+                    ? interaction.values[0]
+                    : cmd;
+
+                if (!choseValue || !guild) return;
 
                 await interaction.deferUpdate();
 
-                const choseValue = interaction.values[0];
-
-                let embed = null;
-
-                let row = null;
 
                 if (category) {
                     if (!isValidGuideCategory(category)) throw new Error(`${category} is not a valid guide category`);
