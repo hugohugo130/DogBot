@@ -295,7 +295,7 @@ export async function get_cooldowns(userid) {
     const table_name = /** @type {const} */ "rpg_cooldowns";
 
     const command = `
-        SELECT last_run_at
+        SELECT cooldown_key, last_run_at
         FROM ${table_name}
         WHERE user_id = $1
         LIMIT 1
@@ -425,17 +425,19 @@ export async function save_user_counts(userid, counts) {
     const table_name = /** @type {const} */ "rpg_user_counts";
 
     const command = `
+        WITH deleted AS (
+            DELETE FROM ${table_name}
+            WHERE user_id = $1::bigint
+                AND count_key != ALL($2::text[])
+        )
         INSERT INTO ${table_name} (user_id, count_key, count_value)
         SELECT $1::bigint, count_key, count_value::int
         FROM UNNEST($2::text[], $3::int[]) AS t(count_key, count_value)
         ON CONFLICT (user_id, count_key)
-        DO UPDATE SET
-            count_value = EXCLUDED.count_value
+            DO UPDATE SETcount_value = EXCLUDED.count_value
     `;
 
     const entries = Object.entries(counts);
-
-    if (!entries.length) return;
 
     const keys = entries.map(([key]) => key);
     const values = entries.map(([, value]) => value);
