@@ -134,6 +134,8 @@ async function smelt_smelt(interaction, item_id, amount, client = global._client
 
         if (mode == 1) await interaction.editReply({ embeds: [embed] });
         else await interaction.followUp({ embeds: [embed] });
+
+        return;
     };
 
     const embed = new EmbedBuilder()
