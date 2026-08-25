@@ -1278,7 +1278,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
                     let value = is_finished ? `冷卻完畢 (${target_time_str})` : target_time_str;
                     value += `\n上次執行時間: <t:${time_second}:D> <t:${Math.floor(time_second)}:T>`;
-                    value += `\n今天執行了 \`${counts[command].toLocaleString()}\` 次`;
+                    value += `\n今天執行了 \`${counts[command]?.toLocaleString() || 0}\` 次`;
 
                     embed.addFields({ name: field_name, value: value, inline: true });
                 };
