@@ -1303,7 +1303,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
             const user = message.author;
             if (!user) return;
 
-            const cooldowns = get_cooldowns(user.id);
+            const cooldowns = await get_cooldowns(user.id);
             const filtered_lastRunTimestamp = Object.fromEntries(
                 Object.
                     entries(cooldowns)
@@ -2761,23 +2761,23 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
         };
     };
 
-    if (rpg_cooldown[command] || ["cd", "cdd"].includes(command)) {
-        // 檢查上次執行時間是否為今天
-        const cooldowns = await get_cooldowns(userid);
-        if (cooldowns[command]) {
-            const lastRunDate = cooldowns[command];
-            const today = new Date();
+    // 檢查上次執行時間是否為今天
+    const cooldowns = await get_cooldowns(userid);
+    for (const [cmd, lastRunDate] of Object.entries(cooldowns)) {
+        const today = new Date();
 
-            // 檢查是否為同一天 (比較年、月、日)
-            if (lastRunDate.getFullYear() !== today.getFullYear() ||
-                lastRunDate.getMonth() !== today.getMonth() ||
-                lastRunDate.getDate() !== today.getDate()) {
-
-                // 如果不是同一天，重置計數
-                await save_user_counts(userid, {});
-            };
+        // 檢查是否為同一天 (比較年、月、日)
+        if (
+            lastRunDate.getFullYear() !== today.getFullYear() ||
+            lastRunDate.getMonth() !== today.getMonth() ||
+            lastRunDate.getDate() !== today.getDate()
+        ) {
+            // 如果不是同一天，重置計數
+            await set_count(userid, cmd, 0);
         };
+    };
 
+    if (rpg_cooldown[command]) {
         const [fetched_current_count, { is_finished, remaining_time }] = await Promise.all([
             get_count(command, userid),
             is_cooldown_finished(command, userid),
