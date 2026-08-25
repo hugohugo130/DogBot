@@ -592,26 +592,26 @@ export const bakeSlash = {
                             .setEmbedFooter(interaction);
 
                         embeds.push(embed);
+                    } else {
+                        // 將烘烤完成的物品加入背包
+                        inventory.add_item(item.output_item_id, item.amount);
+
+                        // 從烤箱移除該物品
+                        bake_data.splice(index, 1);
+
+                        // 儲存資料
+                        await Promise.all([
+                            save_bake_data(userId, bake_data),
+                            save_inventory(userId, inventory),
+                        ]);
+
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_default_color)
+                            .setTitle(`${emoji_drumstick} | 成功從烤箱取出了 ${get_name_of_id(item.output_item_id)}x${item.amount}`)
+                            .setEmbedFooter(interaction);
+
+                        embeds.push(embed);
                     };
-
-                    // 將烘烤完成的物品加入背包
-                    inventory.add_item(item.output_item_id, item.amount);
-
-                    // 從烤箱移除該物品
-                    bake_data.splice(index, 1);
-
-                    // 儲存資料
-                    await Promise.all([
-                        save_bake_data(userId, bake_data),
-                        save_inventory(userId, inventory),
-                    ]);
-
-                    const embed = new EmbedBuilder()
-                        .setColor(embed_default_color)
-                        .setTitle(`${emoji_drumstick} | 成功從烤箱取出了 ${get_name_of_id(item.output_item_id)}x${item.amount}`)
-                        .setEmbedFooter(interaction);
-
-                    embeds.push(embed);
                 };
 
                 await interaction.editReply({ embeds });
