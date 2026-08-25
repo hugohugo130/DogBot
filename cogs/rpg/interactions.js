@@ -1270,6 +1270,16 @@ export async function execute(client, interaction) {
                     get_emoji("crosS", client),
                 ]);
 
+                const smelt_recipe = smeltable_recipe.find(a => a.input.item === item_id);
+                if (!smelt_recipe) {
+                    const error_embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 找不到這個熔煉配方`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+                };
+
                 // 確保所有數值都被正確解析為整數
                 const parsedAmount = parseInt(amount);
                 const parsedCoalAmount = parseInt(coal_amount);
@@ -1310,16 +1320,6 @@ export async function execute(client, interaction) {
                 };
 
                 await save_inventory(user.id, inventory);
-
-                const smelt_recipe = smeltable_recipe.find(a => a.input.item === item_id);
-                if (!smelt_recipe) {
-                    const error_embed = new EmbedBuilder()
-                        .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 找不到這個熔煉配方`)
-                        .setEmbedFooter(interaction);
-
-                    return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
-                };
 
                 const output_item_id = smelt_recipe.output;
                 const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
