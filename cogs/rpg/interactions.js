@@ -817,14 +817,14 @@ export async function execute(client, interaction) {
                     return await message.reply({ embeds: [embed] });
                 };
 
-                rpg_data.remove_money({
+                await rpg_data.remove_money({
                     amount: amount,
                     original_user: `<@${user.id}>`,
                     target_user: `<@${targetUserId}>`,
                     type: `付款給`,
                 });
 
-                target_user_rpg_data.add_money({
+                await target_user_rpg_data.add_money({
                     amount: amount,
                     original_user: `<@${user.id}>`,
                     target_user: `<@${targetUserId}>`,
@@ -993,7 +993,7 @@ export async function execute(client, interaction) {
 
                 inventory.subtract_item(item_id, amount);
 
-                rpg_data.add_money({
+                await rpg_data.add_money({
                     amount: total_price,
                     original_user: "系統",
                     target_user: `<@${user.id}>`,
@@ -1106,7 +1106,7 @@ export async function execute(client, interaction) {
                 const item_name = get_name_of_id(item);
                 const total_price = price * amount;
 
-                buyerRPGData.remove_money({
+                await buyerRPGData.remove_money({
                     amount: total_price,
                     original_user: `<@${buyerUserId}>`,
                     target_user: `<@${targetUserId}>`,
@@ -1115,7 +1115,7 @@ export async function execute(client, interaction) {
 
                 buyerInventory.add_item(item, amount);
 
-                targetUserRPGData.add_money({
+                await targetUserRPGData.add_money({
                     amount: total_price,
                     original_user: `<@${buyerUserId}>`,
                     target_user: `<@${targetUserId}>`,

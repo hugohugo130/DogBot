@@ -86,7 +86,7 @@ export async function sign(rpg_data, message, client = null) {
     const diff = 4; // ± 4
 
     const amount = randint(total - diff, total + diff);
-    rpg_data.add_money({
+    await rpg_data.add_money({
         amount,
         original_user: "系統",
         target_user: user.toString(),
