@@ -88,7 +88,7 @@ async function smelt_smelt(interaction, item_id, amount, client = global._client
         return await interaction.followUp({ embeds: [embed] });
     };
 
-    const allMats = interaction.options.getBoolean("全部") ?? false;
+    const allMats = interaction.options.getBoolean("all") ?? false;
 
     // 透過需要的物品id 尋找熔鍊的配方
     const smelt_recipe = smeltable_recipe.find(item => item.input.item === item_id);
