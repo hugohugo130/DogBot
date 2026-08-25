@@ -69,7 +69,7 @@ export const TABLES_METADATA = {
                 FOREIGN KEY (user_id) REFERENCES rpg_users(user_id),
                 CONSTRAINT inventory_pkey primary key (user_id, item_id),
                 CONSTRAINT inventory_item_id_fkey foreign KEY (item_id)
-                    REFERENCES items (item_id) ON DELETE RESTRICT
+                    REFERENCES items (item_id) ON DELETE CASCADE
             );
             `,
     },
