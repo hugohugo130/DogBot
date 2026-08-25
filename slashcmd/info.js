@@ -683,7 +683,7 @@ export const infoSlash = {
 
                 const message = (
                     (given_msg_id && await channel.messages.fetch(given_msg_id))
-                    || (await channel.messages.fetch({ limit: 2 })).reverse().first()
+                    || (await channel.messages.fetch({ limit: 2 })).reverse().first() // 呼叫了deferReply，已經覆蓋剛剛最新訊息了
                 );
 
                 if (!message) {
