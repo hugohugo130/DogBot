@@ -1091,7 +1091,7 @@ const rpg_commands = {
             if (!item_exists(item)) item = null;
 
             const shop_data = await load_shop_data(target_user.id);
-            if (shop_data.items.length === 0) {
+            if (Object.keys(shop_data.items).length === 0) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 商店裡沒有販賣任何東西`)
