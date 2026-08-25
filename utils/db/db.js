@@ -98,9 +98,8 @@ export class PoolClient extends PGClient {
             fields: [ { name: 'table_exists', dataTypeID: 16 } ] // 16 is the OID for boolean
         }
         */
-        await this.begin();
         const command = `SELECT to_regclass('${table_name}') IS NOT NULL AS table_exists`;
-        const result = await this.query(command);
+        const result = await _pool.query(command);
 
         return !!result.rows[0]?.["table_exists"];
     };
