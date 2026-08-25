@@ -6,10 +6,10 @@
   "type": "module",
   "scripts": {
     "start": "node .",
-    "test": "node ./test.js",
+    "test": "node ./test.cjs",
     "check-deps": "node check_circular_dependencies.js",
     "pretest": "npm run check-deps",
-    "changelog": "powershell -Command '$changeLogFolderPath = \"./changelogs\"; if (-not Test-Path -Path $changeLogFolderPath) {New-Item -Path $directoryPath -ItemType Directory ^| Out-Null}; auto-changelog --output $changeLogFolderPath/$(Get-Date -Format \"yyyyMMdd_HHmmss\") --template keepachangelog'"
+    "changelog": "powershell -Command '$changeLogFolderPath = \"./changelog\"; if (-not Test-Path -Path $changeLogFolderPath) {New-Item -Path $directoryPath -ItemType Directory ^| Out-Null}; auto-changelog --output $changeLogFolderPath/$(Get-Date -Format \"yyyyMMdd_HHmmss\") --template keepachangelog'"
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
