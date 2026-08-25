@@ -9,6 +9,9 @@ import {
     get_id_of_name,
     get_name_of_id,
 } from "../rpg.js";
+import type {
+    MarryInfo,
+} from "../config.js";
 
 // #region [SQL returned data]
 
@@ -84,8 +87,6 @@ function assertValidAmount(amount: number): void {
         throw new Error("Amount must be a positive safe integer");
     };
 };
-
-type MarryInfo = import("../config.js").MarryInfo;
 
 export type RPGUserData = Omit<RPGUsers, "user_id">;
 export type RPGInventoryData = { [item_id: string]: number };
