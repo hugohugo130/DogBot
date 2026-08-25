@@ -136,6 +136,7 @@ dist
 .pnp.*
 
 temp/
+/website/
 /db/
 db_old/
 ai_update/
