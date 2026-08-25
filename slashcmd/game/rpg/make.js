@@ -13,6 +13,7 @@ import {
 import {
     load_inventory,
     load_rpg_data,
+    save_inventory,
     save_rpg_data,
 } from "../../../utils/db/rpg.js";
 import {
@@ -162,7 +163,7 @@ export const makeSlash = {
             .setEmbedFooter(interaction);
 
         await Promise.all([
-            save_rpg_data(userid, rpg_data),
+            save_inventory(userid, inventory),
             interaction.editReply({ embeds: [embed] }),
         ]);
     },
