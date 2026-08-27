@@ -1895,8 +1895,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 return await message.reply({ embeds: [embed] });
             };
 
-            let sell_amount = await get_amount(item_id, user, args[1]) || 1;
-            sell_amount = sell_amount < 1 ? 1 : sell_amount;
+            let sell_amount = BetterEval((await get_amount(item_id, user, args[1]) || 1), 1);
             if (item_amount < sell_amount) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
