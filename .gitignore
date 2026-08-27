@@ -139,6 +139,8 @@ temp/
 /website/
 /db/
 db_old/
+migration/
+*backup*
 ai_update/
 .bailurules/
 database_recovery/
