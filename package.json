@@ -1,6 +1,6 @@
 {
   "name": "dogbot",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "license": "PolyForm-Noncommercial-1.0.0",
   "main": "index.js",
   "type": "module",
@@ -16,9 +16,9 @@
     "@discordjs/voice": "^0.19.2",
     "@ffmpeg-installer/ffmpeg": "^1.1.0",
     "@snazzah/davey": "^0.1.12",
-    "axios": "^1.18.1",
+    "axios": "^1.20.0",
     "diff": "^8.0.4",
-    "discord.js": "^14.26.4",
+    "discord.js": "^14.27.0",
     "express": "^5.2.1",
     "file-type": "^21.3.4",
     "fluent-ffmpeg": "^2.1.3",
@@ -31,7 +31,8 @@
   },
   "devDependencies": {
     "eslint-plugin-command": "^4.0.0",
-    "jscodeshift": "^17.3.0",
+    "jscodeshift": "^17.4.0",
+    "supabase": "^2.116.0",
     "typescript": "^6.0.3"
   },
   "allowScripts": {
