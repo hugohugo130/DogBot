@@ -69,9 +69,7 @@ export const makeSlash = {
     async execute(interaction, client) {
         const userid = interaction.user.id;
 
-        const [_, rpg_data, inventory, [emoji_toolbox, emoji_cross]] = await Promise.all([
-            interaction.deferReply(),
-            load_rpg_data(userid),
+        const [inventory, [emoji_toolbox, emoji_cross]] = await Promise.all([
             load_inventory(userid),
             get_emojis(["toolbox", "crosS"], client),
         ]);
@@ -85,7 +83,7 @@ export const makeSlash = {
                 .trim()
         );
 
-        if (!get_name_of_id(item_id)) {
+        if (!get_id_of_name(get_name_of_id(item_id), null)) {
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 我不知道 ${original_item_id} 是什麼`)
@@ -145,8 +143,10 @@ export const makeSlash = {
                 .setDescription(`你缺少了 ${item_missing.map(missing => `${missing.name} \`x${missing.amount}\`個`).join("、")}`)
                 .setEmbedFooter(interaction);
 
-            return await interaction.editReply({ embeds: [embed] });
+            return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
+
+        await interaction.deferReply();
 
         for (const need_item in item_need) {
             inventory.subtract_item(need_item, item_need[need_item]);
