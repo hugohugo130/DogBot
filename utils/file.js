@@ -1,23 +1,16 @@
 import path from "path";
-import util from "util";
-import axios from "axios";
 import fs from "fs";
 import fsp from "fs/promises";
 import {
     Logger,
 } from "winston";
 import {
-    AxiosError,
-} from "axios";
-import {
     VoiceChannel,
 } from "discord.js";
 
 import {
-    getServerIPSync,
-} from "./getSeverIPSync.js";
-import {
     INDENT,
+
     DATABASE_FILES,
     DEFAULT_VALUES,
     database_folder,
@@ -26,14 +19,12 @@ import {
     scheduleEverymin,
     scheduleEverysec,
     database_file,
-    rpg_database_file,
     rpg_shop_file,
     rpg_farm_file,
     bake_data_file,
     smelt_data_file,
     dvoice_data_file,
     temp_folder,
-    RPGDatabase,
 } from "./config.js";
 import {
     get_logger,
@@ -331,84 +322,6 @@ function join_db_folder(filename) {
  * @param {number} maxRetries
  * @returns {Promise<[same: boolean, localContent: string | null, remoteContent: string | null]>}
  */
-async function compareLocalRemote(filename, log = logger, maxRetries = 3) {
-    let localContent = null;
-    let remoteContent = null;
-
-    const basename_filename = path.basename(filename);
-    const local_filepath = join_db_folder(basename_filename);
-
-    // 獲取遠端伺服器地址
-    const { IP: serverIP, PORT } = global._client?.serverIP || getServerIPSync();
-    const SERVER_URL = `http://${serverIP}:${PORT}`;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        // 讀取本地檔案
-        try {
-            if (await exists(local_filepath)) {
-                localContent = await readFile(local_filepath, {
-                    encoding: "utf-8",
-                    return: null,
-                });
-
-                // 嘗試解析並格式化 JSON 以便比較
-                try {
-                    localContent = stringify(safeJSONParse(localContent));
-                } catch (e) {
-                    // 不是 JSON 格式，保持原樣
-                };
-            } else {
-                localContent = null;
-            }
-        } catch (err) {
-            if (err instanceof Error) log.error(`讀取本地檔案內容時遇到錯誤: ${err.stack}`);
-            localContent = null;
-        };
-
-        // 從遠端伺服器獲取檔案
-        try {
-            const url = `${SERVER_URL}/files/${basename_filename}`;
-
-            let response;
-
-            const resp = global.preloadResponse.get(url);
-            if (resp) {
-                response = resp;
-            };
-
-            if (!response?.data) {
-                response = await axios.get(url);
-            };
-
-            remoteContent = stringify(response.data);
-        } catch (err) {
-            if (err instanceof AxiosError && err.response?.status === 404) {
-                log.warn(`遠端檔案不存在: ${basename_filename}`);
-                remoteContent = null;
-            } else if (err instanceof AxiosError && (err.code === "ECONNRESET" || err.message?.includes("socket hang up"))) {
-                if (attempt < maxRetries) {
-                    log.warn(`連接遠端伺服器時中斷，正在重試 (${attempt}/${maxRetries})...`);
-                    await asleep(1000);
-                    continue;
-                } else {
-                    if (err instanceof Error) log.error(`獲取遠端檔案內容時遇到錯誤: ${err.message}`);
-                    remoteContent = null;
-                };
-            } else {
-                if (err instanceof Error) log.error(`獲取遠端檔案內容時遇到錯誤: ${err.stack}`);
-                remoteContent = null;
-            };
-        };
-
-        break;
-    };
-
-    // 比較內容
-    const same = !!(localContent && remoteContent && util.isDeepStrictEqual(localContent, remoteContent));
-
-    return [same, localContent, remoteContent];
-};
-
 /**
  *
  * @param {string} filename
@@ -668,86 +581,6 @@ async function getPrefixes(guildID) {
     };
 
     return data["prefix"];
-};
-
-/**
- * Load RPG data
- * @param {string} userid
- * @returns {Promise<RPGDatabase>}
- */
-async function load_rpg_data(userid) {
-    logger.debug(`load_rpg_data(${userid}) - ${getCallerModuleName("list")}`);
-    const cacheManager = getCacheManager();
-
-    // 嘗試從緩存中獲取
-    const cached = cacheManager.get(CacheTypes.RPG, userid);
-    if (cached) {
-        return cached;
-    };
-
-    const rpg_emptyeg = find_default_value("rpg_database.json", {});
-
-    if (await exists(rpg_database_file)) {
-        const data = await readJson(rpg_database_file);
-
-        if (!data[userid]) {
-            const empty_rpg_class = new RPGDatabase(rpg_emptyeg);
-            await save_rpg_data(userid, empty_rpg_class);
-
-            return new RPGDatabase(empty_rpg_class);
-        };
-
-        const userData = order_data(data[userid], rpg_emptyeg);
-
-        // 存入緩存
-        cacheManager.set(CacheTypes.RPG, userid, new RPGDatabase(userData));
-
-        return new RPGDatabase(userData);
-    } else {
-        await save_rpg_data(userid, rpg_emptyeg);
-        return new RPGDatabase(rpg_emptyeg);
-    };
-};
-
-/**
- * Save RPG data
- * @param {string} userid
- * @param {RPGDatabase} rpg_data
- * @returns {Promise<void>}
- */
-async function save_rpg_data(userid, rpg_data) {
-    logger.debug(`save_rpg_data(${userid}) - ${getCallerModuleName("list")}`);
-    const rpg_emptyeg = find_default_value("rpg_database.json", {});
-
-    /** @type {{ [k: string]: RPGDatabase }} */
-    let data = {};
-    if (await exists(rpg_database_file)) {
-        data = await readJson(rpg_database_file);
-    };
-
-    if (!data[userid]) {
-        data[userid] = rpg_emptyeg;
-    };
-
-    data[userid] = rpg_data.concat(data[userid]);
-
-    // 檢查並清理 inventory 中數量為 0 或 null 的物品
-    if (data[userid].inventory) {
-        Object.keys(data[userid].inventory).forEach(item => {
-            if (data[userid].inventory[item] === 0 || data[userid].inventory[item] === null) {
-                delete data[userid].inventory[item];
-            };
-        });
-    };
-
-    data[userid] = order_data(data[userid], rpg_emptyeg);
-
-    await writeJson(rpg_database_file, data);
-
-    const cacheManager = getCacheManager();
-
-    // 更新緩存
-    cacheManager.set(CacheTypes.RPG, userid, data[userid]);
 };
 
 /**
@@ -1016,7 +849,6 @@ export {
     // tools
     join_folder,
     join_db_folder,
-    compareLocalRemote,
     find_default_value,
     get_probability_of_id,
     order_data,
@@ -1030,8 +862,6 @@ export {
     addPrefix,
     rmPrefix,
     getPrefixes,
-    load_rpg_data,
-    save_rpg_data,
     load_shop_data,
     save_shop_data,
     load_farm_data,

@@ -1,0 +1,32 @@
+import {
+    ApplicationCommandType,
+    ApplicationIntegrationType,
+    ContextMenuCommandBuilder,
+    InteractionContextType,
+    MessageFlags,
+} from "discord.js";
+
+import type { ContextMenu } from "../utils/types";
+import {
+    getAvatarGallery,
+} from "../slashcmd/avatar.js";
+
+export const avatarMenu: ContextMenu = {
+    builder: new ContextMenuCommandBuilder()
+        .setName("avatar")
+        .setNameLocalizations({
+            "zh-CN": "头像",
+            "zh-TW": "頭貼",
+        })
+        .setType(ApplicationCommandType.User)
+        .setContexts(InteractionContextType.Guild, InteractionContextType.BotDM, InteractionContextType.PrivateChannel)
+        .setIntegrationTypes(ApplicationIntegrationType.UserInstall),
+
+    async execute(interaction) {
+        if (!interaction.isUserContextMenuCommand()) return;
+
+        const mediaGallery = getAvatarGallery(interaction.targetUser);
+
+        await interaction.reply({ components: [mediaGallery], flags: MessageFlags.IsComponentsV2 });
+    },
+};

@@ -6,7 +6,6 @@ import {
     ButtonStyle,
     MessageFlags,
     Collection,
-    ChatInputCommandInteraction,
 } from "discord.js";
 
 import {
@@ -17,14 +16,17 @@ import {
     oven_slots,
     food_data,
     get_name_of_id,
-    add_item,
 } from "../../../utils/rpg.js";
 import {
-    load_rpg_data,
-    save_rpg_data,
     load_bake_data,
     save_bake_data,
 } from "../../../utils/file.js";
+import {
+    load_inventory,
+    save_inventory,
+    load_rpg_data,
+    save_rpg_data,
+} from "../../../utils/db/rpg.js";
 import {
     generateSessionId,
 } from "../../../utils/random.js";
@@ -88,8 +90,8 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
 
     const [emoji_cross, emoji_drumstick] = await get_emojis(["crosS", "drumstick"], client);
 
-    let [rpg_data, bake_data] = await Promise.all([
-        load_rpg_data(userId),
+    const [inventory, bake_data] = await Promise.all([
+        load_inventory(userId),
         load_bake_data(userId)
     ]);
 
@@ -112,8 +114,8 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
 
     const allFoods = interaction.options.getBoolean("all") ?? false;
 
-    // if (allFoods && !auto_amount) amount = rpg_data.inventory[first_food] || 0;
-    if (allFoods) amount = rpg_data.inventory[item_id] || 0;
+    // if (allFoods && !auto_amount) amount = inventory[first_food] || 0;
+    if (allFoods) amount = inventory.get(item_id) ?? 0;
 
     const target_food = bake[item_id];
     const target_food_hunger = food_data[target_food];
@@ -137,7 +139,7 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
     for (const need_item of item_need) {
         const current_item_id = need_item.item;
         const need_amount = need_item.amount;
-        const have_amount = (rpg_data.inventory[current_item_id] || 0);
+        const have_amount = (inventory.get(current_item_id) || 0);
 
         if (have_amount < need_amount) {
             item_missing.push({
@@ -395,7 +397,8 @@ export const bakeSlash = {
         const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
 
         let rpg_data = await load_rpg_data(userId);
-        const [bake_data, [wrongJobEmbed, row], [emoji_cross, emoji_drumstick]] = await Promise.all([
+        const [inventory, bake_data, [wrongJobEmbed, row], [emoji_cross, emoji_drumstick]] = await Promise.all([
+            load_inventory(userId),
             load_bake_data(userId),
             wrong_job_embed(rpg_data, "/bake", userId, interaction, client),
             get_emojis(["crosS", "drumstick"], client),
@@ -475,15 +478,15 @@ export const bakeSlash = {
                 };
 
                 if (allFoods && !auto_amount && first_food) {
-                    amounts = [rpg_data.inventory[first_food] || 1];
+                    amounts = [inventory.get(first_food) || 1];
                 } else if (auto_amount) {
                     if (auto_amount === "amount" && first_food) {
-                        amounts = divide(rpg_data.inventory[first_food], oven_remain_slots);
+                        amounts = divide(inventory.get(first_food) ?? 0, oven_remain_slots);
                     } else { // auto_amount === "foods"
-                        const entries = Object.entries(rpg_data.inventory)
-                            .filter(([key]) => key in bake) // 過濾掉不可烘烤的物品
+                        const entries = inventory.entries().toArray()
+                            .filter(([key]) => key in bake)                    // 過濾掉不可烘烤的物品
                             .sort(([, valueA], [, valueB]) => valueB - valueA) // 按數量降序排序
-                            .slice(0, oven_remain_slots); // 取前 {oven_remain_slots} 個物品
+                            .slice(0, oven_remain_slots);                      // 取前 {oven_remain_slots} 個物品
 
                         items = entries.map(([key]) => key);
                         amounts = entries.map(([, value]) => value);
@@ -491,7 +494,7 @@ export const bakeSlash = {
                 };
 
                 const total_need_coal = Math.ceil(amounts.reduce((sum, amount) => sum + amount, 0) / 2);
-                const coal_amount = rpg_data.inventory["coal"] || 0;
+                const coal_amount = inventory.get("coal") ?? 0;
 
                 if (coal_amount < total_need_coal) {
                     const item_list = [{
@@ -589,26 +592,26 @@ export const bakeSlash = {
                             .setEmbedFooter(interaction);
 
                         embeds.push(embed);
+                    } else {
+                        // 將烘烤完成的物品加入背包
+                        inventory.add_item(item.output_item_id, item.amount);
+
+                        // 從烤箱移除該物品
+                        bake_data.splice(index, 1);
+
+                        // 儲存資料
+                        await Promise.all([
+                            save_bake_data(userId, bake_data),
+                            save_inventory(userId, inventory),
+                        ]);
+
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_default_color)
+                            .setTitle(`${emoji_drumstick} | 成功從烤箱取出了 ${get_name_of_id(item.output_item_id)}x${item.amount}`)
+                            .setEmbedFooter(interaction);
+
+                        embeds.push(embed);
                     };
-
-                    // 將烘烤完成的物品加入背包
-                    rpg_data = add_item(rpg_data, item.output_item_id, item.amount);
-
-                    // 從烤箱移除該物品
-                    bake_data.splice(index, 1);
-
-                    // 儲存資料
-                    await Promise.all([
-                        save_bake_data(userId, bake_data),
-                        save_rpg_data(userId, rpg_data),
-                    ]);
-
-                    const embed = new EmbedBuilder()
-                        .setColor(embed_default_color)
-                        .setTitle(`${emoji_drumstick} | 成功從烤箱取出了 ${get_name_of_id(item.output_item_id)}x${item.amount}`)
-                        .setEmbedFooter(interaction);
-
-                    embeds.push(embed);
                 };
 
                 await interaction.editReply({ embeds });

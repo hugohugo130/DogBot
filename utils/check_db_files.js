@@ -14,10 +14,6 @@ import {
     exists,
     basename,
     join_db_folder,
-    load_rpg_data,
-    save_rpg_data,
-    loadData,
-    saveData,
 } from "./file.js";
 import {
     get_logger,
@@ -25,6 +21,10 @@ import {
 import {
     wait_for_client,
 } from "./wait_for_client.js";
+import {
+    load_rpg_data,
+    save_rpg_data,
+} from "./db/rpg.js";
 import DogClient from "./customs/client.js";
 
 const logger = get_logger();

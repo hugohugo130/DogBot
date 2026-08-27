@@ -1,0 +1,7 @@
+{
+    "editor.tabSize": 4, 
+    "[json]": {
+        "editor.tabSize": 2
+    },
+    "js/ts.suggest.paths": false,
+}

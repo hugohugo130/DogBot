@@ -2,24 +2,23 @@ import "./utils/check.env.js"; // check .env file
 import { inspect } from "util";
 import { loadEnvFile } from "node:process";
 
+import { Events } from "discord.js";
 import { get_logger } from "./utils/logger.js";
-import { Events, Collection } from "discord.js";
 import { load_cogs } from "./utils/load_cogs.js";
 import { check_item_data } from "./utils/rpg.js";
 import { registcmd } from "./register_commands.js";
 import { getCacheManager } from "./utils/cache.js";
 import { musicSearchEngine } from "./utils/config.js";
-import { loadslashcmd } from "./utils/loadslashcmd.js";
 import { safeshutdown } from "./utils/safeshutdown.js";
 import { hot_reload_cogs } from "./utils/hot_reload.js";
 import { check_language_keys } from "./utils/language.js";
-import { getServerIPSync } from "./utils/getSeverIPSync.js";
+import { create_tables } from "./utils/db/create_tables.js";
 import { should_register_cmd } from "./utils/auto_register.js";
+import { update_items } from "./utils/db/update_items_table.js";
 import { check_help_rpg_info } from "./cogs/rpg/interactions.js";
 import { saveAllMusicStates } from "./utils/music/persistence.js";
 import { getQueues, IsFFprobeInstalled } from "./utils/music/music.js";
 import { checkDBFilesExists, checkDBFilesCorrupted } from "./utils/check_db_files.js";
-import { checkAllDatabaseFilesContent, uploadAllDatabaseFiles } from "./utils/onlineDB.js";
 import DogClient from "./utils/customs/client.js";
 import get_areadline from "./utils/readline.js";
 
@@ -28,6 +27,7 @@ loadEnvFile(); // load .env file
 const args = process.argv.slice(2);
 const debug = args.includes("--debug");
 const isBeta = args.includes("--beta");
+const noCache = args.includes("--no-cache");
 
 global.debug = debug;
 global.isBeta = isBeta;
@@ -64,6 +64,9 @@ process.on("uncaughtException", (error) => {
     if (errorStack.includes("Missing Access")) return;
     if (errorStack.includes("Missing Permissions")) return;
     if (errorStack.includes("Unknown interaction")) return;
+    if (/^Error: getaddrinfo ENOTFOUND c-[0-9a-z\-]+\.discord\.media$/.test(errorStack)) {
+        return logger.warn("臭臭的Discord又開始斷線了");
+    };
 
     logger.error(`未捕獲的異常:\n${errorStack}`);
 });
@@ -136,7 +139,6 @@ client.once(Events.ClientReady, async () => {
             }
 
             case "uploadall": {
-                await uploadAllDatabaseFiles();
                 logger.info(`done uploading all database files`)
 
                 break;
@@ -219,9 +221,10 @@ client.once(Events.ClientReady, async () => {
     global._client = null;
     global._areadline = null;
     global.sendQueue = [];
-    global.preloadResponse = new Collection();
 
-    const [_, ffprobeInstalled] = await Promise.all([
+    await create_tables(noCache);
+    const [_, __, ffprobeInstalled] = await Promise.all([
+        update_items(),
         checkDBFilesCorrupted(),
         IsFFprobeInstalled(),
     ]);
@@ -230,14 +233,10 @@ client.once(Events.ClientReady, async () => {
         logger.warn(`如果FFprobe沒有安裝，那麼將無法偵測音樂功能中，播放自定義URL的音訊長度`);
     };
 
-    if (!debug) await checkAllDatabaseFilesContent();
-
     check_help_rpg_info();
     check_language_keys();
     check_item_data();
     await checkDBFilesExists();
-
-    client.serverIP = getServerIPSync();
 
     const cogs = await load_cogs(client);
     logger.info(`✅ Loaded ${cogs} cogs`);
@@ -245,10 +244,6 @@ client.once(Events.ClientReady, async () => {
     if (await should_register_cmd()) {
         await registcmd(true, true);
     };
-
-    client.commands = await loadslashcmd(true);
-
-    logger.info(`✅ Loaded ${client.commands.size} slash commands`);
 
     await client.login(TOKEN);
 

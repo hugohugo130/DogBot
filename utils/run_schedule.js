@@ -41,6 +41,7 @@ async function interval(per_sec, execute, file, ...args) {
             logger.error(`[interval] 每${per_sec}秒的排程，${file}執行錯誤: ${errorStack}`);
 
             await asleep(Math.max(per_sec * 1000, 1000));
+            continue;
         };
 
         const elapsed = Date.now() - start;
@@ -107,6 +108,7 @@ async function wait_for_lock(basename, timeout = 5000, check_per = 100) {
         await asleep(check_per);
     };
 
+    run_lock[basename] = true;
     return true;
 };
 
@@ -127,12 +129,14 @@ async function scheduleFunc(client, file, per) {
         return;
     };
 
-    run_lock[basename] = true;
     try {
         const schedule = await import(pathToFileURL(file).href);
 
-        if (schedule.execute) {
-            await schedule.execute(client);
+        const execute = schedule?.execute || schedule?.default?.execute;
+        if (execute) {
+            await execute(client);
+        } else {
+            logger.warn(`排程 ${basename} 沒有 export execute`);
         };
     } catch (error) {
         const errorStack = util.inspect(error, { depth: null });

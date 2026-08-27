@@ -6,9 +6,8 @@ import {
 import {
     load_rpg_data,
     save_rpg_data,
-} from "../utils/file.js";
+} from "../utils/db/rpg.js";
 import {
-    add_money,
     get_emoji,
 } from "../utils/rpg.js";
 import {
@@ -20,8 +19,10 @@ import {
 import {
     daily_sign_guildIDs,
     embed_default_color,
-    RPGDatabase,
 } from "../utils/config.js";
+import {
+    RPGData,
+} from "../utils/db/tables.ts";
 import DogClient from "../utils/customs/client.js";
 import EmbedBuilder from "../utils/customs/embedBuilder.js";
 
@@ -59,7 +60,7 @@ export function hasSignedTodayOrBrokeSign(lastSignTime) {
 
 /**
  * Sign Function
- * @param {RPGDatabase} rpg_data - RPG data
+ * @param {RPGData} rpg_data - RPG data
  * @param {Message} message - Discord Message
  * @param {DogClient | null} [client=null] - Discord Client
  * @returns {Promise<boolean>} true if signed successfully, otherwise false
@@ -69,7 +70,7 @@ export async function sign(rpg_data, message, client = null) {
     const user = message.author;
 
     if (!rpg_data.job) return false;
-    if (!rpg_data.daily || typeof rpg_data.daily !== "number") rpg_data.daily = 0;
+    if (!rpg_data.daily) rpg_data.daily = new Date(0);
     if (!rpg_data.daily_times || typeof rpg_data.daily_times !== "number") rpg_data.daily_times = 0;
 
     let daily_times = rpg_data.daily_times;
@@ -85,15 +86,14 @@ export async function sign(rpg_data, message, client = null) {
     const diff = 4; // ± 4
 
     const amount = randint(total - diff, total + diff);
-    rpg_data.money = add_money({
-        rpg_data,
+    await rpg_data.add_money({
         amount,
-        originalUser: "系統",
-        targetUser: user.toString(),
+        original_user: "系統",
+        target_user: user.toString(),
         type: "每日簽到",
     });
 
-    rpg_data.daily = Date.now();
+    rpg_data.daily = new Date();
     daily_times++;
 
     rpg_data.daily_times = daily_times;

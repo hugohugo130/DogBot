@@ -19,7 +19,6 @@ declare global {
     var debug: boolean | undefined;
     var isBeta: boolean | undefined;
     var sendQueue: any[] | undefined;
-    var preloadResponse: Collection | null | undefined;
 };
 
 export { };

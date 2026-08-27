@@ -6,10 +6,10 @@
   "type": "module",
   "scripts": {
     "start": "node .",
-    "test": "node ./test.js",
+    "test": "node ./test.cjs",
     "check-deps": "node check_circular_dependencies.js",
     "pretest": "npm run check-deps",
-    "changelog": "powershell -Command '$changeLogFolderPath = \"./changelogs\"; if (-not Test-Path -Path $changeLogFolderPath) {New-Item -Path $directoryPath -ItemType Directory ^| Out-Null}; auto-changelog --output $changeLogFolderPath/$(Get-Date -Format \"yyyyMMdd_HHmmss\") --template keepachangelog'"
+    "changelog": "powershell -Command '$changeLogFolderPath = \"./changelog\"; if (-not Test-Path -Path $changeLogFolderPath) {New-Item -Path $directoryPath -ItemType Directory ^| Out-Null}; auto-changelog --output $changeLogFolderPath/$(Get-Date -Format \"yyyyMMdd_HHmmss\") --template keepachangelog'"
   },
   "dependencies": {
     "@discordjs/opus": "^0.10.0",
@@ -24,11 +24,13 @@
     "fluent-ffmpeg": "^2.1.3",
     "mediaplex": "^1.0.0",
     "opusscript": "^0.0.8",
+    "pg": "^8.23.0",
     "prism-media": "^1.3.5",
     "soundcloud.ts": "^0.7.4",
     "winston": "^3.19.0"
   },
   "devDependencies": {
+    "eslint-plugin-command": "^4.0.0",
     "jscodeshift": "^17.3.0",
     "typescript": "^6.0.3"
   },

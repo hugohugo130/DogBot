@@ -13,6 +13,13 @@ import {
     authorName,
     BotName,
 } from "../config.js";
+import {
+    loadslashcmd,
+    get_context_menus,
+} from "../loadslashcmd.js";
+import {
+    loadDvoiceData,
+} from "../file.js";
 
 /**
  * @typedef OvenBakeSession
@@ -45,7 +52,7 @@ import {
  * @property {string} userId
  */
 
-export default class DogClient extends Client {
+class DogClient extends Client {
     constructor() {
         /** @type {import("discord.js").ClientOptions} */
         const options = {
@@ -94,6 +101,9 @@ export default class DogClient extends Client {
         /** @type {Collection<string, import("../types").Slash>} */
         this.commands = new Collection();
 
+        /** @type {Collection<string, import("../types").ContextMenu>} */
+        this.context_menus = new Collection();
+
         /** @type {Collection<string, any>} */
         this.musicTrackSession = new Collection();
 
@@ -116,8 +126,6 @@ export default class DogClient extends Client {
         /** @type {Collection<string, number>} */
         this.counting_warning_cooldown = new Collection();
 
-        /** @type {{ IP: string, PORT: number }} */
-        this.serverIP = { IP: "192.168.0.156", "PORT": 3003 };
 
         /** @type {string} */
         this.name = BotName; // will be set when the client is ready and BotName is not set
@@ -136,11 +144,15 @@ export default class DogClient extends Client {
      * @returns {Promise<void>}
      */
     async on_ready() {
-        const { loadDvoiceData } = await import(new URL("../file.js", import.meta.url).href);
-        const { loadslashcmd } = await import(new URL("../loadslashcmd.js", import.meta.url).href);
+        const [loadedCommands, loadedContextMenus, rawDvoiceData] = await Promise.all([
+            (!this.commands.size) ? loadslashcmd(true) : this.commands,
+            (!this.context_menus.size) ? get_context_menus(false) : this.context_menus,
+            loadDvoiceData(),
+        ]);
 
-        if (!this.commands.size) this.commands = await loadslashcmd(true);
-        this.dvoice = new Collection(await loadDvoiceData());
+        this.commands = loadedCommands;
+        this.context_menus = loadedContextMenus;
+        this.dvoice = new Collection(rawDvoiceData);
 
         if (!this.name && this.user?.displayName) this.name = this.user.displayName;
     };
@@ -230,3 +242,6 @@ export default class DogClient extends Client {
      */
     save_user_locale = (userId, locale) => this.locales.set(userId, locale);
 };
+
+export default DogClient;
+export {DogClient};

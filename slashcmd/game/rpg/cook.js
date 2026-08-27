@@ -4,7 +4,6 @@ import {
     ButtonBuilder,
     ButtonStyle,
     MessageFlags,
-    ChatInputCommandInteraction,
     ContainerBuilder,
     TextDisplayBuilder,
     SeparatorBuilder,
@@ -20,12 +19,12 @@ import {
     get_emoji,
     cook,
     food_data,
-    subtract_item,
 } from "../../../utils/rpg.js";
 import {
+    load_inventory,
+    save_inventory,
     load_rpg_data,
-    save_rpg_data,
-} from "../../../utils/file.js";
+} from "../../../utils/db/rpg.js";
 import {
     generateSessionId,
 } from "../../../utils/random.js";
@@ -106,7 +105,7 @@ export async function getCookingResultContainer(output_food, amount, client = gl
 
     const food_name = get_name_of_id(output_food);
 
-    // 创建显示内容
+    // 創建顯示內容
     const fill_hunger = food_data[output_food];
 
     const container = new ContainerBuilder()
@@ -187,9 +186,10 @@ export const cookSlash = {
     async execute(interaction, client) {
         const userId = interaction.user.id;
 
-        let rpg_data = await load_rpg_data(userId);
-        const [emoji_cross, [wrongJobEmbed, row]] = await Promise.all([
+        const rpg_data = await load_rpg_data(userId);
+        const [emoji_cross, inventory, [wrongJobEmbed, row]] = await Promise.all([
             get_emoji("crosS", client),
+            load_inventory(userId),
             wrong_job_embed(rpg_data, "/cook", userId, interaction, client),
         ]);
 
@@ -214,7 +214,7 @@ export const cookSlash = {
 
         if (allFoods) {
             // 透過玩家的背包，計算可以製作多少份
-            const max_amount = Math.min(...input_foods.map(e => Math.floor((rpg_data.inventory[e.name] ?? 0) / e.amount)));
+            const max_amount = Math.min(...input_foods.map(e => Math.floor((inventory.get(e.name) ?? 0) / e.amount)));
 
             if (max_amount) amount = max_amount;
         };
@@ -234,13 +234,13 @@ export const cookSlash = {
         ];
 
         const not_enough_items = item_needed
-            .map(item => userHaveNotEnoughItems(rpg_data, item.item, item.amount))
+            .map(item => userHaveNotEnoughItems(inventory, item.item, item.amount))
             .filter(e => e !== null);
 
         if (not_enough_items.length) return await interaction.reply({ embeds: [await notEnoughItemEmbed(not_enough_items, interaction, client)], flags: MessageFlags.Ephemeral });
 
         for (const item of item_needed) {
-            rpg_data = subtract_item(rpg_data, item.item, item.amount);
+            inventory.subtract_item(item.item, item.amount);
         };
 
         const buttonCustomIdLengthLimit = 100;
@@ -249,7 +249,7 @@ export const cookSlash = {
 
         const [container, _, __] = await Promise.all([
             getCookingContainer(inputed_foods, item_needed, userId, sessionId, 0, client),
-            save_rpg_data(userId, rpg_data),
+            save_inventory(userId, inventory),
             interaction.deferReply(),
         ]);
 

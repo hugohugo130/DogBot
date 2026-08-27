@@ -9,6 +9,6 @@ export default {
      * @param {DogClient} client
      */
     execute: async function (client) {
-        await process_send_queue(client);
+        await process_send_queue();
     },
 };

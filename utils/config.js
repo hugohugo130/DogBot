@@ -9,103 +9,10 @@ import {
 const cwd = process.cwd;
 const isBeta = (global.isBeta ?? process.argv.slice(2).includes("--beta"));
 
-// Online Database Info
-const DEFAULT_IP = "192.168.0.156";
-const DEFAULT_PORT = isBeta
-    ? 3004 // BETA: true  - 測試環境
-    : 3003 // BETA: false - 正式環境
 
 // Database
 const INDENT = 4;
 const database_folder = `${cwd()}/db`;
-
-class RPGDatabase {
-    /** @type {number} */
-    money = 1000;
-    /** @type {number} */
-    hunger = 20;
-    /** @type {number} */
-    daily = 0;
-    /** @type {number} */
-    daily_times = 0;
-    /** @type {boolean} */
-    daily_msg = false;
-    /** @type {string | null} */
-    job = null;
-    /** @type {string | null} */
-    fightjob = null;
-    /** @type {string | null} */
-    badge = null;
-
-    /** @type {import("./config.js").MarryInfo} */
-    marry = {
-        status: false,
-        with: null,
-        time: 0,
-    };
-
-    /** @type {{ [k: string]: number}} */
-    lastRunTimestamp = {};
-    /** @type {{ [k: string]: number}} */
-    inventory = {};
-
-    /** @type {import("./config.js").TransactionsInfo[]} */
-    transactions = [];
-    /** @type {{ [k: string]: number}} */
-    count = {};
-    /** @type {string[]} */
-    privacy = [];
-
-    /**
-     * @param {import("./config.js").RpgDatabase | RPGDatabase} data
-     */
-    constructor(data) {
-        Object.assign(this, structuredClone(data));
-    };
-
-    /**
-     * @param {any} obj
-     * @returns {boolean}
-     */
-    static isRPGDatabase(obj) {
-        return obj instanceof RPGDatabase;
-    };
-
-    /**
-     * Merge two objects
-     * @param {Object | RPGDatabase} new_data
-     * @returns {RPGDatabase} Modified RPGDatabase
-     */
-    concat(new_data) {
-        if (new_data instanceof RPGDatabase) {
-            new_data = new_data.toJSON();
-        };
-
-        return new RPGDatabase({ ...new_data, ...this.toJSON() });
-    };
-
-    /**
-     * @returns {import("./config.js").RpgDatabase}
-     */
-    toJSON() {
-        return {
-            money: this.money,
-            hunger: this.hunger,
-            daily: this.daily,
-            daily_times: this.daily_times,
-            daily_msg: this.daily_msg,
-            job: this.job,
-            fightjob: this.fightjob,
-            badge: this.badge,
-            marry: this.marry,
-            lastRunTimestamp: this.lastRunTimestamp,
-            inventory: this.inventory,
-            transactions: this.transactions,
-            count: this.count,
-            privacy: this.privacy,
-        };
-    };
-};
 
 // #region [typedef]
 
@@ -113,34 +20,16 @@ class RPGDatabase {
  * @typedef {Object} MarryInfo
  * @property {boolean} status     - 是否已結婚
  * @property {string | null} with - 和誰結婚
- * @property {number} time        - 結婚時間戳
+ * @property {number} time        - 結婚時間戳 (單位：毫秒)
  */
 
 /**
  * @typedef {Object} TransactionsInfo
- * @property {number} timestamp
- * @property {string} originalUser
- * @property {string} targetUser
+ * @property {number} timestamp   - 單位：秒
+ * @property {string} original_user
+ * @property {string} target_user
  * @property {string} type
  * @property {number} amount
- */
-
-/**
- * @typedef {Object} RpgDatabase
- * @property {number} money
- * @property {number} hunger
- * @property {number} daily
- * @property {number} daily_times
- * @property {boolean} daily_msg
- * @property {string | null} job
- * @property {string | null} fightjob
- * @property {string | null} badge
- * @property {MarryInfo} marry
- * @property {Object.<string, number>} lastRunTimestamp  - 最後一次運行一些操作的時間戳
- * @property {Object.<string, number>} inventory         - 背包；item_id: amount
- * @property {Array<TransactionsInfo>} transactions      - 交易記錄
- * @property {Object.<string, number>} count             - 工作次數
- * @property {Array<string>} privacy                     - 隱私設定
  */
 
 /**
@@ -209,7 +98,6 @@ const DATABASE_FILES = [
     "rpg_shop.json",
     "bake_db.json",
     "smelt_db.json",
-    "serverIP.json",
     "dvoice_db.json",
     "rpg_farm.json",
     "music.json",
@@ -218,7 +106,7 @@ const DATABASE_FILES = [
 /**
  * @type {{
  *   "user": {
- *     "rpg_database.json": RpgDatabase,
+ *     "rpg_database.json": any,
  *     "rpg_shop.json": RpgShop,
  *     "rpg_farm.json": RpgFarm,
  *     "bake_db.json": Array<any>,
@@ -226,7 +114,6 @@ const DATABASE_FILES = [
  *     [k: string]: object | Array<any>,
  *   },
  *   "single": {
- *     "serverIP.json": { IP: string, PORT: number },
  *     "dvoice_db.json": [[string], DvoiceData][],
  *     [k: string]: object | Array<any>,
  *   },
@@ -273,13 +160,10 @@ const DEFAULT_VALUES = {
         "smelt_db.json": [],
     },
     "single": {
-        "serverIP.json": {
-            IP: DEFAULT_IP,
-            PORT: DEFAULT_PORT,
-        },
         "music.json": {},
         "dvoice_db.json": [],
     },
+
     "guild": {
         "database.json": {
             "rpg": true,
@@ -296,18 +180,6 @@ const DEFAULT_VALUES = {
     },
 };
 
-const onlineDB_Files = [
-    "database.json",
-    "rpg_database.json",
-    "rpg_shop.json",
-    "bake_db.json",
-    "smelt_db.json",
-    "dvoice_db.json",
-    "rpg_farm.json",
-    "music.json",
-];
-
-// Database order
 const priorityUserIDs = ["898836485397180426", "1245902419750289538"];
 const priorityGuildIDs = ["1422545977226690683", "1218367644307034112"];
 
@@ -327,7 +199,6 @@ const bake_data_file = join(database_folder, "bake_db.json");
 const smelt_data_file = join(database_folder, "smelt_db.json");
 const dvoice_data_file = join(database_folder, "dvoice_db.json");
 const music_status_file = join(database_folder, "music.json")
-const serverIPFile = join(database_folder, "serverIP.json");
 const auto_register_cmd_file = `${cwd()}/auto_register.cmd.data`;
 
 // Logger
@@ -352,6 +223,7 @@ const adminIDs = [ownerID];
 const rpg_lvlUp_per = 50;
 const setJobDelay = 604800 // 24 * 24 * 60 * 7 = 604800
 const max_hunger = 20;
+const default_prefix = "&";
 
 /** @type {string[]} */
 const cannot_sell = [];
@@ -676,17 +548,11 @@ const PrivacySettings = Object.freeze({
 });
 
 export {
-    RPGDatabase,
-
-    DEFAULT_IP,
-    DEFAULT_PORT,
-
     INDENT,
     database_folder,
 
     DATABASE_FILES,
     DEFAULT_VALUES,
-    onlineDB_Files,
 
     priorityUserIDs,
     priorityGuildIDs,
@@ -699,7 +565,6 @@ export {
     smelt_data_file,
     dvoice_data_file,
     music_status_file,
-    serverIPFile,
 
     cogsFolder,
     musicFileFolder,
@@ -726,6 +591,7 @@ export {
     rpg_lvlUp_per,
     setJobDelay,
     max_hunger,
+    default_prefix,
     cannot_sell,
 
     // counting

@@ -79,7 +79,7 @@ function generateSessionId(length = 32) {
 
 /**
  * Generate a SHA256 hash
- * @param {crypto.BinaryLike} input
+ * @param {string | NodeJS.ArrayBufferView<ArrayBufferLike>} input
  * @returns {string}
  */
 function generateSHA256(input) {
@@ -91,7 +91,7 @@ function generateSHA256(input) {
 
 /**
  * Generate a MD5 hash
- * @param {crypto.BinaryLike} input
+ * @param {string | NodeJS.ArrayBufferView<ArrayBufferLike>} input
  * @returns {string}
  */
 function generateMD5(input) {

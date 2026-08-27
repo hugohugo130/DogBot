@@ -8,9 +8,6 @@ import {
     isDigit,
 } from "../message.js";
 import {
-    RPGDatabase,
-} from "../config.js";
-import {
     get_lang_data,
 } from "../language.js";
 import DogClient from "./client.js";
@@ -25,10 +22,10 @@ export default class EmbedBuilder extends djsEmbedBuilder {
 
     /**
      * set customize footer
-     * @param {BaseInteraction | Locale | string | null | { text?: string, rpg_data?: RPGDatabase | null, force?: boolean, client?: DogClient }} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
+     * @param {BaseInteraction | Locale | string | null | { text?: string, rpg_data?: import("../db/tables.js").RPGData | null, force?: boolean, client?: DogClient }} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
      * @param {Object} options
      * @param {string} [options.text=""]
-     * @param {RPGDatabase | null} [options.rpg_data=null]
+     * @param {import("../db/tables.js").RPGData | null} [options.rpg_data=null]
      * @param {boolean} [options.force=false]
      * @param {DogClient | null} [options.client]
      * @remark force: text參數是否不會增加飽食度和機器犬文字

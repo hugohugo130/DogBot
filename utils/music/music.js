@@ -164,7 +164,6 @@ const DEBUG = false;
     },
     "station_urn": "soundcloud:system-playlists:track-stations:973047190",
     "station_permalink": "track-stations:973047190",
-    "track_authorization": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJnZW8iOiJISyIsInN1YiI6IiIsInJpZCI6IjJmMjRjZTgxLTU1NTctNDA0ZS05YWY3LWQwYmVmZDJjNzU2OSIsImlhdCI6MTc2NjU0NzkyOX0.RB83gVP3R6YzI_ZzSFH9qOwoSVZjSS4r1GOvQw1tktU",
     "monetization_model": "NOT_APPLICABLE",
     "policy": "SNIP",
     "user": {
@@ -657,6 +656,8 @@ class MusicQueue {
                 */
                 this.addTrack(track, 0); // 把 意外地再次播放了可能不同的曲目 放進佇列的開頭
             };
+
+            this.play_lock = true;
 
             if (DEBUG) this.debug(`has connection: ${!!this.connection}`);
             if (DEBUG) this.debug(`has voiceChannel: ${!!this.voiceChannel}`);

@@ -8,9 +8,6 @@ import {
     getCacheManager,
 } from "./cache.js";
 import {
-    uploadAllDatabaseFiles,
-} from "./onlineDB.js";
-import {
     saveAllMusicStates,
 } from "./music/persistence.js";
 import {
@@ -29,9 +26,6 @@ async function safeshutdown(client) {
 
         await saveAllMusicStates();
         console.log("成功保存音樂狀態！");
-
-        await uploadAllDatabaseFiles();
-        console.log("已上載所有資料庫檔案");
 
         await shutdown(true, 200);
         console.log("已關閉所有logger");

@@ -83,7 +83,7 @@ async function should_register_cmd() {
  * @returns {Promise<void>}
  */
 async function update_cmd_hash() {
-    const file_datas = await read_all_files_in_dir("slashcmd");
+    const file_datas = [...await read_all_files_in_dir("slashcmd"), ...await read_all_files_in_dir("context_menus")];
     const hash = get_hash_of_datas(file_datas);
     await writeFile(auto_register_cmd_file, `${hash}`);
 

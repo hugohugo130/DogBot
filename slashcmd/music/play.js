@@ -300,7 +300,7 @@ export const playSlash = {
         if (will_play_audio_url && audioerr) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setDescription(`${emoji_cross} | 播放自定義url (<${custom_url_or_query}>) 時遇到問題: \n\`${audioerr}\``.slice(0, 4090))
+                .setDescription(`${emoji_cross} | 播放自定義url (\`${custom_url_or_query}\`) 時遇到問題: \n\`${audioerr}\``.slice(0, 4090))
                 .setEmbedFooter(interaction);
 
             return await interaction.editReply({ content: "", embeds: [embed] });
