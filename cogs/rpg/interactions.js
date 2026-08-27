@@ -1091,7 +1091,7 @@ export async function execute(client, interaction) {
                         .setTitle(`${emoji_cross} | 沒有販賣這個物品`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.editReply({ embeds: [embed], components: [] });
+                    return await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 if (item_data.amount < amount) {
@@ -1100,7 +1100,16 @@ export async function execute(client, interaction) {
                         .setTitle(`${emoji_cross} | 沒有販賣那麼多物品`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.editReply({ embeds: [embed], components: [] });
+                    return await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                };
+
+                if (!targetUserShopData.status) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 該交易還沒有被店主授權`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 const item_name = get_name_of_id(item);
