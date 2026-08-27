@@ -117,8 +117,7 @@ export class PoolClient extends PGClient {
 
         const command = `SELECT ${columns.join(", ")} FROM ${this.table_name}`;
 
-        await this.begin();
-        const result = await this.query(command);
+        const result = await _pool.query(command);
 
         return result.rows;
     };
