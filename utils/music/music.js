@@ -655,6 +655,7 @@ class MusicQueue {
                 但現在有BUG就這先這樣做吧 >:)
                 */
                 this.addTrack(track, 0); // 把 意外地再次播放了可能不同的曲目 放進佇列的開頭
+                return null;
             };
 
             this.play_lock = true;
@@ -729,6 +730,7 @@ class MusicQueue {
             const firstTrackInQueue = this.tracks.shift();
 
             if (firstTrackInQueue) new_track = await this.play(firstTrackInQueue);
+            if (!new_track) new_track = this.currentTrack;
         } else {
             this.stopPlaying(force);
         };
@@ -1197,6 +1199,27 @@ async function getStream({ track, url, source }) {
 async function search_until(query, amount = 25, { enable: customURL = false, URLOnly = false, duration: file_duration = null, track_name = null } = {}) {
     let results = [];
 
+    if (customURL && !(await IsSupportMusicURL(query))) {
+        const url = await get_redirected_url(query);
+        if (DEBUG) logger.debug(`given track_name: ${track_name}`)
+
+        const [audioData, duration] = await Promise.all([
+            getAudioFileData(url, true),
+            file_duration || getAudioDuration(url),
+        ]);
+
+        if (duration) audioData.duration = duration;
+        if (track_name) audioData.title = track_name;
+
+        const fixed_audioData = (await fixStructure([audioData]))[0];
+
+        if (URLOnly) {
+            return [fixed_audioData];
+        } else {
+            results.push(fixed_audioData);
+        };
+    };
+
     for (const engine of musicSearchEngine) {
         const file = await import(new URL(`./${engine}.js`, import.meta.url).href);
 
@@ -1214,21 +1237,19 @@ async function search_until(query, amount = 25, { enable: customURL = false, URL
         let output = [];
 
         try {
-            if (!URLOnly) {
-                if (file.get_track_info
-                    && typeof file.get_track_info === "function"
-                    && file.validateURL
-                    && typeof file.validateURL === "function"
-                    && file.validateURL(query)
-                ) {
-                    try {
-                        output.push(await file.get_track_info(query));
-                    } catch {
-                        output = await file.search_tracks(query);
-                    };
-                } else {
+            if (file.get_track_info
+                && typeof file.get_track_info === "function"
+                && file.validateURL
+                && typeof file.validateURL === "function"
+                && file.validateURL(query)
+            ) {
+                try {
+                    output.push(await file.get_track_info(query));
+                } catch {
                     output = await file.search_tracks(query);
                 };
+            } else {
+                output = await file.search_tracks(query);
             };
         } catch (err) {
             const errorStack = util.inspect(err, { depth: null });
@@ -1251,27 +1272,6 @@ async function search_until(query, amount = 25, { enable: customURL = false, URL
         if (results.length >= amount) {
             break;
         };
-    };
-
-    if (customURL && IsValidURL(query)) {
-        const url = await get_redirected_url(query);
-
-        const [audioData, duration] = await Promise.all([
-            getAudioFileData(url, true),
-            file_duration || getAudioDuration(url),
-        ]);
-
-        if (duration) {
-            audioData.duration = duration;
-        };
-
-        if (track_name) {
-            audioData.title = track_name;
-        };
-
-        const fixed_audioData = (await fixStructure([audioData]))[0];
-
-        results.unshift(fixed_audioData); // 等同於 results.splice(0, 0, audioData)，意思是插入到列表開頭
     };
 
     return results.slice(0, amount);
@@ -1333,27 +1333,25 @@ function IsValidURL(str) {
 
 /**
  * Check whether a string is a valid URL and we support it
- * @param {string} str
+ * @param {string} url
  * @returns {Promise<boolean>}
  */
-async function IsSupportMusicURL(str) {
-    if (!IsValidURL(str)) return false;
+async function IsSupportMusicURL(url) {
+    if (!IsValidURL(url)) return false;
 
-    for (const engine_id of musicSearchEngine) {
+    const checks = musicSearchEngine.map(async (engine_id) => {
         try {
             const engine = await import(new URL(`./${engine_id}`, import.meta.url).href);
+            const validateURL = engine?.validateURL;
+            return typeof validateURL === "function" && await validateURL(url);
+        } catch {
+            return false;
+        };
+    });
 
-            const validateURL_function = engine.validateURL;
-            if (!validateURL_function) continue;
-
-            if (validateURL_function()) {
-                return true;
-            };
-        } catch { };
-    };
-
-    return false;
-}
+    const results = await Promise.all(checks);
+    return results.some(Boolean);
+};
 
 /**
  * Convert Google Drive sharing URL to direct download URL

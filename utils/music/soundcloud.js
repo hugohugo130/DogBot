@@ -86,10 +86,10 @@ async function get_related_tracks(track_id) {
 /**
  * Check whether a string is a valid soundcloud url
  * @param {string | null} [url=null]
- * @param {string | null} [type=null]
+ * @param {string | null} [type="track"]
  * @returns {boolean}
  */
-function validateURL(url = null, type = "all") {
+export function validateURL(url = null, type = "track") {
     if (typeof url !== "string") return false;
 
     switch (type) {
@@ -118,5 +118,4 @@ export {
     getAudioStream,
     get_track_info,
     get_related_tracks,
-    validateURL,
 };

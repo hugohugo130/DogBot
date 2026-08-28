@@ -36,7 +36,6 @@ import {
     getPlayingPlayers,
     URLAvaliable,
     GDriveDirectLink,
-    IsSupportMusicURL,
 } from "../../utils/music/music.js";
 import {
     formatMinutesSeconds,
@@ -181,7 +180,7 @@ export const playSlash = {
             });
         };
 
-        const isAudioFile = file?.contentType?.startsWith('audio/');
+        const isAudioFile = file?.waveform || file?.duration || file?.contentType?.startsWith('audio/');
         if (file && !isAudioFile) {
             // 你必須提供一個音頻文件
             // You must provide an audio file
@@ -238,7 +237,7 @@ export const playSlash = {
         };
 
         const custom_file_duration = file?.duration
-            ? file?.duration * 1000
+            ? file.duration * 1000
             : null;
 
         const queryOrURL =
@@ -276,13 +275,14 @@ export const playSlash = {
 
         await interaction.editReply({ content: `${emoji_search} | 正在從音樂的海洋中撈取...` });
 
-        const will_play_audio_url = IsValidURL(queryOrURL) && !IsSupportMusicURL(queryOrURL);
+        const will_play_audio_url = IsValidURL(queryOrURL);
         const converted_gdrive_custom_url_or_query = will_play_audio_url && GDriveDirectLink(queryOrURL);
         const custom_url_or_query = converted_gdrive_custom_url_or_query || queryOrURL;
 
         if (DEBUG) logger.debug(`是否自定義url: ${will_play_audio_url}`);
         if (DEBUG) logger.debug(`轉換後的gdrive url: ${converted_gdrive_custom_url_or_query}`);
         if (DEBUG) logger.debug(`使用的自定義url: ${custom_url_or_query}`);
+        if (DEBUG) logger.debug(`上傳檔案: ${!!file}`);
 
         let audioerr = null;
         try { // 檢查自定義url是否可訪問
@@ -300,7 +300,7 @@ export const playSlash = {
         if (will_play_audio_url && audioerr) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
-                .setDescription(`${emoji_cross} | 播放自定義url (\`${custom_url_or_query}\`) 時遇到問題: \n\`${audioerr}\``.slice(0, 4090))
+                .setDescription(`${emoji_cross} | 播放自定義url (\`${custom_url_or_query}\`) 時遇到問題: \n\`\`\`${audioerr}\`\`\``.slice(0, 4090))
                 .setEmbedFooter(interaction);
 
             return await interaction.editReply({ content: "", embeds: [embed] });
@@ -311,11 +311,12 @@ export const playSlash = {
             enable: will_play_audio_url,
             URLOnly: !!file,
             duration: custom_file_duration,
+            track_name: file?.title || file?.name,
         });
 
         if (DEBUG) logger.debug(`搜到了${tracks.length}首曲目`);
 
-        if (tracks.length === 0) return await interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
+        if (!tracks.length) return await interaction.editReply(`${emoji_cross} | 沒有找到任何音樂`);
 
         if (tracks.length === 1) {
             const track = (await fixStructure(tracks))[0];
