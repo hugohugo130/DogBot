@@ -23,12 +23,15 @@ jobs:
           script: |
             cd /home/hugo/${{ secrets.REPO_NAME }}
 
-            git fetch origin main
+            # git fetch origin main
 
-            if git diff --name-only HEAD origin/main | grep -q "^slashcmd/"; then
-              git pull origin main
-              docker restart ${{ secrets.DOCKER_NAME }}
-            else
-              git pull origin main
-              echo "reload cogs" | docker exec -i ${{ secrets.DOCKER_NAME }} sh -c "cat >> /proc/1/fd/0"
-            fi
+            # if git diff --name-only HEAD origin/main | grep -q "^slashcmd/"; then
+              # git pull origin main
+              # docker restart ${{ secrets.DOCKER_NAME }}
+            # else
+            #   git pull origin main
+            #   echo "reload cogs" | docker exec -i ${{ secrets.DOCKER_NAME }} sh -c "cat >> /proc/1/fd/0"
+            # fi
+
+            git pull origin main
+            docker restart ${{ secrets.DOCKER_NAME }}
