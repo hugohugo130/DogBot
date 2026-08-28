@@ -25,7 +25,6 @@ import {
     load_inventory,
     save_inventory,
     load_rpg_data,
-    save_rpg_data,
 } from "../../../utils/db/rpg.js";
 import {
     generateSessionId,
@@ -393,8 +392,8 @@ export const bakeSlash = {
     async execute(interaction, client) {
         const userId = interaction.user.id;
 
-        const first_food = interaction.options.getString("food");
-        const auto_amount = interaction.options.getString("auto_dispense_food") ?? false;
+        const first_food = interaction.options.getString("food", false);
+        const auto_amount = interaction.options.getString("auto_dispense_food", false) ?? false;
 
         let rpg_data = await load_rpg_data(userId);
         const [inventory, bake_data, [wrongJobEmbed, row], [emoji_cross, emoji_drumstick]] = await Promise.all([
@@ -428,6 +427,15 @@ export const bakeSlash = {
                     return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
                 };
 
+                if (first_food && !inventory.get(first_food)) {
+                    const error_embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你沒有這個食物`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
+                };
+
                 let items = first_food ? [first_food] : [];
                 let amounts = [interaction.options.getInteger("amount") ?? 1];
                 const allFoods = interaction.options.getBoolean("all") ?? false;
@@ -435,47 +443,51 @@ export const bakeSlash = {
                 if (!first_food && !allFoods && !auto_amount) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 蛤？ 🤔 你什麼也不選`)
+                        .setTitle(`${emoji_cross} | 你什麼也沒有選擇`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.reply({ embeds: [embed] });
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 if (!first_food && amounts[0] && !allFoods && !auto_amount) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 蛤？ 🤔 你選了數量但沒選食物`)
+                        .setTitle(`${emoji_cross} | 錯誤的數量`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.reply({ embeds: [embed] });
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 if (first_food && auto_amount === "foods") {
+                    const item_name = get_name_of_id(first_food);
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 什麼拉🤣 你選了食物又選了自動選擇食物 那我要選什麼阿`)
+                        .setTitle(`${emoji_cross} | 指定食物和自動分配食物不能一起用`)
+                        .setDescription(`如果你想要自動分配${item_name}的數量，可以改成自動分配物品數量`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.reply({ embeds: [embed] });
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 if (allFoods && auto_amount) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 什麼拉🤣 你選了全部食物又選了自動選擇食物 那我要選什麼阿`)
+                        .setTitle(`${emoji_cross} | 烘培所有指定食物和自動挑選食物不能一起用`)
+                        .setDescription(`如果你想要自動挑選食物，可以直接選"自動挑選食物"，會自動幫你選可以烘培、最多的物品`)
                         .setEmbedFooter(interaction);
 
-                    return await interaction.reply({ embeds: [embed] });
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
                 if (!first_food && auto_amount === "amount") {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
-                        .setTitle(`${emoji_cross} | 你選了自動選擇數量但沒選食物 蛤？`)
+                        .setTitle(`${emoji_cross} | 自動選擇數量需要指定食物`)
+                        .setDescription("這樣才可以自動分配目前所有食物的數量，並放進目前可以烘培的位置")
                         .setEmbedFooter(interaction);
 
-                    return await interaction.reply({ embeds: [embed] });
-                };
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                }; console.debug("e1")
 
                 if (allFoods && !auto_amount && first_food) {
                     amounts = [inventory.get(first_food) || 1];
@@ -491,7 +503,7 @@ export const bakeSlash = {
                         items = entries.map(([key]) => key);
                         amounts = entries.map(([, value]) => value);
                     };
-                };
+                }; console.debug("e2")
 
                 const total_need_coal = Math.ceil(amounts.reduce((sum, amount) => sum + amount, 0) / 2);
                 const coal_amount = inventory.get("coal") ?? 0;
