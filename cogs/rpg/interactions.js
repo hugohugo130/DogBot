@@ -1103,7 +1103,7 @@ export async function execute(client, interaction) {
                     return await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
                 };
 
-                if (!targetUserShopData.status) {
+                if (!targetUserShopData.status && !isConfirm) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 該交易還沒有被店主授權`)
