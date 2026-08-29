@@ -62,6 +62,7 @@ import {
     get_fightjob_name,
     get_job_name,
     valid_job_id,
+    valid_fightjob_id,
 } from "../../utils/rpg.js";
 import {
     get_farm_info_embed,
@@ -116,7 +117,6 @@ import {
 import {
     load_transactions,
     load_rpg_data,
-    save_rpg_data,
     load_inventory,
     set_cooldown,
     save_inventory,
@@ -831,8 +831,6 @@ export async function execute(client, interaction) {
                         type: `付款給`,
                         record_transaction: false,
                     }),
-                    save_rpg_data(user.id, rpg_data),
-                    save_rpg_data(targetUserId, target_user_rpg_data),
                 ]);
 
                 const embed = new EmbedBuilder()
@@ -842,30 +840,6 @@ export async function execute(client, interaction) {
                     .setEmbedFooter(interaction);
 
                 await interaction.editReply({ embeds: [embed], components: [] });
-                break;
-            }
-            case "setLang": {
-                // await interaction.deferUpdate();
-                // const emoji_tick = await get_emoji("Tick", client);
-                // const emoji_cross = await get_emoji("crosS", client);
-                // const embed = new EmbedBuilder()
-                //     .setColor(embed_default_color)
-                //     .setTitle(`${emoji_tick} | 語言設定成功`)
-                //     .setDescription(`你已成功設定語言為 ${client.available_languages[language]}`)
-                //     .setEmbedFooter(interation);
-
-                // const language = customIdParts[2];
-                // const rpg_data = await load_rpg_data(interaction.user.id);
-                // if (rpg_data.language != language) {
-                //     rpg_data.language = language;
-                //     await save_rpg_data(interaction.user.id, rpg_data);
-                // } else {
-                //     embed.setColor(embed_error_color);
-                //     embed.setTitle(`${emoji_cross} | 語言一樣`);
-                //     embed.setDescription(`你選擇的語言和現在的語言一樣 :|`);
-                // };
-
-                // await interaction.editReply({ embeds: [embed], components: [] });
                 break;
             }
             case "rpg_privacy_menu": {
@@ -992,17 +966,15 @@ export async function execute(client, interaction) {
 
                 inventory.subtract_item(item_id, amount);
 
-                await rpg_data.add_money({
-                    amount: total_price,
-                    original_user: "系統",
-                    target_user: `<@${user.id}>`,
-                    type: "出售物品所得",
-                })
-
                 const [emoji_trade, ...__] = await Promise.all([
                     get_emoji("trade", client),
                     save_inventory(user.id, inventory),
-                    save_rpg_data(user.id, rpg_data),
+                    rpg_data.add_money({
+                        amount: total_price,
+                        original_user: "系統",
+                        target_user: `<@${user.id}>`,
+                        type: "出售物品所得",
+                    }),
                 ]);
 
                 const embed = new EmbedBuilder()
@@ -1133,9 +1105,7 @@ export async function execute(client, interaction) {
                         type: `購買物品付款`,
                         record_transaction: false,
                     }),
-                    save_rpg_data(buyerUserId, buyerRPGData),
                     save_inventory(buyerUserId, buyerInventory),
-                    save_rpg_data(targetUserId, targetUserRPGData),
                     save_shop_data(targetUserId, targetUserShopData),
                 ]);
 
@@ -1407,12 +1377,9 @@ export async function execute(client, interaction) {
                     time: Date.now(),
                 };
 
-                rpg_data.setMarryInfo(married_data);
-                t_rpg_data.setMarryInfo(married_data);
-
                 await Promise.all([
-                    save_rpg_data(userId, rpg_data),
-                    save_rpg_data(targetUserId, t_rpg_data),
+                    rpg_data.setMarryInfo(married_data),
+                    t_rpg_data.setMarryInfo(married_data),
                 ]);
 
                 const embed = new EmbedBuilder()
@@ -1451,12 +1418,9 @@ export async function execute(client, interaction) {
                     .setDescription(`<@${user.id}> 和 <@${with_UserId}> 的婚姻關係已經結束了 :((`)
                     .setEmbedFooter(interaction);
 
-                rpg_data.resetMarryInfo();
-                with_User_rpg_data.resetMarryInfo(); // 記得兩邊都要重置
-
                 await Promise.all([
-                    save_rpg_data(user.id, rpg_data),
-                    save_rpg_data(with_UserId, with_User_rpg_data),
+                    rpg_data.resetMarryInfo(),
+                    with_User_rpg_data.resetMarryInfo(), // 兩邊都要重置
                 ]);
 
                 return await interaction.editReply({ embeds: [embed] });
@@ -1521,7 +1485,10 @@ export async function execute(client, interaction) {
                 return await interaction.update({ embeds: [embed], components: [row] });
             }
             case "job_confirm": {
-                const [_, __, job_id] = interaction.customId.split("|");
+                const [_, __, _job_id] = interaction.customId.split("|");
+                const job_id = valid_job_id(_job_id)
+                    ? _job_id
+                    : null;
 
                 const [emoji_job, delay_embed, rpg_data, inventory] = await Promise.all([
                     get_emoji("job", client),
@@ -1532,11 +1499,7 @@ export async function execute(client, interaction) {
 
                 if (delay_embed) return await interaction.followUp({ embeds: [delay_embed], flags: MessageFlags.Ephemeral });
 
-                const job_name = valid_job_id(job_id)
-                    ? get_job_name(job_id, locale)
-                    : job_id;
-
-                rpg_data.job = job_id;
+                const job_name = (job_id && valid_job_id(job_id) ? get_job_name(job_id, locale) : null) || job_id;
 
                 if (job_id === "farmer") {
                     inventory.add_item("wooden_hoe", 4);
@@ -1551,7 +1514,7 @@ export async function execute(client, interaction) {
 
                 await Promise.all([
                     interaction.update({ embeds: [embed], components: [] }),
-                    save_rpg_data(user.id, rpg_data),
+                    rpg_data.set_job(job_id),
                     save_inventory(user.id, inventory),
                 ]);
 
@@ -2043,7 +2006,6 @@ export async function execute(client, interaction) {
                 const before = rpg_data.daily_msg;
 
                 const nowStatus = !before;
-                rpg_data.daily_msg = nowStatus;
 
                 const changeToStatusText = nowStatus ? "開啟" : "關閉"
 
@@ -2068,7 +2030,10 @@ export async function execute(client, interaction) {
                         ));
 
                 await Promise.all([
-                    save_rpg_data(user.id, rpg_data),
+                    rpg_data.setDailyInfo({
+                        ...rpg_data.getDailyInfo(),
+                        daily_msg: nowStatus,
+                    }),
                     interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral }),
                 ]);
                 break;
@@ -2077,18 +2042,20 @@ export async function execute(client, interaction) {
                 if (!(interaction instanceof StringSelectMenuInteraction)) return;
 
                 /** @type {string | null} */
-                let jobId = interaction.values?.[0];
+                const givenJobId = interaction.values[0];
 
                 const lang_none = get_lang_data(locale, "rpg", "fightjob.none"); // None 無
                 const lang_transfer_to = get_lang_data(locale, "rpg", "fightjob.transfer_to"); // Successfully changed adventure job to | 成功轉職為
 
-                if (!fightjobs[jobId]) jobId = null;
+                const jobId = valid_fightjob_id(givenJobId)
+                    ? givenJobId
+                    : null;
+
                 const fight_job_name = jobId
                     ? get_fightjob_name(jobId, locale) ?? lang_none
                     : lang_none;
 
                 const rpg_data = await load_rpg_data(user.id);
-                rpg_data.fightjob = jobId;
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
@@ -2096,7 +2063,7 @@ export async function execute(client, interaction) {
                     .setEmbedFooter(interaction);
 
                 await Promise.all([
-                    save_rpg_data(user.id, rpg_data),
+                    rpg_data.set_fightjob(jobId),
                     interaction.update({ content: "", embeds: [embed], components: [] }),
                 ]);
             }

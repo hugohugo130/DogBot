@@ -26,7 +26,6 @@ import {
     load_inventory,
     load_rpg_data,
     save_inventory,
-    save_rpg_data,
     set_cooldown,
 } from "../../../utils/db/rpg.js";
 import {
@@ -369,7 +368,6 @@ export const farmSlash = {
 
                 await Promise.all([
                     save_inventory(userId, inventory),
-                    save_rpg_data(userId, rpg_data),
                     save_farm_data(userId, farm_data),
                 ]);
 
@@ -482,7 +480,6 @@ export const farmSlash = {
 
                 await Promise.all([
                     set_cooldown(userId, cooldown_key, new Date()),
-                    save_rpg_data(userId, rpg_data),
                     save_farm_data(userId, farm_data),
                 ]);
 

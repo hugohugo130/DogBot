@@ -34,6 +34,7 @@ import {
     jobs,
     workCmdJobs,
     PrivacySettings,
+    fightjobs,
 } from "./config.ts";
 import {
     get_lang_data,
@@ -1760,7 +1761,7 @@ async function startsWith_prefixes(guildID, str) {
  * @param {Locale | null} [locale=null] - the locale
  * @returns {string}
  */
-const get_fightjob_name = (fj_id, locale = null) => get_lang_data(locale, "fightjob_name", fj_id);
+export const get_fightjob_name = (fj_id, locale = null) => get_lang_data(locale, "fightjob_name", fj_id);
 
 /**
  * Get the translation of a job by its ID
@@ -1768,14 +1769,19 @@ const get_fightjob_name = (fj_id, locale = null) => get_lang_data(locale, "fight
  * @param {Locale | null} [locale=null] - the locale
  * @returns {string}
  */
-const get_job_name = (job_id, locale = null) => get_lang_data(locale, "job_name", job_id);
+export const get_job_name = (job_id, locale = null) => get_lang_data(locale, "job_name", job_id);
 
 /**
- * 
- * @param {string} job_id 
+ * @param {string} job_id
  * @returns {job_id is import("./types").JobNames}
  */
-const valid_job_id = (job_id) => job_id in jobs;
+export const valid_job_id = (job_id) => job_id in jobs;
+
+/**
+ * @param {string} fightjob_id
+ * @returns {fightjob_id is import("./types").FightJobNames}
+ */
+export const valid_fightjob_id = (fightjob_id) => fightjob_id in fightjobs;
 
 const oven_slots = 6;
 const farm_slots = 4;
@@ -1832,7 +1838,4 @@ export {
     firstPrefix,
     InPrefix,
     startsWith_prefixes,
-    get_fightjob_name,
-    get_job_name,
-    valid_job_id,
 };

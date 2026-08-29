@@ -1,4 +1,7 @@
 import {
+    Pool,
+} from "pg";
+import {
     Collection,
 } from "discord.js";
 
@@ -9,9 +12,18 @@ import {
     get_id_of_name,
     get_name_of_id,
 } from "../rpg.js";
-import type {
-    MarryInfo,
+import {
+    max_hunger,
+    type DailyInfo,
+    type MarryInfo,
 } from "../config.ts";
+import {
+    getPool,
+} from "./db.js";
+import type {
+    JobNames,
+    FightJobNames,
+} from "../types.d.ts";
 
 // #region [SQL returned data]
 
@@ -82,9 +94,15 @@ export type RPGUserPrivacySQLRow = (BaseData & {
 
 // #endregion [SQL returned data]
 
-function assertValidAmount(amount: number): void {
+function assertValidAmount(amount: number): asserts amount is number {
     if (!Number.isSafeInteger(amount) || amount <= 0) {
         throw new Error("Amount must be a positive safe integer");
+    };
+};
+
+function assertValidHunger(hunger: number): asserts hunger is number {
+    if (!Number.isInteger(hunger) || hunger < 0 || hunger > 20) {
+        throw new Error("Hunger must be an integer between 0 and 20");
     };
 };
 
@@ -93,23 +111,23 @@ export type RPGInventoryData = { [item_id: string]: number };
 export type RPGCooldownsData = { [item_id: string]: Date };
 
 export class RPGData {
+    _userID: string | null = null;
     money: number = 1000;
     hunger: number = 20;
     daily: Date | null = new Date(0);
     daily_times: number = 0;
     daily_msg: boolean = false;
-    job: string | null = null;
-    fightjob: string | null = null;
+    job: JobNames | null = null;
+    fightjob: FightJobNames | null = null;
     badge: string | null = null;
 
     married: boolean = false;
     married_with: string | null = null;
     married_at: Date | null = null;
 
-    constructor(data?: RPGUserData | null) {
-        if (data) {
-            Object.assign(this, structuredClone(data));
-        };
+    constructor(data?: RPGUserData | null, userid?: string) {
+        if (data) Object.assign(this, structuredClone(data));
+        if (userid) this._userID = userid;
     };
 
     concat(new_data: Partial<RPGUserData> | RPGData): RPGData {
@@ -118,7 +136,48 @@ export class RPGData {
         return new RPGData({ ...this.toJSON(), ...data });
     };
 
+    assertUserID(): asserts this is this & { _userID: string } {
+        if (!this._userID) {
+            throw new Error("User ID has not been set");
+        };
+    };
+
+    setUserID(user_id: string) {
+        this._userID = user_id;
+    };
+
+    #getUserID(): string {
+        this.assertUserID();
+        return this._userID;
+    };
+
+    async #poolWithUserID(callbackOrCommand: string): Promise<{ [k: string]: any }[]>
+    async #poolWithUserID<T>(callbackOrCommand: (pool: Pool, userID: string) => PromiseLike<T>): Promise<T>
+    async #poolWithUserID(callbackOrCommand: ((pool: Pool, userID: string) => PromiseLike<any>) | string): Promise<any | { [k: string]: any }[]> {
+        const userID = this.#getUserID();
+        const pool = getPool();
+
+        if (typeof callbackOrCommand === 'string') {
+            const result = await pool.query(callbackOrCommand);
+            return result.rows;
+        } else {
+            return await callbackOrCommand(pool, userID);
+        };
+    };
+
     async add_money({ amount, original_user, target_user, type, record_transaction = true }: { amount: number; original_user: string; target_user: string; type: string; record_transaction?: boolean }): Promise<number> {
+        assertValidAmount(amount);
+
+        await this.#poolWithUserID(async (pool, userID) => {
+            await pool.query(`
+                UPDATE rpg_users
+                SET money = money + $1::bigint
+                WHERE user_id = $2::bigint
+            `,
+                [amount, userID],
+            );
+        });
+
         this.money += amount;
 
         if (record_transaction) {
@@ -135,6 +194,18 @@ export class RPGData {
     };
 
     async remove_money({ amount, original_user, target_user, type, record_transaction = true }: { amount: number; original_user: string; target_user: string; type: string; record_transaction?: boolean }): Promise<number> {
+        assertValidAmount(amount);
+
+        await this.#poolWithUserID(async (pool, userID) => {
+            await pool.query(`
+                UPDATE rpg_users
+                SET money = money - $1::bigint
+                WHERE user_id = $2::bigint
+            `,
+                [amount, userID],
+            );
+        });
+
         this.money -= amount;
 
         if (record_transaction) {
@@ -150,6 +221,22 @@ export class RPGData {
         return this.money;
     };
 
+    async set_money(money: number): Promise<void> {
+        assertValidAmount(money);
+
+        await this.#poolWithUserID(async (pool, userID) => {
+            await pool.query(`
+                UPDATE rpg_users
+                SET money = $1::bigint
+                WHERE user_id = $2::bigint
+            `,
+                [money, userID],
+            );
+        });
+
+        this.money = money;
+    };
+
     getMarryInfo(): MarryInfo {
         return {
             status: this.married,
@@ -158,18 +245,138 @@ export class RPGData {
         };
     };
 
-    setMarryInfo(data: MarryInfo): void {
-        const { status: married, with: married_with, time: married_at } = data;
+    async setMarryInfo(data: MarryInfo): Promise<void> {
+        const { status: married, with: married_with, time: married_at_timestamp } = data;
+
+        const married_at = married_at_timestamp ? new Date(married_at_timestamp) : null
+
+        await this.#poolWithUserID(async (pool, userID) => {
+            await pool.query(`
+                UPDATE rpg_users
+                SET married = $1::boolean,
+                    married_with = $2::text,
+                    married_at = $3::timestamptz
+                WHERE user_id = $4::bigint
+            `,
+                [married, married_with, married_at, userID],
+            );
+        });
 
         this.married = married;
         this.married_with = married_with;
-        this.married_at = new Date(married_at);
+        this.married_at = married_at;
     };
 
-    resetMarryInfo(): void {
-        this.married = false;
-        this.married_with = null;
-        this.married_at = null;
+    async resetMarryInfo(): Promise<void> {
+        await this.setMarryInfo({
+            status: false,
+            with: null,
+            time: null
+        });
+    };
+
+    getDailyInfo(): DailyInfo {
+        return {
+            daily: this.daily,
+            daily_times: this.daily_times,
+            daily_msg: this.daily_msg,
+        };
+    };
+
+    async setDailyInfo(data: DailyInfo): Promise<void> {
+        const { daily, daily_times, daily_msg } = data;
+
+        await this.#poolWithUserID(async (pool, userID) => {
+            await pool.query(`
+                UPDATE rpg_users
+                SET daily = $1::timestamptz,
+                        daily_times = $2::smallint,
+                        daily_msg = $3::boolean
+                WHERE user_id = $4::bigint
+            `,
+                [daily, daily_times, daily_msg, userID],
+            );
+        });
+
+        this.daily = daily;
+        this.daily_times = daily_times;
+        this.daily_msg = daily_msg;
+    };
+
+    async resetDailyInfo(): Promise<void> {
+        await this.setDailyInfo({
+            daily: new Date(0),
+            daily_times: 0,
+            daily_msg: false,
+        });
+    };
+
+    async set_hunger(hunger: number): Promise<void> {
+        assertValidHunger(hunger);
+
+        await this.#poolWithUserID(async (pool, userID) => {
+            await pool.query(`
+                UPDATE rpg_users
+                SET hunger = $1::smallint
+                WHERE user_id = $2::bigint
+            `,
+                [hunger, userID]
+            );
+        });
+
+        this.hunger = hunger;
+    };
+
+    async add_hunger(amount: number): Promise<void> {
+        const hunger = Math.min(this.hunger + amount, max_hunger);
+        await this.set_hunger(hunger);
+    };
+
+    async subtract_hunger(amount: number): Promise<void> {
+        const hunger = Math.max(this.hunger - amount, 0);
+        await this.set_hunger(hunger);
+    };
+
+    async set_job(job: JobNames | null) {
+        await this.#poolWithUserID(async (pool, userID) => {
+            await pool.query(`
+                UPDATE rpg_users
+                SET job = $1::text
+                WHERE user_id = $2::bigint
+                `,
+                [job, userID],
+            );
+        });
+
+        this.job = job;
+    };
+
+    async set_fightjob(fightjob: FightJobNames | null) {
+        await this.#poolWithUserID(async (pool, userID) => {
+            await pool.query(`
+                UPDATE rpg_users
+                SET fightjob = $1::text
+                WHERE user_id = $2::bigint
+                `,
+                [fightjob, userID],
+            );
+        });
+
+        this.fightjob = fightjob;
+    };
+
+    async set_badge(badge: string | null) {
+        await this.#poolWithUserID(async (pool, userID) => {
+            await pool.query(`
+                UPDATE rpg_users
+                SET badge = $1::text
+                WHERE user_id = $2::bigint
+                `,
+                [badge, userID],
+            );
+        });
+
+        this.badge = badge;
     };
 
     toJSON(): RPGUserData {

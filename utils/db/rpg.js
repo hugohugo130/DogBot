@@ -1,5 +1,11 @@
-import { connectPool, getPool } from "./db.js";
-import { RPGData, RPGInventory } from "./tables.ts";
+import {
+    connectPool,
+    getPool,
+} from "./db.js";
+import {
+    RPGData,
+    RPGInventory,
+} from "./tables.ts";
 
 /** @import { TransactionsInfo } from '../config' */
 

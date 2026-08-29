@@ -5,7 +5,6 @@ import {
 
 import {
     load_rpg_data,
-    save_rpg_data,
 } from "../utils/db/rpg.js";
 import {
     get_emoji,
@@ -70,12 +69,11 @@ export async function sign(rpg_data, message, client = null) {
     const user = message.author;
 
     if (!rpg_data.job) return false;
-    if (!rpg_data.daily) rpg_data.daily = new Date(0);
     if (!rpg_data.daily_times || typeof rpg_data.daily_times !== "number") rpg_data.daily_times = 0;
 
     let daily_times = rpg_data.daily_times;
 
-    const [signedToday, brokeSign] = hasSignedTodayOrBrokeSign(rpg_data.daily);
+    const [signedToday, brokeSign] = hasSignedTodayOrBrokeSign(rpg_data.daily || new Date(0));
     if (signedToday) return false;
 
     if (brokeSign) daily_times = 0;
@@ -93,10 +91,7 @@ export async function sign(rpg_data, message, client = null) {
         type: "每日簽到",
     });
 
-    rpg_data.daily = new Date();
     daily_times++;
-
-    rpg_data.daily_times = daily_times;
 
     let sign_msg_send_promise;
 
@@ -111,14 +106,18 @@ export async function sign(rpg_data, message, client = null) {
 
         sign_msg_send_promise = user.send({ embeds: [embed] })
             .catch(error => {
-                if (error.code === 50007) return;
+                if (error?.code === 50007) return;
                 throw error;
             });
     };
 
     await Promise.all([
         message.react("💰"),
-        save_rpg_data(user.id, rpg_data),
+        rpg_data.setDailyInfo({
+            daily: new Date(),
+            daily_times,
+            daily_msg: rpg_data.daily_msg,
+        }),
         sign_msg_send_promise || null,
     ]);
 

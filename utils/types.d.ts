@@ -8,9 +8,12 @@ import {
     PermissionFlagsBits,
 } from "discord.js";
 
+import {
+    RPGData,
+} from "./db/tables.js";
 import DogClient from "./customs/client.js";
 
-// #region [Language]
+// #region [RPG]
 
 export type JobNames =
     | "fisher"
@@ -22,7 +25,13 @@ export type JobNames =
     | "blacksmith"
     | "lumberjack";
 
-// #endregion [Language]
+export type FightJobNames =
+    | "soldier"
+    | "magician"
+    | "ninja"
+    | "tank";
+
+// #endregion [RPG]
 
 // #region [Interactions]
 

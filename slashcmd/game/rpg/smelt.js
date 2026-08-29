@@ -18,7 +18,6 @@ import {
     load_inventory,
     load_rpg_data,
     save_inventory,
-    save_rpg_data,
 } from "../../../utils/db/rpg.js";
 import {
     load_smelt_data,

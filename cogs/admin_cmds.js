@@ -180,19 +180,16 @@ export async function execute(client, message) {
                 break;
 
             case "resjob":
-                rpg_data.job = null;
                 await Promise.all([
                     set_cooldown(message.author.id, "job", new Date(0)),
-                    save_rpg_data(message.author.id, rpg_data),
+                    rpg_data.set_job(null),
+                    message.reply("e, ok."),
                 ]);
 
-                await message.reply("e, ok.");
                 break;
 
             case "resfjob":
-                rpg_data.fightjob = null;
-
-                await save_rpg_data(message.author.id, rpg_data);
+                await rpg_data.set_fightjob(null);
 
                 await message.reply("e ok!");
                 break;

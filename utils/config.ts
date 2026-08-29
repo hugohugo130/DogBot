@@ -5,6 +5,11 @@ import {
     join,
 } from "path";
 
+import type {
+    FightJobNames,
+    JobNames,
+} from "./types.d.ts";
+
 // functions for config
 const cwd = process.cwd;
 const isBeta = (global.isBeta ?? process.argv.slice(2).includes("--beta"));
@@ -19,7 +24,13 @@ const database_folder = `${cwd()}/db`;
 export interface MarryInfo {
     status: boolean;
     with: string | null;
-    time: number;
+    time: number | null;
+};
+
+export interface DailyInfo {
+    daily: Date | null,
+    daily_times: number,
+    daily_msg: boolean,
 };
 
 export interface TransactionsInfo {
@@ -442,7 +453,7 @@ const probabilities: { [k: string]: { [k: string]: [number, number, number]; }; 
 // #endregion
 
 
-const jobs: { [k in import("./types").JobNames]: { command: string[]; emoji: string; desc: string; name: string; }; } = {
+const jobs: Record<JobNames, { command: string[]; emoji: string; desc: string; name: string }> = {
     "fisher": { // fisher 漁夫
         "command": ["fish"],
         "emoji": "fisher",
@@ -493,7 +504,7 @@ const jobs: { [k in import("./types").JobNames]: { command: string[]; emoji: str
     },
 };
 
-const fightjobs: { [k: string]: { emoji: string; HP: number; ATK: number; name: string; }; } = {
+const fightjobs: Record<FightJobNames, { emoji: string; HP: number; ATK: number; name: string }> = {
     "soldier": { // 戰士
         "emoji": "soldier",
         "HP": 135,

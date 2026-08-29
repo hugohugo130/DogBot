@@ -12,9 +12,7 @@ import {
 } from "../../../utils/rpg.js";
 import {
     load_inventory,
-    load_rpg_data,
     save_inventory,
-    save_rpg_data,
 } from "../../../utils/db/rpg.js";
 import {
     embed_error_color,

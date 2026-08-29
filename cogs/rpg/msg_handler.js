@@ -87,20 +87,15 @@ import {
 } from "../dailySign.js";
 import {
     load_rpg_data,
-    save_rpg_data,
     load_inventory,
     save_inventory,
     get_cooldowns,
     load_user_counts,
     load_user_privacy,
-    save_user_counts,
     set_count,
     get_count,
     set_cooldown,
 } from "../../utils/db/rpg.js";
-import {
-    RPGData,
-} from "../../utils/db/tables.ts";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
 
@@ -256,7 +251,7 @@ async function redirect({ client, message, command, mode = 0 }) {
  */
 async function show_marry_info(marry_info, interaction = null, client = global._client) {
     const married = marry_info.status ?? false;
-    if (!married) throw new Error("not married and triggered show_marry_info");
+    if (!married || !marry_info.time) throw new Error("not married and triggered show_marry_info");
 
     const emoji_check = await get_emoji("check", client);
     const marryTime = convertToSecondTimestamp(marry_info.time);
@@ -1440,11 +1435,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             const food_id = args[0];
             const food_name = get_name_of_id(food_id);
 
-            // let amount = args[1]?.toLowerCase().trim() || 1;
-            // if (amount === "all") amount = await get_number_of_items(item, userid);
-            // amount = parseInt(amount);
-            // if (isNaN(amount)) amount = 1;
-
             if (!foods[food_id]) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
@@ -1468,7 +1458,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
             let eat_amount = await get_amount(food_id, user, args[1]);
             const force_eat = (args[2] ?? args[1])?.toLowerCase().trim() === "force";
-            // if (force_eat && !amount) amount = 1;
 
             if (eat_amount < 1) {
                 const embed = new EmbedBuilder()
@@ -1547,13 +1536,10 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 extra_embeds.push(embed);
             };
 
-            rpg_data.hunger += newadd;
-            rpg_data.hunger = Math.min(rpg_data.hunger, max_hunger);
-
             inventory.subtract_item(food_id, eat_amount);
             await Promise.all([
                 save_inventory(user.id, inventory),
-                save_rpg_data(user.id, rpg_data),
+                rpg_data.add_hunger(newadd),
             ]);
 
             const embed = new EmbedBuilder()
@@ -2188,7 +2174,6 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
     fightjob: ["選擇冒險職業", async function ({ client, message, rpg_data, args, mode, random_item }) {
         if (!message.author) return;
 
-        /** @type {string | null} */
         const current_fightjob = rpg_data.fightjob;
 
         /** @type {{ emoji: string, HP: number, ATK: number, name: string } | null | undefined} */
@@ -2476,20 +2461,15 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
             return await message.reply({ embeds: [await get_cooldown_embed(remaining_time, action, current_count, null, client)] });
         };
 
-        // 減少體力值
-        rpg_data.hunger -= 1;
-
         await Promise.all([
             set_count(userid, command, current_count + 1), // 增加計數
             set_cooldown(userid, command, new Date()),     // 設定 &command 的最後執行時間 (即cooldowns)
-            save_rpg_data(userid, rpg_data),               // 保存 rpg_data
+            rpg_data.subtract_hunger(1),                   // 扣除一點體力值
         ]);
     };
 
     const { failed, item, amount } = get_random_result(command);
     if (failed && rpg_work.includes(command)) {
-        // rpg_data.hunger++;
-        // await save_rpg_data(userid, rpg_data);
         if (item) {
             if (mode === 1) return { embeds: [await get_failed_embed(item, rpg_data, null, client)] };
             await message.reply({ embeds: [await get_failed_embed(item, rpg_data, null, client)] });
