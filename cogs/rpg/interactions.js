@@ -1690,6 +1690,25 @@ export async function execute(client, interaction) {
                         await interaction.update({ content: `${emoji_music} | 正在播放`, embeds: [embed], components: rows });
                         break;
                     }
+
+                    case "ping": {
+                        const start = Date.now();
+
+                        await interaction.deferUpdate();
+
+                        const globalPing = Date.now() - start;
+
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_default_color)
+                            .addFields(
+                                { name: '🔗 API延遲', value: `${client.ws.ping}ms` },
+                                { name: '🌐 Global 全域延遲', value: `${globalPing}ms` }
+                            )
+                            .setEmbedFooter(interaction);
+
+                        await interaction.editReply({ embeds: [embed] });
+                        break;
+                    }
                 };
 
                 break;

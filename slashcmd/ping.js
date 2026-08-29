@@ -55,7 +55,7 @@ export const pingSlash = {
             (new ActionRowBuilder()
                 .setComponents(
                     new ButtonBuilder()
-                        .setCustomId("update_ping")
+                        .setCustomId("refresh|any|ping")
                         .setLabel(lang_update)
                         .setEmoji(emoji_refresh)
                         .setStyle(ButtonStyle.Success),
