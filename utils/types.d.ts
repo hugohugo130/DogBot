@@ -101,3 +101,27 @@ export type ContextMenu = {
 // #endregion [Context Menus]
 
 // #endregion [Interactions]
+
+// #region [rpg]
+
+type RPGCmdCheckNeedArgFunction =
+    (client: DogClient, userId: string) => Promise<boolean> | boolean;
+
+type RPGCmdArgument = {
+    client: DogClient;
+    message: Message | MockMessage;
+    rpg_data: RPGData;
+    args: any[];
+    mode: 0 | 1;
+    random_item: {
+        item: string | null;
+        amount: number;
+    };
+};
+
+type RPGCmdFunction =
+    ({ client, message, rpg_data, args, mode, random_item }: RPGCmdArgument) => Promise<Message | Object>;
+
+export type RPGCommand = [string, RPGCmdFunction, RPGCmdCheckNeedArgFunction | boolean];
+
+// #endregion [rpg]
