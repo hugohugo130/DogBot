@@ -1,4 +1,4 @@
-export const TABLES = /** @type {const} */ ([
+export const TABLES = [
     "items",
     "rpg_users",
     "inventory",
@@ -6,12 +6,9 @@ export const TABLES = /** @type {const} */ ([
     "rpg_cooldowns",
     "rpg_user_counts",
     "rpg_user_privacy",
-]);
+] as const;
 
-/**
- * @type {{ [k in typeof TABLES[number]]: { CREATE?: string } }}
- */
-export const TABLES_METADATA = {
+export const TABLES_METADATA: { [k in typeof TABLES[number]]: { CREATE?: string; } } = {
     "items": {
         "CREATE":
             `
