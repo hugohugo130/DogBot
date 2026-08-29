@@ -182,6 +182,9 @@ Since <t:{1}:R>`,
         "/ping": {
             "update": "Update",
         },
+        "/avatar": {
+            "avatar_decoration": "Avatar Decoration",
+        },
         "music": {
             "loop_status.disabled": "Disabled",
             "loop_status.track": "Track",
@@ -358,6 +361,9 @@ Since <t:{1}:R>`,
         },
         "/ping": {
             "update": "更新",
+        },
+        "/avatar": {
+            "avatar_decoration": "頭像裝飾",
         },
         "music": {
             "loop_status.disabled": "關閉",

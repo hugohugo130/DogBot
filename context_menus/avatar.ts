@@ -25,8 +25,8 @@ export const avatarMenu: ContextMenu = {
     async execute(interaction) {
         if (!interaction.isUserContextMenuCommand()) return;
 
-        const mediaGallery = getAvatarGallery(interaction.targetUser);
+        const rows = getAvatarGallery(interaction.targetUser, interaction);
 
-        await interaction.reply({ components: [mediaGallery], flags: MessageFlags.IsComponentsV2 });
+        await interaction.reply({ components: rows, flags: MessageFlags.IsComponentsV2 });
     },
 };

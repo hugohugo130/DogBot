@@ -1,23 +1,45 @@
 import {
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
     MediaGalleryBuilder,
     MediaGalleryItemBuilder,
     MessageFlags,
     SlashCommandBuilder,
     User,
 } from "discord.js";
+import {
+    get_lang_data,
+} from "../utils/language.js";
 
 /**
  * @param {User} user
- * @returns {MediaGalleryBuilder}
+ * @param {import("discord.js").Interaction | null} [interaction=null]
+ * @returns {(MediaGalleryBuilder | ActionRowBuilder<ButtonBuilder>)[]}
  */
-export function getAvatarGallery(user) {
+export function getAvatarGallery(user, interaction = null) {
+    const lang_avatar_decoration = get_lang_data(interaction?.locale, "/avatar", "avatar_decoration");
     const avatarURL = user.avatarURL({ size: 4096 }) ?? user.defaultAvatarURL;
-
-    return new MediaGalleryBuilder()
+    const avatarDecoration = user.avatarDecorationURL({ size: 4096 });
+    const mediaGallery = new MediaGalleryBuilder()
         .addItems(
             new MediaGalleryItemBuilder()
                 .setURL(avatarURL)
         );
+
+    const row = avatarDecoration
+        ? /** @type {ActionRowBuilder<ButtonBuilder>} */ (
+            new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setLabel(lang_avatar_decoration)
+                        .setStyle(ButtonStyle.Link)
+                        .setURL(avatarDecoration),
+                )
+        )
+        : null;
+
+    return row ? [mediaGallery, row] : [mediaGallery];
 };
 
 /** @type {import("../utils/types").Slash} */
@@ -52,8 +74,8 @@ export const avatarSlash = {
     async execute(interaction, client) {
         const user = interaction.options.getUser("user", false) ?? interaction.user;
 
-        const mediaGallery = getAvatarGallery(user);
+        const rows = getAvatarGallery(user, interaction);
 
-        await interaction.reply({ components: [mediaGallery], flags: MessageFlags.IsComponentsV2 });
+        await interaction.reply({ components: rows, flags: MessageFlags.IsComponentsV2 });
     },
 };
