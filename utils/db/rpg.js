@@ -31,14 +31,14 @@ export async function load_rpg_data(userid) {
         [userid],
     ));
 
-    if (!rows.length) return new RPGData(null);
+    if (!rows.length) return new RPGData(null, userid);
 
     const rpgUserData = rows[0];
 
     return new RPGData({
         ...rpgUserData,
         money: Number(rpgUserData.money), // 把返回的 BigInt 轉換成 Number
-    });
+    }, userid);
 };
 
 /**

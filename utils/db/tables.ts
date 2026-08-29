@@ -125,7 +125,7 @@ export class RPGData {
     married_with: string | null = null;
     married_at: Date | null = null;
 
-    constructor(data?: RPGUserData | null, userid?: string) {
+    constructor(data?: RPGUserData | null, userid?: string | null) {
         if (data) Object.assign(this, structuredClone(data));
         if (userid) this._userID = userid;
     };
@@ -133,7 +133,7 @@ export class RPGData {
     concat(new_data: Partial<RPGUserData> | RPGData): RPGData {
         const data = new_data instanceof RPGData ? new_data.toJSON() : new_data;
 
-        return new RPGData({ ...this.toJSON(), ...data });
+        return new RPGData({ ...this.toJSON(), ...data }, this._userID);
     };
 
     assertUserID(): asserts this is this & { _userID: string } {
@@ -403,17 +403,13 @@ export class RPGInventory extends Collection<string, number> {
         if (data instanceof RPGInventory) {
             for (const [key, value] of data) {
                 if (value === 0) continue;
-                if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
-                    throw new Error("Amount must be a positive safe integer");
-                };
+                assertValidAmount(value);
                 this.set(key, value);
             };
         } else if (data) {
             for (const [key, value] of Object.entries(data)) {
                 if (value === 0) continue;
-                if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
-                    throw new Error("Amount must be a positive safe integer");
-                };
+                assertValidAmount(value);
                 this.set(key, value);
             };
         };
