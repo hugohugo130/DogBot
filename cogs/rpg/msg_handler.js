@@ -2406,8 +2406,8 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
                 message,
                 rpg_data,
                 args: [found_food, "all"],
-                mode: 1
-                // {client, message, rpg_data, args, mode, random_item }
+                mode: 1,
+                random_item: { item: "", amount: 0 },
             });
 
 
@@ -2526,22 +2526,16 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
 
 /**
  * Get a random gain of a rpg work
- * @param {string} category - work command or ID
- * @returns {{ failed: boolean, item: string | null, amount: number }}
+ * @param {keyof typeof probabilities} category - work command or ID
+ * @returns {{ failed: boolean, item: string, amount: number }}
  */
 function get_random_result(category) {
     const datas = probabilities[category];
 
-    const error_template = {
-        failed: true,
-        item: null,
-        amount: 0,
-    };
-
-    if (!datas || typeof datas !== "object") return error_template;
-
     const items = Object.keys(datas);
-    if (items.length === 0) return error_template;
+    if (!items.length) {
+        throw new Error(`no probabilities data of category ${category} found`);
+    };
 
     let totalWeight = 0;
     const cumulativeWeights = [];
@@ -2562,7 +2556,9 @@ function get_random_result(category) {
         };
     };
 
-    if (!selectedItem) return error_template;
+    if (!selectedItem) {
+        selectedItem = items[Math.floor(Math.random() * items.length)];
+    };
 
     const [_, minAmount, maxAmount] = datas[selectedItem];
     const amount = randint(minAmount, maxAmount);
@@ -2570,7 +2566,7 @@ function get_random_result(category) {
     const is_failed = failed.includes(selectedItem);
 
     return { failed: is_failed, item: selectedItem, amount };
-}
+};
 
 const event_name = Events.MessageCreate;
 

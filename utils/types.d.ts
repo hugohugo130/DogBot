@@ -114,7 +114,7 @@ type RPGCmdArgument = {
     args: any[];
     mode: 0 | 1;
     random_item: {
-        item: string | null;
+        item: string;
         amount: number;
     };
 };
