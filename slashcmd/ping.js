@@ -7,7 +7,7 @@ import {
 
 import {
     embed_default_color,
-} from "../utils/config.js";
+} from "../utils/config.ts";
 import {
     get_lang_data,
 } from "../utils/language.js";

@@ -42,7 +42,7 @@ import {
     jobs,
     fightjobs,
     container_default_color,
-} from "../utils/config.js";
+} from "../utils/config.ts";
 import EmbedBuilder from "../utils/customs/embedBuilder.js";
 import DogClient from "../utils/customs/client.js";
 

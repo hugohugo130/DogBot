@@ -12,7 +12,7 @@ import {
 } from "./music/persistence.js";
 import {
     BotName,
-} from "./config.js";
+} from "./config.ts";
 import DogClient from "./customs/client.js";
 
 /**

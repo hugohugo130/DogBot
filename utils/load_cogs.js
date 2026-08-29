@@ -16,7 +16,7 @@ import {
 } from "./logger.js";
 import {
     cogsFolder,
-} from "./config.js";
+} from "./config.ts";
 import DogClient from "./customs/client.js";
 
 /** @type {string[]} */

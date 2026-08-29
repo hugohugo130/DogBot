@@ -12,7 +12,7 @@ import {
 import {
     embed_default_color,
     reserved_prefixes,
-} from "../../../utils/config.js";
+} from "../../../utils/config.ts";
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 
 

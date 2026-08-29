@@ -19,7 +19,7 @@ import {
 } from "../../utils/music/music.js";
 import {
     embed_error_color,
-} from "../../utils/config.js";
+} from "../../utils/config.ts";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 
 /** @type {import("../../utils/types").Slash<["guild"]>} */

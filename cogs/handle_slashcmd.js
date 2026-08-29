@@ -25,7 +25,7 @@ import {
 } from "../utils/language.js";
 import EmbedBuilder from "../utils/customs/embedBuilder.js";
 import DogClient from "../utils/customs/client.js";
-import { adminIDs, ownerID } from "../utils/config.js";
+import { adminIDs, ownerID } from "../utils/config.ts";
 
 // function parseOptions(options) {
 //     if (!options || options.length === 0) return "";

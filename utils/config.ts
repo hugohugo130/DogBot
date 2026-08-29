@@ -14,83 +14,74 @@ const isBeta = (global.isBeta ?? process.argv.slice(2).includes("--beta"));
 const INDENT = 4;
 const database_folder = `${cwd()}/db`;
 
-// #region [typedef]
+// #region [interfaces]
 
-/**
- * @typedef {Object} MarryInfo
- * @property {boolean} status     - 是否已結婚
- * @property {string | null} with - 和誰結婚
- * @property {number} time        - 結婚時間戳 (單位：毫秒)
- */
+export interface MarryInfo {
+    status: boolean;
+    with: string | null;
+    time: number;
+};
 
-/**
- * @typedef {Object} TransactionsInfo
- * @property {number} timestamp   - 單位：秒
- * @property {string} original_user
- * @property {string} target_user
- * @property {string} type
- * @property {number} amount
- */
+export interface TransactionsInfo {
+    timestamp: number;
+    original_user: string;
+    target_user: string;
+    type: string;
+    amount: number;
+};
 
-/**
- * @typedef {Object} RpgShop
- * @property {boolean} status
- * @property {{ [k: string]: any }} items
- */
+export interface RpgShop {
+    status: boolean;
+    items: { [k: string]: any; };
+};
 
-/**
- * @typedef {Object} RpgFarm
- * @property {number} exp
- * @property {number} lvl
- * @property {number} waterAt
- * @property {Array<any>} farms
- */
+export interface RpgFarm {
+    exp: number;
+    lvl: number;
+    waterAt: number;
+    farms: Array<any>;
+};
 
-/**
- * @typedef {Object} CountingData
- * @property {number} current
- * @property {number} highest
- * @property {string | null} channelId
- * @property {string | null} last_counter
- */
+export interface CountingData {
+    current: number;
+    highest: number;
+    channelId: string | null;
+    last_counter: string | null;
+};
 
-/**
- * @typedef {Object} GuildDatabase
- * @property {boolean} rpg
- * @property {CountingData} counting
- * @property {string | null} dynamicVoice
- * @property {boolean} voiceNotification
- * @property {string[]} prefix
- */
+export interface GuildDatabase {
+    rpg: boolean;
+    counting: CountingData;
+    dynamicVoice: string | null;
+    voiceNotification: boolean;
+    prefix: string[];
+};
 
-/**
- * @typedef {Object} DvoiceData
- * @property {string} owner
- * @property {VoiceChannel} channel
- */
+export interface DvoiceData {
+    owner: string;
+    channel: VoiceChannel;
+};
 
-/**
- * @typedef {Object} MusicTrackData
- * @property {string} id
- * @property {string} title
- * @property {string | null} url
- * @property {number} duration
- * @property {string | null} thumbnail
- * @property {string} author
- * @property {string} source
- */
+export interface MusicTrackData {
+    id: string;
+    title: string;
+    url: string | null;
+    duration: number;
+    thumbnail: string | null;
+    author: string;
+    source: string;
+};
 
-/**
- * @typedef {Object} MusicStatus
- * @property {string | null} channelId
- * @property {string | null} textChannelId
- * @property {MusicTrackData | null} currentTrack
- * @property {MusicTrackData[]} queue
- * @property {number} loopStatus
- * @property {boolean} paused
- */
+export interface MusicStatus {
+    channelId: string | null;
+    textChannelId: string | null;
+    currentTrack: MusicTrackData | null;
+    queue: MusicTrackData[];
+    loopStatus: number;
+    paused: boolean;
+};
 
-// #endregion
+// #endregion [interfaces]
 
 const DATABASE_FILES = [
     "database.json",
@@ -103,28 +94,25 @@ const DATABASE_FILES = [
     "music.json",
 ];
 
-/**
- * @type {{
- *   "user": {
- *     "rpg_database.json": any,
- *     "rpg_shop.json": RpgShop,
- *     "rpg_farm.json": RpgFarm,
- *     "bake_db.json": Array<any>,
- *     "smelt_db.json": Array<any>,
- *     [k: string]: object | Array<any>,
- *   },
- *   "single": {
- *     "dvoice_db.json": [[string], DvoiceData][],
- *     [k: string]: object | Array<any>,
- *   },
- *   "guild": {
- *     "database.json": GuildDatabase,
- *     [k: string]: object | Array<any>,
- *   },
- *   [k: string]: { [ k: string ]: object | Array<any> },
- * }}
- */
-const DEFAULT_VALUES = {
+const DEFAULT_VALUES: {
+    "user": {
+        "rpg_database.json": any;
+        "rpg_shop.json": RpgShop;
+        "rpg_farm.json": RpgFarm;
+        "bake_db.json": Array<any>;
+        "smelt_db.json": Array<any>;
+        [k: string]: object | Array<any>;
+    };
+    "single": {
+        "dvoice_db.json": [[string], DvoiceData][];
+        [k: string]: object | Array<any>;
+    };
+    "guild": {
+        "database.json": GuildDatabase;
+        [k: string]: object | Array<any>;
+    };
+    [k: string]: { [k: string]: object | Array<any>; };
+} = {
     "user": {
         "rpg_database.json": {
             "money": 1000,
@@ -225,8 +213,7 @@ const setJobDelay = 604800 // 24 * 24 * 60 * 7 = 604800
 const max_hunger = 20;
 const default_prefix = "&";
 
-/** @type {string[]} */
-const cannot_sell = [];
+const cannot_sell: string[] = [];
 
 // counting
 const counting_warning_cooldown = 3000; // ms
@@ -266,8 +253,7 @@ type ColorResolvable =
 */
 
 // Embed colors
-/** @type {import("discord.js").ColorResolvable} */
-const embed_default_color = "Random";
+const embed_default_color: import("discord.js").ColorResolvable = "Random";
 const embed_warn_color = 0xF0B90B;
 const embed_error_color = 0xF04A47;
 const embed_fell_color = 0x966e33;
@@ -293,12 +279,14 @@ const failed = [
 
 /**
  * Probabilities
+
  * the first number is weight
+
  * the second number is minimum gain amount
+
  * the third number is maximum gain amount
- * @type {{ [k: string]: { [k: string]: [number, number, number] } }}
  */
-const probabilities = {
+const probabilities: { [k: string]: { [k: string]: [number, number, number]; }; } = {
     "farm": {
         // "acid_rain": [2, 1, 1],
         "wheat": [30, 1, 2],
@@ -454,8 +442,7 @@ const probabilities = {
 // #endregion
 
 
-/** @type {{ [k in import("./types").JobNames]: { command: string[], emoji: string, desc: string, name: string  }}} */
-const jobs = {
+const jobs: { [k in import("./types").JobNames]: { command: string[]; emoji: string; desc: string; name: string; }; } = {
     "fisher": { // fisher 漁夫
         "command": ["fish"],
         "emoji": "fisher",
@@ -506,8 +493,7 @@ const jobs = {
     },
 };
 
-/** @type {{ [k: string]: { emoji: string, HP: number, ATK: number, name: string } }} */
-const fightjobs = {
+const fightjobs: { [k: string]: { emoji: string; HP: number; ATK: number; name: string; }; } = {
     "soldier": { // 戰士
         "emoji": "soldier",
         "HP": 135,
@@ -534,8 +520,7 @@ const fightjobs = {
     },
 };
 
-/** @type {{ [k: string]: [string, { command: string[], emoji: string, desc: string, name: string }] }} */
-const workCmdJobs = Object.fromEntries(
+const workCmdJobs: { [k: string]: [string, { command: string[]; emoji: string; desc: string; name: string; }]; } = Object.fromEntries(
     Object.entries(jobs)
         .filter(([_, value]) => value.command?.length)
         .flatMap(([key, value]) => value.command.map(cmd => [cmd, [key, value]]))

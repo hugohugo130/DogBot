@@ -12,7 +12,7 @@ import {
 } from "../utils/rpg.js";
 import {
     embed_default_color,
-} from "../utils/config.js";
+} from "../utils/config.ts";
 import DogClient from "../utils/customs/client.js";
 import EmbedBuilder from "../utils/customs/embedBuilder.js";
 

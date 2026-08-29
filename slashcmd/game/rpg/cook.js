@@ -35,7 +35,7 @@ import {
     container_default_color,
     embed_error_color,
     cookClickAmount,
-} from "../../../utils/config.js";
+} from "../../../utils/config.ts";
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 import DogClient from "../../../utils/customs/client.js";
 

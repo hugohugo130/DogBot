@@ -13,7 +13,7 @@ import {
 } from "../../../../utils/file.js";
 import {
     adminIDs,
-} from "../../../../utils/config.js";
+} from "../../../../utils/config.ts";
 import {
     load_rpg_data,
 } from "../../../../utils/db/rpg.js";

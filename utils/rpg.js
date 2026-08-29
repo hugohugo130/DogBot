@@ -34,7 +34,7 @@ import {
     jobs,
     workCmdJobs,
     PrivacySettings,
-} from "./config.js";
+} from "./config.ts";
 import {
     get_lang_data,
 } from "./language.js";

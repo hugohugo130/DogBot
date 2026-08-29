@@ -21,7 +21,7 @@ import {
 } from "./music.js";
 import {
     music_status_file,
-} from "../config.js";
+} from "../config.ts";
 import DogClient from "../customs/client.js";
 
 const DEBUG = false;
@@ -31,7 +31,7 @@ const logger = get_logger();
 async function saveAllMusicStates() {
     const queues = getQueues();
 
-    /** @type {{ [guildId: string]: import("../config.js").MusicStatus }} */
+    /** @type {{ [guildId: string]: import("../config").MusicStatus }} */
     // const allMusicData = await loadAllMusicStates();
     const allMusicData = {};
 
@@ -58,7 +58,7 @@ async function saveAllMusicStates() {
 
 /**
  * Load all stored music states
- * @returns {Promise<{ [guildId: string]: import("../config.js").MusicStatus }>}
+ * @returns {Promise<{ [guildId: string]: import("../config").MusicStatus }>}
  */
 async function loadAllMusicStates() {
     if (!(await exists(music_status_file))) {

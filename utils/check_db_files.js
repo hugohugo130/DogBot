@@ -7,7 +7,7 @@ import {
     DATABASE_FILES,
     DEFAULT_VALUES,
     priorityGuildIDs,
-} from "./config.js";
+} from "./config.ts";
 import {
     readJson,
     writeJson,

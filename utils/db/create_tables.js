@@ -12,8 +12,8 @@ import {
 export async function create_tables(cache = true) {
     const logger = get_logger();
     const { TABLES_METADATA } =
-        /** @type {import("./config.js")} */
-        (await importModules("./config.js", cache));
+        /** @type {import("./config")} */
+        (await importModules("./config.ts", cache));
 
     const commands = Object.entries(TABLES_METADATA)
         .filter(([_, value]) => value.CREATE !== undefined)

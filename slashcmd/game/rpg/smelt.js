@@ -39,7 +39,7 @@ import {
 import {
     embed_error_color,
     embed_default_color,
-} from "../../../utils/config.js";
+} from "../../../utils/config.ts";
 import {
     wait_for_client,
 } from "../../../utils/wait_for_client.js";

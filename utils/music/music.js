@@ -33,7 +33,7 @@ import {
     musicSearchEngine,
     embed_error_color,
     embed_default_color,
-} from "../config.js";
+} from "../config.ts";
 import {
     get_emoji,
 } from "../rpg.js";

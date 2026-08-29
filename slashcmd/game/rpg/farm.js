@@ -41,7 +41,7 @@ import {
     embed_error_color,
     rpg_lvlUp_per,
     probabilities,
-} from "../../../utils/config.js";
+} from "../../../utils/config.ts";
 import DogClient from "../../../utils/customs/client.js";
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 

@@ -19,7 +19,7 @@ import {
 import {
     daily_sign_guildIDs,
     embed_default_color,
-} from "../utils/config.js";
+} from "../utils/config.ts";
 import {
     RPGData,
 } from "../utils/db/tables.ts";

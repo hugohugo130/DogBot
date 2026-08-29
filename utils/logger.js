@@ -18,7 +18,7 @@ import {
     dc_send_ignore_keywords,
     backend_channel_id,
     console_ignore_keywords,
-} from "./config.js";
+} from "./config.ts";
 import {
     time2,
 } from "./time.js";

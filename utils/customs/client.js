@@ -12,7 +12,7 @@ import {
 import {
     authorName,
     BotName,
-} from "../config.js";
+} from "../config.ts";
 import {
     loadslashcmd,
     get_context_menus,
@@ -95,7 +95,7 @@ class DogClient extends Client {
         /** @type {string} */
         this.author = authorName || "哈狗";
 
-        /** @type {Collection<string, import("../config.js").DvoiceData>} */
+        /** @type {Collection<string, import("../config").DvoiceData>} */
         this.dvoice = new Collection();
 
         /** @type {Collection<string, import("../types").Slash>} */

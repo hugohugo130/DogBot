@@ -78,7 +78,7 @@ import {
     daily_sign_guildIDs,
     fightjobs,
     default_prefix,
-} from "../../utils/config.js";
+} from "../../utils/config.ts";
 import {
     mentions_users,
 } from "../../utils/message.js";
@@ -249,7 +249,7 @@ async function redirect({ client, message, command, mode = 0 }) {
 
 /**
  * Get the embed for showing marry info of a user
- * @param {import("../../utils/config.js").MarryInfo} marry_info
+ * @param {import("../../utils/config").MarryInfo} marry_info
  * @param {BaseInteraction | null} [interaction=null]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}

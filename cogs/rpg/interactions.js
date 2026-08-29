@@ -86,7 +86,7 @@ import {
     embed_sign_color,
     fightjobs,
     default_prefix,
-} from "../../utils/config.js";
+} from "../../utils/config.ts";
 import {
     getQueueListEmbedRow,
 } from "../../slashcmd/music/queue.js";

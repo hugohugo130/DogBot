@@ -1,7 +1,7 @@
 import { connectPool, getPool } from "./db.js";
 import { RPGData, RPGInventory } from "./tables.ts";
 
-/** @import { TransactionsInfo } from '../config.js' */
+/** @import { TransactionsInfo } from '../config' */
 
 // #region [rpg_users]
 

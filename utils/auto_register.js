@@ -10,7 +10,7 @@ import {
 import {
     enable_auto_register_cmd,
     auto_register_cmd_file,
-} from "./config.js";
+} from "./config.ts";
 
 const DEBUG = false;
 

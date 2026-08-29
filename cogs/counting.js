@@ -13,7 +13,7 @@ import {
 } from "../utils/file.js";
 import {
     counting_warning_cooldown,
-} from "../utils/config.js";
+} from "../utils/config.ts";
 import DogClient from "../utils/customs/client.js";
 
 /**

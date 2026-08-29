@@ -11,7 +11,7 @@ import {
 
 import {
     BotID,
-} from "./utils/config.js";
+} from "./utils/config.ts";
 import {
     get_context_menus,
     loadslashcmd,

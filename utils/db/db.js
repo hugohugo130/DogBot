@@ -3,7 +3,7 @@ import { importModules } from "../customs/custom_import.js";
 
 /**
  * @typedef {Object} ClientInitOptions
- * @property {keyof typeof import("./config.js").TABLES_METADATA} table_name
+ * @property {keyof typeof import("./config").TABLES_METADATA} table_name
  * @property {boolean} [cache=false]
  */
 
@@ -33,14 +33,14 @@ export class PoolClient extends PGClient {
     };
 
     /**
-     * @param {keyof typeof import("./config.js").TABLES_METADATA} table_name
+     * @param {keyof typeof import("./config").TABLES_METADATA} table_name
      * @param {boolean} [cache=false]
      * @returns {Promise<void>}
      */
     async init(table_name, cache = false) {
         const { TABLES_METADATA } =
-            /** @type {import('./config.js')} */
-            (await importModules("./config.js", cache));
+            /** @type {import('./config')} */
+            (await importModules("./config.ts", cache));
 
         if (!(table_name in TABLES_METADATA)) {
             throw new Error("Table name must in the TABLES_METADATA");
@@ -80,8 +80,8 @@ export class PoolClient extends PGClient {
             table_name = this.table_name;
         } else {
             const { TABLES_METADATA } =
-                /** @type {import('./config.js')} */
-                (await importModules("./config.js", true));
+                /** @type {import('./config')} */
+                (await importModules("./config.ts", true));
 
             if (!(table_name in TABLES_METADATA)) {
                 throw new Error("Table name must in the TABLES_METADATA");

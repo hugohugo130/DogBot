@@ -11,7 +11,7 @@ import {
 } from "../rpg.js";
 import type {
     MarryInfo,
-} from "../config.js";
+} from "../config.ts";
 
 // #region [SQL returned data]
 

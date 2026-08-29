@@ -35,7 +35,7 @@ import {
     embed_default_color,
     DOCS,
     STATUS_PAGE,
-} from "../../utils/config.js";
+} from "../../utils/config.ts";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
 import { get_lang_data } from "../../utils/language.js";

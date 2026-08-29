@@ -25,7 +25,7 @@ import {
     smelt_data_file,
     dvoice_data_file,
     temp_folder,
-} from "./config.js";
+} from "./config.ts";
 import {
     get_logger,
     getCallerModuleName,
@@ -389,14 +389,14 @@ function order_data(data, follow) {
  * @overload
  * @param {null} [guildID=null] - 伺服器ID
  * @param {0 | 1} [mode=0] - 0: 取得伺服器資料, 1: 取得所有資料
- * @returns {Promise<{ [k: string]: import("./config.js").GuildDatabase }>}
+ * @returns {Promise<{ [k: string]: import("./config").GuildDatabase }>}
  * @throws {TypeError} - 如果mode不是0或1
  */
 /**
  * @overload
  * @param {string} guildID - 伺服器ID
  * @param {0 | 1} [mode=0] - 0: 取得伺服器資料, 1: 取得所有資料
- * @returns {Promise<import("./config.js").GuildDatabase>}
+ * @returns {Promise<import("./config").GuildDatabase>}
  * @throws {TypeError} - 如果mode不是0或1
  */
 /**
@@ -455,7 +455,7 @@ async function loadData(guildID = null, mode = 0) {
 async function saveData(guildID, guildData) {
     const database_emptyeg = find_default_value("database.json", {});
 
-    /** @type {{ [k: string]: import("./config.js").GuildDatabase}} */
+    /** @type {{ [k: string]: import("./config").GuildDatabase}} */
     let data = {};
 
     if (await exists(database_file)) {
@@ -586,7 +586,7 @@ async function getPrefixes(guildID) {
 /**
  * Load shop data of a user
  * @param {string} userid
- * @returns {Promise<import("./config.js").RpgShop>}
+ * @returns {Promise<import("./config").RpgShop>}
  */
 async function load_shop_data(userid) {
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
@@ -609,12 +609,12 @@ async function load_shop_data(userid) {
 /**
  * Save shop data of a user
  * @param {string} userid
- * @param {import("./config.js").RpgShop} shop_data
+ * @param {import("./config").RpgShop} shop_data
  */
 async function save_shop_data(userid, shop_data) {
     const shop_emptyeg = find_default_value("rpg_shop.json", {});
 
-    /** @type {{ [k: string]: import("./config.js").RpgShop}} */
+    /** @type {{ [k: string]: import("./config").RpgShop}} */
     let data = {};
     if (await exists(rpg_shop_file)) {
         data = await readJson(rpg_shop_file);
@@ -743,7 +743,7 @@ async function save_smelt_data(userId, data) {
 
 /**
  * Load dynamic voice data
- * @returns {Promise<[string, import("./config.js").DvoiceData][]>}
+ * @returns {Promise<[string, import("./config").DvoiceData][]>}
  */
 async function loadDvoiceData() {
     return await readJson(dvoice_data_file);
@@ -751,7 +751,7 @@ async function loadDvoiceData() {
 
 /**
  * Save dynamic voice data
- * @param {[string, import("./config.js").DvoiceData][]} data - The data to save
+ * @param {[string, import("./config").DvoiceData][]} data - The data to save
  * @returns {Promise<void>}
  */
 async function saveDvoiceData(data) {
