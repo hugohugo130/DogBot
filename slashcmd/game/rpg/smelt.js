@@ -470,16 +470,13 @@ export const smeltSlash = {
                     return await interaction.editReply({ embeds: [embed] });
                 };
 
-                // 將熔鍊完成的物品加入背包
-                inventory.add_item(item.output_item_id, item.output_amount);
-
                 // 從煉金爐移除該物品
                 smelt_data.splice(index, 1);
 
                 // 儲存資料
                 await Promise.all([
+                    inventory.add_item(item.output_item_id, item.output_amount), // 將熔鍊完成的物品加入背包
                     save_smelt_data(userId, smelt_data),
-                    save_inventory(userId, inventory),
                 ]);
 
                 const embed = new EmbedBuilder()

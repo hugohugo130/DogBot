@@ -605,16 +605,12 @@ export const bakeSlash = {
 
                         embeds.push(embed);
                     } else {
-                        // 將烘烤完成的物品加入背包
-                        inventory.add_item(item.output_item_id, item.amount);
-
                         // 從烤箱移除該物品
                         bake_data.splice(index, 1);
 
-                        // 儲存資料
                         await Promise.all([
+                            inventory.add_item(item.output_item_id, item.amount),
                             save_bake_data(userId, bake_data),
-                            save_inventory(userId, inventory),
                         ]);
 
                         const embed = new EmbedBuilder()

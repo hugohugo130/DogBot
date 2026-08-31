@@ -128,7 +128,9 @@ export class PoolClient extends PGClient {
     release(err) {
         // 避免 Typescript 不知道 PoolClient 其實有 release() method
         // Pool 會自動注入代碼
-        throw new Error("not injected? WHY! TELL ME WHY!");
+        // node_modules/pg-pool/index.js Line 342
+        // client.release = this._releaseOnce(client, idleListener)
+        throw new Error("pg too lazy, doesn't inject it? WHY! TELL ME WHY!");
     };
 };
 

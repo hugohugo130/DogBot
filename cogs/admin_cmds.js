@@ -118,7 +118,7 @@ async function handleGive2Command(message, args) {
         item = get_id_of_name(item);
 
         try {
-            inventory.add_item(item, parseInt(amount));
+            await inventory.add_item(item, parseInt(amount));
             log += `added ${get_name_of_id(item)}\\*${amount} to user ${user.toString()}'s inventory\n`;
         } catch (err) {
             if (err instanceof Error) await message.reply(`error adding item ${item} to user ${user.toString()}'s inventory: ${err.message}`);
@@ -218,8 +218,7 @@ export async function execute(client, message) {
             };
 
             const inventory = await load_inventory(user.id);
-            inventory.add_item(item, parseInt(amount));
-            await save_inventory(user.id, inventory);
+            await inventory.add_item(item, parseInt(amount));
 
             return message.reply(`done adding user ${user.toString()} 's inventory: ${item}*${amount}`);
         };

@@ -110,7 +110,7 @@ export async function get_farm_info_embed(user, interaction = null, client = glo
 /**
  * 獲取農作物採收物品
  * @param {number} amount - 需要獲得的物品總數
- * @returns {Object} - 物品ID到數量的映射字典
+ * @returns {{ [k: string]: number }} - 物品ID到數量的映射字典
  * @throws {Error} - 如果amount不是正整數 或 amount不是整數
  */
 function get_harvest_items(amount) {
@@ -364,10 +364,9 @@ export const farmSlash = {
 
                 if (need_hunger) rpg_data.hunger -= need_hunger;
 
-                inventory.subtract_item(hoe, amount);
 
                 await Promise.all([
-                    save_inventory(userId, inventory),
+                    inventory.subtract_item(hoe, amount),
                     save_farm_data(userId, farm_data),
                 ]);
 
@@ -424,9 +423,12 @@ export const farmSlash = {
 
                 const items = get_harvest_items(farmlands);
                 const items_str = Object.entries(items).map(([item, amount]) => `${amount} 個${get_name_of_id(item)}`).join("、");
-                for (const [item, amount] of Object.entries(items)) {
-                    inventory.add_item(item, amount);
-                };
+
+                await Promise.all(
+                    Object
+                        .entries(items)
+                        .map(([item, amount]) => inventory.add_item(item, amount)),
+                );
 
                 farm_data.farms = farm_data.farms.filter(farm => !completed_farms.includes(farm));
 

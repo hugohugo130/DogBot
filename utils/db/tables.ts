@@ -11,6 +11,7 @@ import {
 import {
     get_id_of_name,
     get_name_of_id,
+    name,
 } from "../rpg.js";
 import {
     max_hunger,
@@ -24,6 +25,9 @@ import type {
     JobNames,
     FightJobNames,
 } from "../types.d.ts";
+import {
+    Mutex,
+} from "./mutex.ts";
 
 // #region [SQL returned data]
 
@@ -106,12 +110,62 @@ function assertValidHunger(hunger: number): asserts hunger is number {
     };
 };
 
+function checkValidItemId(item_id: string): string {
+    item_id = get_name_of_id(get_id_of_name(item_id), null);
+    if (!item_id) {
+        throw new Error("unknown item id");
+    };
+    return item_id;
+};
+
+function WithUserID<TBase extends Constructor>(Base: TBase) {
+    return class extends Base {
+        protected _userID: string | null = null;
+
+        assertUserID(): asserts this is this & { _userID: string } {
+            if (!this._userID) {
+                throw new Error("User ID has not been set");
+            };
+        };
+
+        setUserID(user_id: string) {
+            this._userID = user_id;
+        };
+
+        protected getUserID(): string {
+            this.assertUserID();
+            return this._userID;
+        };
+
+        protected async poolWithUserID(callbackOrCommand: string): Promise<{ [k: string]: any }[]>
+        protected async poolWithUserID<T>(callbackOrCommand: (pool: Pool, userID: string) => PromiseLike<T>): Promise<T>
+        protected async poolWithUserID(callbackOrCommand: ((pool: Pool, userID: string) => PromiseLike<any>) | string): Promise<any | { [k: string]: any }[]> {
+            const userID = this.getUserID();
+            const pool = getPool();
+
+            if (typeof callbackOrCommand === 'string') {
+                const result = await pool.query(callbackOrCommand);
+                return result.rows;
+            } else {
+                return await callbackOrCommand(pool, userID);
+            };
+        };
+    };
+};
+
+type Constructor<T = {}> = new (...args: any[]) => T;
 export type RPGUserData = Omit<RPGUsers, "user_id">;
 export type RPGInventoryData = { [item_id: string]: number };
 export type RPGCooldownsData = { [item_id: string]: Date };
 
-export class RPGData {
-    _userID: string | null = null;
+class EmptyBase { };
+class CollectionBase extends Collection<string, number> { }
+
+const CollectionWithUserID = WithUserID(CollectionBase);
+const UserDataBase = WithUserID(EmptyBase);
+
+export class RPGData extends UserDataBase {
+    private _mutex = new Mutex();
     money: number = 1000;
     hunger: number = 20;
     daily: Date | null = new Date(0);
@@ -125,7 +179,9 @@ export class RPGData {
     married_with: string | null = null;
     married_at: Date | null = null;
 
-    constructor(data?: RPGUserData | null, userid?: string | null) {
+    constructor(data?: Partial<RPGUserData> | null, userid?: string | null) {
+        super();
+
         if (data) Object.assign(this, structuredClone(data));
         if (userid) this._userID = userid;
     };
@@ -136,105 +192,82 @@ export class RPGData {
         return new RPGData({ ...this.toJSON(), ...data }, this._userID);
     };
 
-    assertUserID(): asserts this is this & { _userID: string } {
-        if (!this._userID) {
-            throw new Error("User ID has not been set");
-        };
-    };
-
-    setUserID(user_id: string) {
-        this._userID = user_id;
-    };
-
-    #getUserID(): string {
-        this.assertUserID();
-        return this._userID;
-    };
-
-    async #poolWithUserID(callbackOrCommand: string): Promise<{ [k: string]: any }[]>
-    async #poolWithUserID<T>(callbackOrCommand: (pool: Pool, userID: string) => PromiseLike<T>): Promise<T>
-    async #poolWithUserID(callbackOrCommand: ((pool: Pool, userID: string) => PromiseLike<any>) | string): Promise<any | { [k: string]: any }[]> {
-        const userID = this.#getUserID();
-        const pool = getPool();
-
-        if (typeof callbackOrCommand === 'string') {
-            const result = await pool.query(callbackOrCommand);
-            return result.rows;
-        } else {
-            return await callbackOrCommand(pool, userID);
-        };
-    };
-
     async add_money({ amount, original_user, target_user, type, record_transaction = true }: { amount: number; original_user: string; target_user: string; type: string; record_transaction?: boolean }): Promise<number> {
         assertValidAmount(amount);
 
-        await this.#poolWithUserID(async (pool, userID) => {
-            await pool.query(`
-                UPDATE rpg_users
-                SET money = money + $1::bigint
-                WHERE user_id = $2::bigint
-            `,
-                [amount, userID],
-            );
-        });
-
-        this.money += amount;
-
-        if (record_transaction) {
-            await add_transaction({
-                timestamp: Math.floor(Date.now() / 1000),
-                original_user,
-                target_user,
-                amount,
-                type
+        return await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
+                    UPDATE rpg_users
+                    SET money = money + $1::bigint
+                    WHERE user_id = $2::bigint
+                `,
+                    [amount, userID],
+                );
             });
-        };
 
-        return this.money;
+            this.money += amount;
+
+            if (record_transaction) {
+                await add_transaction({
+                    timestamp: Math.floor(Date.now() / 1000),
+                    original_user,
+                    target_user,
+                    amount,
+                    type
+                });
+            };
+
+            return this.money;
+        });
     };
 
     async remove_money({ amount, original_user, target_user, type, record_transaction = true }: { amount: number; original_user: string; target_user: string; type: string; record_transaction?: boolean }): Promise<number> {
         assertValidAmount(amount);
 
-        await this.#poolWithUserID(async (pool, userID) => {
-            await pool.query(`
-                UPDATE rpg_users
-                SET money = money - $1::bigint
-                WHERE user_id = $2::bigint
-            `,
-                [amount, userID],
-            );
-        });
-
-        this.money -= amount;
-
-        if (record_transaction) {
-            await add_transaction({
-                timestamp: Math.floor(Date.now() / 1000),
-                original_user,
-                target_user,
-                amount,
-                type
+        return await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
+                    UPDATE rpg_users
+                    SET money = money - $1::bigint
+                    WHERE user_id = $2::bigint
+                `,
+                    [amount, userID],
+                );
             });
-        };
 
-        return this.money;
+            this.money -= amount;
+
+            if (record_transaction) {
+                await add_transaction({
+                    timestamp: Math.floor(Date.now() / 1000),
+                    original_user,
+                    target_user,
+                    amount,
+                    type
+                });
+            };
+
+            return this.money;
+        });
     };
 
     async set_money(money: number): Promise<void> {
         assertValidAmount(money);
 
-        await this.#poolWithUserID(async (pool, userID) => {
-            await pool.query(`
-                UPDATE rpg_users
-                SET money = $1::bigint
-                WHERE user_id = $2::bigint
-            `,
-                [money, userID],
-            );
-        });
+        await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
+                    UPDATE rpg_users
+                    SET money = $1::bigint
+                    WHERE user_id = $2::bigint
+                `,
+                    [money, userID],
+                );
+            });
 
-        this.money = money;
+            this.money = money;
+        });
     };
 
     getMarryInfo(): MarryInfo {
@@ -248,23 +281,24 @@ export class RPGData {
     async setMarryInfo(data: MarryInfo): Promise<void> {
         const { status: married, with: married_with, time: married_at_timestamp } = data;
 
-        const married_at = married_at_timestamp ? new Date(married_at_timestamp) : null
-
-        await this.#poolWithUserID(async (pool, userID) => {
-            await pool.query(`
+        const married_at = married_at_timestamp ? new Date(married_at_timestamp) : null;
+        await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
                 UPDATE rpg_users
                 SET married = $1::boolean,
                     married_with = $2::text,
                     married_at = $3::timestamptz
                 WHERE user_id = $4::bigint
             `,
-                [married, married_with, married_at, userID],
-            );
-        });
+                    [married, married_with, married_at, userID],
+                );
+            });
 
-        this.married = married;
-        this.married_with = married_with;
-        this.married_at = married_at;
+            this.married = married;
+            this.married_with = married_with;
+            this.married_at = married_at;
+        });
     };
 
     async resetMarryInfo(): Promise<void> {
@@ -286,21 +320,23 @@ export class RPGData {
     async setDailyInfo(data: DailyInfo): Promise<void> {
         const { daily, daily_times, daily_msg } = data;
 
-        await this.#poolWithUserID(async (pool, userID) => {
-            await pool.query(`
-                UPDATE rpg_users
-                SET daily = $1::timestamptz,
-                        daily_times = $2::smallint,
-                        daily_msg = $3::boolean
-                WHERE user_id = $4::bigint
-            `,
-                [daily, daily_times, daily_msg, userID],
-            );
-        });
+        await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
+                    UPDATE rpg_users
+                    SET daily = $1::timestamptz,
+                            daily_times = $2::smallint,
+                            daily_msg = $3::boolean
+                    WHERE user_id = $4::bigint
+                `,
+                    [daily, daily_times, daily_msg, userID],
+                );
+            });
 
-        this.daily = daily;
-        this.daily_times = daily_times;
-        this.daily_msg = daily_msg;
+            this.daily = daily;
+            this.daily_times = daily_times;
+            this.daily_msg = daily_msg;
+        });
     };
 
     async resetDailyInfo(): Promise<void> {
@@ -314,17 +350,19 @@ export class RPGData {
     async set_hunger(hunger: number): Promise<void> {
         assertValidHunger(hunger);
 
-        await this.#poolWithUserID(async (pool, userID) => {
-            await pool.query(`
-                UPDATE rpg_users
-                SET hunger = $1::smallint
-                WHERE user_id = $2::bigint
-            `,
-                [hunger, userID]
-            );
-        });
+        await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
+                    UPDATE rpg_users
+                    SET hunger = $1::smallint
+                    WHERE user_id = $2::bigint
+                `,
+                    [hunger, userID],
+                );
+            });
 
-        this.hunger = hunger;
+            this.hunger = hunger;
+        });
     };
 
     async add_hunger(amount: number): Promise<void> {
@@ -338,45 +376,51 @@ export class RPGData {
     };
 
     async set_job(job: JobNames | null) {
-        await this.#poolWithUserID(async (pool, userID) => {
-            await pool.query(`
-                UPDATE rpg_users
-                SET job = $1::text
-                WHERE user_id = $2::bigint
+        await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
+                    UPDATE rpg_users
+                    SET job = $1::text
+                    WHERE user_id = $2::bigint
                 `,
-                [job, userID],
-            );
-        });
+                    [job, userID],
+                );
+            });
 
-        this.job = job;
+            this.job = job;
+        });
     };
 
     async set_fightjob(fightjob: FightJobNames | null) {
-        await this.#poolWithUserID(async (pool, userID) => {
-            await pool.query(`
-                UPDATE rpg_users
-                SET fightjob = $1::text
-                WHERE user_id = $2::bigint
+        await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
+                    UPDATE rpg_users
+                    SET fightjob = $1::text
+                    WHERE user_id = $2::bigint
                 `,
-                [fightjob, userID],
-            );
-        });
+                    [fightjob, userID],
+                );
+            });
 
-        this.fightjob = fightjob;
+            this.fightjob = fightjob;
+        });
     };
 
     async set_badge(badge: string | null) {
-        await this.#poolWithUserID(async (pool, userID) => {
-            await pool.query(`
-                UPDATE rpg_users
-                SET badge = $1::text
-                WHERE user_id = $2::bigint
+        await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
+                    UPDATE rpg_users
+                    SET badge = $1::text
+                    WHERE user_id = $2::bigint
                 `,
-                [badge, userID],
-            );
-        });
+                    [badge, userID],
+                );
+            });
 
-        this.badge = badge;
+            this.badge = badge;
+        });
     };
 
     toJSON(): RPGUserData {
@@ -396,80 +440,109 @@ export class RPGData {
     };
 };
 
-export class RPGInventory extends Collection<string, number> {
+export class RPGInventory extends CollectionWithUserID {
+    private _mutex = new Mutex();
+
     constructor(data?: RPGInventoryData | RPGInventory | null) {
         super();
 
         if (data instanceof RPGInventory) {
             for (const [key, value] of data) {
-                if (value === 0) continue;
+                if (!value) continue;
                 assertValidAmount(value);
                 this.set(key, value);
             };
         } else if (data) {
             for (const [key, value] of Object.entries(data)) {
-                if (value === 0) continue;
+                if (!value) continue;
                 assertValidAmount(value);
                 this.set(key, value);
             };
         };
     };
 
-    add_item(item: string, amount: number) {
+    async add_item(item: string, amount: number) {
         assertValidAmount(amount);
 
-        const item_id = get_id_of_name(item);
+        const item_id = checkValidItemId(item);
 
-        if (!get_name_of_id(item_id, null)) {
-            throw new Error("Item not found");
-        };
+        return await this._mutex.runExclusive(async () => {
+            const result = await this.poolWithUserID(async (pool, userID) => {
+                const res = await pool.query(`
+                    INSERT INTO inventory (user_id, item_id, amount)
+                    VALUES ($1::bigint, $2::text, $3::bigint)
+                    ON CONFLICT (user_id, item_id)
+                        DO UPDATE SET amount = inventory.amount + EXCLUDED.amount,
+                    RETURNING amount
+                `,
+                    [userID, item_id, amount],
+                );
+                return res.rows[0].amount;
+            });
 
-        if (amount < 0) {
-            throw new Error("Amount must be non-negative");
-        };
-
-        const current = this.get(item_id) ?? 0;
-        this.set(item_id, current + amount);
+            this.set(item_id, result);
+            return result;
+        });
     };
 
-    subtract_item(item: string, amount: number) {
+    async subtract_item(item: string, amount: number) {
         assertValidAmount(amount);
 
-        const item_id = get_id_of_name(item);
+        const item_id = checkValidItemId(item);
 
-        if (!get_name_of_id(item_id, null)) {
-            throw new Error("Item not found");
-        };
+        return await this._mutex.runExclusive(async () => {
+            const result = await this.poolWithUserID(async (pool, userID) => {
+                const res = await pool.query(`
+                    UPDATE inventory
+                    SET amount = amount - $3
+                    WHERE user_id = $1::bigint
+                        AND item_id = $2::text
+                        AND amount >= $3
+                    RETURNING amount
+                `,
+                    [userID, item_id, amount],
+                );
 
-        const current = this.get(item_id) ?? 0;
-        if (current < amount) {
-            throw new Error("Not enough item");
-        };
+                if (res.rowCount === 0) {
+                    throw new Error("Not enough item");
+                };
 
-        const next = current - amount;
+                return res.rows[0].amount;
+            });
 
-        if (next === 0) {
+            this.set(item_id, result);
+            return result;
+        });
+    };
+
+    async add_random_item({ item, amount }: { item: string, amount: number }) {
+        await this.add_item(item, amount);
+        return get_name_of_id(item);
+    };
+
+    async delete_item(item: string) {
+        const item_id = checkValidItemId(item);
+
+        await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
+                    DELETE FROM inventory
+                    WHERE user_id = $1::bigint
+                        AND item_id = $2::text
+                `,
+                    [userID, item_id],
+                );
+            });
+
             this.delete(item_id);
-        } else {
-            this.set(item_id, next);
-        };
-    };
-
-    add_random_item({ item, amount }: { item: string, amount: number }) {
-        assertValidAmount(amount);
-
-        const item_name = get_name_of_id(item, null);
-
-        if (!item_name) {
-            throw new Error(`Item not found: ${item_name}`);
-        };
-
-        this.add_item(item, amount);
-        return item_name;
+        });
     };
 
     toObject(): Record<string, number> {
-        return Object.fromEntries(this.entries());
+        return Object.fromEntries(
+            this
+                .entries()
+                .filter(([_, amount]) => !!amount),
+        );
     };
 };
-

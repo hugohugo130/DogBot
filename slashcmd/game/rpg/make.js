@@ -100,7 +100,7 @@ export const makeSlash = {
         /** @type {{ item: string, amount: number }[]} */
         const item_required = recipes[item_id].input;
 
-        /** @type {{ [k: string]: number }} */
+        /** @type {Record<string, number>} */
         const item_need = {};
 
         /** @type {{ name: string, amount: number }[]} */
@@ -144,15 +144,15 @@ export const makeSlash = {
             return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         };
 
-        await interaction.deferReply();
-
-        for (const need_item in item_need) {
-            inventory.subtract_item(need_item, item_need[need_item]);
-        };
-
         const output_amount = recipes[item_id].amount * amount;
 
-        inventory.add_item(item_id, output_amount);
+        await Promise.all([
+            ...Object
+                .entries(item_need)
+                .map(([item, amount]) => inventory.subtract_item(item, amount)),
+            inventory.add_item(item_id, output_amount),
+            interaction.deferReply(),
+        ]);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)

@@ -239,9 +239,10 @@ export const cookSlash = {
 
         if (not_enough_items.length) return await interaction.reply({ embeds: [await notEnoughItemEmbed(not_enough_items, interaction, client)], flags: MessageFlags.Ephemeral });
 
-        for (const item of item_needed) {
-            inventory.subtract_item(item.item, item.amount);
-        };
+        await Promise.all(
+            item_needed
+                .map(({ item, amount }) => inventory.subtract_item(item, amount)),
+        );
 
         const buttonCustomIdLengthLimit = 100;
         const reservedLength = 5;

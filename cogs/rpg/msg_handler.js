@@ -336,15 +336,13 @@ const rpg_commands = {
         const userid = message.author?.id;
         if (!userid) return;
 
-        const inventory = await load_inventory(userid);
-
-        const { item, amount } = random_item;
-        const ore_name = inventory.add_random_item(random_item);
-
-        const [_, emoji] = await Promise.all([
-            save_inventory(userid, inventory),
+        const [inventory, emoji_ore] = await Promise.all([
+            load_inventory(userid),
             get_emoji("ore", client),
         ]);
+
+        const { item, amount } = random_item;
+        const ore_name = await inventory.add_random_item(random_item);
 
         let description;
         if (item === "stone") {
@@ -360,7 +358,7 @@ const rpg_commands = {
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
-            .setTitle(`${emoji} | 挖礦`)
+            .setTitle(`${emoji_ore} | 挖礦`)
             .setDescription(description)
             .setEmbedFooter(userid, { text: "", rpg_data });
 
@@ -371,10 +369,13 @@ const rpg_commands = {
         if (!message.author) return;
         const userid = message.author.id;
 
-        const inventory = await load_inventory(userid);
+        const [inventory, emoji_wood] = await Promise.all([
+            load_inventory(userid),
+            get_emoji("wood", client),
+        ]);
 
         const { item, amount } = random_item;
-        const log_name = inventory.add_random_item(random_item);
+        const log_name = await inventory.add_random_item(random_item);
 
         let description;
         if (item === "god_wood") {
@@ -383,13 +384,9 @@ const rpg_commands = {
             description = `你來到了森林，並且砍了 \`${amount}\` 塊${log_name}`;
         };
 
-        await save_inventory(userid, inventory);
-
-        const emoji = await get_emoji("wood", client);
-
         const embed = new EmbedBuilder()
             .setColor(embed_fell_color)
-            .setTitle(`${emoji} | ${item === "god_wood" ? "是神?!" : "平常的一天"}`)
+            .setTitle(`${emoji_wood} | ${item === "god_wood" ? "是神?!" : "平常的一天"}`)
             .setDescription(description)
             .setEmbedFooter(userid, { text: "", rpg_data });
 
@@ -413,7 +410,7 @@ const rpg_commands = {
 
         const product = animal_products[random_animal];
 
-        inventory.add_item(product, amount);
+        await inventory.add_item(product, amount);
 
         const product_name = get_name_of_id(product);
         const animal_name = product_name.replace("生", "").replace("肉", "");
@@ -423,7 +420,7 @@ const rpg_commands = {
         if (product === "raw_chicken") {
             const egg_amount = randint(1, 3);
             description += `\n不僅如此！你還發現了 \`${egg_amount}\` 顆 ${get_name_of_id("egg")}！`
-            inventory.add_item("egg", egg_amount);
+            await inventory.add_item("egg", egg_amount);
         } else if (product === "raw_pork") {
             title = "佩佩豬";
         } else if (product === "raw_duck") {
@@ -436,8 +433,6 @@ const rpg_commands = {
             title = `🐶 汪!`
             description = `你偷走了機器犬的幼崽！拿到了 \`${amount}\` 隻 ${product_name}`
         };
-
-        await save_inventory(userid, inventory);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
@@ -458,9 +453,7 @@ const rpg_commands = {
         ]);
 
         const { amount } = random_item;
-        const potion_name = inventory.add_random_item(random_item);
-
-        await save_inventory(userid, inventory);
+        const potion_name = await inventory.add_random_item(random_item);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
@@ -469,7 +462,6 @@ const rpg_commands = {
             .setEmbedFooter(userid, { text: "", rpg_data });
         // .setTitle(`${emoji_potion} | 回復藥水可以幹嘛?`)
         // .setDescription(`你研究了許久，獲得了 \`${amount}\` 個${potion_name}\n\n之後推出的冒險可以用上`);
-
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -484,9 +476,7 @@ const rpg_commands = {
         ]);
 
         const { item, amount } = random_item;
-        const fish_name = inventory.add_random_item(random_item);
-
-        await save_inventory(userid, inventory);
+        const fish_name = await inventory.add_random_item(random_item);
 
         let fish_text;
         let description;
@@ -617,7 +607,7 @@ const rpg_commands = {
                     return await message.reply({ embeds: [embed] });
                 };
 
-                inventory.subtract_item(item, amount);
+                await inventory.subtract_item(item, amount);
 
                 if (item_exist) {
                     shop_data.items[item].amount += amount;
@@ -632,10 +622,7 @@ const rpg_commands = {
 
                 ({ amount, price } = shop_data.items[item]);
 
-                await Promise.all([
-                    save_inventory(userid, inventory),
-                    save_shop_data(userid, shop_data)
-                ]);
+                await save_shop_data(userid, shop_data);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
@@ -700,7 +687,7 @@ const rpg_commands = {
                     return await message.reply({ embeds: [embed] });
                 };
 
-                inventory.add_item(item_id, amount);
+                await inventory.add_item(item_id, amount);
 
                 shop_data.items[item_id].amount -= amount;
                 if (shop_data.items[item_id].amount <= 0) {
@@ -884,7 +871,7 @@ const rpg_commands = {
                 let shop_data_modified = false;
 
                 if (amount) {
-                    inventory.subtract_item(item, item_amount_needed);
+                    await inventory.subtract_item(item, item_amount_needed);
 
                     shop_data.items[item].amount = amount;
 
@@ -1536,9 +1523,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 extra_embeds.push(embed);
             };
 
-            inventory.subtract_item(food_id, eat_amount);
             await Promise.all([
-                save_inventory(user.id, inventory),
+                inventory.subtract_item(food_id, eat_amount),
                 rpg_data.add_hunger(newadd),
             ]);
 

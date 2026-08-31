@@ -964,11 +964,10 @@ export async function execute(client, interaction) {
                 const amount = parseInt(amount_str);
                 const total_price = Math.round(parseFloat(total_price_str));
 
-                inventory.subtract_item(item_id, amount);
+                await inventory.subtract_item(item_id, amount);
 
                 const [emoji_trade, ...__] = await Promise.all([
                     get_emoji("trade", client),
-                    save_inventory(user.id, inventory),
                     rpg_data.add_money({
                         amount: total_price,
                         original_user: "系統",
@@ -1047,7 +1046,7 @@ export async function execute(client, interaction) {
                 const amount = parseInt(amount_str);
                 const price = parseInt(price_str);
 
-                let [[emoji_cross, emoji_store], buyerRPGData, buyerInventory, targetUserRPGData, targetUserShopData] = await Promise.all([
+                const [[emoji_cross, emoji_store], buyerRPGData, buyerInventory, targetUserRPGData, targetUserShopData] = await Promise.all([
                     get_emojis(["crosS", "store"], client),
                     load_rpg_data(buyerUserId),
                     load_inventory(buyerUserId),
@@ -1087,11 +1086,11 @@ export async function execute(client, interaction) {
                 const item_name = get_name_of_id(item);
                 const total_price = price * amount;
 
-                buyerInventory.add_item(item, amount);
                 if (!targetUserShopData.items[item].amount) targetUserShopData.items[item].amount = 0;
                 targetUserShopData.items[item].amount -= amount;
 
                 await Promise.all([
+                    buyerInventory.add_item(item, amount),
                     buyerRPGData.remove_money({
                         amount: total_price,
                         original_user: `<@${buyerUserId}>`,
@@ -1105,7 +1104,6 @@ export async function execute(client, interaction) {
                         type: `購買物品付款`,
                         record_transaction: false,
                     }),
-                    save_inventory(buyerUserId, buyerInventory),
                     save_shop_data(targetUserId, targetUserShopData),
                 ]);
 
@@ -1203,10 +1201,10 @@ export async function execute(client, interaction) {
                     return await interaction.editReply({ embeds: [embed], components: TopLevelComponent });
                 };
                 // ============================================
-
-                for (const need_item of item_need) {
-                    inventory.subtract_item(need_item.item, need_item.amount);
-                };
+                await Promise.all(
+                    item_need
+                        .map(({ item, amount }) => inventory.subtract_item(item, amount)),
+                );
 
                 const output_item_id = bake[item_id];
                 const end_time = Math.floor(Date.now() / 1000) + duration;
@@ -1291,12 +1289,10 @@ export async function execute(client, interaction) {
                     return await interaction.editReply({ embeds: [embed] });
                 };
                 // ==================檢查物品==================
-
-                for (const need_item of item_need) {
-                    inventory.subtract_item(need_item.item, need_item.amount);
-                };
-
-                await save_inventory(user.id, inventory);
+                await Promise.all(
+                    item_need
+                        .map(({ item, amount }) => inventory.subtract_item(item, amount)),
+                );
 
                 const output_item_id = smelt_recipe.output;
                 const end_time = Math.floor(Date.now() / 1000) + parsedDuration;
@@ -1502,7 +1498,7 @@ export async function execute(client, interaction) {
                 const job_name = (job_id && valid_job_id(job_id) ? get_job_name(job_id, locale) : null) || job_id;
 
                 if (job_id === "farmer") {
-                    inventory.add_item("wooden_hoe", 4);
+                    await inventory.add_item("wooden_hoe", 4);
                 };
 
                 await set_cooldown(user.id, "job", new Date());
@@ -1515,7 +1511,6 @@ export async function execute(client, interaction) {
                 await Promise.all([
                     interaction.update({ embeds: [embed], components: [] }),
                     rpg_data.set_job(job_id),
-                    save_inventory(user.id, inventory),
                 ]);
 
                 break;
@@ -1942,11 +1937,10 @@ export async function execute(client, interaction) {
                     ]);
 
                     const output_item = recipe.output;
-                    inventory.add_item(output_item, amount);
 
                     await Promise.all([
+                        inventory.add_item(output_item, amount),
                         client.cook_sessions.delete(sessionId),
-                        save_inventory(user.id, inventory),
                     ]);
                 } else {
                     container = await getCookingContainer(inputed_foods, item_needed, user.id, sessionId, session.cooked, client);
@@ -1994,17 +1988,13 @@ export async function execute(client, interaction) {
                         return { name, amount };
                     })
 
-                let inventory = await load_inventory(user.id);
-
-                for (const item of items) {
-                    inventory.add_item(item.name, item.amount);
-                };
+                const inventory = await load_inventory(user.id);
 
                 const [__, ___, ____, emoji_check] = await Promise.all([
                     interaction.message.delete(),
                     interaction.deferReply({ flags: MessageFlags.Ephemeral }),
-                    save_inventory(user.id, inventory),
                     get_emoji("check", client),
+                    ...items.map(({ name, amount }) => inventory.add_item(name, amount)),
                 ]);
 
                 const textDisplay = new TextDisplayBuilder().setContent(`**${emoji_check} | 成功取回 ${items.map(item => `${item.amount} 個 ${get_name_of_id(item.name)}`).join(", ")}**`);
