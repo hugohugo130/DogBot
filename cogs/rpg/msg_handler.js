@@ -2511,7 +2511,13 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
  */
 function get_random_result(category) {
     const datas = probabilities[category];
+    const empty_template = {
+        failed: false,
+        item: "",
+        amount: 0,
+    };
 
+    if (!datas) return empty_template;
     const items = Object.keys(datas);
     if (!items.length) {
         throw new Error(`no probabilities data of category ${category} found`);
