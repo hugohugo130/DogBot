@@ -10,7 +10,10 @@ import {
 
 import {
     RPGData,
-} from "./db/tables.js";
+} from "./db/tables.ts";
+import {
+    MockMessage,
+} from "../cogs/rpg/msg_handler.js";
 import DogClient from "./customs/client.js";
 
 // #region [RPG]
