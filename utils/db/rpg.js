@@ -304,7 +304,6 @@ export async function get_cooldowns(userid) {
         SELECT cooldown_key, last_run_at
         FROM ${table_name}
         WHERE user_id = $1
-        LIMIT 1
     `;
 
     const pool = getPool();

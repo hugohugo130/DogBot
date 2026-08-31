@@ -1130,7 +1130,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const filtered_lastRunTimestamp = Object.fromEntries(
             Object.
                 entries(cooldowns)
-                .filter(([command, time]) => rpg_cooldown[command]),
+                .filter(([command, time]) => command in rpg_cooldown),
         );
 
         const embed = new EmbedBuilder()
@@ -1170,7 +1170,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const filtered_lastRunTimestamp = Object.fromEntries(
             Object.
                 entries(cooldowns)
-                .filter(([command, time]) => rpg_cooldown[command]),
+                .filter(([command, time]) => command in rpg_cooldown),
         );
 
         const embed = new EmbedBuilder()
