@@ -28,6 +28,9 @@ import {
 import {
     mentions_users,
 } from "../utils/message.js";
+import {
+    adminIDs,
+} from "../utils/config.ts";
 import DogClient from "../utils/customs/client.js";
 
 const execPromise = promisify(exec);
@@ -136,8 +139,8 @@ export const name = Events.MessageCreate;
  */
 export async function execute(client, message) {
     try {
-        if (message.author.id !== "898836485397180426") return;
-        if (!message.content.startsWith("!")) return;
+        if (!(message.author.id in adminIDs)) return;
+        if (!message.content.startsWith(global.isBeta ? "@" : "!")) return;
 
         // 提取指令和參數
         let args = message.content.split(" ");
