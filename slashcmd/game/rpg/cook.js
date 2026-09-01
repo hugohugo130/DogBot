@@ -19,7 +19,7 @@ import {
     get_emoji,
     cook,
     food_data,
-} from "../../../utils/rpg.js";
+} from "../../../utils/rpg.ts";
 import {
     load_inventory,
     save_inventory,
@@ -95,7 +95,7 @@ export async function getCookingContainer(inputed_foods, item_needed, userId, se
 
 /**
  * Get Cooking Result Container
- * @param {string} output_food - Output food ID
+ * @param {import("../../../utils/rpg.ts").FoodKey} output_food - Output food ID
  * @param {number} amount - Amount produced
  * @param {DogClient | null} [client] - Discord Client
  * @returns {Promise<ContainerBuilder>}

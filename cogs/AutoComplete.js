@@ -9,7 +9,7 @@ import {
     smeltable_recipe,
     cook,
     recipes,
-} from "../utils/rpg.js";
+} from "../utils/rpg.ts";
 import {
     load_inventory,
     load_rpg_data,

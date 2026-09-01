@@ -14,7 +14,7 @@ import {
 } from "../../../utils/discord.js";
 import {
     get_emoji,
-} from "../../../utils/rpg.js";
+} from "../../../utils/rpg.ts";
 import {
     get_lang_data,
     PermissionTranslationKeyMapping,

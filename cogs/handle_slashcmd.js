@@ -15,7 +15,7 @@ import {
 import {
     get_emoji,
     get_loophole_embed,
-} from "../utils/rpg.js";
+} from "../utils/rpg.ts";
 import {
     get_me,
 } from "../utils/discord.js";

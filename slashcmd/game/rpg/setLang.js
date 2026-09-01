@@ -27,7 +27,7 @@ export const setLangSlash = {
     stage: "beta",
 
     async execute(interaction) {
-        // const { get_emoji } = require("../../../utils/rpg.js");
+        // const { get_emoji } = require("../../../utils/rpg.ts");
 
         // const emoji = await get_emoji("top", interaction.client));
         // const embed = new EmbedBuilder()

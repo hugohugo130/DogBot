@@ -9,7 +9,7 @@ import {
     recipes,
     tags,
     get_id_of_name,
-} from "../../../utils/rpg.js";
+} from "../../../utils/rpg.ts";
 import {
     load_inventory,
     save_inventory,

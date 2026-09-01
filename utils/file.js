@@ -342,21 +342,19 @@ function find_default_value(filename, default_return = undefined) {
 };
 
 /**
- * 
- * @param {string} item 
- * @param {any} default_return 
+ * @param {import("./rpg.ts").ItemKey} item
+ * @param {any} default_return
  * @returns {[number, number, number] | any}
  */
 function get_probability_of_id(item, default_return = undefined) {
     for (const categoryData of Object.values(probabilities)) {
-        if (categoryData.hasOwnProperty(item)) return categoryData[item];
+        if (Object.hasOwn(categoryData, item)) return categoryData[item];
     };
 
     return default_return;
 };
 
 /**
- * 
  * @param {any} data
  * @param {any} follow
  * @returns {any}

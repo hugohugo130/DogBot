@@ -10,7 +10,7 @@ import {
 
 import {
     get_emojis,
-} from "../../utils/rpg.js";
+} from "../../utils/rpg.ts";
 import {
     MusicQueue,
     getQueue,

@@ -17,7 +17,7 @@ import {
     get_id_of_name,
     get_name_of_id,
     get_loophole_embed,
-} from "../utils/rpg.js";
+} from "../utils/rpg.ts";
 import {
     load_inventory,
     load_rpg_data,

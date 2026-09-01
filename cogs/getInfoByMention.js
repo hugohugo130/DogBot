@@ -9,7 +9,7 @@ import {
 } from "../utils/logger.js";
 import {
     get_loophole_embed,
-} from "../utils/rpg.js";
+} from "../utils/rpg.ts";
 import {
     embed_default_color,
 } from "../utils/config.ts";

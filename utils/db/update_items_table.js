@@ -6,7 +6,7 @@ export async function update_items(cache = true) {
     const logger = get_logger();
     logger.info("正在檢查並更新items表");
 
-    const { name, tags } = /** @type {import("../rpg.js")} */ (await importModules("../rpg.js", cache));
+    const { name, tags } = /** @type {import("../rpg.ts")} */ (await importModules("../rpg.ts", cache));
 
     const currentIds = Object.keys(name)
         .filter(e => !(e.includes("#"))); // 排除 tags

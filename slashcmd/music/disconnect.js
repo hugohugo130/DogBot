@@ -8,7 +8,7 @@ import {
 
 import {
     get_emoji,
-} from "../../utils/rpg.js";
+} from "../../utils/rpg.ts";
 import {
     get_channel,
 } from "../../utils/discord.js";

@@ -11,8 +11,8 @@ import {
 import {
     get_id_of_name,
     get_name_of_id,
-    name,
-} from "../rpg.js";
+    type ItemKey,
+} from "../rpg.ts";
 import {
     max_hunger,
     type DailyInfo,
@@ -28,6 +28,7 @@ import type {
 import {
     Mutex,
 } from "./mutex.ts";
+import { item_exists } from "../../cogs/rpg/msg_handler.js";
 
 // #region [SQL returned data]
 
@@ -110,12 +111,11 @@ function assertValidHunger(hunger: number): asserts hunger is number {
     };
 };
 
-function checkValidItemId(item_id: string): string {
-    item_id = get_name_of_id(get_id_of_name(item_id), null);
+function checkValidItemId(id: string): asserts id is ItemKey {
+    const item_id = item_exists(id);
     if (!item_id) {
         throw new Error("unknown item id");
     };
-    return item_id;
 };
 
 function WithUserID<TBase extends Constructor>(Base: TBase) {
@@ -159,7 +159,7 @@ export type RPGInventoryData = { [item_id: string]: number };
 export type RPGCooldownsData = { [item_id: string]: Date };
 
 class EmptyBase { };
-class CollectionBase extends Collection<string, number> { }
+class CollectionBase extends Collection<ItemKey, number> { }
 
 const CollectionWithUserID = WithUserID(CollectionBase);
 const UserDataBase = WithUserID(EmptyBase);
@@ -446,25 +446,27 @@ export class RPGInventory extends CollectionWithUserID {
     constructor(data?: RPGInventoryData | RPGInventory | null) {
         super();
 
-        if (data instanceof RPGInventory) {
-            for (const [key, value] of data) {
-                if (!value) continue;
-                assertValidAmount(value);
-                this.set(key, value);
-            };
-        } else if (data) {
-            for (const [key, value] of Object.entries(data)) {
-                if (!value) continue;
-                assertValidAmount(value);
-                this.set(key, value);
-            };
+        if (!data) return;
+        const _data = data instanceof RPGInventory
+            ? data
+            : Object.entries(data);
+
+        for (const [key, value] of _data) {
+            this.#add_item(key, value);
         };
     };
+
+    #add_item(key: string, value: number) {
+        if (!key || !value || !item_exists(key)) return;
+        assertValidAmount(value);
+        this.set(key, value);
+    }
 
     async add_item(item: string, amount: number) {
         assertValidAmount(amount);
 
-        const item_id = checkValidItemId(item);
+        checkValidItemId(item);
+        const item_id = get_id_of_name(item);
 
         return await this._mutex.runExclusive(async () => {
             const result = await this.poolWithUserID(async (pool, userID) => {
@@ -488,7 +490,8 @@ export class RPGInventory extends CollectionWithUserID {
     async subtract_item(item: string, amount: number) {
         assertValidAmount(amount);
 
-        const item_id = checkValidItemId(item);
+        checkValidItemId(item);
+        const item_id = get_id_of_name(item);
 
         return await this._mutex.runExclusive(async () => {
             const result = await this.poolWithUserID(async (pool, userID) => {
@@ -521,7 +524,8 @@ export class RPGInventory extends CollectionWithUserID {
     };
 
     async delete_item(item: string) {
-        const item_id = checkValidItemId(item);
+        checkValidItemId(item);
+        const item_id = get_id_of_name(item);
 
         await this._mutex.runExclusive(async () => {
             await this.poolWithUserID(async (pool, userID) => {

@@ -34,7 +34,7 @@ import {
     smelter_slots,
     smeltable_recipe,
     bake,
-} from "../../../utils/rpg.js";
+} from "../../../utils/rpg.ts";
 import {
     embed_error_color,
     embed_default_color,

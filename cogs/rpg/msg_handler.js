@@ -54,7 +54,9 @@ import {
     userHaveNotEnoughItems,
     BetterEval,
     valid_job_id,
-} from "../../utils/rpg.js";
+    isFoodKey,
+    isFailedItem,
+} from "../../utils/rpg.ts";
 import {
     load_shop_data,
     save_shop_data,
@@ -111,7 +113,7 @@ class MockMessage {
      * @param {User | null} [mention_user=null]
      */
     constructor(content = null, channel = null, author = null, guild = null, mention_user = null) {
-        /** @type {string | null} */
+        /** @type {string | null | undefined} */
         this.content = content;
 
         /** @type {any | null} */
@@ -141,12 +143,12 @@ class MockMessage {
 };
 
 /**
- * Check whether a item exists by its ID
- * @param {string} item_id
- * @returns {boolean}
+ * Check whether a item exists by its ID or name
+ * @param {any} item
+ * @returns {item is import("../../utils/rpg.ts").ItemKey}
  */
-function item_exists(item_id) {
-    return !!get_name_of_id(item_id, null);
+export function item_exists(item) {
+    return !!get_name_of_id(get_id_of_name(item), null);
 };
 
 
@@ -330,11 +332,22 @@ const redirect_data_reverse = Object.entries(redirect_data).reduce((acc, [key, v
     ({})
 );
 
+/**
+ * @param {import("../../utils/types").RandomItem | null | undefined} random_item
+ * @returns {asserts random_item is import("../../utils/types").RandomItem}
+ */
+function assertRandomItem(random_item) {
+    if (!random_item) {
+        throw new Error("Random Item is not given");
+    };
+};
+
 /** @type {{ [commandName: string]: import("../../utils/types").RPGCommand }} */
 const rpg_commands = {
     mine: ["挖礦", async function ({ client, message, rpg_data, args, mode, random_item }) {
         const userid = message.author?.id;
         if (!userid) return;
+        assertRandomItem(random_item);
 
         const [inventory, emoji_ore] = await Promise.all([
             load_inventory(userid),
@@ -368,6 +381,7 @@ const rpg_commands = {
     fell: ["伐木", async function ({ client, message, rpg_data, args, mode, random_item }) {
         if (!message.author) return;
         const userid = message.author.id;
+        assertRandomItem(random_item);
 
         const [inventory, emoji_wood] = await Promise.all([
             load_inventory(userid),
@@ -396,6 +410,7 @@ const rpg_commands = {
     herd: ["放牧", async function ({ client, message, rpg_data, args, mode, random_item }) {
         if (!message.author) return;
         const userid = message.author.id;
+        assertRandomItem(random_item);
 
         const { item: random_animal, amount } = random_item;
         if (!animal_products[random_animal]) {
@@ -446,6 +461,7 @@ const rpg_commands = {
     brew: ["釀造", async function ({ client, message, rpg_data, args, mode, random_item }) {
         if (!message.author) return;
         const userid = message.author.id;
+        assertRandomItem(random_item);
 
         const [inventory, emoji_potion] = await Promise.all([
             load_inventory(userid),
@@ -469,6 +485,7 @@ const rpg_commands = {
     fish: ["抓魚", async function ({ client, message, rpg_data, args, mode, random_item }) {
         if (!message.author) return;
         const userid = message.author.id;
+        assertRandomItem(random_item);
 
         const [inventory, emoji_fisher] = await Promise.all([
             load_inventory(userid),
@@ -529,18 +546,18 @@ const rpg_commands = {
                 範例: shop add 鑽石礦 2 600
                 範例2: shop add diamond_ore 2 600
                 */
-                let [_, item_name, amount, price] = args;
+                let [_, item_name, given_amount, given_price] = args;
                 item_name = get_name_of_id(item_name); // 物品名稱
-                const item = get_id_of_name(item_name); // 物品id
+                const item = /** @type {import("../../utils/rpg.ts").ItemKey} */ (get_id_of_name(item_name)); // 物品id
 
                 const [shop_data, inventory, inventory_item_amount] = await Promise.all([
                     load_shop_data(userid),
                     load_inventory(userid),
-                    amount === "all" ? await get_number_of_items(item, userid) : amount // 獲取所有物品數量
+                    given_amount === "all" ? await get_number_of_items(item, userid) : parseInt(given_amount) // 獲取所有物品數量
                 ]);
 
                 const status = shop_data.status ? "營業中" : "打烊";
-                amount = inventory_item_amount;
+                let amount = inventory_item_amount || 1;
 
                 if (!
                     Object.keys(name)
@@ -550,9 +567,6 @@ const rpg_commands = {
                     return await redirect({ client, message, command: "help shop", mode });
                 };
 
-                const item_exist = shop_data.items[item];
-                amount = parseInt(amount);
-                if (isNaN(amount)) amount = 1;
                 if (amount < 1) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -563,8 +577,9 @@ const rpg_commands = {
                     return await message.reply({ embeds: [embed] });
                 };
 
+                const item_exist = shop_data.items[item];
                 // let price = parseInt(args[3]) || item_exist?.price || shop_lowest_price[item];
-                price = parseInt(price) || item_exist?.price;
+                let price = parseInt(given_price) || item_exist?.price;
                 if (!price || price < 1 || price >= 1000000000) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
@@ -747,7 +762,7 @@ const rpg_commands = {
 
                 // 食物
                 const food = Object.entries(shop_data.items)
-                    .filter(([item]) => Object.values(foods).includes(item))
+                    .filter(([item]) => /** @type {string[]} */(foods).includes(item))
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([item, data]) => `${get_name_of_id(item)} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
                     .join("\n");
@@ -756,7 +771,7 @@ const rpg_commands = {
 
                 // 其他
                 const others = Object.entries(shop_data.items)
-                    .filter(([item]) => !Object.values(mine_gets).includes(item) && !Object.values(ingots).includes(item) && !Object.values(foods).includes(item))
+                    .filter(([item]) => !Object.values(mine_gets).includes(item) && !Object.values(ingots).includes(item) && !/** @type {string[]} */(foods).includes(item))
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([item, data]) => `${get_name_of_id(item)} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
                     .join("\n");
@@ -840,22 +855,55 @@ const rpg_commands = {
 
                 const status = shop_data.status ? "營業中" : "打烊";
 
-                let [_, item_name, amount = null, price = null] = args;
+                let [_, item_name, amount_str = null, price_str = null] = args;
                 item_name = get_name_of_id(item_name); // 物品名稱
                 const item = get_id_of_name(item_name); // 物品id
+
+                if (!item_exists(item)) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 未知的物品`)
+                        .setEmbedFooter(userid);
+
+                    if (mode === 1) return { embeds: [embed] };
+                    return await message.reply({ embeds: [embed] });
+                };
 
                 const item_exist = shop_data.items[item];
 
                 if (!item_exist) return await redirect({
                     client,
                     message,
-                    command: `shop add ${item} ${amount || 1} ${price || 1}`,
+                    command: `shop add ${item} ${amount_str || 1} ${price_str || 1}`,
                     mode,
                 });
 
-                const item_amount_needed = (amount - item_exist.amount);
+                if (!amount_str) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 錯誤的數量`)
+                        .setEmbedFooter(userid);
 
-                if (amount === "all") amount = ((item_exist.amount || 0) + await get_number_of_items(item, userid)) || 1;
+                    if (mode === 1) return { embeds: [embed] };
+                    return await message.reply({ embeds: [embed] });
+                };
+
+                if (!price_str) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 錯誤的價格`)
+                        .setEmbedFooter(userid);
+
+                    if (mode === 1) return { embeds: [embed] };
+                    return await message.reply({ embeds: [embed] });
+                };
+
+                const amount = amount_str === "all"
+                    ? ((item_exist.amount || 0) + await get_number_of_items(item, userid)) || 1
+                    : parseInt(amount_str);
+                const price = parseInt(price_str);
+
+                const item_amount_needed = (amount - item_exist.amount);
 
                 if (userHaveNotEnoughItems(inventory, item, item_amount_needed)) {
                     const embed = new EmbedBuilder()
@@ -867,8 +915,7 @@ const rpg_commands = {
                     return await message.reply({ embeds: [embed] });
                 };
 
-                let inventory_modified = false;
-                let shop_data_modified = false;
+                let inventory_modified = false, shop_data_modified = false;
 
                 if (amount) {
                     await inventory.subtract_item(item, item_amount_needed);
@@ -971,8 +1018,9 @@ const rpg_commands = {
             return;
         };
 
+        /** @type {string | null} */
         let item = args[0];
-        item = get_id_of_name(item);
+        item = get_id_of_name(item, null);
 
         if (!item_exists(item)) item = null;
 
@@ -987,12 +1035,11 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
-        /** @type {string} */
-        const item_name = get_name_of_id(item);
-
-        if (!item || !get_id_of_name(item_name, null)) {
+        if (!item) {
             return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
         };
+
+        const item_name = get_name_of_id(item);
 
         const item_exist = shop_data.items[item];
         if (!item_exist) {
@@ -1005,19 +1052,11 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
-        let amount = args[1];
-        if (amount === "all") {
-            amount = item_exist.amount;
-        } else if (amount) {
-            // 過濾amount中任何非數字的字元 e.g: $100 -> 100
-            amount = amount.toString().replace(/\D/g, "");
+        const amount_str = args[1];
+        const amount = (amount_str === "all"
+            ? item_exist.amount
+            : parseInt(amount_str.replace(/\D/g, ""))) || 0;
 
-            amount = parseInt(amount);
-        };
-
-        if (typeof amount !== "number") amount = parseInt(amount);
-
-        if (!amount) amount = 1;
         if (amount < 1 || amount > item_exist.amount) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -1422,7 +1461,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             const food_id = args[0];
             const food_name = get_name_of_id(food_id);
 
-            if (!foods[food_id]) {
+            if (!isFoodKey(food_id)) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 這東東不能吃ㄟ`)
@@ -1545,21 +1584,21 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 .setDescription(`體力值: ${rpg_data.hunger} / ${max_hunger} 點`)
                 .setEmbedFooter(user.id);
 
-            /** @type {{[key: string]: number}} */
+            /** @type {Partial<Record<import("../../utils/rpg.ts").FoodKey, number>>} */
             const food_crops_items = {};
-            /** @type {{[key: string]: number}} */
+            /** @type {Partial<Record<import("../../utils/rpg.ts").FoodKey, number>>} */
             const food_meat_items = {};
 
             // 遍歷背包中的物品並分類
             for (const [item, amount] of inventory.entries().toArray()) {
                 if (amount <= 0) continue;
-                // if (!Object.keys(foods).includes(item)) continue;
+                // if (!/** @type {string[]} */ (foods).includes(item)) continue;
                 if (!Object.keys(food_data).includes(item)) continue;
                 // if (item.startsWith("raw_")) continue;
 
-                if (Object.keys(foods_crops).includes(item)) {
+                if (/** @type {readonly string[]} */ (foods_crops).includes(item)) { // @ts-ignore
                     food_crops_items[item] = amount;
-                } else if (Object.keys(foods_meat).includes(item) || Object.keys(fish).includes(item)) {
+                } else if (/** @type {readonly string[]} */ (foods_meat).includes(item) || Object.keys(fish).includes(item)) { // @ts-ignore
                     food_meat_items[item] = amount;
                 };
             };
@@ -1592,7 +1631,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                     const category_items = category.items;
                     if (Object.keys(category_items).length > 0) {
                         const itemsTexts = Object.entries(category_items)
-                            .map(([item, amount]) => `${get_name_of_id(item)} \`${amount.toLocaleString()}\` 個 (回復 \`${food_data[item]}\` ${emoji_drumstick})`);
+                            .map(([item, amount]) => {
+                                const item_name = get_name_of_id(item);
+                                const item_amount = amount.toLocaleString();
+                                const food_hunger = food_data[/** @type {keyof typeof category_items} */ (item)];
+                                return `${item_name} \`${item_amount}\` 個 (回復 \`${food_hunger}\` ${emoji_drumstick})`
+                            });
 
                         const longestItemNameLength = Math.max(...itemsTexts.map(item => item.length));
                         const itemsPerChunk = Math.floor(embed_field_value_limit / longestItemNameLength);
@@ -2363,9 +2407,7 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
 
     if (rpg_work.includes(command) && rpg_data.hunger <= 0) {
         const inventory = await load_inventory(message.author.id);
-        const food_items = Object.keys(foods);
-
-        let found_food = food_items
+        const found_food = foods
             .filter(food => inventory.has(food) && food_data[food] < max_hunger)
             .sort((a, b) => food_data[b] - food_data[a])
         [0];
@@ -2378,7 +2420,6 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
                 rpg_data,
                 args: [found_food, "all"],
                 mode: 1,
-                random_item: { item: "", amount: 0 },
             });
 
 
@@ -2464,16 +2505,14 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
         return;
     };
 
-    let need_arg = false;
     const need_arg_func = rpg_commands[command][2];
-
-    if (need_arg_func) {
-        if (typeof need_arg_func === "function") {
-            need_arg = await need_arg_func(client, userid);
-        } else {
-            need_arg = need_arg_func;
-        };
-    };
+    const need_arg = need_arg_func
+        ? (
+            typeof need_arg_func === "function"
+                ? await need_arg_func(client, userid)
+                : need_arg_func
+        )
+        : false;
 
     if (need_arg && !args.length) {
         const { get_help_command } = await import(new URL("./interactions.js", import.meta.url).href);
@@ -2486,25 +2525,31 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
         return;
     };
 
-    const result = await execute({ client, message, rpg_data, args, mode, random_item: { item, amount } });
+    /** @type {import("../../utils/types").RPGCmdArgument} */
+    const execute_args = { client, message, rpg_data, args, mode };
+    if (!failed) {
+        execute_args["random_item"] = { item, amount };
+    };
+
+    const result = await execute(execute_args);
     if (mode === 1) return result;
 };
 
 /**
  * Get a random gain of a rpg work
  * @param {keyof typeof probabilities} category - work command or ID
- * @returns {{ failed: boolean, item: string, amount: number }}
+ * @returns {import("../../utils/types").RandomResult}
  */
 function get_random_result(category) {
     const datas = probabilities[category];
-    const empty_template = {
-        failed: false,
+    const empty_template = /** @type {const} */ ({
+        failed: true,
         item: "",
         amount: 0,
-    };
+    });
 
     if (!datas) return empty_template;
-    const items = Object.keys(datas);
+    const items = /** @type {(keyof typeof datas)[]} */ (/** @type {unknown} */ (Object.keys(datas)));
     if (!items.length) {
         throw new Error(`no probabilities data of category ${category} found`);
     };
@@ -2512,7 +2557,9 @@ function get_random_result(category) {
     let totalWeight = 0;
     const cumulativeWeights = [];
     for (const item of items) {
-        const weight = datas[item][0];
+        const data = datas[item];
+        if (!data) continue;
+        const weight = data[0];
 
         totalWeight += weight;
         cumulativeWeights.push(totalWeight);
@@ -2532,12 +2579,17 @@ function get_random_result(category) {
         selectedItem = items[Math.floor(Math.random() * items.length)];
     };
 
-    const [_, minAmount, maxAmount] = datas[selectedItem];
+    const selectedItemData = datas[selectedItem];
+    if (!selectedItemData) return empty_template;
+
+    const [_, minAmount, maxAmount] = selectedItemData;
     const amount = randint(minAmount, maxAmount);
 
-    const is_failed = failed.includes(selectedItem);
-
-    return { failed: is_failed, item: selectedItem, amount };
+    if (isFailedItem(selectedItem)) {
+        return { failed: true, item: selectedItem, amount };
+    } else {
+        return { failed: false, item: selectedItem, amount };
+    };
 };
 
 const event_name = Events.MessageCreate;

@@ -63,7 +63,8 @@ import {
     get_job_name,
     valid_job_id,
     valid_fightjob_id,
-} from "../../utils/rpg.js";
+    isFoodKey,
+} from "../../utils/rpg.ts";
 import {
     get_farm_info_embed,
 } from "../../slashcmd/game/rpg/farm.js";
@@ -931,10 +932,9 @@ export async function execute(client, interaction) {
             case "ls": {
                 if (!guild) return;
 
-                const [_, prefix, rpg_data] = await Promise.all([
+                const [_, prefix] = await Promise.all([
                     interaction.deferReply({ flags: MessageFlags.Ephemeral }),
                     firstPrefix(guild.id),
-                    load_rpg_data(user.id),
                 ]);
 
                 const message = new MockMessage(`${prefix}ls`, channel, interaction.user, interaction.guild);
@@ -946,8 +946,6 @@ export async function execute(client, interaction) {
                     PASS: true,
                     interaction,
                 });
-
-                if (res instanceof Message) return;
 
                 await interaction.followUp(res);
                 break;
@@ -1152,12 +1150,19 @@ export async function execute(client, interaction) {
                     return await interaction.editReply({ content: "", embeds: [error_embed], components: [] });
                 };
 
-                let [inventory, bake_data] = await Promise.all([
+                if (!isFoodKey(item_id)) {
+                    throw new Error("given item id is not an id of a food item");
+                };
+
+                const output_item_id = bake[item_id];
+                if (!output_item_id) {
+                    throw new Error(`can't find baking output item of item id: ${item_id}`);
+                };
+
+                const [inventory, bake_data] = await Promise.all([
                     load_inventory(user.id),
                     load_bake_data(user.id),
                 ]);
-
-                if (!bake_data) bake_data = [];
 
                 if (bake_data?.length && bake_data.length >= oven_slots) {
                     const embed = new EmbedBuilder()
@@ -1206,7 +1211,6 @@ export async function execute(client, interaction) {
                         .map(({ item, amount }) => inventory.subtract_item(item, amount)),
                 );
 
-                const output_item_id = bake[item_id];
                 const end_time = Math.floor(Date.now() / 1000) + duration;
 
                 bake_data.push({

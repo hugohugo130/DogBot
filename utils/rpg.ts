@@ -35,6 +35,8 @@ import {
     workCmdJobs,
     PrivacySettings,
     fightjobs,
+    type ItemName,
+    failed,
 } from "./config.ts";
 import {
     get_lang_data,
@@ -48,8 +50,15 @@ import {
     load_inventory,
     load_user_privacy,
 } from "./db/rpg.js";
+import type {
+    JobNames,
+    SuccessItem,
+} from "./types.d.ts";
+import {
+    item_exists,
+} from "../cogs/rpg/msg_handler.js";
 import EmbedBuilder from "./customs/embedBuilder.js";
-import DogClient from "./customs/client.js";
+import DogClient, { type CookSession } from "./customs/client.js";
 
 const logger = get_logger();
 
@@ -65,7 +74,7 @@ const mine_gets = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, /** @type {Object<string, string>} */({}));
+}, {} as { [key: string]: string });
 
 const ingots = [
     "diamond",
@@ -78,7 +87,7 @@ const ingots = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, /** @type {Object<string, string>} */({}));
+}, {} as { [key: string]: string });
 
 const logs = [
     "acacia_wood",
@@ -94,7 +103,7 @@ const logs = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, /** @type {Object<string, string>} */({}));
+}, {} as { [key: string]: string });
 
 const planks = [
     "acacia_planks",
@@ -110,14 +119,13 @@ const planks = [
 ].reduce((acc, cur) => {
     acc[cur] = cur;
     return acc;
-}, /** @type {Object<string, string>} */({}));
+}, {} as { [key: string]: string });
 
 const wood_productions = {
     stick: "stick",
 };
 
-/** @type {{ [k: string]: { input: { item: string, amount: number }[], output: string, amount: number } }} */
-const recipes = {
+const recipes: { [k: string]: { input: { item: string; amount: number; }[]; output: string; amount: number } } = {
     iron_armor: {
         input: [
             { item: "iron", amount: 28 }
@@ -273,10 +281,9 @@ const smeltable_recipe = [
     },
 ];
 
-/** @type {{ [k: string]: string[] }} */
-const tags = {
+const tags: { [k: string]: string[] } = {
     "planks": Object.keys(planks),
-};
+} as const;
 
 const foods_crops = [
     "apple",
@@ -292,10 +299,7 @@ const foods_crops = [
     "potato",
     "wheat",
     "hugo_burger",
-].reduce((acc, cur) => {
-    acc[cur] = cur;
-    return acc;
-}, /** @type {Object<string, string>} */({}));
+] as const;
 
 const foods_meat = [
     "anglerfish",
@@ -350,25 +354,19 @@ const foods_meat = [
     "whale",
     "raw_hugo",
     "hugo",
-].reduce((acc, cur) => {
-    acc[cur] = cur;
-    return acc;
-}, /** @type {Object<string, string>} */({}));
+] as const;
 
 const animals = [
     "a_chicken",
     "a_duck",
     "a_sheep",
     "a_hugo",
+    "a_dog",
     "cow",
     "pig",
-].reduce((acc, cur) => {
-    acc[cur] = cur;
-    return acc;
-}, /** @type {Object<string, string>} */({}));
+] as const;
 
-/** @type {{ [k: string]: string }} */
-const animal_products = {
+const animal_products: Partial<Record<SuccessItem, ItemKey>> = {
     a_chicken: "raw_chicken",
     a_duck: "raw_duck",
     a_sheep: "raw_mutton",
@@ -378,8 +376,7 @@ const animal_products = {
     pig: "raw_pork",
 };
 
-/** @type {{ [k: string]: number }} */
-const shop_lowest_price = {
+const shop_lowest_price: Record<ItemKey, number> = {
     // ==============材料==============
     egg: 50,
     // ==============作物==============
@@ -523,74 +520,68 @@ const shop_lowest_price = {
     // ============================
 };
 
-const sell_data = Object.keys(shop_lowest_price).reduce(function (result, key) {
+const sell_data = (Object.keys(shop_lowest_price) as (keyof typeof shop_lowest_price)[]).reduce(function (result, key) {
     result[key] = parseFloat((shop_lowest_price[key] * 0.9).toFixed(1));
     return result;
 },
-    /** @type {{ [k: string]: number }} */
-    ({})
+    {} as Record<keyof typeof shop_lowest_price, number>,
 );
 
-/** @type {{ [k: string]: number }} */
 const food_data = {
+    hugo_burger: 4,
     anglerfish: 4,
-    apple: 1,
     beef: 4,
-    bread: 2,
-    cake: 2,
-    candy: 1,
+    eel: 4,
+    octopus: 4,
+    pork: 4,
+    whale: 4,
+    tomato_egg: 3,
+    carrot_egg: 3,
     catfish: 3,
     chicken: 3,
-    chocolate: 2,
     clownfish: 3,
-    cod: 2,
-    cookie: 2,
-    crab: 2,
     duck: 3,
-    eel: 4,
     goldfish: 3,
     jellyfish: 3,
     koi: 3,
-    lobster: 2,
     mutton: 3,
-    octopus: 4,
-    pork: 4,
-    potato: 2,
-    tomato: 1,
-    tomato_egg: 3,
-    carrot_egg: 3,
-    carrot: 1,
-    corn: 1,
-    cooked_corn: 2,
-    pufferfish: 2,
     salmon: 3,
     shrimp: 3,
     squid: 3,
     swordfish: 3,
-    tropical_fish: 2,
     tuna: 3,
-    whale: 4,
-    raw_hugo: 1,
+    cooked_corn: 2,
+    potato: 2,
+    cod: 2,
+    crab: 2,
+    lobster: 2,
+    pufferfish: 2,
+    tropical_fish: 2,
+    bread: 2,
     hugo: 2,
-    hugo_burger: 4,
-    egg: 1,
+    apple: 1,
+    wheat: 1,
+    raw_potato: 1,
+    tomato: 1,
+    carrot: 1,
+    corn: 1,
+    bread_dough: 1,
     raw_beef: 1,
     raw_chicken: 1,
+    raw_duck: 1,
+    raw_mutton: 1,
     raw_pork: 1,
-    raw_potato: 1,
     raw_shrimp: 1,
     raw_anglerfish: 1,
     raw_catfish: 1,
     raw_clownfish: 1,
     raw_cod: 1,
     raw_crab: 1,
-    raw_duck: 1,
     raw_eel: 1,
     raw_goldfish: 1,
     raw_jellyfish: 1,
     raw_koi: 1,
     raw_lobster: 1,
-    raw_mutton: 1,
     raw_pufferfish: 1,
     raw_octopus: 1,
     raw_salmon: 1,
@@ -599,18 +590,15 @@ const food_data = {
     raw_tropical_fish: 1,
     raw_tuna: 1,
     raw_whale: 1,
-};
+    raw_hugo: 1,
+    egg: 1,
+} as const;
 
-let foods = { ...foods_crops, ...foods_meat };
+const foods = [...foods_crops, ...foods_meat]
+    .filter(e => e in food_data)
+    .sort((a, b) => food_data[a as FoodKey] - food_data[b as FoodKey]); // 透過food_data排序foods, 從高到低
 
-// 透過food_data排序foods, 從高到低
-foods = Object.keys(foods).sort((a, b) => food_data[b] - food_data[a]).reduce((obj, key) => {
-    obj[key] = foods[key];
-    return obj;
-}, /** @type {Object<string, string>} */({}));
-
-/** @type {{ [k: string]: string }} */
-const brew = {
+const brew: { [k: string]: string; } = {
     cough_potion: "cough_potion",
     dizzy_potion: "dizzy_potion",
     eye_potion: "eye_potion",
@@ -629,8 +617,7 @@ const brew = {
     unlucky_potion: "unlucky_potion",
 };
 
-/** @type {{ [k: string]: string }} */
-const fish = {
+const fish: { [k: string]: string; } = {
     raw_anglerfish: "raw_anglerfish",
     raw_catfish: "raw_catfish",
     raw_clownfish: "raw_clownfish",
@@ -652,8 +639,7 @@ const fish = {
     raw_whale: "raw_whale",
 };
 
-/** @type {{ [k: string]: string }} */
-const weapons_armor = {
+const weapons_armor: { [k: string]: string; } = {
     iron_armor: "iron_armor",
     iron_axe: "iron_axe",
     iron_hoe: "iron_hoe",
@@ -665,8 +651,7 @@ const weapons_armor = {
     wooden_hoe: "wooden_hoe",
 };
 
-/** @type {{ [k: string]: string }} */
-const bake = {
+const bake: Partial<Record<FoodKey, FoodKey>> = {
     raw_beef: "beef",
     raw_chicken: "chicken",
     raw_duck: "duck",
@@ -680,14 +665,14 @@ const bake = {
     wheat: "bread",
 };
 
-for (const raw_food of Object.keys(foods_meat).filter(e => e.startsWith("raw_"))) {
-    if (bake[raw_food]) continue;
+for (const raw_food of foods_meat.filter(e => e.startsWith("raw_"))) {
+    if (raw_food in bake) continue;
 
-    const food = raw_food.replace("raw_", "");
-    bake[raw_food] = food;
+    const food = raw_food.replace("raw_", "") as FoodKey;
+    bake[raw_food as FoodKey] = food;
 };
 
-const cook = [
+const cook: (CookSession["recipe"])[] = [
     { // tomato_egg
         input: [
             { name: "tomato", amount: 1 },
@@ -706,7 +691,6 @@ const cook = [
     },
 ];
 
-/** @type {{ [k: string]: string }} */
 const name = {
     // ==============礦物==============
     coal: "煤炭",
@@ -782,6 +766,7 @@ const name = {
     a_duck: "鴨",
     a_sheep: "羊",
     a_hugo: "哈狗",
+    a_dog: "狗狗機器犬",
     cow: "牛",
     pig: "豬",
     // ==============藥水==============
@@ -864,18 +849,27 @@ const name = {
     blacksmith: "鐵匠",
     lumberjack: "伐木工",
     // ==============其他==============
-    a_dog: "狗狗機器犬",
     dogdog: "正在孵化的幼犬",
     // ==============....==============
-};
+} as const;
 
-const name_reverse = Object.entries(name).reduce((acc, [key, value]) => {
-    acc[value] = key;
-    return acc;
-},
-    /** @type {{ [k: string]: string }} */
-    ({})
+const name_reverse = (Object.keys(name) as Array<NameKey>).reduce(
+    (acc, key) => {
+        const value = name[key];
+        acc[value] = key;
+        return acc;
+    },
+    {} as Record<typeof name[NameKey], NameKey>
 );
+
+export type FoodKey = keyof typeof food_data;
+export type NameKey = keyof typeof name;
+export type ItemKey = Exclude<
+    NameKey,
+    | `#${keyof typeof tags}`   // 排除 "#planks" 等以 # 開頭的標籤鍵
+    | typeof animals[number]    // 排除動物鍵
+    | JobNames                  // 排除職業鍵
+>;
 
 function check_item_data() {
     const all_items = [...new Set([
@@ -893,7 +887,8 @@ function check_item_data() {
         .filter(item => !item.startsWith("#"))
         .filter(item => !(item in jobs))
         .filter(item => !Object.keys(animal_products).includes(item))
-        .filter(item => !Object.values(animals).includes(item))
+        .filter(item => !(animals as readonly string[]).includes(item))
+        .filter(item_exists)
     )];
 
     const work_productions = [...new Set([
@@ -902,29 +897,29 @@ function check_item_data() {
         // ...Object.values(ingots),
         ...Object.values(logs),
         ...Object.values(foods_crops),
-        ...Object.values(foods_meat).filter(e => e.startsWith("raw_")),
+        ...foods_meat.filter(e => e.startsWith("raw_")),
     ]
         .flat()
-        .filter(item => !Object.values(animal_products).includes(item))
-        .filter(item => !Object.values(bake).includes(item))
+        .filter(item => !(Object.values(animal_products) as string[]).includes(item))
+        .filter(item => !(Object.values(bake) as string[]).includes(item))
         .filter(item => !cook.map(data => data.output).includes(item))
         .filter(item => !(item in recipes))
+        .filter(item_exists)
     )];
 
 
     for (const item_id of all_items) {
-        if (!name[item_id]) {
+        if (!(item_id in name)) {
             logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的名稱`);
         };
 
-        if (!shop_lowest_price[item_id]) {
+        if (!(item_id in shop_lowest_price)) {
             logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的最低上架價格 和 出售價格`);
         };
 
         // if (!sell_data[item_id]) {
         //     logger.warn(`[警告] 物品ID "${item_id}" 沒有對應的出售價格`);
         // };
-
     };
 
     for (const item_id of work_productions.filter(item_id => !get_probability_of_id(item_id))) {
@@ -933,50 +928,54 @@ function check_item_data() {
 };
 
 /**
- * Get the item name of the item ID
- * @param {string} id
- * @param {string | any} default_value
- * @returns {string | any} id or default_value
+ * Get the item name from the item ID
  */
-function get_name_of_id(id, default_value = id) {
-    return name[id] || default_value;
+function get_name_of_id<T extends NameKey>(id: T): typeof name[T];
+function get_name_of_id<T extends string>(id: T): T;
+function get_name_of_id<T extends string, D>(
+    id: T,
+    default_value: D
+): T extends NameKey
+    ? typeof name[T] | D
+    : D | (typeof name)[NameKey];
+function get_name_of_id(id: string, default_value: any = id): any {
+    return (name as Record<string, any>)[id] ?? default_value;
 };
 
 /**
- * Get the item ID of the item name
- * @param {string} id
- * @param {string | any} default_value
- * @returns {string | any} id or default_value
+ * Get the item ID from the item name
  */
-function get_id_of_name(id, default_value = id) {
-    return name_reverse[id] || default_value;
+function get_id_of_name<T extends keyof typeof name_reverse>(name: T): typeof name_reverse[T];
+function get_id_of_name<T extends string>(name: T): T;
+function get_id_of_name<T extends string, D>(
+    name: T,
+    default_value: D
+): T extends keyof typeof name_reverse
+    ? typeof name_reverse[T] | D
+    : D | (typeof name_reverse)[keyof typeof name_reverse];
+function get_id_of_name(name: string, default_value: any = name): any {
+    return (name_reverse as Record<string, any>)[name] ?? default_value;
 };
 
 /**
  * Get the amount of item in the inventory of a user
- * @param {string} name
- * @param {string} userid
- * @returns {Promise<number>}
  */
-async function get_number_of_items(name, userid) {
+async function get_number_of_items(item_name: string, userid: string): Promise<number> {
     const inventory = await load_inventory(userid);
 
     // 如果輸入的是中文名稱，找到對應的英文key
-    let item_key = get_id_of_name(name);
+    let item_key = get_id_of_name(item_name);
 
-    if (!item_key) return 0;
+    if (!item_exists(item_key)) return 0;
 
     return inventory.get(item_key) ?? 0;
 };
 
-/**
- *
- * @param {import("./db/tables").RPGInventory} inventory
- * @param {string} item
- * @param {number} amount_needed
- * @returns {null | {item: string, amount: number}} 如果玩家有足夠的物品，回傳null，否則返回物品id和數量
- */
-function userHaveNotEnoughItems(inventory, item, amount_needed) {
+function userHaveNotEnoughItems(
+    inventory: import("./db/tables").RPGInventory,
+    item: ItemKey,
+    amount_needed: number
+): null | { item: string; amount: number; } {
     const item_amount = inventory.get(item) ?? 0;
 
     if (item_amount && item_amount >= amount_needed) {
@@ -989,14 +988,11 @@ function userHaveNotEnoughItems(inventory, item, amount_needed) {
     };
 };
 
-/**
- *
- * @param {({ item: string, amount: number } | string)[] | ({ item: string, amount: number } | string)} item_datas
- * @param {BaseInteraction | null} [interaction=null]
- * @param {DogClient | null} [client]
- * @returns {Promise<EmbedBuilder>}
- */
-async function notEnoughItemEmbed(item_datas, interaction = null, client = global._client) {
+async function notEnoughItemEmbed(
+    item_datas: ({ item: string; amount: number; } | string)[] | ({ item: string; amount: number; } | string),
+    interaction: BaseInteraction | null = null,
+    client: DogClient | null = global._client
+): Promise<EmbedBuilder> {
     if (!Array.isArray(item_datas)) item_datas = [item_datas];
     if (!item_datas.length) throw new Error("item_datas is empty");
 
@@ -1042,7 +1038,7 @@ async function notEnoughItemEmbed(item_datas, interaction = null, client = globa
  * @param {any} [default_value=null]
  * @returns {any}
  */
-function BetterEval(obj, default_value = null) {
+function BetterEval(obj: any, default_value: any = null): any {
     try {
         return Function(`"use strict";return ${obj}`)();
     } catch {
@@ -1056,7 +1052,7 @@ function BetterEval(obj, default_value = null) {
  * @param {number} chunkSize - the size of each chunk
  * @returns {Array<any>}
  */
-function chunkArray(array, chunkSize) {
+function chunkArray(array: Array<any>, chunkSize: number): Array<any> {
     const chunks = [];
     for (let i = 0; i < array.length; i += chunkSize) {
         chunks.push(array.slice(i, i + chunkSize));
@@ -1074,7 +1070,7 @@ function chunkArray(array, chunkSize) {
  * @param {DogClient | null} [client]
  * @returns {Promise<[EmbedBuilder | null, ActionRowBuilder<ButtonBuilder> | null]>}
  */
-async function wrong_job_embed(rpg_data, command, userId, interaction = null, client = global._client) {
+async function wrong_job_embed(rpg_data: import("./db/tables").RPGData, command: string, userId: string, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<[EmbedBuilder | null, ActionRowBuilder<ButtonBuilder> | null]> {
     const workJobShouldBe = workCmdJobs[command];
 
     if (workJobShouldBe?.length > 0) {
@@ -1098,9 +1094,8 @@ async function wrong_job_embed(rpg_data, command, userId, interaction = null, cl
                     .setStyle(ButtonStyle.Primary);
 
                 row =
-                    /** @type {ActionRowBuilder<ButtonBuilder>} */
                     (new ActionRowBuilder()
-                        .addComponents(chooseJobButton));
+                        .addComponents(chooseJobButton)) as ActionRowBuilder<ButtonBuilder>;
             };
 
             return [embed, row];
@@ -1116,7 +1111,7 @@ async function wrong_job_embed(rpg_data, command, userId, interaction = null, cl
  * @param {DogClient | null} [client]
  * @returns {Promise<ApplicationEmoji | null>}
  */
-async function get_emoji_object(name, client = global._client) {
+async function get_emoji_object(name: string, client: DogClient | null = global._client): Promise<ApplicationEmoji | null> {
     if (!client) client = await wait_for_client();
 
     let emojis = client.application?.emojis.cache;
@@ -1136,7 +1131,7 @@ async function get_emoji_object(name, client = global._client) {
  * @param {DogClient | null} [client]
  * @returns {Promise<(ApplicationEmoji | null)[]>}
  */
-async function get_emoji_objects(names, client = global._client) {
+async function get_emoji_objects(names: string[], client: DogClient | null = global._client): Promise<(ApplicationEmoji | null)[]> {
     if (!client) client = await wait_for_client();
 
     const emojis = await Promise.all(
@@ -1152,7 +1147,7 @@ async function get_emoji_objects(names, client = global._client) {
  * @param {DogClient | null} [client]
  * @returns {Promise<string>}
  */
-async function get_emoji(name, client = global._client) {
+async function get_emoji(name: string, client: DogClient | null = global._client): Promise<string> {
     if (!client) client = await wait_for_client();
 
     const emojiObject = await get_emoji_object(name, client);
@@ -1169,7 +1164,7 @@ async function get_emoji(name, client = global._client) {
  * @param {DogClient | null} [client]
  * @returns {Promise<string[]>}
  */
-async function get_emojis(names, client = global._client) {
+async function get_emojis(names: string[], client: DogClient | null = global._client): Promise<string[]> {
     if (!client) client = await wait_for_client();
 
     const emojis = await Promise.all(
@@ -1188,11 +1183,11 @@ async function get_emojis(names, client = global._client) {
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
-async function get_cooldown_embed(remaining_time, action, count, interaction = null, client = global._client) {
-    const [emoji, { rpg_actions }] = /** @type {[string, import("../cogs/rpg/msg_handler.js") ]} */ (await Promise.all([
+async function get_cooldown_embed(remaining_time: number, action: string, count: number | string, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder> {
+    const [emoji, { rpg_actions }] = await Promise.all([
         get_emoji("crosS", client),
         import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href),
-    ]));
+    ]) as [string, typeof import("../cogs/rpg/msg_handler.js")];
 
     const timestamp = Math.floor(Date.now() / 1000) + Math.floor(remaining_time / 1000);
     const time = `<t:${timestamp}:T> (<t:${timestamp}:R>)`;
@@ -1214,7 +1209,7 @@ async function get_cooldown_embed(remaining_time, action, count, interaction = n
  * @param {string} user_id
  * @returns {Promise<number>}
  */
-async function get_cooldown_time(command_name, user_id) {
+async function get_cooldown_time(command_name: string, user_id: string): Promise<number> {
     const { rpg_cooldown } = /** @type {import("../cogs/rpg/msg_handler.js")} */ (await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href));
     const count = await get_count(command_name, user_id) ?? 0;
 
@@ -1227,7 +1222,7 @@ async function get_cooldown_time(command_name, user_id) {
  * @param {string} user_id
  * @returns {Promise<{ is_finished: boolean, remaining_time: number, endsAtms: number, endsAts: number }>} - is_finished: 冷卻是否結束 - remaining_time: 剩餘時間
  */
-async function is_cooldown_finished(command_name, user_id) {
+async function is_cooldown_finished(command_name: string, user_id: string): Promise<{ is_finished: boolean; remaining_time: number; endsAtms: number; endsAts: number; }> {
     const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href);
 
     if (!rpg_cooldown[command_name]) return {
@@ -1258,7 +1253,7 @@ async function is_cooldown_finished(command_name, user_id) {
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
-async function get_failed_embed(failed_reason, rpg_data, interaction = null, client = global._client) {
+async function get_failed_embed(failed_reason: string, rpg_data: import("./db/tables").RPGData, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder> {
     let color = embed_error_color;
 
     let title = "失敗";
@@ -1319,7 +1314,7 @@ async function get_failed_embed(failed_reason, rpg_data, interaction = null, cli
  * @param {string} description
  * @returns {{ title: string, description: string }}
  */
-function generate_analyze_data(title, description) {
+function generate_analyze_data(title: string, description: string): { title: string; description: string; } {
     return {
         title,
         description,
@@ -1331,7 +1326,7 @@ function generate_analyze_data(title, description) {
  * @param {string} errorStack
  * @returns {{ title: string, description: string }[]}
  */
-function error_analyze(errorStack) {
+function error_analyze(errorStack: string): { title: string; description: string; }[] {
     const analyzes = [];
 
     if (errorStack.includes("is not a function")) {
@@ -1416,7 +1411,7 @@ function error_analyze(errorStack) {
  * @param {DogClient | null} [client=global._client]
  * @returns {Promise<EmbedBuilder[]>}
  */
-async function get_loophole_embed(text, interaction = null, client = global._client) {
+async function get_loophole_embed(text: string | Error, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder[]> {
     const emoji_cross = await get_emoji("crosS", client);
 
     if (text instanceof Error) {
@@ -1467,7 +1462,7 @@ async function get_loophole_embed(text, interaction = null, client = global._cli
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
-async function job_delay_embed(userId, interaction = null, client = global._client) {
+async function job_delay_embed(userId: string, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder | null> {
     const { load_cooldown } = /** @type {import("./db/rpg.js")} */ (await importModules("./db/rpg.js"));
 
     const job_cooldown = await load_cooldown(userId, "job");
@@ -1494,7 +1489,7 @@ async function job_delay_embed(userId, interaction = null, client = global._clie
  * @param {string} userid
  * @returns {Promise<[ActionRowBuilder<StringSelectMenuBuilder>, ActionRowBuilder<ButtonBuilder>]>}
  */
-async function choose_job_row(userid) {
+async function choose_job_row(userid: string): Promise<[ActionRowBuilder<StringSelectMenuBuilder>, ActionRowBuilder<ButtonBuilder>]> {
     const selectMenu = new StringSelectMenuBuilder()
         .setCustomId(`job_choose|${userid}`)
         .setPlaceholder("選擇職業")
@@ -1523,14 +1518,12 @@ async function choose_job_row(userid) {
         .setStyle(ButtonStyle.Danger);
 
     const row1 =
-        /** @type {ActionRowBuilder<StringSelectMenuBuilder>} */
         (new ActionRowBuilder()
-            .addComponents(selectMenu));
+            .addComponents(selectMenu)) as ActionRowBuilder<StringSelectMenuBuilder>;
 
     const row2 =
-        /** @type {ActionRowBuilder<ButtonBuilder>} */
         (new ActionRowBuilder()
-            .addComponents(cancel_button));
+            .addComponents(cancel_button)) as ActionRowBuilder<ButtonBuilder>;
 
     return [row1, row2];
 };
@@ -1540,41 +1533,36 @@ async function choose_job_row(userid) {
  * @param {number} amount
  * @returns {boolean}
  */
-function amount_limit(amount) {
+function amount_limit(amount: number): boolean {
     return amount > Number.MAX_SAFE_INTEGER || amount < Number.MIN_SAFE_INTEGER;
 };
 
-/**
- * Handle &ls for open backpack interaction
- * @overload
- * @param {Object} options
- * @param {DogClient} options.client
- * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
- * @param {string} options.userid
- * @param {1} options.mode
- * @param {boolean} [options.PASS=false]
- * @param {BaseInteraction | null} [options.interaction=null]
- * @returns {Promise<{ [k: string]: any }>}
- * 
- * @overload
- * @param {Object} options
- * @param {DogClient} options.client
- * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
- * @param {string} options.userid
- * @param {0 | 1} [options.mode=0]
- * @param {boolean} [options.PASS=false]
- * @param {BaseInteraction | null} [options.interaction=null]
- * @returns {Promise<Message | null>}
- *
- * @param {Object} options
- * @param {DogClient} options.client
- * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} options.message
- * @param {string} options.userid
- * @param {0 | 1} [options.mode=0]
- * @param {boolean} [options.PASS=false]
- * @param {BaseInteraction | null} [options.interaction=null]
- */
-async function ls_function({ client, message, userid, mode = 0, PASS = false, interaction = null }) {
+interface LsOptions {
+    client: DogClient;
+    message: Message | import("../cogs/rpg/msg_handler.js").MockMessage;
+    userid: string;
+    mode?: 0 | 1;
+    PASS?: boolean;
+    interaction?: BaseInteraction | null;
+};
+
+async function ls_function(
+    options: LsOptions & { mode: 1 }
+): Promise<{ [k: string]: any }>;
+
+async function ls_function(
+    options: LsOptions & { mode?: 0 }
+): Promise<Message | null>;
+
+async function ls_function(
+    options: LsOptions
+): Promise<{ [k: string]: any } | Message | null>;
+
+async function ls_function(
+    options: LsOptions
+): Promise<{ [k: string]: any } | Message | null> {
+    const { client, message, userid, mode = 0, PASS = false, interaction = null } = options;
+
     if (!message.author) return mode === 0 ? null : {};
 
     const privacy = await load_user_privacy(userid);
@@ -1602,9 +1590,8 @@ async function ls_function({ client, message, userid, mode = 0, PASS = false, in
             .setStyle(ButtonStyle.Success);
 
         const row =
-            /** @type {ActionRowBuilder<ButtonBuilder>} */
             (new ActionRowBuilder()
-                .addComponents(confirm_button));
+                .addComponents(confirm_button)) as ActionRowBuilder<ButtonBuilder>;
 
         if (mode === 1) return { embeds: [embed], components: [row] };
         return await message.reply({ embeds: [embed], components: [row] });
@@ -1639,22 +1626,14 @@ async function ls_function({ client, message, userid, mode = 0, PASS = false, in
         ], client);
 
         // 分類物品
-        /** @type {Object.<string, number>} */
-        const ores = {};
-        /** @type {Object.<string, number>} */
-        const log_items = {};
-        /** @type {Object.<string, number>} */
-        const food_crops_items = {};
-        /** @type {Object.<string, number>} */
-        const food_meat_items = {}
-        /** @type {Object.<string, number>} */
-        const fish_items = {};
-        /** @type {Object.<string, number>} */
-        const weapons_armor_items = {};
-        /** @type {Object.<string, number>} */
-        const potions_items = {}
-        /** @type {Object.<string, number>} */
-        const other_items = {};
+        const ores: { [s: string]: number; } = {};
+        const log_items: { [s: string]: number; } = {};
+        const food_crops_items: { [s: string]: number; } = {};
+        const food_meat_items: { [s: string]: number; } = {}
+        const fish_items: { [s: string]: number; } = {};
+        const weapons_armor_items: { [s: string]: number; } = {};
+        const potions_items: { [s: string]: number; } = {}
+        const other_items: { [s: string]: number; } = {};
 
         // 遍歷背包中的物品並分類
         for (const [item, amount] of inventory) {
@@ -1666,7 +1645,7 @@ async function ls_function({ client, message, userid, mode = 0, PASS = false, in
                 log_items[item] = amount;
             } else if (Object.keys(foods_crops).includes(item)) {
                 food_crops_items[item] = amount;
-            } else if (Object.keys(foods_meat).includes(item) && !Object.keys(fish).includes(item)) {
+            } else if ((foods_meat as readonly string[]).includes(item) && !Object.keys(fish).includes(item)) {
                 food_meat_items[item] = amount;
             } else if (Object.keys(fish).includes(item)) {
                 fish_items[item] = amount;
@@ -1710,7 +1689,7 @@ async function ls_function({ client, message, userid, mode = 0, PASS = false, in
  * @param {string} guildID
  * @returns {Promise<string>}
  */
-async function firstPrefix(guildID) {
+async function firstPrefix(guildID: string): Promise<string> {
     const guildData = await loadData(guildID);
 
     const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
@@ -1724,7 +1703,7 @@ async function firstPrefix(guildID) {
  * @param {string} prefix
  * @returns {Promise<string[]>}
  */
-async function InPrefix(guildID, prefix) {
+async function InPrefix(guildID: string, prefix: string): Promise<string[]> {
     const guildData = await loadData(guildID);
 
     const prefixes = (guildData.prefix ?? [])
@@ -1740,7 +1719,7 @@ async function InPrefix(guildID, prefix) {
  * @param {string} str
  * @returns {Promise<false | string>}
  */
-async function startsWith_prefixes(guildID, str) {
+async function startsWith_prefixes(guildID: string, str: string): Promise<false | string> {
     const guildData = await loadData(guildID);
 
     const prefixes = (guildData.prefix ?? [])
@@ -1755,13 +1734,20 @@ async function startsWith_prefixes(guildID, str) {
     return false;
 };
 
+export const isFoodKey = (key: string): key is FoodKey => {
+    return key in food_data;
+};
+
+export const isFailedItem = (item: ItemName): item is (typeof failed)[number] =>
+    (failed as readonly string[]).includes(item);
+
 /**
  * Get the translation of adventure job by its ID
  * @param {string} fj_id - ID of the fight job
  * @param {Locale | null} [locale=null] - the locale
  * @returns {string}
  */
-export const get_fightjob_name = (fj_id, locale = null) => get_lang_data(locale, "fightjob_name", fj_id);
+export const get_fightjob_name = (fj_id: string, locale: Locale | null = null): string => get_lang_data(locale, "fightjob_name", fj_id);
 
 /**
  * Get the translation of a job by its ID
@@ -1769,19 +1755,19 @@ export const get_fightjob_name = (fj_id, locale = null) => get_lang_data(locale,
  * @param {Locale | null} [locale=null] - the locale
  * @returns {string}
  */
-export const get_job_name = (job_id, locale = null) => get_lang_data(locale, "job_name", job_id);
+export const get_job_name = (job_id: import("./types").JobNames, locale: Locale | null = null): string => get_lang_data(locale, "job_name", job_id);
 
 /**
  * @param {string} job_id
  * @returns {job_id is import("./types").JobNames}
  */
-export const valid_job_id = (job_id) => job_id in jobs;
+export const valid_job_id = (job_id: string): job_id is import("./types").JobNames => job_id in jobs;
 
 /**
  * @param {string} fightjob_id
  * @returns {fightjob_id is import("./types").FightJobNames}
  */
-export const valid_fightjob_id = (fightjob_id) => fightjob_id in fightjobs;
+export const valid_fightjob_id = (fightjob_id: string): fightjob_id is import("./types").FightJobNames => fightjob_id in fightjobs;
 
 const oven_slots = 6;
 const farm_slots = 4;

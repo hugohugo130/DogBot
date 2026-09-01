@@ -278,6 +278,7 @@ const container_default_color = Math.floor(Math.random() * 0xFFFFFF); // Random
 
 // RPG
 const failed = [
+    "",
     "boom",
     "mouse",
     "collapse",
@@ -286,18 +287,20 @@ const failed = [
     // "acid_rain",
     "escape",
     "epidemic",
-];
+] as const;
+
+export type ItemName = import("./rpg.ts").NameKey | (typeof failed)[number];
 
 /**
- * Probabilities
-
  * the first number is weight
 
  * the second number is minimum gain amount
 
  * the third number is maximum gain amount
  */
-const probabilities: { [k: string]: { [k: string]: [number, number, number]; }; } = {
+const probabilities: {
+    [category: string]: Partial<Record<ItemName, [number, number, number]>>
+} = {
     "farm": {
         // "acid_rain": [2, 1, 1],
         "wheat": [30, 1, 2],

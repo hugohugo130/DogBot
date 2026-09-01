@@ -8,7 +8,7 @@ import {
 } from "../utils/db/rpg.js";
 import {
     get_emoji,
-} from "../utils/rpg.js";
+} from "../utils/rpg.ts";
 import {
     randint,
 } from "../utils/random.js";

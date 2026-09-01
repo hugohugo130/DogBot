@@ -13,7 +13,7 @@ import {
 } from "../utils/language.js";
 import {
     get_emoji,
-} from "../utils/rpg.js";
+} from "../utils/rpg.ts";
 import EmbedBuilder from "../utils/customs/embedBuilder.js";
 
 /** @type {import("../utils/types").Slash} */

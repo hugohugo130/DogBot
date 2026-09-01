@@ -29,7 +29,7 @@ import {
     get_job_name,
     get_fightjob_name,
     valid_job_id,
-} from "../utils/rpg.js";
+} from "../utils/rpg.ts";
 import {
     get_lang_data,
 } from "../utils/language.js";

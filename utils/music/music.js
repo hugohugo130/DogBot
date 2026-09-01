@@ -36,7 +36,7 @@ import {
 } from "../config.ts";
 import {
     get_emoji,
-} from "../rpg.js";
+} from "../rpg.ts";
 import {
     get_logger,
 } from "../logger.js";

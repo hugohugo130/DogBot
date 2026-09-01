@@ -16,7 +16,8 @@ import {
     oven_slots,
     food_data,
     get_name_of_id,
-} from "../../../utils/rpg.js";
+    isFoodKey,
+} from "../../../utils/rpg.ts";
 import {
     load_bake_data,
     save_bake_data,
@@ -78,7 +79,7 @@ export function divide(amount, by) {
  * Handle /bake bake
  * @param {import("../../../utils/types").ChatInputCommandInteraction} interaction
  * @param {string} userId
- * @param {string} item_id
+ * @param {keyof typeof bake} item_id
  * @param {number} amount
  * @param {DogClient} client
  * @param {number} mode 1 = interaction.editReply, 2 = interaction.followUp
@@ -117,13 +118,17 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
     if (allFoods) amount = inventory.get(item_id) ?? 0;
 
     const target_food = bake[item_id];
+    if (!target_food) {
+        throw new Error(`Cannot find the baking output of the food ${item_id}`);
+    };
     const target_food_hunger = food_data[target_food];
 
     const duration = 60 * amount * target_food_hunger;
 
     const coal_amount = Math.ceil(amount / 2);
 
-    let item_need = [
+    /** @type { { item: import("../../../utils/rpg.ts").ItemKey, amount: number }[] } */
+    const item_need = [
         {
             item: item_id,
             amount,
@@ -133,7 +138,7 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
             amount: coal_amount,
         },
     ];
-    let item_missing = [];
+    const item_missing = [];
 
     for (const need_item of item_need) {
         const current_item_id = need_item.item;
@@ -418,7 +423,7 @@ export const bakeSlash = {
                     return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
                 };
 
-                if (first_food && !bake[first_food]) {
+                if (!first_food || !isFoodKey(first_food) || !bake[first_food]) {
                     const error_embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 找不到這個烘培配方`)
@@ -487,7 +492,7 @@ export const bakeSlash = {
                         .setEmbedFooter(interaction);
 
                     return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-                }; console.debug("e1")
+                };
 
                 if (allFoods && !auto_amount && first_food) {
                     amounts = [inventory.get(first_food) || 1];
@@ -495,15 +500,15 @@ export const bakeSlash = {
                     if (auto_amount === "amount" && first_food) {
                         amounts = divide(inventory.get(first_food) ?? 0, oven_remain_slots);
                     } else { // auto_amount === "foods"
-                        const entries = inventory.entries().toArray()
-                            .filter(([key]) => key in bake)                    // 過濾掉不可烘烤的物品
+                        const entries = /** @type {[keyof typeof bake, number][]} */ (inventory.entries().toArray()
+                            .filter(([key]) => key in bake))                   // 過濾掉不可烘烤的物品
                             .sort(([, valueA], [, valueB]) => valueB - valueA) // 按數量降序排序
                             .slice(0, oven_remain_slots);                      // 取前 {oven_remain_slots} 個物品
 
                         items = entries.map(([key]) => key);
                         amounts = entries.map(([, value]) => value);
                     };
-                }; console.debug("e2")
+                };
 
                 const total_need_coal = Math.ceil(amounts.reduce((sum, amount) => sum + amount, 0) / 2);
                 const coal_amount = inventory.get("coal") ?? 0;

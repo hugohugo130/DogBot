@@ -15,7 +15,7 @@ import {
 import {
     get_emojis,
     get_emoji,
-} from "../../utils/rpg.js";
+} from "../../utils/rpg.ts";
 import {
     formatMinutesSeconds,
 } from "../../utils/timestamp.js";

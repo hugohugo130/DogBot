@@ -17,7 +17,7 @@ import {
     userHaveNotEnoughItems,
     wrong_job_embed,
     farm_slots,
-} from "../../../utils/rpg.js";
+} from "../../../utils/rpg.ts";
 import {
     load_farm_data,
     save_farm_data,

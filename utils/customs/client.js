@@ -21,24 +21,26 @@ import {
     loadDvoiceData,
 } from "../file.js";
 
+/** @import { ItemKey } from import("../rpg.ts") */
+
 /**
  * @typedef OvenBakeSession
  * @property {string} item_id
  * @property {number} amount
  * @property {number} coal_amount
  * @property {number} duration
- * @property {{ item: string, amount: number }[]} item_need
+ * @property {{ item: ItemKey, amount: number }[]} item_need
  * @property {string} userId
  */
 
 /**
- * @typedef {{ item: string, amount: number }[]} SmelterSession
+ * @typedef {{ item: ItemKey, amount: number }[]} SmelterSession
 */
 
 /**
  * @typedef CookSession
  * @property {string} userId
- * @property {{ input: { name: string, amount: number }[], output: string, amount: number }} recipe
+ * @property {{ input: { name: ItemKey, amount: number }[], output: ItemKey, amount: number }} recipe
  * @property {{ item: string, amount: number}[]} inputed_foods
  * @property {{ item: string, amount: number}[]} item_needed
  * @property {number} amount
@@ -244,4 +246,4 @@ class DogClient extends Client {
 };
 
 export default DogClient;
-export {DogClient};
+export { DogClient };

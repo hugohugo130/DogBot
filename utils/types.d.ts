@@ -14,27 +14,11 @@ import {
 import {
     MockMessage,
 } from "../cogs/rpg/msg_handler.js";
+import {
+    failed,
+    ItemName,
+} from "./config.ts";
 import DogClient from "./customs/client.js";
-
-// #region [RPG]
-
-export type JobNames =
-    | "fisher"
-    | "pharmacist"
-    | "farmer"
-    | "cook"
-    | "miner"
-    | "herder"
-    | "blacksmith"
-    | "lumberjack";
-
-export type FightJobNames =
-    | "soldier"
-    | "magician"
-    | "ninja"
-    | "tank";
-
-// #endregion [RPG]
 
 // #region [Interactions]
 
@@ -114,7 +98,25 @@ export type ContextMenu = {
 
 // #endregion [Interactions]
 
-// #region [rpg]
+// #region [RPG]
+
+export type JobNames =
+    | "fisher"
+    | "pharmacist"
+    | "farmer"
+    | "cook"
+    | "miner"
+    | "herder"
+    | "blacksmith"
+    | "lumberjack";
+
+export type FightJobNames =
+    | "soldier"
+    | "magician"
+    | "ninja"
+    | "tank";
+
+type SuccessItem = Exclude<ItemName, (typeof failed)[number]>;
 
 type RPGCmdCheckNeedArgFunction =
     (client: DogClient, userId: string) => Promise<boolean> | boolean;
@@ -123,17 +125,23 @@ type RPGCmdArgument = {
     client: DogClient;
     message: Message | MockMessage;
     rpg_data: RPGData;
-    args: any[];
+    args: string[];
     mode: 0 | 1;
-    random_item: {
-        item: string;
-        amount: number;
-    };
+    random_item?: RandomItem
 };
 
 type RPGCmdFunction =
     ({ client, message, rpg_data, args, mode, random_item }: RPGCmdArgument) => Promise<Message | Object>;
 
+export type RandomItem = {
+    item: SuccessItem;
+    amount: number;
+};
+
+export type RandomResult =
+    | { failed: true; item: (typeof failed)[number]; amount: number }
+    | { failed: false; item: SuccessItem; amount: number };
+
 export type RPGCommand = [string, RPGCmdFunction, RPGCmdCheckNeedArgFunction | boolean];
 
-// #endregion [rpg]
+// #endregion [RPG]

@@ -5,7 +5,7 @@ import { loadEnvFile } from "node:process";
 import { Events } from "discord.js";
 import { get_logger } from "./utils/logger.js";
 import { load_cogs } from "./utils/load_cogs.js";
-import { check_item_data } from "./utils/rpg.js";
+import { check_item_data } from "./utils/rpg.ts";
 import { registcmd } from "./register_commands.js";
 import { getCacheManager } from "./utils/cache.js";
 import { musicSearchEngine } from "./utils/config.ts";
