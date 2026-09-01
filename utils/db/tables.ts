@@ -478,7 +478,7 @@ export class RPGInventory extends CollectionWithUserID {
                     INSERT INTO inventory (user_id, item_id, amount)
                     VALUES ($1::bigint, $2::text, $3::bigint)
                     ON CONFLICT (user_id, item_id)
-                        DO UPDATE SET amount = inventory.amount + EXCLUDED.amount,
+                        DO UPDATE SET amount = inventory.amount + EXCLUDED.amount
                     RETURNING amount
                 `,
                     [userID, item_id, amount],
