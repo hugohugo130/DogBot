@@ -156,7 +156,7 @@ export async function load_inventory(userid) {
         return acc;
     }, /** @type {{ [k: string]: number }} */({}));
 
-    return new RPGInventory(data);
+    return new RPGInventory(data, userid);
 };
 
 /**

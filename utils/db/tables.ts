@@ -443,16 +443,20 @@ export class RPGData extends UserDataBase {
 export class RPGInventory extends CollectionWithUserID {
     private _mutex = new Mutex();
 
-    constructor(data?: RPGInventoryData | RPGInventory | null) {
+    constructor(data?: RPGInventoryData | RPGInventory | null, userid?: string) {
         super();
 
-        if (!data) return;
-        const _data = data instanceof RPGInventory
-            ? data
-            : Object.entries(data);
+        if (data) {
+            const _data = data instanceof RPGInventory
+                ? data
+                : Object.entries(data);
 
-        for (const [key, value] of _data) {
-            this.#add_item(key, value);
+            for (const [key, value] of _data) {
+                this.#add_item(key, value);
+            };
+        };
+        if (userid) {
+            this.setUserID(userid);
         };
     };
 
