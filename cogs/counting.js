@@ -27,7 +27,7 @@ function getNumberFromMessage(message) {
 };
 
 /**
- * @param {any} n
+ * @param {number} n
  * @returns {boolean}
  */
 function IsAValidNumber(n) {
@@ -59,7 +59,7 @@ export async function execute(client, message) {
     const user = message.author;
     const guildId = guild.id;
 
-    if (!IsAValidNumber(given_number)) return;
+    if (!given_number || !IsAValidNumber(given_number)) return;
 
     const guildData = await loadData(guildId);
 
@@ -83,7 +83,7 @@ export async function execute(client, message) {
     const correct = given_number === next_count;
     const different_counter = last_counter !== user.id;
 
-    let emoji = "❓";
+    let emoji;
     let msg = null;
 
     if (correct && different_counter) {

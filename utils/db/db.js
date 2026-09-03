@@ -34,7 +34,7 @@ export class PoolClient extends PGClient {
 
     /**
      * @param {keyof typeof import("./config").TABLES_METADATA} table_name
-     * @param {boolean} [cache=false]
+     * @param {boolean} [cache]
      * @returns {Promise<void>}
      */
     async init(table_name, cache = false) {
@@ -50,7 +50,7 @@ export class PoolClient extends PGClient {
     };
 
     /**
-     * @param {boolean} [force=false]
+     * @param {boolean} [force]
      * @returns {Promise<void>}
      */
     async begin(force = false) {
@@ -124,7 +124,7 @@ export class PoolClient extends PGClient {
 
     /**
      * @param {Error | boolean} [err]
-     */
+     */ // eslint-disable-next-line @typescript-eslint/no-unused-vars
     release(err) {
         // 避免 Typescript 不知道 PoolClient 其實有 release() method
         // Pool 會自動注入代碼

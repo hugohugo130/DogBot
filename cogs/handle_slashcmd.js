@@ -6,7 +6,8 @@ import {
     Events,
     MessageFlags,
     GuildMember,
-    DMChannel,
+    InteractionResponse,
+    Message,
 } from "discord.js";
 
 import {
@@ -40,12 +41,13 @@ import { adminIDs, ownerID } from "../utils/config.ts";
 
 /**
  *
- * @param {any} options
+ * @param {readonly import("discord.js").CommandInteractionOption<import("discord.js").CacheType>[]} options
  * @returns {string[]}
  */
 function getFullCommandPath(options) {
     let path = [];
 
+    /** @type {(readonly import("discord.js").CommandInteractionOption<import("discord.js").CacheType>[]) | undefined} */
     let current = options;
 
     while (current && current.length > 0 && (current[0].type === 1 || current[0].type === 2)) {
@@ -58,11 +60,10 @@ function getFullCommandPath(options) {
 
 /**
  *
- * @param {any} options
+ * @param {(readonly import('discord.js').CommandInteractionOption<import('discord.js').CacheType>[]) | undefined} options
  * @returns {readonly import('discord.js').CommandInteractionOption<import('discord.js').CacheType>[]}
  */
 function getFinalOptions(options) {
-    /** @type {readonly import('discord.js').CommandInteractionOption<import('discord.js').CacheType>[] | undefined}*/
     let current = options;
 
     while (current && current.length > 0 && (current[0].type === 1 || current[0].type === 2)) {
@@ -80,7 +81,7 @@ const name = Events.InteractionCreate;
  *
  * @param {DogClient} client
  * @param {import("discord.js").Interaction} interaction
- * @returns {Promise<any>}
+ * @returns {Promise<InteractionResponse | Message | void>}
  */
 const execute = async function (client, interaction) {
     if (!interaction.isChatInputCommand?.()) return;
@@ -129,6 +130,7 @@ const execute = async function (client, interaction) {
                     flags: MessageFlags.Ephemeral,
                 });
             };
+            break;
         }
 
         case "owner": {
@@ -185,7 +187,7 @@ const execute = async function (client, interaction) {
 
             if (!userPermission) {
                 return await interaction.reply({
-                    content: `${emoji_cross} | 我無法取得你的權限`,
+                    content: `${emoji_cross} | ${lang_cant_get_permission}`,
                     flags: MessageFlags.Ephemeral,
                 });
             };
@@ -209,7 +211,7 @@ const execute = async function (client, interaction) {
 
             /**
              * @param {import("../utils/types").PermissionTexts} perm
-             * @return {string}
+             * @returns {string}
              */
             const translatePermissionNames = (perm) => {
                 const translation_key = PermissionTranslationKeyMapping[perm];
@@ -243,7 +245,9 @@ const execute = async function (client, interaction) {
                         content: missingPermText.slice(0, 2000),
                         flags: MessageFlags.Ephemeral,
                     });
-                } catch { };
+                } catch {
+                    // 忽略所有錯誤 :D
+                };
             };
         };
 
@@ -257,7 +261,9 @@ const execute = async function (client, interaction) {
         const embeds = await get_loophole_embed(errorStack, interaction, client);
         try {
             await interaction.followUp({ content: "", embeds, components: [], flags: MessageFlags.Ephemeral });
-        } catch { };
+        } catch {
+            // 忽略所有錯誤 :D
+        };
     };
 };
 

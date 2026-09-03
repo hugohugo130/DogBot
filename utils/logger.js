@@ -173,7 +173,7 @@ const consoleFormat = winston.format.combine(
 
         return info;
     })(),
-    winston.format.printf(({ timestamp, level, message, module }) => {
+    winston.format.printf(({ timestamp: _, level, message, module }) => {
         return `${time2()} [${path.basename(String(module), ".js")}] - ${level.toUpperCase()} - ${message}`;
     }),
 );
@@ -185,7 +185,7 @@ const consoleFormat = winston.format.combine(
  * @param {import('discord.js').ColorResolvable} color
  * @param {string} logger_name
  * @param {string} message
- * @param {number | null} [timestamp=null]
+ * @param {number | null} [timestamp]
  * @returns {Promise<void>}
  */
 async function send_msg(channel, level, color, logger_name, message, timestamp = null) {
@@ -219,7 +219,7 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
 
 /**
  * 取得呼叫者檔案資訊
- * @param {string[]} [skipURLs=[]] 額外要跳過的檔案 URL（例如 importModules 所在的檔案）
+ * @param {string[]} [skipURLs] 額外要跳過的檔案 URL（例如 importModules 所在的檔案）
  * @returns {[string, string] | [null, null]} [檔案名稱, file:// URL]
  */
 function getCallerFile(skipURLs = []) {
@@ -281,12 +281,12 @@ function getCallerFile(skipURLs = []) {
  * @returns {string[]}
  *
  * @overload
- * @param {"full" | "url" | null} [mode=1]
- * @param {string[]} [skipURLs=[]] 額外要跳過的檔案 URL
+ * @param {"full" | "url" | null} [mode]
+ * @param {string[]} [skipURLs] 額外要跳過的檔案 URL
  * @returns {string}
  *
- * @param {any | "list" | "full" | "url" | null} [mode=1]
- * @param {string[]} [skipURLs=[]] 額外要跳過的檔案 URL
+ * @param {any | "list" | "full" | "url" | null} [mode]
+ * @param {string[]} [skipURLs] 額外要跳過的檔案 URL
  * @returns {any}
  */
 export function getCallerModuleName(mode = 1, skipURLs = []) {
@@ -339,7 +339,7 @@ export function getCallerModuleName(mode = 1, skipURLs = []) {
 
 /**
  * Get the logger instance for a file
- * @param {{ name?: string, backend?: boolean, nodc?: boolean }} [options={}]
+ * @param {{ name?: string, backend?: boolean, nodc?: boolean }} [options]
  * @returns {winston.Logger}
  */
 export function get_logger(options = {}) {

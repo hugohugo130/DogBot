@@ -85,8 +85,8 @@ async function get_related_tracks(track_id) {
 
 /**
  * Check whether a string is a valid soundcloud url
- * @param {string | null} [url=null]
- * @param {string | null} [type="track"]
+ * @param {string | null} [url]
+ * @param {string | null} [type]
  * @returns {boolean}
  */
 export function validateURL(url = null, type = "track") {

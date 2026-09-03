@@ -17,7 +17,6 @@ import {
 import {
     load_inventory,
     load_rpg_data,
-    save_inventory,
 } from "../../../utils/db/rpg.js";
 import {
     load_smelt_data,
@@ -28,12 +27,10 @@ import {
     get_emojis,
     wrong_job_embed,
     get_loophole_embed,
-    get_id_of_name,
     userHaveNotEnoughItems,
     notEnoughItemEmbed,
     smelter_slots,
     smeltable_recipe,
-    bake,
 } from "../../../utils/rpg.ts";
 import {
     embed_error_color,
@@ -42,6 +39,9 @@ import {
 import {
     wait_for_client,
 } from "../../../utils/wait_for_client.js";
+import {
+    item_exists,
+} from "../../../cogs/rpg/msg_handler.js";
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 import DogClient from "../../../utils/customs/client.js";
 
@@ -61,10 +61,10 @@ const logger = get_logger();
 /**
  *
  * @param {ChatInputCommandInteraction} interaction
- * @param {string} item_id
+ * @param {import("../../../utils/rpg.ts").ItemKey} item_id
  * @param {number} amount
  * @param {DogClient | null} [client]
- * @param {1 | 2} [mode=1] 1 = interaction.editReply, 2 = interaction.followUp
+ * @param {1 | 2} [mode] 1 = interaction.editReply, 2 = interaction.followUp
  * @returns {Promise<any>}
  */
 async function smelt_smelt(interaction, item_id, amount, client = global._client, mode = 1) {
@@ -107,13 +107,14 @@ async function smelt_smelt(interaction, item_id, amount, client = global._client
     const duration = 5 * 60 * amount;
     const coal_used = Math.ceil(amount / 2);
 
+    /** @type {{item:import("../../../utils/rpg.ts").ItemKey,amount:number}[]} */
     let item_need = [
         {
             item: item_id,
             amount: input_amount,
         },
         {
-            item: get_id_of_name("煤炭", "coal"),
+            item: "coal",
             amount: coal_used,
         },
     ];
@@ -310,7 +311,7 @@ export const smeltSlash = {
 
                 const item_id = interaction.options.getString("recipe", true);
 
-                if (item_id && !smeltable_recipe.find(e => e.input.item === item_id)) {
+                if (!item_exists(item_id) || !smeltable_recipe.find(e => e.input.item === item_id)) {
                     const error_embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 找不到這個熔煉配方`)

@@ -9,6 +9,9 @@ import {
     recipes,
     tags,
     get_id_of_name,
+    isRecipe,
+    getTagKey,
+    isTagKey,
 } from "../../../utils/rpg.ts";
 import {
     load_inventory,
@@ -18,6 +21,9 @@ import {
     embed_error_color,
     embed_default_color,
 } from "../../../utils/config.ts";
+import {
+    item_exists,
+} from "../../../cogs/rpg/msg_handler.js";
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 
 /** @type {import("../../../utils/types").Slash} */
@@ -81,14 +87,16 @@ export const makeSlash = {
                 .trim()
         );
 
-        if (!get_id_of_name(get_name_of_id(item_id), null)) {
+        if (!item_exists(item_id)) {
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 我不知道 ${original_item_id} 是什麼`)
                 .setEmbedFooter(interaction);
 
             return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
-        } else if (!(item_id in recipes)) {
+        };
+
+        if (!isRecipe(item_id)) {
             const error_embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 這種物品不能被製作`)
@@ -97,39 +105,32 @@ export const makeSlash = {
             return await interaction.reply({ embeds: [error_embed], flags: MessageFlags.Ephemeral });
         };
 
-        /** @type {{ item: string, amount: number }[]} */
         const item_required = recipes[item_id].input;
 
-        /** @type {Record<string, number>} */
+        /** @type {Partial<Record<import("../../../utils/rpg.ts").ItemKey, number>>} */
         const item_need = {};
 
-        /** @type {{ name: string, amount: number }[]} */
+        /** @type {{ name: import("../../../utils/rpg.ts").NameReverseKey, amount: number }[]} */
         const item_missing = [];
 
         for (const { item: need_item, amount: count } of item_required) {
-            let item_id = need_item;
+            const item_id = !isTagKey(need_item)
+                ? need_item
+                : (() => {
+                    const items_of_tag = tags[getTagKey(need_item)];
+                    return items_of_tag.find(item => inventory.get(item)) ?? items_of_tag[0];
+                })();
 
-            if (need_item.startsWith("#")) {
-                const tag = need_item.slice(1);
-
-                for (const item of tags[tag]) {
-                    if (inventory.get(item)) {
-                        item_id = item;
-                        break;
-                    };
-                };
-            };
-
-            if (!item_need[item_id]) item_need[item_id] = 0;
-            item_need[item_id] += count * amount;
+            const current_value = item_need[item_id] ?? 0
+            item_need[item_id] = current_value + (count * amount);
         };
 
-        for (const need_item in item_need) {
+        for (const [need_item, amount] of /** @type {[import("../../../utils/rpg.ts").ItemKey, number][]} */ (Object.entries(item_need))) {
             const have_amount = (inventory.get(need_item) ?? 0);
-            if (have_amount < item_need[need_item]) {
+            if (have_amount < amount) {
                 item_missing.push({
                     name: get_name_of_id(need_item),
-                    amount: item_need[need_item] - have_amount,
+                    amount: amount - have_amount,
                 });
             };
         };

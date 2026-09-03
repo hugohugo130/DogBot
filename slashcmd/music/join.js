@@ -38,20 +38,20 @@ export const joinSlash = {
     allowedContext: ["guild"],
     stage: "beta",
     music: true,
-        
+
     async execute(interaction, client) {
         const guild = interaction.guild;
         if (!guild?.id) return;
 
         const textChannel = interaction.channel;
-        const voiceChannel = (
-            interaction.member
-            && 'voice' in interaction.member
-            && interaction.member.voice?.channel
-            && "speakable" in interaction.member.voice?.channel
-        )
-            ? interaction.member.voice?.channel
-            : null;
+        let voiceChannel = null;
+
+        if (interaction.member && 'voice' in interaction.member) {
+            const channel = interaction.member.voice?.channel;
+            if (channel && 'speakable' in channel) {
+                voiceChannel = channel;
+            };
+        };
 
         const queue = getQueue(guild.id);
 

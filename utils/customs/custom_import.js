@@ -4,7 +4,7 @@ import { getCallerModuleName } from "../logger.js";
 
 /**
  * @param {string} module
- * @param {boolean} [cache=true]
+ * @param {boolean} [cache]
  * @returns {Promise<any>}
  */
 export async function importModules(module, cache = true) {

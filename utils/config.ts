@@ -9,6 +9,9 @@ import type {
     FightJobNames,
     JobNames,
 } from "./types.d.ts";
+import type {
+    ItemKey,
+} from "./rpg.ts";
 
 // functions for config
 const cwd = process.cwd;
@@ -20,6 +23,19 @@ const INDENT = 4;
 const database_folder = `${cwd()}/db`;
 
 // #region [interfaces]
+
+interface ShopItem {
+    name: ItemKey;
+    amount: number;
+    price: number;
+};
+
+interface FarmData {
+    amount: number;
+    hoe: string;
+    start: number;
+    endsAt: number;
+};
 
 export interface MarryInfo {
     status: boolean;
@@ -43,14 +59,14 @@ export interface TransactionsInfo {
 
 export interface RpgShop {
     status: boolean;
-    items: { [k: string]: any; };
+    items: Partial<Record<ItemKey, ShopItem>>;
 };
 
 export interface RpgFarm {
     exp: number;
     lvl: number;
     waterAt: number;
-    farms: Array<any>;
+    farms: Array<FarmData>;
 };
 
 export interface CountingData {
@@ -220,6 +236,7 @@ const adminIDs = [ownerID];
 
 // RPG
 const rpg_lvlUp_per = 50;
+const farm_slots = 4;
 const setJobDelay = 604800 // 24 * 24 * 60 * 7 = 604800
 const max_hunger = 20;
 const default_prefix = "&";
@@ -624,6 +641,7 @@ export {
 
     failed,
     probabilities,
+    farm_slots,
     jobs,
     fightjobs,
     workCmdJobs,

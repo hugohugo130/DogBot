@@ -40,14 +40,14 @@ export const pauseSlash = {
         const guildId = interaction.guild?.id;
         if (!guildId) return;
 
-        const voiceChannel = (
-            interaction.member
-            && 'voice' in interaction.member
-            && interaction.member.voice?.channel
-            && "speakable" in interaction.member.voice?.channel
-        )
-            ? interaction.member.voice?.channel
-            : null;
+        let voiceChannel = null;
+
+        if (interaction.member && 'voice' in interaction.member) {
+            const channel = interaction.member.voice?.channel;
+            if (channel && 'speakable' in channel) {
+                voiceChannel = channel;
+            };
+        };
 
         if (!voiceChannel) {
             return await interaction.reply({

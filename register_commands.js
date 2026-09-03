@@ -5,9 +5,6 @@ import {
     REST,
     Routes,
 } from "discord.js";
-import {
-    Logger,
-} from "winston";
 
 import {
     BotID,
@@ -32,7 +29,7 @@ global.isBeta = isBeta;
 
 /**
  * Log something
- * @param {Logger | false | null} logger
+ * @param {import("winston").Logger | false | null} logger
  * @param {any} message - the message to be logged
  */
 function log(logger, message) {
@@ -42,7 +39,7 @@ function log(logger, message) {
 
 /**
  * Log some errors
- * @param {Logger | false | null} logger
+ * @param {import("winston").Logger | false | null} logger
  * @param {any} message - the message of error to be logged
  */
 function _error(logger, message) {
@@ -52,9 +49,9 @@ function _error(logger, message) {
 
 /**
  * Register slash commands
- * @param {boolean} [quiet=true]
- * @param {boolean | Logger} [logger=false]
- * @param {boolean} [updateHash=true] 是否在註冊成功後更新 hash 文件
+ * @param {boolean} [quiet]
+ * @param {boolean | import("winston").Logger} [logger]
+ * @param {boolean} [updateHash] 是否在註冊成功後更新 hash 文件
  * @param {boolean} [beta] 是否使用 beta bot
  * @returns {Promise<any[]>}
  */
@@ -97,27 +94,25 @@ async function registcmd(quiet = true, logger = false, updateHash = true, beta =
 };
 
 if (import.meta.main) { // 等於 (require.main === module)
-    (async () => {
-        const res = await should_register_cmd();
-        console.log("should_register_cmd: " + res);
+    const res = await should_register_cmd();
+    console.log("should_register_cmd: " + res);
 
-        const force = args.includes("force");
-        console.log(`force: ${force}`);
+    const force = args.includes("force");
+    console.log(`force: ${force}`);
 
-        const quiet = args.includes("quiet");
-        console.log(`quiet: ${quiet}`);
+    const quiet = args.includes("quiet");
+    console.log(`quiet: ${quiet}`);
 
-        if (res || force) {
-            try {
-                await registcmd(quiet, false); // 註冊成功後自動更新 hash
-                console.log("命令註冊完成！");
-            } catch (error) {
-                console.error(`命令註冊失敗，hash 文件未更新\n${util.inspect(error, { depth: null })}`);
-            };
-        } else {
-            console.log("無需註冊命令");
-        }
-    })();
+    if (res || force) {
+        try {
+            await registcmd(quiet, false); // 註冊成功後自動更新 hash
+            console.log("命令註冊完成！");
+        } catch (error) {
+            console.error(`命令註冊失敗，hash 文件未更新\n${util.inspect(error, { depth: null })}`);
+        };
+    } else {
+        console.log("無需註冊命令");
+    };
 };
 
 export {

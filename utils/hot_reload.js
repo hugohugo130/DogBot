@@ -9,7 +9,7 @@ import DogClient from "./customs/client.js";
 /**
  * Hot reload cogs
  * @param {Object} [options]
- * @param {boolean} [options.quiet=false]
+ * @param {boolean} [options.quiet]
  * @param {DogClient | null} [options.client]
  * @returns {Promise<number>} The amount of cogs loaded.
  */

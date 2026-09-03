@@ -18,9 +18,9 @@ export default {
      * 
      * @param {string} userID
      * @param {string} guild_id
-     * @param {number | null} [limit=100]
-     * @param {string | null} [channel_id=null]
-     * @param {DogClient | null} [client=null]
+     * @param {number | null} [limit]
+     * @param {string | null} [channel_id]
+     * @param {DogClient | null} [client]
      * @returns {Promise<void>}
     */
     async del_msg(userID, guild_id, limit = 100, channel_id = null, client = null) {

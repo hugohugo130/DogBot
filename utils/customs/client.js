@@ -21,7 +21,7 @@ import {
     loadDvoiceData,
 } from "../file.js";
 
-/** @import { ItemKey } from import("../rpg.ts") */
+/** @import { ItemKey, FoodKey } from "../rpg.ts" */
 
 /**
  * @typedef OvenBakeSession
@@ -35,12 +35,12 @@ import {
 
 /**
  * @typedef {{ item: ItemKey, amount: number }[]} SmelterSession
-*/
+ */
 
 /**
  * @typedef CookSession
  * @property {string} userId
- * @property {{ input: { name: ItemKey, amount: number }[], output: ItemKey, amount: number }} recipe
+ * @property {{ input: { name: ItemKey, amount: number }[], output: FoodKey, amount: number }} recipe
  * @property {{ item: string, amount: number}[]} inputed_foods
  * @property {{ item: string, amount: number}[]} item_needed
  * @property {number} amount
@@ -186,7 +186,7 @@ class DogClient extends Client {
      * Get all members from a guild.
      * @param {Guild} guild
      * @param {boolean | "necessary"} [fetch] - 是否fetch guild的member而不是使用cache
-     * @param {number} [fetch_timeout=360] - fetch members的timeout
+     * @param {number} [fetch_timeout] - fetch members的timeout
      * @returns {Promise<GuildMember[]>}
      */
     async getGuildMembers(guild, fetch = true, fetch_timeout = 360) {
@@ -216,7 +216,7 @@ class DogClient extends Client {
     /**
      * Get all members from all guilds.
      * @param {boolean | "necessary"} fetch - 是否fetch guild的member而不是使用cache
-     * @param {number} [fetch_timeout=360] - fetch members的timeout
+     * @param {number} [fetch_timeout] - fetch members的timeout
      * @returns {Promise<GuildMember[]>}
      */
     async getAllGuildMembers(fetch = true, fetch_timeout = 360) {

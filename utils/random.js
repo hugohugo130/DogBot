@@ -56,7 +56,6 @@ async function choices(array, amount = 1) {
 
 /**
  * Generates a random boolean with a specified weight (probability of being true).
- *
  * @param {number} weight - The probability of returning true, between 0.0 and 1.0.
  * @returns {boolean}
  */
@@ -69,8 +68,7 @@ function getRandomBooleanWithWeight(weight) {
 };
 
 /**
- *
- * @param {number} [length=32] - Defaults to 32
+ * @param {number} [length] - Defaults to 32
  * @returns {string}
  */
 function generateSessionId(length = 32) {

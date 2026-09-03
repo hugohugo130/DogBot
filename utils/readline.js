@@ -12,7 +12,7 @@ import readlinep from "readline/promises";
  */
 /**
  * Get readline/promises interface object
- * @param {boolean} [createInterface=true] - Whether to create Interface when the rl is not exists.
+ * @param {boolean} [createInterface] - Whether to create Interface when the rl is not exists.
  */
 export default function get_areadline(createInterface = true) {
     if (global._areadline) return global._areadline;

@@ -45,7 +45,7 @@ import DogClient from "../../../utils/customs/client.js";
  * @param {{ item: string, amount: number }[]} item_needed - item needed data
  * @param {string} userId - User ID
  * @param {string} sessionId - Cooking session ID
- * @param {number} [progress=0] progress
+ * @param {number} [progress] progress
  * @param {DogClient | null} [client] - Discord Client
  * @returns {Promise<ContainerBuilder>}
  */

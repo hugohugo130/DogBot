@@ -61,7 +61,7 @@ export function hasSignedTodayOrBrokeSign(lastSignTime) {
  * Sign Function
  * @param {RPGData} rpg_data - RPG data
  * @param {Message} message - Discord Message
- * @param {DogClient | null} [client=null] - Discord Client
+ * @param {DogClient | null} [client] - Discord Client
  * @returns {Promise<boolean>} true if signed successfully, otherwise false
  */
 export async function sign(rpg_data, message, client = null) {

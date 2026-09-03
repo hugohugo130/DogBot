@@ -27,7 +27,7 @@ function convertToSecond(number) {
 /**
  * 
  * @param {number} seconds
- * @param {boolean} [convertToSec=true]
+ * @param {boolean} [convertToSec]
  * @returns {string}
  */
 function formatMinutesSeconds(seconds, convertToSec = true) {

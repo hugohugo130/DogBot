@@ -3,7 +3,6 @@ import {
     ChannelType,
     MessageFlags,
     VoiceChannel,
-    PermissionFlagsBits,
 } from "discord.js";
 
 import {
@@ -80,7 +79,7 @@ export const dvoiceSlash = {
                     const translation_key = PermissionTranslationKeyMapping[perm];
 
                     const translated_perm = get_lang_data(locale, "permissions", `perm.${translation_key}`);
-                    `\`${translated_perm || perm}\``
+                    return `\`${translated_perm || perm}\``;
                 }).join(", ");
 
                 await interaction.reply({

@@ -1,6 +1,9 @@
 {
     "compilerOptions": {
         "module": "esnext",
+        "types": [
+            "node"
+        ],
         "checkJs": true,
         "allowJs": true,
         "allowImportingTsExtensions": true,

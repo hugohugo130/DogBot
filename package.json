@@ -30,10 +30,19 @@
     "winston": "^3.19.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.4.1",
+    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/parser": "^8.69.0",
+    "eslint": "^10.9.1",
     "eslint-plugin-command": "^4.0.0",
+    "eslint-plugin-jsdoc": "^64.3.4",
+    "globals": "^17.12.0",
+    "jiti": "^2.7.0",
     "jscodeshift": "^17.4.0",
     "supabase": "^2.116.0",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.69.0"
   },
   "allowScripts": {
     "@discordjs/opus@0.10.0": true

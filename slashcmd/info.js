@@ -29,6 +29,7 @@ import {
     get_job_name,
     get_fightjob_name,
     valid_job_id,
+    valid_fightjob_id,
 } from "../utils/rpg.ts";
 import {
     get_lang_data,
@@ -47,7 +48,7 @@ import EmbedBuilder from "../utils/customs/embedBuilder.js";
 import DogClient from "../utils/customs/client.js";
 
 /**
- * @param {Locale | null} [locale=null]
+ * @param {Locale | null} [locale]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
@@ -57,6 +58,7 @@ export async function getBotInfoEmbed(locale = null, client = global._client) {
     const fix =
         /**
          * divide a number by 1024*1024 and floor or fix it
+         *
          * @overload
          * @param {number} num
          * @param {number} tofix
@@ -69,11 +71,11 @@ export async function getBotInfoEmbed(locale = null, client = global._client) {
          *
          * @overload
          * @param {number} num
-         * @param {number | null} [tofix=null]
+         * @param {number | null} [tofix]
          * @returns {number | string}
          *
          * @param {number} num
-         * @param {number | null} [tofix=null]
+         * @param {number | null} [tofix]
          */
         (num, tofix = null) => {
             num = num / 1024 / 1024;
@@ -125,7 +127,7 @@ export async function getBotInfoEmbed(locale = null, client = global._client) {
 
 /**
  * @param {Message} message
- * @param {Locale | null} [locale=null]
+ * @param {Locale | null} [locale]
  * @returns {ContainerBuilder}
  */
 export function getMsgInfoContainer(message, locale = null) {
@@ -198,7 +200,7 @@ export function getMsgInfoContainer(message, locale = null) {
  * @param {Exclude<import("discord.js").TextBasedChannel, import("discord.js").PublicThreadChannel | import("discord.js").PrivateThreadChannel | NewsChannel | StageChannel>} channel
  * @param {Locale | null} [locale]
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>]>}
-*/
+ */
 export async function getChannelInfoEmbedRows(channel, locale = null) {
     const emoji_refresh = await get_emoji("refresh");
 
@@ -448,7 +450,10 @@ export const infoSlash = {
                     load_user_privacy(userId),
                 ]);
                 const marry_data = rpg_data.getMarryInfo();
-                const lang_marry_info = get_lang_data(locale, "/info", "user.marry_info", marry_data.with, convertToSecondTimestamp(marry_data.time));
+                const lang_marry_info = marry_data.status && marry_data.time
+                    ? get_lang_data(locale, "/info", "user.marry_info", marry_data.with, convertToSecondTimestamp(marry_data.time))
+                    : "";
+
                 const lang_sign_count = get_lang_data(locale, "/info", "user.sign_count", rpg_data.daily_times); // 連續簽到了 {0} 次
 
                 const show_money = privacy.includes("money");
@@ -460,13 +465,17 @@ export const infoSlash = {
                 const fightjob = rpg_data.fightjob || lang_none;
                 const badge = rpg_data.badge || lang_none;
 
-                const marry_str = marry_data.status
+                const marry_str = marry_data.status && marry_data.time
                     ? lang_marry_info
                     : lang_single;
 
                 const createdAt = convertToSecondTimestamp(user.createdAt.getTime());
                 const jobData = valid_job_id(job)
                     ? jobs[job]
+                    : null;
+
+                const fightjobData = valid_fightjob_id(fightjob)
+                    ? fightjobs[fightjob]
                     : null;
 
                 const [fetched_user, emojiOfTheJob, emojiOfTheFightJob] = await Promise.all([
@@ -476,8 +485,8 @@ export const infoSlash = {
                         ? await get_emoji(jobData.emoji)
                         : "",
 
-                    fightjobs[fightjob]?.emoji
-                        ? await get_emoji(fightjobs[fightjob].emoji)
+                    fightjobData?.emoji
+                        ? await get_emoji(fightjobData.emoji)
                         : "",
                 ]);
 
@@ -485,7 +494,7 @@ export const infoSlash = {
                     ? get_job_name(job, locale)
                     : job;
 
-                const nameOfTheFightJob = fightjobs[fightjob]
+                const nameOfTheFightJob = fightjobData
                     ? get_fightjob_name(fightjob, locale)
                     : fightjob;
 

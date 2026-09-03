@@ -16,7 +16,6 @@ import {
     is_cooldown_finished,
     userHaveNotEnoughItems,
     wrong_job_embed,
-    farm_slots,
 } from "../../../utils/rpg.ts";
 import {
     load_farm_data,
@@ -40,9 +39,11 @@ import {
     embed_error_color,
     rpg_lvlUp_per,
     probabilities,
+    farm_slots,
 } from "../../../utils/config.ts";
 import DogClient from "../../../utils/customs/client.js";
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
+import { item_exists } from "../../../cogs/rpg/msg_handler.js";
 
 /**
  * @typedef FarmData
@@ -55,7 +56,7 @@ import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 /**
  *
  * @param {User} user
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>]>}
  */
@@ -130,8 +131,8 @@ function get_harvest_items(amount) {
     const result = {};
 
     // 預先計算加權選擇的數據
-    const items = Object.keys(farm_probability);
-    const weights = items.map(item => farm_probability[item][0]);
+    const items = /** @type {(keyof typeof farm_probability)[]} */ (Object.keys(farm_probability));
+    const weights = items.map(item => farm_probability?.[item]?.[0] ?? 0);
 
     // 計算總權重
     const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
@@ -153,9 +154,12 @@ function get_harvest_items(amount) {
 
             if (randomValue < weightSum) {
                 const selectedItem = items[j];
+                const selectedItemData = farm_probability[selectedItem];
+
+                if (!selectedItemData) continue;
 
                 // 獲取該物品的數量範圍
-                const [_, minAmount, maxAmount] = farm_probability[selectedItem];
+                const [_, minAmount, maxAmount] = selectedItemData;
 
                 // 產生隨機數量
                 const quantity = randint(minAmount, maxAmount);
@@ -213,8 +217,8 @@ export const farmSlash = {
                     })
                     .setRequired(true)
                     .addChoices([
-                        { name: "木鋤", value: get_id_of_name("木鋤", "wooden_hoe") },
-                        { name: "鐵鋤", value: get_id_of_name("鐵鋤", "iron_hoe") },
+                        { name: "木鋤", value: "wooden_hoe" },
+                        { name: "鐵鋤", value: "iron_hoe" },
                     ]),
             )
             .addIntegerOption(option =>
@@ -332,6 +336,15 @@ export const farmSlash = {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你的體力不足了`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                };
+
+                if (!item_exists(hoe)) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 無效的鋤頭ID`)
                         .setEmbedFooter(interaction);
 
                     return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });

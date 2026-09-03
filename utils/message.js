@@ -1,6 +1,5 @@
 import {
     Collection,
-    Guild,
     Message,
     User,
 } from "discord.js";
@@ -26,10 +25,9 @@ function isDigit(string) {
 /**
  * Get the users mentioned in a message
  * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} message
- * @param {Guild | null} [guild=null]
  * @returns {Promise<Collection<string, User>>}
  */
-async function mentions_users(message, guild = null) {
+async function mentions_users(message) {
     if (!message.content) return new Collection();
 
     const userIDs = message.content.split(" ")

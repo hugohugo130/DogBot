@@ -65,14 +65,14 @@ export const swapSlash = {
     music: true,
 
     async execute(interaction, client) {
-        const voiceChannel = (
-            interaction.member
-            && 'voice' in interaction.member
-            && interaction.member.voice?.channel
-            && "speakable" in interaction.member.voice?.channel
-        )
-            ? interaction.member.voice?.channel
-            : null;
+        let voiceChannel = null;
+
+        if (interaction.member && 'voice' in interaction.member) {
+            const channel = interaction.member.voice?.channel;
+            if (channel && 'speakable' in channel) {
+                voiceChannel = channel;
+            };
+        };
 
         if (!voiceChannel || !interaction.guild) {
             return await interaction.reply({

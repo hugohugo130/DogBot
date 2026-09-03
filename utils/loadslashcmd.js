@@ -108,14 +108,14 @@ async function processDirectory(bot, dirPath) {
 
 /**
  * @overload
- * @param {true} [bot=true] true返回collection, false返回array
+ * @param {true} [bot] true返回collection, false返回array
  * @returns {Promise<Collection<string, any>>}
  *
  * @overload
- * @param {boolean} [bot=true] true返回collection, false返回array
+ * @param {boolean} [bot] true返回collection, false返回array
  * @returns {Promise<Collection<string, any> | any[]>}
  *
- * @param {boolean} [bot=true] true返回collection, false返回array
+ * @param {boolean} [bot] true返回collection, false返回array
  */
 export async function loadslashcmd(bot = true) {
     if (!bot) return await loadslashcmd_array();
@@ -146,7 +146,7 @@ async function loadslashcmd_array() {
  * @param {false} returnArray
  * @returns {Promise<Collection<string, import("./types").ContextMenu>>}
  *
- * @param {boolean} [returnArray=false]
+ * @param {boolean} [returnArray]
  * @returns {Promise<any[] | Collection<string, import("./types").ContextMenu>>}
  */
 export async function get_context_menus(returnArray = false) {

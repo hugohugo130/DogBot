@@ -33,8 +33,8 @@ import DogClient from "../../utils/customs/client.js";
 /**
  * Get queue list embed
  * @param {MusicQueue} queue
- * @param {number} [currentPage=1]
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {number} [currentPage]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>[]]>}
  */

@@ -12,7 +12,7 @@ import {
 /**
  * Get all members in a guild by its ID
  * @param {string} guildID - Guild ID
- * @param {boolean} [fetch=true] - 是否fetch
+ * @param {boolean} [fetch] - 是否fetch
  * @param {import("../utils/customs/client.js").DogClient | null} [client] - import("../utils/customs/client.js").DogClient
  * @returns {Promise<GuildMember[]>}
  */
@@ -133,8 +133,8 @@ export async function get_channels(guild, fetch_first = false) {
 /**
  * Get a channel by its ID
  * @param {any} channelId
- * @param {Guild | null} [guild=null]
- * @param {boolean} [fetch_first=false]
+ * @param {Guild | null} [guild]
+ * @param {boolean} [fetch_first]
  * @returns {Promise<import("discord.js").Channel | import("discord.js").VoiceBasedChannel | null | undefined>}
  */
 export async function get_channel(channelId, guild = null, fetch_first = false) {
@@ -160,8 +160,8 @@ export async function get_channel(channelId, guild = null, fetch_first = false) 
  * Get message by its ID and guild
  * @param {Guild} guild
  * @param {string} messageId
- * @param {boolean} [fetch=false]
- * @param {import("../utils/customs/client.js").DogClient | null} [client=null]
+ * @param {boolean} [fetch]
+ * @param {import("../utils/customs/client.js").DogClient | null} [client]
  * @returns {Promise<Message | null>}
  */
 export async function get_message_by_guild(guild, messageId, fetch = false, client = null) {
@@ -178,8 +178,7 @@ export async function get_message_by_guild(guild, messageId, fetch = false, clie
             const message = await channel.messages.fetch(messageId);
 
             if (message) return message;
-        } catch (err) {
-            // 忽略找不到訊息的錯誤
+        } catch {
             continue;
         };
     };
@@ -195,8 +194,8 @@ export async function get_message_by_guild(guild, messageId, fetch = false, clie
  * Get message by its ID and channel
  * @param {import("discord.js").TextBasedChannel} channel
  * @param {string} messageId
- * @param {boolean} [fetch=false]
- * @param {import("../utils/customs/client.js").DogClient | null} [client=null]
+ * @param {boolean} [fetch]
+ * @param {import("../utils/customs/client.js").DogClient | null} [client]
  * @returns {Promise<Message | null>}
  */
 export async function get_message_by_channel(channel, messageId, fetch = false, client = null) {
@@ -208,7 +207,7 @@ export async function get_message_by_channel(channel, messageId, fetch = false, 
             : channel.messages.cache.get(messageId);
 
         if (message) return message;
-    } catch (err) {
+    } catch {
         return null;
     };
 

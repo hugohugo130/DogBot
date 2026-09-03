@@ -12,28 +12,28 @@ const client_ready = (client = global._client) => client?.isReady?.();
  * Wait for the Client object
  *
  * @overload
- * @param {boolean} [waitReady=true] - whether to wait the client to be ready.
- * @param {null | undefined | 0} [timeout=10000] - unit: ms
- * @param {number} [wait=500] - check per __ ms
+ * @param {boolean} [waitReady] - whether to wait the client to be ready.
+ * @param {null | undefined | 0} [timeout] - unit: ms
+ * @param {number} [wait] - check per __ ms
  * @returns {Promise<import("./customs/client.js").DogClient>}
  *
  * @overload
- * @param {boolean} [waitReady=true] - whether to wait the client to be ready.
- * @param {number} [timeout=10000] - unit: ms
- * @param {number} [wait=500] - check per __ ms
+ * @param {boolean} [waitReady] - whether to wait the client to be ready.
+ * @param {number} [timeout] - unit: ms
+ * @param {number} [wait] - check per __ ms
  * @returns {Promise<import("./customs/client.js").DogClient | null>}
  *
  * @overload
- * @param {boolean} [waitReady=true] - whether to wait the client to be ready.
- * @param {number} [timeout=10000] - unit: ms
- * @param {number} [wait=500] - check per __ ms
+ * @param {boolean} [waitReady] - whether to wait the client to be ready.
+ * @param {number} [timeout] - unit: ms
+ * @param {number} [wait] - check per __ ms
  * @returns {Promise<import("./customs/client.js").DogClient | null>}
  *
- * @param {boolean} [waitReady=true] - whether to wait the client to be ready.
- * @param {number} [timeout=10000] - unit: ms
- * @param {number} [wait=500] - check per __ ms
+ * @param {boolean} [waitReady] - whether to wait the client to be ready.
+ * @param {number} [timeout] - unit: ms
+ * @param {number} [wait] - check per __ ms
  */
-async function wait_for_client(waitReady = true, timeout = 10000, wait = 500) {
+export async function wait_for_client(waitReady = true, timeout = 10000, wait = 500) {
     const client = global._client;
     const start = Date.now();
 
@@ -53,11 +53,11 @@ async function wait_for_client(waitReady = true, timeout = 10000, wait = 500) {
 /**
  * 
  * @param {import("./customs/client.js").DogClient | null} [client] - Discord Client
- * @param {number} [timeout=10000] - Timeout (ms)
- * @param {number} [wait=500] - check is ready per _ ms
+ * @param {number} [timeout] - Timeout (ms)
+ * @param {number} [wait] - check is ready per _ ms
  * @returns {Promise<import("./customs/client.js").DogClient | null>}
  */
-async function wait_until_ready(client = global._client, timeout = 10000, wait = 500) {
+export async function wait_until_ready(client = global._client, timeout = 10000, wait = 500) {
     if (!(client instanceof Client)) client = await wait_for_client(true, timeout, wait);
 
     if (!client) client = global._client;
@@ -72,8 +72,4 @@ async function wait_until_ready(client = global._client, timeout = 10000, wait =
     return client_ready(client)
         ? client
         : null;
-};
-
-export {
-    wait_for_client,
 };

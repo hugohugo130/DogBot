@@ -204,7 +204,7 @@ export async function save_inventory(userid, inventory) {
 /**
  * 從 SQL 資料庫中 讀取 RPG 交易資料
  * @param {string} userid
- * @param {number} [amount=10]
+ * @param {number} [amount]
  * @returns {Promise<TransactionsInfo[]>}
  */
 export async function load_transactions(userid, amount = 10) {

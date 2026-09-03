@@ -27,6 +27,7 @@ const logger = get_logger();
 
 /**
  * Handle shutdown event(s)
+ *
  * @param {string} sign - signal string
  * @param {DogClient} client - Discord Client
  * @returns {Promise<void>}

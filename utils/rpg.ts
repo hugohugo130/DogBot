@@ -35,8 +35,8 @@ import {
     workCmdJobs,
     PrivacySettings,
     fightjobs,
-    type ItemName,
     failed,
+    type ItemName,
 } from "./config.ts";
 import {
     get_lang_data,
@@ -53,10 +53,14 @@ import {
 import type {
     JobNames,
     SuccessItem,
+    ValidGuideCategory,
 } from "./types.d.ts";
 import {
     item_exists,
 } from "../cogs/rpg/msg_handler.js";
+import {
+    help_data,
+} from "../cogs/rpg/interactions.js";
 import EmbedBuilder from "./customs/embedBuilder.js";
 import DogClient, { type CookSession } from "./customs/client.js";
 
@@ -100,10 +104,7 @@ const logs = [
     "oak_wood",
     "spruce_wood",
     "warped_wood",
-].reduce((acc, cur) => {
-    acc[cur] = cur;
-    return acc;
-}, {} as { [key: string]: string });
+] as const;
 
 const planks = [
     "acacia_planks",
@@ -116,16 +117,13 @@ const planks = [
     "oak_planks",
     "spruce_planks",
     "warped_planks",
-].reduce((acc, cur) => {
-    acc[cur] = cur;
-    return acc;
-}, {} as { [key: string]: string });
+] as const;
 
 const wood_productions = {
     stick: "stick",
 };
 
-const recipes: { [k: string]: { input: { item: string; amount: number; }[]; output: string; amount: number } } = {
+const staticRecipes = {
     iron_armor: {
         input: [
             { item: "iron", amount: 28 }
@@ -227,24 +225,24 @@ const recipes: { [k: string]: { input: { item: string; amount: number; }[]; outp
         output: "hugo_burger",
         amount: 1
     },
-};
+} as const;
 
 // 動態生成木材到木板的合成配方，比例 1:4
-Object.entries(logs).forEach(([logKey, logValue]) => {
-    const plankKey = logKey.replace("_wood", "_planks");
-    if (planks[plankKey]) {
-        recipes[planks[plankKey]] = {
-            input: [
-                {
-                    item: logValue,
-                    amount: 1
-                }
-            ],
-            output: planks[plankKey],
-            amount: 4
-        };
+const plankRecipes = {} as Record<PlankKey, Recipe>;
+
+for (const logKey of logs) {
+    const plankKey = logKey.replace("_wood", "_planks") as PlankKey;
+    plankRecipes[plankKey] = {
+        input: [{ item: logKey, amount: 1 }],
+        output: plankKey,
+        amount: 4,
     };
-});
+};
+
+const recipes = {
+    ...staticRecipes,
+    ...plankRecipes,
+} as const satisfies Record<RecipeKey, Recipe>;
 
 const smeltable_recipe = [
     {
@@ -281,8 +279,8 @@ const smeltable_recipe = [
     },
 ];
 
-const tags: { [k: string]: string[] } = {
-    "planks": Object.keys(planks),
+const tags = {
+    "planks": Object.keys(planks) as unknown as typeof planks,
 } as const;
 
 const foods_crops = [
@@ -862,15 +860,6 @@ const name_reverse = (Object.keys(name) as Array<NameKey>).reduce(
     {} as Record<typeof name[NameKey], NameKey>
 );
 
-export type FoodKey = keyof typeof food_data;
-export type NameKey = keyof typeof name;
-export type ItemKey = Exclude<
-    NameKey,
-    | `#${keyof typeof tags}`   // 排除 "#planks" 等以 # 開頭的標籤鍵
-    | typeof animals[number]    // 排除動物鍵
-    | JobNames                  // 排除職業鍵
->;
-
 function check_item_data() {
     const all_items = [...new Set([
         ...Object.values(mine_gets),
@@ -964,7 +953,7 @@ async function get_number_of_items(item_name: string, userid: string): Promise<n
     const inventory = await load_inventory(userid);
 
     // 如果輸入的是中文名稱，找到對應的英文key
-    let item_key = get_id_of_name(item_name);
+    const item_key = get_id_of_name(item_name);
 
     if (!item_exists(item_key)) return 0;
 
@@ -1035,7 +1024,7 @@ async function notEnoughItemEmbed(
 /**
  *
  * @param {any} obj
- * @param {any} [default_value=null]
+ * @param {any} [default_value]
  * @returns {any}
  */
 function BetterEval(obj: any, default_value: any = null): any {
@@ -1066,7 +1055,7 @@ function chunkArray(array: Array<any>, chunkSize: number): Array<any> {
  * @param {import("./db/tables").RPGData} rpg_data
  * @param {string} command
  * @param {string} userId
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  * @returns {Promise<[EmbedBuilder | null, ActionRowBuilder<ButtonBuilder> | null]>}
  */
@@ -1179,7 +1168,7 @@ async function get_emojis(names: string[], client: DogClient | null = global._cl
  * @param {number} remaining_time
  * @param {string} action
  * @param {number | string} count
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
@@ -1210,7 +1199,7 @@ async function get_cooldown_embed(remaining_time: number, action: string, count:
  * @returns {Promise<number>}
  */
 async function get_cooldown_time(command_name: string, user_id: string): Promise<number> {
-    const { rpg_cooldown } = /** @type {import("../cogs/rpg/msg_handler.js")} */ (await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href));
+    const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href) as typeof import("../cogs/rpg/msg_handler.js");
     const count = await get_count(command_name, user_id) ?? 0;
 
     return BetterEval(rpg_cooldown[command_name].replace("{c}", String(count)));
@@ -1249,7 +1238,7 @@ async function is_cooldown_finished(command_name: string, user_id: string): Prom
  * 
  * @param {string} failed_reason
  * @param {import("./db/tables").RPGData} rpg_data
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
@@ -1405,10 +1394,9 @@ function error_analyze(errorStack: string): { title: string; description: string
 };
 
 /**
- * 
  * @param {string | Error} text
- * @param {BaseInteraction | null} [interaction=null]
- * @param {DogClient | null} [client=global._client]
+ * @param {BaseInteraction | null} [interaction]
+ * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder[]>}
  */
 async function get_loophole_embed(text: string | Error, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder[]> {
@@ -1458,7 +1446,7 @@ async function get_loophole_embed(text: string | Error, interaction: BaseInterac
 
 /**
  * @param {string} userId
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
@@ -1734,6 +1722,20 @@ async function startsWith_prefixes(guildID: string, str: string): Promise<false 
     return false;
 };
 
+/**
+ * Get the translation of adventure job by its ID
+ */
+export const get_fightjob_name = (fj_id: string, locale: Locale | null = null): string => get_lang_data(locale, "fightjob_name", fj_id);
+
+/**
+ * Get the translation of a job by its ID
+ */
+export const get_job_name = (job_id: import("./types").JobNames, locale: Locale | null = null): string => get_lang_data(locale, "job_name", job_id);
+
+export const valid_job_id = (job_id: string): job_id is import("./types").JobNames => job_id in jobs;
+
+export const valid_fightjob_id = (fightjob_id: string): fightjob_id is import("./types").FightJobNames => fightjob_id in fightjobs;
+
 export const isFoodKey = (key: string): key is FoodKey => {
     return key in food_data;
 };
@@ -1741,36 +1743,46 @@ export const isFoodKey = (key: string): key is FoodKey => {
 export const isFailedItem = (item: ItemName): item is (typeof failed)[number] =>
     (failed as readonly string[]).includes(item);
 
-/**
- * Get the translation of adventure job by its ID
- * @param {string} fj_id - ID of the fight job
- * @param {Locale | null} [locale=null] - the locale
- * @returns {string}
- */
-export const get_fightjob_name = (fj_id: string, locale: Locale | null = null): string => get_lang_data(locale, "fightjob_name", fj_id);
+export const isRecipe = (input_item: ItemKey): input_item is keyof typeof recipes =>
+    input_item in recipes
 
-/**
- * Get the translation of a job by its ID
- * @param {import("./types").JobNames} job_id - ID of the job
- * @param {Locale | null} [locale=null] - the locale
- * @returns {string}
- */
-export const get_job_name = (job_id: import("./types").JobNames, locale: Locale | null = null): string => get_lang_data(locale, "job_name", job_id);
+export function getTagKey(tag: TagKeys): TagKey
+export function getTagKey(tag: string): string
+export function getTagKey(tag: string | TagKeys): string | TagKey {
+    return tag.replaceAll("#", "");
+};
 
-/**
- * @param {string} job_id
- * @returns {job_id is import("./types").JobNames}
- */
-export const valid_job_id = (job_id: string): job_id is import("./types").JobNames => job_id in jobs;
+export const isTagKey = (tag: string): tag is TagKeys => {
+    return tag in tags;
+};
 
-/**
- * @param {string} fightjob_id
- * @returns {fightjob_id is import("./types").FightJobNames}
- */
-export const valid_fightjob_id = (fightjob_id: string): fightjob_id is import("./types").FightJobNames => fightjob_id in fightjobs;
+export const isValidGuideCategory = (value: string): value is ValidGuideCategory =>
+    value in help_data.group && value in help_data.name;
+
+
+type TagKeys = TagKey | `#${TagKey}`;
+type PlankKey = typeof planks[number];
+type RecipeKey = StaticRecipeKey | PlankKey;
+type StaticRecipeKey = keyof typeof staticRecipes;
+type Recipe = {
+    input: readonly { item: RecipeInput; amount: number }[];
+    output: ItemKey;
+    amount: number;
+};
+
+export type RecipeInput = ItemKey | `#${TagKey}`;
+export type FoodKey = keyof typeof food_data;
+export type NameKey = keyof typeof name;
+export type NameReverseKey = keyof typeof name_reverse;
+export type TagKey = keyof typeof tags;
+export type ItemKey = Exclude<
+    NameKey,
+    | `#${TagKey}`   // 排除 "#planks" 等以 # 開頭的標籤鍵
+    | typeof animals[number]    // 排除動物鍵
+    | JobNames                  // 排除職業鍵
+>;
 
 const oven_slots = 6;
-const farm_slots = 4;
 const smelter_slots = 6;
 
 export {
@@ -1798,7 +1810,6 @@ export {
     cook,
     sell_data,
     oven_slots,
-    farm_slots,
     smelter_slots,
     check_item_data,
     get_name_of_id,

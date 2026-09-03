@@ -32,12 +32,12 @@ import {
     adminIDs,
 } from "../utils/config.ts";
 import DogClient from "../utils/customs/client.js";
+import { item_exists } from "./rpg/msg_handler.js";
 
 const execPromise = promisify(exec);
 const logger = get_logger();
 
 /**
- * 
  * @param {Message} message
  * @param {(string | number)[]} args
  * @returns {Promise<Message>}
@@ -71,7 +71,7 @@ async function handleInvCommand(message, args) {
         ? args[1]
         : parseInt(args[1]);
 
-    if (!item) return message.reply("請輸入物品名稱！");
+    if (!item_exists(item)) return await message.reply("無效的物品");
     if (isNaN(amount)) return message.reply("amount must be a number");
     if (!user) return message.reply("請標記一個用戶！");
 
@@ -85,7 +85,7 @@ async function handleInvCommand(message, args) {
 
 /**
  * @param {Message} message
- * @param {Array<any>} args
+ * @param {Array<string>} args
  * @returns {Promise<Message>}
  */
 async function handleGive2Command(message, args) {
@@ -158,7 +158,7 @@ export async function execute(client, message) {
                 await handleGiveCommand(message, commandArgs);
                 break;
 
-            case "give2":
+            case "give2": {
                 let give2args = message.content.split(" ");
                 give2args = give2args.map(arg => arg.trim());
                 give2args = give2args.filter(arg => arg !== "");
@@ -169,6 +169,7 @@ export async function execute(client, message) {
 
                 await handleGive2Command(message, [userMention, object]);
                 break;
+            };
 
             case "run":
                 await handleRunCommand(message, commandArgs);
@@ -199,10 +200,10 @@ export async function execute(client, message) {
         };
 
         /**
-        * @param {Message} message
-        * @param {(any)[]} args
-        * @returns {Promise<Message>}
-        */
+         * @param {Message} message
+         * @param {string[]} args
+         * @returns {Promise<Message>}
+         */
         async function handleGiveCommand(message, args) {
             if (args.length < 3) {
                 return message.reply("用法: !give @user item amount");
@@ -227,18 +228,18 @@ export async function execute(client, message) {
          *
          * @param {Message} message
          * @param {(string | number)[]} args
-         * @returns {Promise<any>}
+         * @returns {Promise<Message | void>}
          */
         async function handleRunCommand(message, args) {
             if (args.length === 0) {
-                return message.reply("用法: !run COMMAND");
+                return await message.reply("用法: !run COMMAND");
             };
 
             const cmd = args.join(" ");
 
             try {
                 if (process.platform === "linux") {
-                    message.reply(`執行指令: \`${cmd}\`\n請稍候...`);
+                    await message.reply(`執行指令: \`${cmd}\`\n請稍候...`);
 
                     const { stdout, stderr } = await execPromise(cmd, {
                         cwd: "/home/hugo/dogbot",
@@ -255,9 +256,9 @@ export async function execute(client, message) {
                         response += `\n**錯誤輸出:**\n\`\`\`\n${stderr.substring(0, 1800)}\`\`\``;
                     };
 
-                    return message.reply(response);
+                    return await message.reply(response);
                 } else {
-                    return message.reply("不支援的操作系統。");
+                    return await message.reply("不支援的操作系統。");
                 };
             } catch (error) {
                 if (error instanceof Error) await message.reply(`**執行失敗:**\n\`\`\`\n${error.message}\`\`\``);

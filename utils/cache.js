@@ -6,8 +6,8 @@
 
 /**
  * 緩存項目結構
- * @typedef {Object} CacheItem
- * @property {any} data - 緩存的資料
+ * @typedef {object} CacheItem
+ * @property {object} data - 緩存的資料
  * @property {number} timestamp - 緩存建立時間戳（毫秒）
  */
 
@@ -69,7 +69,7 @@ class CacheManager {
      * 獲取緩存資料
      * @param {string} type - 緩存類型
      * @param {string} id - 資料 ID
-     * @returns {any | null} 如果緩存存在且未過期則返回資料，否則返回 null
+     * @returns {object | null} 如果緩存存在且未過期則返回資料，否則返回 null
      */
     get(type, id) {
         const key = this.generateKey(type, id);
@@ -97,7 +97,7 @@ class CacheManager {
      * 設定緩存資料
      * @param {string} type - 緩存類型
      * @param {string} id - 資料 ID
-     * @param {any} data - 要緩存的資料
+     * @param {object} data - 要緩存的資料
      */
     set(type, id, data) {
         const key = this.generateKey(type, id);
@@ -232,7 +232,7 @@ class CacheManager {
  */
 /**
  * Get the cache manager
- * @param {boolean} [create=true] - Whether to create the cache manager if not exists.
+ * @param {boolean} [create] - Whether to create the cache manager if not exists.
  */
 function getCacheManager(create = true) {
     /** @type {CacheManager | null} */

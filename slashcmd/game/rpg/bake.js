@@ -24,7 +24,6 @@ import {
 } from "../../../utils/file.js";
 import {
     load_inventory,
-    save_inventory,
     load_rpg_data,
 } from "../../../utils/db/rpg.js";
 import {

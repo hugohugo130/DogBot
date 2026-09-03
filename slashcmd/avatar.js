@@ -14,7 +14,7 @@ import {
 
 /**
  * @param {User} user
- * @param {import("discord.js").Interaction | null} [interaction=null]
+ * @param {import("discord.js").Interaction | null} [interaction]
  * @returns {(MediaGalleryBuilder | ActionRowBuilder<ButtonBuilder>)[]}
  */
 export function getAvatarGallery(user, interaction = null) {
@@ -71,7 +71,7 @@ export const avatarSlash = {
     allowedContext: ["dm", "guild"],
     stage: "beta",
 
-    async execute(interaction, client) {
+    async execute(interaction) {
         const user = interaction.options.getUser("user", false) ?? interaction.user;
 
         const rows = getAvatarGallery(user, interaction);

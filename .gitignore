@@ -144,11 +144,9 @@ migration/
 ai_update/
 .bailurules/
 database_recovery/
-eslint.config.mjs
+eslint.config.*
 PROJECT_STRUCTURE.md
 auto_register.cmd.data
-check_circular_dependencies.js
-circular-dependencies-report.json
 error_reader.js
 .bailucode.md
 *test*

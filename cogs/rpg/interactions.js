@@ -22,6 +22,7 @@ import {
     ThreadChannel,
     BaseInteraction,
     NewsChannel,
+    InteractionResponse,
 } from "discord.js";
 import util from "util";
 
@@ -31,6 +32,7 @@ import {
     rpg_commands,
     redirect_data,
     find_redirect_targets_from_id,
+    item_exists,
 } from "./msg_handler.js";
 import {
     get_logger,
@@ -64,6 +66,7 @@ import {
     valid_job_id,
     valid_fightjob_id,
     isFoodKey,
+    isValidGuideCategory,
 } from "../../utils/rpg.ts";
 import {
     get_farm_info_embed,
@@ -86,7 +89,6 @@ import {
     PrivacySettings,
     cookClickAmount,
     embed_sign_color,
-    fightjobs,
     default_prefix,
 } from "../../utils/config.ts";
 import {
@@ -125,6 +127,8 @@ import {
 } from "../../utils/db/rpg.js";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
+
+/** @import { ValidGuideCategory } from "../../utils/types.d.ts" */
 
 const logger = get_logger();
 
@@ -173,7 +177,7 @@ async function get_transaction_embed(interaction) {
 
 /**
  *
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  */
@@ -188,7 +192,8 @@ async function get_failed_embed(interaction = null, client = global._client) {
     return embed;
 };
 
-const help = {
+/** @type {{ name: Record<ValidGuideCategory, string>, group: Record<ValidGuideCategory, Record<string, import("../../utils/types").CommandGuide>> }} */
+export const help_data = {
     name: {
         general: "一般",
         music: "音樂",
@@ -389,9 +394,9 @@ const help = {
                 format: "{cmd}",
             },
             "make": {
-                "emoji": "toolbox",
-                "desc": "合成或製作出物品",
-                "usage": [
+                emoji: "toolbox",
+                desc: "合成或製作出物品",
+                usage: [
                     {
                         "name": "合成製作出石劍",
                         "value": "&make 石劍"
@@ -401,7 +406,7 @@ const help = {
                         "value": "&make stick"
                     }
                 ],
-                "format": "{cmd} <目標物品ID> [數量]"
+                format: "{cmd} <目標物品ID> [數量]"
             },
             "marry": {
                 emoji: "wedding",
@@ -569,21 +574,11 @@ const special_cancel = {
  * @property {string} format
  */
 
-const VALID_GUIDE_CATEGORIES = /** @type {const} */ (["general", "music", "rpg", "special", "dev"]);
-
 /**
- * @typedef {typeof VALID_GUIDE_CATEGORIES[number]} ValidGuideCategory
+ * @returns {void}
  */
-
-/**
- * 檢查字串是否為有效的 guide category
- * @param {string} value
- * @returns {value is ValidGuideCategory}
- */
-const isValidGuideCategory = (value) => value in help.group && value in help.name;
-
 export function check_help_rpg_info() {
-    const commandsWithHelpInfo = Object.keys(help.group.rpg);
+    const commandsWithHelpInfo = Object.keys(help_data.group.rpg);
     const commands = Object.keys(rpg_commands)
         .filter(e => !["help", ...Object.keys(redirect_data), ...commandsWithHelpInfo].includes(e))
         .filter(e => !["test"].includes(e))
@@ -598,13 +593,13 @@ export function check_help_rpg_info() {
  * @param {string} category
  * @param {User} user
  * @param {DogClient} client
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @returns {[ EmbedBuilder, ActionRowBuilder<StringSelectMenuBuilder> | null ]}
  */
 export function get_help_embed(category, user, client, interaction = null) {
     if (!isValidGuideCategory(category)) throw new Error(`${category} is not a valid category`);
 
-    const options = Object.entries(help.group[category])
+    const options = Object.entries(help_data.group[category])
         .flatMap(([name, data]) => {
             return [{
                 label: name,
@@ -615,7 +610,7 @@ export function get_help_embed(category, user, client, interaction = null) {
 
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
-        .setTitle(help.name[category])
+        .setTitle(help_data.name[category])
         .setEmbedFooter(interaction)
         .setEmbedAuthor(client);
 
@@ -640,18 +635,17 @@ export function get_help_embed(category, user, client, interaction = null) {
  * Get the embed of guile information of command
  * @param {ValidGuideCategory} category
  * @param {string} command_name
- * @param {string | null} [guildID=null]
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {string | null} [guildID]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  */
 export async function get_help_command(category, command_name, guildID = null, interaction = null, client = global._client) {
-    if (!(category in help.group)) throw new Error(`${category} is not a valid category`);
+    if (!(category in help_data.group)) throw new Error(`${category} is not a valid category`);
 
     /** @type {GuideCommandData | null} */
-    const command_data = command_name in help.group[category]
-        // @ts-ignore
-        ? help.group[category][command_name]
+    const command_data = command_name in help_data.group[category]
+        ? help_data.group[category][command_name]
         : null;
 
     if (!command_data) return null;
@@ -722,7 +716,7 @@ export const name = Events.InteractionCreate;
  *
  * @param {DogClient} client
  * @param {ButtonInteraction | StringSelectMenuInteraction} interaction
- * @returns {Promise<any>}
+ * @returns {Promise<InteractionResponse | Message | [boolean, InteractionResponse] | void>}
  */
 export async function execute(client, interaction) {
     try {
@@ -852,8 +846,8 @@ export async function execute(client, interaction) {
                 ]);
 
                 const privacy = /** @type {(PrivacySettings[keyof PrivacySettings])[]} */
-                    (interaction.values // @ts-ignore
-                        .filter(e => Object.values(PrivacySettings).includes(e)));
+                    (interaction.values
+                        .filter(e => /** @type {string[]} */(Object.values(PrivacySettings)).includes(e)));
 
                 await save_user_privacy(user.id, privacy);
 
@@ -922,7 +916,7 @@ export async function execute(client, interaction) {
 
                 const message = new MockMessage(`${prefix}${command}`, channel, user, guild);
                 let response = await rpg_handler({ client: client, message, d: true, mode: 1 });
-                if (!response || response instanceof Message) return;
+                if (!response || response instanceof Message || response instanceof MockMessage) return;
 
                 response.components ??= [];
 
@@ -1007,11 +1001,11 @@ export async function execute(client, interaction) {
                      *
                      * @param {string} str
                      * @param {RegExp | string} regex
-                     * @param {(substring: string, ...args: any[]) => string | Promise<string>} replacer
+                     * @param {(substring: string, ...args: string[]) => string | Promise<string>} replacer
                      * @returns {Promise<string>}
                      */
                     const replaceAsync = async (str, regex, replacer) => {
-                        /** @type {(Promise<any> | any)[]} */
+                        /** @type {(Promise<string> | string)[]} */
                         const promises = [];
 
                         str.replace(regex, (match, p1) => {
@@ -1020,7 +1014,10 @@ export async function execute(client, interaction) {
                         });
 
                         const replacements = await Promise.all(promises);
-                        return str.replace(regex, () => replacements.shift());
+                        return str.replace(regex, () => {
+                            const replacement = replacements.shift();
+                            return replacement !== undefined ? replacement : '';
+                        });
                     };
 
                     if (title) title = await replaceAsync(title, regex, async (match, p1) => await get_emoji(p1, client));
@@ -1036,6 +1033,16 @@ export async function execute(client, interaction) {
             case "buy":
             case "buyc": {
                 let [buyerUserId, targetUserId, amount_str, price_str, item] = otherCustomIDs;
+                if (!item_exists(item)) {
+                    const emoji_cross = await get_emoji("crosS", client);
+
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 無效的物品`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.followUp({ embeds: [embed] });
+                };
 
                 await interaction.deferUpdate();
 
@@ -1084,8 +1091,8 @@ export async function execute(client, interaction) {
                 const item_name = get_name_of_id(item);
                 const total_price = price * amount;
 
-                if (!targetUserShopData.items[item].amount) targetUserShopData.items[item].amount = 0;
-                targetUserShopData.items[item].amount -= amount;
+                item_data.amount = (item_data.amount ?? 0) - amount;
+                targetUserShopData.items[item] = item_data;
 
                 await Promise.all([
                     buyerInventory.add_item(item, amount),
@@ -1534,14 +1541,14 @@ export async function execute(client, interaction) {
 
                 // 連接到語音頻道
                 if (!vconnection) {
-                    const voiceChannel = (
-                        interaction.member
-                        && 'voice' in interaction.member
-                        && interaction.member.voice?.channel
-                        && "speakable" in interaction.member.voice?.channel
-                    )
-                        ? interaction.member.voice?.channel
-                        : null;
+                    let voiceChannel = null;
+
+                    if (interaction.member && 'voice' in interaction.member) {
+                        const channel = interaction.member.voice?.channel;
+                        if (channel && 'speakable' in channel) {
+                            voiceChannel = channel;
+                        };
+                    };
 
                     if (!voiceChannel) return await interaction.followUp({
                         embeds: [await youHaveToJoinVC_Embed(interaction, client)],
@@ -1659,7 +1666,7 @@ export async function execute(client, interaction) {
 
                         await interaction.update({
                             embeds: [embed],
-                            // components: [row],
+                            components: [row],
                         });
 
                         break;
@@ -2090,10 +2097,14 @@ export async function execute(client, interaction) {
 
         if (!interaction.deferred || !interaction.replied) try {
             await interaction.deferReply({ flags: MessageFlags.Ephemeral });
-        } catch { };
+        } catch {
+            // 忽略任何錯誤 :D
+        };
 
         try {
             await interaction.followUp({ embeds: loophole_embeds, flags: MessageFlags.Ephemeral });
-        } catch { };
+        } catch {
+            // 忽略任何錯誤 :D
+        };
     };
 };

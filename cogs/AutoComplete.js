@@ -27,7 +27,7 @@ const smeltable_items = smeltable_recipe.reduce((acc, item) => {
 
     return acc;
 },
-    /** @type {Object<string, {I_amount: number, O_item_id: string, O_amount: number}>} */
+    /** @type {Record<string, {I_amount: number, O_item_id: string, O_amount: number}>} */
     ({})
 );
 
@@ -42,7 +42,7 @@ const cookable_items = cook.reduce((acc, item) => {
 
     return acc;
 },
-    /** @type {Object<string, {input: {name: string, amount: number}[], input_items: string[], output_amount: number}>} */
+    /** @type {Record<string, {input: {name: string, amount: number}[], input_items: string[], output_amount: number}>} */
     ({})
 );
 
@@ -51,6 +51,7 @@ export const name = Events.InteractionCreate;
 /**
  * @param {DogClient} client
  * @param {import("discord.js").Interaction} interaction
+ * @returns {Promise<void>}
  */
 export async function execute(client, interaction) {
     if (!interaction.isAutocomplete()) return;
@@ -69,6 +70,7 @@ export async function execute(client, interaction) {
             //     if (err.toString().toLowerCase().includes("unknown interaction")) return;
             //     logger.error(err);
             // };
+            break;
         }
 
         case "bake": {
@@ -145,7 +147,7 @@ export async function execute(client, interaction) {
                 .filter(([output, data]) => {
                     const itemsInInventory = inventory.keys().toArray();
                     const requiredItems = data.input.map(data => data.name);
-                    const hasAllRequiredItems = requiredItems.every(item => itemsInInventory.includes(item));
+                    const hasAllRequiredItems = requiredItems.every(item => /** @type {string[]} */(itemsInInventory).includes(item));
                     return hasAllRequiredItems && (output.startsWith(focusedValue) || get_name_of_id(output).startsWith(focusedValue));
                 })
                 .slice(0, 25)

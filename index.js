@@ -41,7 +41,7 @@ const client = new DogClient();
 const logger = get_logger();
 
 // 未捕獲的 Promise Rejection 處理
-process.on("unhandledRejection", (reason, promise) => {
+process.on("unhandledRejection", (reason) => {
     let errorStack = reason;
 
     if (reason instanceof Error) {
@@ -64,7 +64,7 @@ process.on("uncaughtException", (error) => {
     if (errorStack.includes("Missing Access")) return;
     if (errorStack.includes("Missing Permissions")) return;
     if (errorStack.includes("Unknown interaction")) return;
-    if (/^Error: getaddrinfo ENOTFOUND c-[0-9a-z\-]+\.discord\.media$/.test(errorStack)) {
+    if (/^Error: getaddrinfo ENOTFOUND c-[0-9a-z\\-]+\.discord\.media$/.test(errorStack)) {
         return logger.warn("臭臭的Discord又開始斷線了");
     };
 
@@ -217,22 +217,22 @@ client.once(Events.ClientReady, async () => {
     })
 });
 
-(async () => {
-    global._client = null;
-    global._areadline = null;
-    global.sendQueue = [];
+global._client = null;
+global._areadline = null;
+global.sendQueue = [];
 
-    await create_tables(noCache);
-    const [_, __, ffprobeInstalled] = await Promise.all([
-        update_items(),
-        checkDBFilesCorrupted(),
-        IsFFprobeInstalled(),
-    ]);
+await create_tables(noCache);
+const [_, __, ffprobeInstalled] = await Promise.all([
+    update_items(),
+    checkDBFilesCorrupted(),
+    IsFFprobeInstalled(),
+]);
 
-    if (musicSearchEngine.length && !ffprobeInstalled) {
-        logger.warn(`如果FFprobe沒有安裝，那麼將無法偵測音樂功能中，播放自定義URL的音訊長度`);
-    };
+if (musicSearchEngine.length && !ffprobeInstalled) {
+    logger.warn(`如果FFprobe沒有安裝，那麼將無法偵測音樂功能中，播放自定義URL的音訊長度`);
+};
 
+if (import.meta.main) {
     check_help_rpg_info();
     check_language_keys();
     check_item_data();
@@ -248,4 +248,4 @@ client.once(Events.ClientReady, async () => {
     await client.login(TOKEN);
 
     global._client = client;
-})();
+};

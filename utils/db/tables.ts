@@ -153,7 +153,7 @@ function WithUserID<TBase extends Constructor>(Base: TBase) {
     };
 };
 
-type Constructor<T = {}> = new (...args: any[]) => T;
+type Constructor<T = object> = new (...args: any[]) => T;
 export type RPGUserData = Omit<RPGUsers, "user_id">;
 export type RPGInventoryData = { [item_id: string]: number };
 export type RPGCooldownsData = { [item_id: string]: Date };

@@ -235,13 +235,13 @@ class MusicTrack {
      * @param {Object} datas
      * @param {string} datas.id
      * @param {string} datas.title
-     * @param {string | null} [datas.url=null]
-     * @param {number} [datas.duration=0]
-     * @param {string | null} [datas.thumbnail=null]
-     * @param {string} [datas.author="unknown"]
-     * @param {string} [datas.source=""]
-     * @param {Readable | null} [datas.stream=null]
-     * @param {any} [datas.original_track=null]
+     * @param {string | null} [datas.url]
+     * @param {number} [datas.duration]
+     * @param {string | null} [datas.thumbnail]
+     * @param {string} [datas.author]
+     * @param {string} [datas.source]
+     * @param {Readable | null} [datas.stream]
+     * @param {any} [datas.original_track]
      */
     constructor({ id, title, url = null, duration = 0, thumbnail = null, author = "unknown", source = "", stream = null, original_track = null }) {
         /** @type {string} */
@@ -280,7 +280,7 @@ class MusicTrack {
         /** @type {boolean} */
         this._streamPreparing = false;
 
-        this.prepareStream();
+        this.prepareStream().catch(() => {});
     };
 
     toJSON() {
@@ -307,7 +307,7 @@ class MusicTrack {
      * @param {false} [force] - Must prepare?
      * @returns {Promise<[Readable, string | null]>}
      *
-     * @param {boolean} [force=false] - Must prepare?
+     * @param {boolean} [force] - Must prepare?
      */
     async prepareStream(force = false) {
         if (this._streamPreparing) {
@@ -341,7 +341,7 @@ class MusicTrack {
     };
 
     /**
-     * @param {string | null} [filename=null]
+     * @param {string | null} [filename]
      * @returns {Promise<[string, string]>}
      */
     async saveFile(filename = null) {
@@ -362,7 +362,7 @@ class MusicQueue {
     /**
      *
      * @param {string} guildID - 伺服器ID
-     * @param {DogClient | null} [client=null] - Discord Client
+     * @param {DogClient | null} [client] - Discord Client
      */
     constructor(guildID, client = global._client) {
         /** @type {string} */
@@ -862,7 +862,7 @@ class MusicQueue {
 
     /**
      * Set the text channel of the queue.
-     * @param {import("discord.js").SendableChannels | null} [textChannel=null]
+     * @param {import("discord.js").SendableChannels | null} [textChannel]
      * @returns {void}
      */
     setTextChannel(textChannel = null) {
@@ -896,16 +896,16 @@ const get_redirected_url = async (original_url) => (await axios.get(original_url
  * Get a music queue by a guildID
  * @overload
  * @param {string} guildID
- * @param {boolean} [create=true]
+ * @param {boolean} [create]
  * @returns {MusicQueue | null}
  *
  * @overload
  * @param {string} guildID
- * @param {true} [create=true]
+ * @param {true} [create]
  * @returns {MusicQueue}
  *
  * @param {string} guildID
- * @param {boolean} [create=true]
+ * @param {boolean} [create]
  */
 function getQueue(guildID, create = true) {
     if (typeof guildID !== "string") throw new Error("guildID is not a string");
@@ -1051,7 +1051,7 @@ async function fixStructure(objects) {
  * Get the data of an audio stream by its URL.
  * This function is used for creating a MusicTrack
  * @param {string} url
- * @param {boolean} [stream=false]
+ * @param {boolean} [stream]
  * @returns {Promise<{ id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean }>}
  */
 async function getAudioFileData(url, stream = false) {
@@ -1081,7 +1081,7 @@ async function getAudioFileData(url, stream = false) {
  *
  * @param {any} promiseOrFn
  * @param {number} ms
- * @param {boolean} [error=true]
+ * @param {boolean} [error]
  * @returns {Promise<any>}
  */
 async function withTimeout(promiseOrFn, ms, error = true) {
@@ -1148,7 +1148,7 @@ async function fetchAudioStream(original_url) {
 
     const readable_stream = Readable.fromWeb(WebReadableStream);
 
-    response.body.cancel();
+    response.body.cancel().catch(() => {});
 
     return [readable_stream, { ext, mime }];
 };
@@ -1189,11 +1189,11 @@ async function getStream({ track, url, source }) {
  *
  * @param {string} query
  * @param {number} amount
- * @param {object} [customURLData={}]
- * @param {boolean} [customURLData.enable=false]
- * @param {boolean} [customURLData.URLOnly=false]
- * @param {number | null} [customURLData.duration=null]
- * @param {string | null} [customURLData.track_name=null]
+ * @param {object} [customURLData]
+ * @param {boolean} [customURLData.enable]
+ * @param {boolean} [customURLData.URLOnly]
+ * @param {number | null} [customURLData.duration]
+ * @param {string | null} [customURLData.track_name]
  * @returns {Promise<(MusicTrack | {id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean})[]>}
  */
 async function search_until(query, amount = 25, { enable: customURL = false, URLOnly = false, duration: file_duration = null, track_name = null } = {}) {
@@ -1372,7 +1372,7 @@ function GDriveDirectLink(sharingURL) {
 /**
  *
  * @param {string} url
- * @param {number | null} [statusCodeMatch=null]
+ * @param {number | null} [statusCodeMatch]
  * @returns {Promise<boolean>}
  */
 async function URLAvaliable(url, statusCodeMatch = null) {
@@ -1387,7 +1387,7 @@ async function URLAvaliable(url, statusCodeMatch = null) {
                 )
             )
         );
-    } catch (error) {
+    } catch {
         return false;
     };
 };
@@ -1398,14 +1398,14 @@ async function IsFFprobeInstalled() {
     try {
         await exec("ffprobe -version");
         return true;
-    } catch (error) {
+    } catch {
         return false;
     };
 };
 
 /**
  * @param {string} url
- * @param {number} [timeoutMs=15000]
+ * @param {number} [timeoutMs]
  * @returns {Promise<number | null>}
  */
 async function getAudioDuration(url, timeoutMs = 15000) {
@@ -1455,7 +1455,7 @@ async function getAudioDuration(url, timeoutMs = 15000) {
                 if (DEBUG) logger.debug(`Got duration: ${dur ? `${dur}s (${dur * 1000}ms)` : dur}`);
 
                 resolve(Number.isFinite(dur) ? dur * 1000 : null);
-            } catch (e) {
+            } catch {
                 reject(new Error("Failed to parse ffprobe JSON"));
             };
         });
@@ -1471,24 +1471,24 @@ async function getAudioDuration(url, timeoutMs = 15000) {
  *
  * @overload
  * @param {null} queue
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder>}
  *
  * @overload
  * @param {MusicQueue} queue
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  *
  * @overload
  * @param {MusicQueue | null} queue
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  * @returns {Promise<EmbedBuilder | null>}
  *
  * @param {MusicQueue | null} queue
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client]
  */
 async function noMusicIsPlayingEmbed(queue, interaction = null, client = global._client) {
@@ -1505,7 +1505,7 @@ async function noMusicIsPlayingEmbed(queue, interaction = null, client = global.
 
 /**
  *
- * @param {BaseInteraction | null} [interaction=null]
+ * @param {BaseInteraction | null} [interaction]
  * @param {DogClient | null} [client] - Discord Client
  * @returns {Promise<EmbedBuilder>}
  */

@@ -44,7 +44,7 @@ async function checkDBFilesExists() {
 };
 
 async function checkDBFilesCorrupted() {
-    let err = false;
+    let errored = false;
 
     for (let file of DATABASE_FILES) {
         const filepath = join_db_folder(file);
@@ -56,12 +56,12 @@ async function checkDBFilesCorrupted() {
             // 如果含有 "SyntaxError: Expected property name"，則警告並且退出程式
             if (err instanceof Error && err.message.includes("SyntaxError: Expected property name")) {
                 logger_nodc.error(`資料庫檔案 ${file} 已損毀，請檢查檔案內容！`);
-                err = true;
+                errored = true;
             } else throw err;
         };
     };
 
-    if (err) process.exit(1);
+    if (errored) process.exit(1);
 };
 
 /**

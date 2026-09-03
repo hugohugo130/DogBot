@@ -22,13 +22,13 @@ export default class EmbedBuilder extends djsEmbedBuilder {
 
     /**
      * set customize footer
-     * @param {BaseInteraction | Locale | string | null | { text?: string, rpg_data?: import("../db/tables.js").RPGData | null, force?: boolean, client?: DogClient }} [interaction="zh-TW"] 盡量提供此參數 (為了獲取語言)
-     * @param {Object} options
-     * @param {string} [options.text=""]
-     * @param {import("../db/tables.js").RPGData | null} [options.rpg_data=null]
-     * @param {boolean} [options.force=false]
+     * @param {BaseInteraction | Locale | string | null | { text?: string, rpg_data?: import("../db/tables.js").RPGData | null, force?: boolean, client?: DogClient }} [interaction] 盡量提供此參數 (為了獲取語言)
+     * @param {object} options
+     * @param {string} [options.text]
+     * @param {import("../db/tables.js").RPGData | null} [options.rpg_data]
+     * @param {boolean} [options.force]
      * @param {DogClient | null} [options.client]
-     * @remark force: text參數是否不會增加飽食度和機器犬文字
+     * @remarks force: text參數是否不會增加飽食度和機器犬文字
      * @returns {EmbedBuilder}
      */
     setEmbedFooter(interaction = null, { text = "", rpg_data = null, force = false, client = global._client } = {}) {
@@ -76,7 +76,7 @@ export default class EmbedBuilder extends djsEmbedBuilder {
     /**
      *
      * @param {DogClient} client
-     * @param {string} [author=""] - defaults to "", and convert to client.name
+     * @param {string} [author] - defaults to "", and convert to client.name
      * @returns {EmbedBuilder}
      */
     setEmbedAuthor(client, author = "") {

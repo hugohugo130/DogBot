@@ -45,7 +45,7 @@ import { get_lang_data } from "../../utils/language.js";
  * @param {number} start - 開始時間（秒）
  * @param {number} played - 已播放時間（秒）
  * @param {number} end - 結束時間（秒）
- * @param {boolean} [debug=false] - 是否啟用 debug
+ * @param {boolean} [debug] - 是否啟用 debug
  * @param {DogClient | null} [client] - Discord 客戶端
  * @returns {Promise<string>} Discord 進度條字串
  */
@@ -124,7 +124,7 @@ async function createProgressBar(start, played, end, debug = false, client = glo
 /**
  * 獲取音樂控制面板按鈕
  * @param {MusicQueue} queue - 音樂佇列
- * @param {Locale | null} [locale=null] - Discord Locale
+ * @param {Locale | null} [locale] - Discord Locale
  * @param {DogClient | null} [client] - Discord 客戶端
  * @returns {Promise<ActionRowBuilder<ButtonBuilder>[]>}
  */
@@ -257,10 +257,10 @@ async function getNowPlayingRows(queue, locale = null, client = global._client) 
 /**
  * 
  * @param {MusicQueue} queue - 音樂佇列
- * @param {MusicTrack | null} [currentTrack=null] - 當前播放的音樂曲目
- * @param {BaseInteraction | null} [interaction=null] - 互動
+ * @param {MusicTrack | null} [currentTrack] - 當前播放的音樂曲目
+ * @param {BaseInteraction | null} [interaction] - 互動
  * @param {DogClient | null} [client] - Discord 客戶端
- * @param {boolean} [start = false] - 是否剛開始播放
+ * @param {boolean} [start] - 是否剛開始播放
  * @returns {Promise<[EmbedBuilder, ActionRowBuilder<ButtonBuilder>[]]>}
  */
 export async function getNowPlayingEmbed(queue, currentTrack = null, interaction = null, client = global._client, start = false) {

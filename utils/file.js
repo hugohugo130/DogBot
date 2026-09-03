@@ -335,7 +335,7 @@ function find_default_value(filename, default_return = undefined) {
         /** @type {{ [k: string]: any }[]} */
         (Object.values(DEFAULT_VALUES))
     ) {
-        if (categoryData.hasOwnProperty(basename)) return categoryData[basename];
+        if (Object.hasOwn(categoryData, basename)) return categoryData[basename];
     };
 
     return default_return;
@@ -385,22 +385,22 @@ function order_data(data, follow) {
 
 /**
  * @overload
- * @param {null} [guildID=null] - 伺服器ID
- * @param {0 | 1} [mode=0] - 0: 取得伺服器資料, 1: 取得所有資料
+ * @param {null} [guildID] - 伺服器ID
+ * @param {0 | 1} [mode] - 0: 取得伺服器資料, 1: 取得所有資料
  * @returns {Promise<{ [k: string]: import("./config").GuildDatabase }>}
  * @throws {TypeError} - 如果mode不是0或1
  */
 /**
  * @overload
  * @param {string} guildID - 伺服器ID
- * @param {0 | 1} [mode=0] - 0: 取得伺服器資料, 1: 取得所有資料
+ * @param {0 | 1} [mode] - 0: 取得伺服器資料, 1: 取得所有資料
  * @returns {Promise<import("./config").GuildDatabase>}
  * @throws {TypeError} - 如果mode不是0或1
  */
 /**
  * 讀取伺服器資料庫
- * @param {string | null} [guildID=null] - 伺服器ID
- * @param {0 | 1} [mode=0] - 0: 取得伺服器資料, 1: 取得所有資料
+ * @param {string | null} [guildID] - 伺服器ID
+ * @param {0 | 1} [mode] - 0: 取得伺服器資料, 1: 取得所有資料
  */
 async function loadData(guildID = null, mode = 0) {
     /*

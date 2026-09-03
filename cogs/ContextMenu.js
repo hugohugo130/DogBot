@@ -2,14 +2,15 @@ import {
     Events,
 } from "discord.js";
 
-import { get_logger } from "../utils/logger.js";
-import DogClient from "../utils/customs/client.js";
+import {
+    get_logger,
+} from "../utils/logger.js";
 
 export const name = Events.InteractionCreate;
 const logger = get_logger();
 
 /**
- * @param {DogClient} client
+ * @param {import("../utils/customs/client.js").DogClient} client
  * @param {import("discord.js").Interaction} interaction
  */
 export async function execute(client, interaction) {

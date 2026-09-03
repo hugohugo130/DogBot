@@ -1,6 +1,5 @@
 import {
     Locale,
-    PermissionFlagsBits,
 } from "discord.js";
 
 import {

@@ -121,7 +121,7 @@ type SuccessItem = Exclude<ItemName, (typeof failed)[number]>;
 type RPGCmdCheckNeedArgFunction =
     (client: DogClient, userId: string) => Promise<boolean> | boolean;
 
-type RPGCmdArgument = {
+interface RPGCmdArgument {
     client: DogClient;
     message: Message | MockMessage;
     rpg_data: RPGData;
@@ -130,10 +130,15 @@ type RPGCmdArgument = {
     random_item?: RandomItem
 };
 
-type RPGCmdFunction =
-    ({ client, message, rpg_data, args, mode, random_item }: RPGCmdArgument) => Promise<Message | Object>;
+type CommandGuideUsage = {
+    name: string,
+    value: string,
+};
 
-export type RandomItem = {
+type RPGCmdFunction =
+    ({ client, message, rpg_data, args, mode, random_item }: RPGCmdArgument) => Promise<Message | object>;
+
+export interface RandomItem {
     item: SuccessItem;
     amount: number;
 };
@@ -143,5 +148,25 @@ export type RandomResult =
     | { failed: false; item: SuccessItem; amount: number };
 
 export type RPGCommand = [string, RPGCmdFunction, RPGCmdCheckNeedArgFunction | boolean];
+
+export type ValidGuideCategory =
+    | "general"
+    | "music"
+    | "rpg"
+    | "special"
+    | "dev";
+
+export interface CommandGuide {
+    emoji: string,
+    desc: string,
+    usage: CommandGuideUsage[],
+    format: string,
+};
+
+export type RPGHandlerReturn = {
+    embeds?: EmbedBuilder[];
+    components?: (ActionRowBuilder<ButtonBuilder> | ActionRowBuilder<StringSelectMenuBuilder>)[];
+    content?: string;
+} | MockMessage | Record<string, never> | null | void;
 
 // #endregion [RPG]
