@@ -135,20 +135,22 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-check_circular_dependencies.js
+# 資料夾
 temp/
 /website/
 /db/
 db_old/
 migration/
-*backup*
 ai_update/
 .bailurules/
 database_recovery/
-eslint.config.*
+
+# 檔案
 PROJECT_STRUCTURE.md
 auto_register.cmd.data
 error_reader.js
 .bailucode.md
+*backup*
 *test*
 *temp*
+check_circular_dependencies.js
