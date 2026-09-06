@@ -135,6 +135,7 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
+check_circular_dependencies.js
 temp/
 /website/
 /db/
