@@ -34,7 +34,8 @@ async function interval(per_sec, execute, file, ...args) {
     while (true) {
         const start = Date.now();
         try {
-            await execute(...args);
+            const tuple = /** @type {[DogClient, string, string]} */ (args);
+            await execute(...tuple);
         } catch (error) {
             const errorStack = util.inspect(error, { depth: null });
 

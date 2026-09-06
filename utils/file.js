@@ -53,7 +53,6 @@ const readdir = fsp.readdir;
 const logger = get_logger();
 
 /**
-*
  * @param {import("node:fs").PathLike} path
  * @returns {Promise<boolean>}
  */
@@ -232,6 +231,7 @@ function writeJsonSync(path, data, replacer) {
  * Write a file asynchronously
  * @param {string} path
  * @param {string} data
+ * @param {boolean} [p]
  * @returns {Promise<void>}
  */
 async function writeFile(path, data, p = false) {
@@ -342,7 +342,7 @@ function find_default_value(filename, default_return = undefined) {
 
 /**
  * @template T
- * @param {import("./rpg.ts").ItemKey} item
+ * @param {import("./rpg").ItemKey} item
  * @param {T} [default_return]
  * @returns {[number, number, number] | T | undefined}
  */
@@ -355,8 +355,8 @@ function get_probability_of_id(item, default_return = undefined) {
 };
 
 /**
- * @template T
- * @template U
+ * @template {object} T
+ * @template {object} U
  * @param {T} data
  * @param {U} follow
  * @returns {{ [K in keyof U]: K extends keyof T ? T[K] | U[K] : U[K] }}
@@ -365,7 +365,9 @@ function order_data(data, follow) {
     /** @type {Record<string, unknown>} */
     const orderedData = {};
     for (const key of Object.keys(follow)) {
-        orderedData[key] = data[key] ?? follow[key];
+        orderedData[key] =
+            /** @type {Record<string, unknown>} */ (data)[key] ??
+            /** @type {Record<string, unknown>} */ (follow)[key];
     };
 
     // @ts-expect-error - e
@@ -585,7 +587,7 @@ async function getPrefixes(guildID) {
  * @returns {Promise<import("./config").RpgShop>}
  */
 async function load_shop_data(userid) {
-    const shop_emptyeg = find_default_value("rpg_shop.json", {});
+    const shop_emptyeg = /** @type {import("./config").RpgShop} */ (find_default_value("rpg_shop.json", {}));
 
     if (await exists(rpg_shop_file)) {
         const data = await readJson(rpg_shop_file);
@@ -608,7 +610,7 @@ async function load_shop_data(userid) {
  * @param {import("./config").RpgShop} shop_data
  */
 async function save_shop_data(userid, shop_data) {
-    const shop_emptyeg = find_default_value("rpg_shop.json", {});
+    const shop_emptyeg = /** @type {import("./config").RpgShop} */ (find_default_value("rpg_shop.json", {}));
 
     /** @type {{ [k: string]: import("./config").RpgShop}} */
     let data = {};
@@ -626,7 +628,7 @@ async function save_shop_data(userid, shop_data) {
     if (data[userid].items) {
         for (const [item, itemData] of Object.entries(data[userid].items)) {
             if (itemData.amount <= 0) {
-                delete data[userid].items[item];
+                delete data[userid].items[/** @type {import("./rpg").ItemKey} */ (item)];
             };
         };
     };
@@ -639,15 +641,15 @@ async function save_shop_data(userid, shop_data) {
 /**
  *
  * @param {string} userid
- * @returns {Promise<{lvl: number, exp: number, waterAt: number, farms: import("../slashcmd/game/rpg/farm.js").FarmData[]}>}
+ * @returns {Promise<import("./config").RpgFarm>}
  */
 async function load_farm_data(userid) {
-    const farm_emptyeg = find_default_value("rpg_farm.json", {});
+    const farm_emptyeg = /** @type {import("./config").RpgFarm} */ (find_default_value("rpg_farm.json", {}));
 
     const data = await readJson(rpg_farm_file);
 
     if (!data[userid]) {
-        await save_shop_data(userid, farm_emptyeg);
+        await save_farm_data(userid, farm_emptyeg);
         return farm_emptyeg;
     };
 
@@ -657,12 +659,12 @@ async function load_farm_data(userid) {
 /**
  *
  * @param {string} userid
- * @param {{ lvl: number, exp: number, waterAt: number, farms: import("../slashcmd/game/rpg/farm.js").FarmData[] }} farm_data
+ * @param {import("./config").RpgFarm} farm_data
  */
 async function save_farm_data(userid, farm_data) {
-    const farm_emptyeg = find_default_value("rpg_farm.json", {});
+    const farm_emptyeg = /** @type {import("./config").RpgFarm} */ (find_default_value("rpg_farm.json", {}));
 
-    /** @type {{ [k: string]: {lvl: number, exp: number, waterAt: number, farms: import("../slashcmd/game/rpg/farm.js").FarmData[]}}} */
+    /** @type {{ [k: string]: import("./config").RpgFarm }} */
     let data = {};
     if (await exists(rpg_farm_file)) {
         data = await readJson(rpg_farm_file);
@@ -809,6 +811,9 @@ async function join_temp_folder(filename) {
     return join_folder(temp_folder, basename);
 };
 
+/**
+ * @returns {Promise<string>}
+ */
 async function get_temp_folder() {
     if (!(await exists(temp_folder))) {
         await mkdir(temp_folder, { recursive: true });
