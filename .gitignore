@@ -154,3 +154,6 @@ error_reader.js
 *test*
 *temp*
 check_circular_dependencies.js
+generate_import_graph.js
+import_graph.json
+analyze_circular.js

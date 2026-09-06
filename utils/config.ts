@@ -9,15 +9,8 @@ import type {
     FightJobNames,
     JobNames,
 } from "./types.d.ts";
-import type {
-    ItemKey,
-} from "./rpg.ts";
-import {
-    type BakeItemData,
-} from "../slashcmd/game/rpg/bake.js";
-import {
-    type SmeltData,
-} from "../slashcmd/game/rpg/smelt.js";
+type BakeItemData = import("../slashcmd/game/rpg/bake.js").BakeItemData;
+type SmeltData = import("../slashcmd/game/rpg/smelt.js").SmeltData;
 import type {
     SoundcloudTrack,
 } from "soundcloud.ts";
@@ -34,7 +27,7 @@ const database_folder = `${cwd()}/db`;
 // #region [interfaces]
 
 interface ShopItem {
-    name: ItemKey;
+    name: import("./rpg.ts").ItemKey;
     amount: number;
     price: number;
 };
@@ -68,7 +61,7 @@ export interface TransactionsInfo {
 
 export interface RpgShop {
     status: boolean;
-    items: Partial<Record<ItemKey, ShopItem>>;
+    items: Partial<Record<import("./rpg.ts").ItemKey, ShopItem>>;
 };
 
 export interface RpgFarm {
