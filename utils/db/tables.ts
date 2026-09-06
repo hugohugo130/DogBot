@@ -137,22 +137,18 @@ function WithUserID<TBase extends Constructor>(Base: TBase) {
             return this._userID;
         };
 
-        protected async poolWithUserID(callbackOrCommand: string): Promise<{ [k: string]: any }[]>
-        protected async poolWithUserID<T>(callbackOrCommand: (pool: Pool, userID: string) => PromiseLike<T>): Promise<T>
-        protected async poolWithUserID(callbackOrCommand: ((pool: Pool, userID: string) => PromiseLike<any>) | string): Promise<any | { [k: string]: any }[]> {
+        protected async poolWithUserID<T>(
+            callback: (pool: Pool, userID: string) => PromiseLike<T>
+        ): Promise<T> {
             const userID = this.getUserID();
             const pool = getPool();
 
-            if (typeof callbackOrCommand === 'string') {
-                const result = await pool.query(callbackOrCommand);
-                return result.rows;
-            } else {
-                return await callbackOrCommand(pool, userID);
-            };
+            return await callback(pool, userID) as Awaited<ReturnType<typeof callback>>;
         };
     };
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T = object> = new (...args: any[]) => T;
 export type RPGUserData = Omit<RPGUsers, "user_id">;
 export type RPGInventoryData = { [item_id: string]: number };

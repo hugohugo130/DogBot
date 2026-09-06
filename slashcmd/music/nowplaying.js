@@ -257,7 +257,7 @@ async function getNowPlayingRows(queue, locale = null, client = global._client) 
 /**
  * 
  * @param {MusicQueue} queue - 音樂佇列
- * @param {MusicTrack | null} [currentTrack] - 當前播放的音樂曲目
+ * @param {MusicTrack | import("../../utils/types").AudioFileData | null} [currentTrack] - 當前播放的音樂曲目
  * @param {BaseInteraction | null} [interaction] - 互動
  * @param {DogClient | null} [client] - Discord 客戶端
  * @param {boolean} [start] - 是否剛開始播放

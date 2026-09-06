@@ -1,3 +1,8 @@
+/**
+ * Seconds
+ * @param {string} str - placeholder
+ * @returns {string}
+ */
 export function time(str = "[{t}]") {
     // YYYY-MM-DD HH:MM:SS
     const currentTime = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 19).replace("T", " "); // 取得當前時間
@@ -6,6 +11,11 @@ export function time(str = "[{t}]") {
     } else return currentTime;
 };
 
+/**
+ * Milliseconds
+ * @param {string} str - placeholder
+ * @returns {string}
+ */
 export function time2(str = "[{t}]") {
     // YYYY-MM-DD HH:MM:SS.ms
     const currentTime = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString().slice(0, 23).replace("T", " "); // 取得當前時間

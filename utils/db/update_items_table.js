@@ -1,7 +1,17 @@
-import { connectPool } from "./db.js";
-import { get_logger } from "../logger.js";
-import { importModules } from "../customs/custom_import.js";
+import {
+    connectPool,
+} from "./db.js";
+import {
+    get_logger,
+} from "../logger.js";
+import {
+    importModules,
+} from "../customs/custom_import.js";
 
+/**
+ * @param {boolean} [cache]
+ * @returns {Promise<void>}
+ */
 export async function update_items(cache = true) {
     const logger = get_logger();
     logger.info("正在檢查並更新items表");

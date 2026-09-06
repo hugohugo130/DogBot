@@ -10,7 +10,7 @@ const logger = get_logger();
 
 /**
  * https://developer.jamendo.com/v3.0/response-codes
- * @param {any} responseData 
+ * @param {{ headers: { warnings?: string, code: number, error_message: string } }} responseData
  */
 function raise_for_status(responseData) {
     const headers = responseData.headers;
@@ -28,9 +28,9 @@ function raise_for_status(responseData) {
 
 /**
  * https://developer.jamendo.com/v3.0/tracks
- * @param {string} search 
- * @param {string} format 
- * @param {number} limit 
+ * @param {string} search
+ * @param {string} format
+ * @param {number} limit
  * @returns {Promise<import("axios").AxiosResponse>}
  */
 async function search_tracks(search, format = "json", limit = 30) {

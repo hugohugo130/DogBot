@@ -1,9 +1,6 @@
 import {
     Interface,
 } from "readline/promises";
-import {
-    Collection,
-} from "discord.js";
 import Soundcloud from "soundcloud.ts";
 
 import {
@@ -18,7 +15,7 @@ declare global {
     var _sc: Soundcloud | null | undefined;
     var debug: boolean | undefined;
     var isBeta: boolean | undefined;
-    var sendQueue: any[] | undefined;
+    var sendQueue: import("logform").TransformableInfo[] | undefined;
 };
 
 export { };

@@ -117,6 +117,7 @@ class CacheManager {
      * 刪除特定緩存
      * @param {string} type - 緩存類型
      * @param {string} id - 資料 ID
+     * @returns {boolean}
      */
     delete(type, id) {
         const key = this.generateKey(type, id);
@@ -132,6 +133,7 @@ class CacheManager {
     /**
      * 清除特定類型的所有緩存
      * @param {string} type - 緩存類型
+     * @returns {number}
      */
     clearType(type) {
         let count = 0;
@@ -222,17 +224,16 @@ class CacheManager {
 
 /**
  * @overload
- * @param {boolean} [create=true] - Whether to create the cache manager if not exists.
+ * @param {boolean} [create] - Whether to create the cache manager if not exists.
  * @returns {CacheManager | null}
- */
-/**
+ *
  * @overload
- * @param {true} [create=true] - Whether to create the cache manager if not exists.
+ * @param {true} [create] - Whether to create the cache manager if not exists.
  * @returns {CacheManager}
- */
-/**
+ *
  * Get the cache manager
  * @param {boolean} [create] - Whether to create the cache manager if not exists.
+ * @returns {CacheManager | null}
  */
 function getCacheManager(create = true) {
     /** @type {CacheManager | null} */

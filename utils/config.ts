@@ -12,6 +12,15 @@ import type {
 import type {
     ItemKey,
 } from "./rpg.ts";
+import {
+    type BakeItemData,
+} from "../slashcmd/game/rpg/bake.js";
+import {
+    type SmeltData,
+} from "../slashcmd/game/rpg/smelt.js";
+import type {
+    SoundcloudTrack,
+} from "soundcloud.ts";
 
 // functions for config
 const cwd = process.cwd;
@@ -97,6 +106,7 @@ export interface MusicTrackData {
     thumbnail: string | null;
     author: string;
     source: string;
+    original_track?: SoundcloudTrack | unknown;  // 原始資料，可能為任意型別
 };
 
 export interface MusicStatus {
@@ -119,48 +129,24 @@ const DATABASE_FILES = [
     "dvoice_db.json",
     "rpg_farm.json",
     "music.json",
-];
+] as const;
 
 const DEFAULT_VALUES: {
     "user": {
-        "rpg_database.json": any;
         "rpg_shop.json": RpgShop;
         "rpg_farm.json": RpgFarm;
-        "bake_db.json": Array<any>;
-        "smelt_db.json": Array<any>;
-        [k: string]: object | Array<any>;
+        "bake_db.json": Array<BakeItemData>;
+        "smelt_db.json": Array<SmeltData>;
     };
     "single": {
+        "music.json": Record<string, MusicStatus>;
         "dvoice_db.json": [[string], DvoiceData][];
-        [k: string]: object | Array<any>;
     };
     "guild": {
         "database.json": GuildDatabase;
-        [k: string]: object | Array<any>;
     };
-    [k: string]: { [k: string]: object | Array<any>; };
 } = {
     "user": {
-        "rpg_database.json": {
-            "money": 1000,
-            "hunger": 20,
-            "daily": 0,
-            "daily_times": 0,
-            "daily_msg": false,
-            "job": null,
-            "fightjob": null,
-            "badge": null,
-            "marry": {
-                "status": false,
-                "with": null,
-                "time": 0,
-            },
-            "lastRunTimestamp": {},
-            "inventory": {},
-            "transactions": [],
-            "count": {},
-            "privacy": [],
-        },
         "rpg_shop.json": {
             "status": true,
             "items": {},

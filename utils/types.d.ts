@@ -6,6 +6,10 @@ import {
     Interaction,
 
     PermissionFlagsBits,
+    SlashCommandBuilder,
+    SlashCommandOptionsOnlyBuilder,
+    SlashCommandSubcommandBuilder,
+    SlashCommandSubcommandsOnlyBuilder,
 } from "discord.js";
 
 import {
@@ -62,7 +66,7 @@ export type SlashExecutor<C extends AllowedContextTuple = AllowedContextTuple> =
 ) => PromiseLike<unknown>;
 
 interface BaseSlash<C extends AllowedContextTuple = AllowedContextTuple> {
-    builder: any;
+    builder: SlashCommandBuilder | SlashCommandSubcommandBuilder | SlashCommandOptionsOnlyBuilder | SlashCommandSubcommandsOnlyBuilder;
     stage: "beta" | "stable" | "owner" | "admin";
     allowedContext: C;
     music?: boolean;
@@ -170,3 +174,35 @@ export type RPGHandlerReturn = {
 } | MockMessage | Record<string, never> | null | void;
 
 // #endregion [RPG]
+
+// #region [General]
+
+export type ValueOf<T> = T[keyof T];
+
+// #endregion [General]
+
+// #region [Music]
+
+export interface AudioFileData {
+    id: string;
+    title: string;
+    url: string;
+    duration: number;
+    thumbnail: string | null;
+    author: string;
+    source: string;
+    useStream: boolean;
+};
+
+export interface FixedAudioFileData {
+    id: string;
+    title: string;
+    url: string;
+    duration: number;
+    thumbnail: string | null;
+    author: string;
+    source: string;
+    useStream: boolean;
+};
+
+// #endregion [Music]

@@ -115,7 +115,7 @@ export async function get_guild(guildID, client = global._client) {
  * @param {Guild} guild
  * @param {boolean} fetch_first
  * @returns {Promise<import("discord.js").Channel[]>}
-*/
+ */
 export async function get_channels(guild, fetch_first = false) {
     if (!guild) return [];
 
@@ -132,12 +132,12 @@ export async function get_channels(guild, fetch_first = false) {
 
 /**
  * Get a channel by its ID
- * @param {any} channelId
+ * @param {string | null} [channelId]
  * @param {Guild | null} [guild]
  * @param {boolean} [fetch_first]
  * @returns {Promise<import("discord.js").Channel | import("discord.js").VoiceBasedChannel | null | undefined>}
  */
-export async function get_channel(channelId, guild = null, fetch_first = false) {
+export async function get_channel(channelId = null, guild = null, fetch_first = false) {
     try {
         if (!channelId) return null;
 

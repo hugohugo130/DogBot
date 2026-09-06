@@ -12,7 +12,6 @@ import {
     readJson,
     writeJson,
     exists,
-    basename,
     join_db_folder,
 } from "./file.js";
 import {
@@ -30,9 +29,28 @@ import DogClient from "./customs/client.js";
 const logger = get_logger();
 const logger_nodc = get_logger({ nodc: true });
 
+/**
+ * @param {string} file
+ * @returns {file is keyof typeof DEFAULT_VALUES['single']}
+ */
+export function inSingleDefaultValues(file) {
+    return file in DEFAULT_VALUES;
+};
+
+/**
+ * @param {string} file
+ * @returns {file is import("./types").ValueOf<DATABASE_FILES>}
+ */
+export function inDATABASE_FILES(file) {
+    return /** @type {readonly string[]} */ (DATABASE_FILES).includes(file);
+};
+
+/**
+ * @returns {Promise<void>}
+ */
 async function checkDBFilesExists() {
     for (let file of DATABASE_FILES) {
-        file = basename(file);
+        if (!inSingleDefaultValues(file)) continue;
         const defaultValue = DEFAULT_VALUES?.single?.[file] || {};
 
         const filePath = join_db_folder(file);
@@ -43,6 +61,9 @@ async function checkDBFilesExists() {
     };
 };
 
+/**
+ * @returns {Promise<void>}
+ */
 async function checkDBFilesCorrupted() {
     let errored = false;
 
@@ -69,7 +90,7 @@ async function checkDBFilesCorrupted() {
  * @param {Array<User>} users
  * @param {Array<Guild>} guilds
  * @returns {Promise<void>}
- */
+ */ /* eslint-disable */
 async function make_db_compatible(users, guilds) {
     for (const user of users) {
         continue;
@@ -210,7 +231,7 @@ async function make_db_compatible(users, guilds) {
         await saveData(guild.id, guild_data);
         */
     };
-};
+};/* eslint-enable */
 
 /**
  * @warning run this before client.login and with no given args may block forever
@@ -248,7 +269,7 @@ async function checkDBFilesDefault(client = global._client) {
         const filePath = join_db_folder(file);
         if (!(exists(filePath))) continue;
 
-        /** @type {{ [k: string]: any }} */
+        /** @type {{ [k: string]: object }} */
         const data = await readJson(filePath);
         if (!default_value) {
             logger.warn(`警告：資料庫檔案 ${file} 缺失預設值，請及時補充。`);
@@ -270,7 +291,7 @@ async function checkDBFilesDefault(client = global._client) {
         const filePath = join_db_folder(file);
         if (!(exists(filePath))) continue;
 
-        /** @type {{ [k: string]: any }} */
+        /** @type {{ [k: string]: object }} */
         const data = await readJson(filePath);
         if (!default_value) {
             logger.warn(`警告：資料庫檔案 ${file} 缺失預設值，請及時補充。`);

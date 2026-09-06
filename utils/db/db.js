@@ -2,7 +2,7 @@ import { Pool, Client as PGClient } from "pg";
 import { importModules } from "../customs/custom_import.js";
 
 /**
- * @typedef {Object} ClientInitOptions
+ * @typedef {object} ClientInitOptions
  * @property {keyof typeof import("./config").TABLES_METADATA} table_name
  * @property {boolean} [cache=false]
  */
@@ -106,7 +106,7 @@ export class PoolClient extends PGClient {
 
     /**
      * @param {string[] | string} columns
-     * @returns {Promise<any[]>}
+     * @returns {Promise<unknown[]>}
      */
     async get(columns = "*") {
         this.#check_table_name();

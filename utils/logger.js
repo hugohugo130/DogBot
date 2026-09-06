@@ -7,7 +7,6 @@ import {
 import {
     EmbedBuilder as djsEmbedBuilder,
     MessageFlags,
-    Embed,
     escapeMarkdown,
 } from "discord.js";
 
@@ -58,7 +57,7 @@ const CHANNEL_MAPPING = {
 
 /**
  *
- * @param {any[]} array
+ * @param {boolean[]} array
  * @returns {boolean}
  */
 const any = (array) => array.some(e => !!e);
@@ -91,9 +90,9 @@ class DiscordTransport extends Transport {
     };
 
     /**
-     * @param {any} info
-     * @param {() => void} [callback]
-     * @returns {any}
+     * @param {import("logform").TransformableInfo} info
+     * @param {() => unknown} [callback]
+     * @returns {boolean | void}
      */
     log(info, callback) {
         setImmediate(() => {
@@ -103,8 +102,9 @@ class DiscordTransport extends Transport {
         if (DEBUG) console.debug(`[DEBUG] [DiscordTransport] pushed info to sendQueue: ${JSON.stringify(info, null, 4)}`);
 
         // 如果message含有config.dc_send_ignore_keywords中任何一個關鍵字，則不發送
-        if (info.message && any(dc_send_ignore_keywords.map(keyword => info.message.includes(keyword)))) return;
-        if (info.stack && any(dc_send_ignore_keywords.map(keyword => info.stack.includes(keyword)))) return;
+        const { message, stack } = info;
+        if (typeof message === "string" && any(dc_send_ignore_keywords.map(keyword => message.includes(keyword)))) return;
+        if (typeof stack === "string" && any(dc_send_ignore_keywords.map(keyword => stack.includes(keyword)))) return;
 
         if (global.sendQueue) global.sendQueue.push(info);
 
@@ -128,9 +128,9 @@ class BackendTransport extends Transport {
     };
 
     /**
-     * @param {any} info
-     * @param {() => void} [callback]
-     * @returns {any}
+     * @param {import("logform").TransformableInfo} info
+     * @param {() => unknown} [callback]
+     * @returns {boolean | void}
      */
     log(info, callback) {
         setImmediate(() => {
@@ -179,8 +179,7 @@ const consoleFormat = winston.format.combine(
 );
 
 /**
- * 
- * @param {any} channel
+ * @param {import("discord.js").SendableChannels} channel
  * @param {string} level
  * @param {import('discord.js').ColorResolvable} color
  * @param {string} logger_name
@@ -265,6 +264,7 @@ function getCallerFile(skipURLs = []) {
             return [callerFileName, callerFileURL];
         };
     } catch {
+        // 忽略錯誤
     } finally {
         Error.prepareStackTrace = originalPrepareStackTrace; // Restore original
     };
@@ -283,11 +283,11 @@ function getCallerFile(skipURLs = []) {
  * @overload
  * @param {"full" | "url" | null} [mode]
  * @param {string[]} [skipURLs] 額外要跳過的檔案 URL
- * @returns {string}
+ * @returns {string | null}
  *
- * @param {any | "list" | "full" | "url" | null} [mode]
+ * @param {1 | "list" | "full" | "url" | null} [mode]
  * @param {string[]} [skipURLs] 額外要跳過的檔案 URL
- * @returns {any}
+ * @returns {string | string[] | null}
  */
 export function getCallerModuleName(mode = 1, skipURLs = []) {
     const unknown_word = "unknown";
@@ -348,6 +348,8 @@ export function get_logger(options = {}) {
         backend = false,
         nodc = false,
     } = options;
+
+    if (!name) throw new Error("name is not given");
 
     // 返回已存在的 logger
     if (backend) {
@@ -425,11 +427,14 @@ export async function process_send_queue() {
 
         try {
             const level = info.level ? info.level.toUpperCase() : "INFO";
-            const logger_name = info.module || "unknown";
+            const got_logger_name = info.module;
+            const logger_name = typeof got_logger_name === "string"
+                ? got_logger_name
+                : "unknown";
             const message = info.stack || info.message;
             const color = LEVEL_COLORS[info.level] || 0x000000;
-            const channel_id = info.channel_id || CHANNEL_MAPPING[info.level];
-            const timestamp = Date.parse(info.timestamp);
+            const channel_id = (typeof info.channel_id === "string" && info.channel_id) || CHANNEL_MAPPING[info.level];
+            const timestamp = typeof info.timestamp === "string" ? Date.parse(info.timestamp) : 0;
 
             const channel = await get_channel(channel_id);
             if (!channel?.isSendable()) {
@@ -440,13 +445,12 @@ export async function process_send_queue() {
             if (
                 message
                 && (
-                    (typeof message === "object" && message.data)
+                    (typeof message === "object" && Object.hasOwn(message, "data"))
                     || message instanceof djsEmbedBuilder
                     || message instanceof EmbedBuilder
-                    || message instanceof Embed
                 )
             ) {
-                const embed = message;
+                const embed = /** @type {djsEmbedBuilder} */ (message);
                 if (!embed.data.color) {
                     embed.setColor(color);
                 };
@@ -459,7 +463,7 @@ export async function process_send_queue() {
                     embeds: [embed],
                     flags: MessageFlags.SuppressNotifications
                 });
-            } else {
+            } else if (typeof message === "string") {
                 const send_messages = splitStringByLength(message, 4000);
 
                 for (const msg of send_messages) {

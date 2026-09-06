@@ -13,6 +13,9 @@ const checks = {
     "DATABASE_URL": ["postgresql://user:pass@host:5432/dogbot", "無效的資料庫連線 URL"],
 };
 
+/**
+ * @returns {void}
+ */
 function checkEnvFile() {
     loadEnvFile();
 

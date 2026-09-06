@@ -22,7 +22,7 @@ export default {
      * @param {string | null} [channel_id]
      * @param {DogClient | null} [client]
      * @returns {Promise<void>}
-    */
+     */
     async del_msg(userID, guild_id, limit = 100, channel_id = null, client = null) {
         if (!client) client = await wait_for_client();
         const user = await get_user(userID, client);

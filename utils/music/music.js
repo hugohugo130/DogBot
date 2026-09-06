@@ -222,7 +222,7 @@ const DEBUG = false;
 /**
  * key: [MediaType](https://en.wikipedia.org/wiki/Media_type)
  * value: [StreamType](https://discord.js.org/docs/packages/voice/0.19.0/StreamType:Enum)
- * @type {Object.<string, StreamType>}
+ * @type {Record<string, StreamType>}
  */
 const fileStreamType = {
     "audio/ogg": StreamType.OggOpus,
@@ -231,17 +231,7 @@ const fileStreamType = {
 
 class MusicTrack {
     /**
-     *
-     * @param {Object} datas
-     * @param {string} datas.id
-     * @param {string} datas.title
-     * @param {string | null} [datas.url]
-     * @param {number} [datas.duration]
-     * @param {string | null} [datas.thumbnail]
-     * @param {string} [datas.author]
-     * @param {string} [datas.source]
-     * @param {Readable | null} [datas.stream]
-     * @param {any} [datas.original_track]
+     * @param {import("../config.ts").MusicTrackData & { stream?: Readable | null }} datas
      */
     constructor({ id, title, url = null, duration = 0, thumbnail = null, author = "unknown", source = "", stream = null, original_track = null }) {
         /** @type {string} */
@@ -274,13 +264,13 @@ class MusicTrack {
         /** @type {string | null} */
         this.streamType = null;
 
-        /** @type {any} */
+        /** @type {import("soundcloud.ts").SoundcloudTrack | unknown} */
         this.original_track = original_track;
 
         /** @type {boolean} */
         this._streamPreparing = false;
 
-        this.prepareStream().catch(() => {});
+        this.prepareStream().catch(() => { });
     };
 
     toJSON() {
@@ -374,7 +364,7 @@ class MusicQueue {
         /** @type {Guild | null} */
         this.guild = client?.guilds.cache.get(guildID) || null;
 
-        /** @type {MusicTrack[]} */
+        /** @type {(MusicTrack)[]} */
         this.tracks = [];
 
         /** @type {AudioPlayer} */
@@ -535,8 +525,8 @@ class MusicQueue {
 
     /**
      *
-     * @param {any} msg
-     * @returns {any}
+     * @param {string} msg
+     * @returns {import("winston").Logger}
      */
     debug = (msg) => logger.debug(`[${this.guildID}] ${msg}`);
 
@@ -694,8 +684,6 @@ class MusicQueue {
             this.currentResource = resource;
 
             return track;
-        } catch (e) {
-            throw e;
         } finally { // 就算 return 了 這裡也會執行
             this.play_lock = false;
         };
@@ -738,12 +726,13 @@ class MusicQueue {
         return [old_track, new_track];
     };
 
-    isSubscriptionValid = () => (
-        this.subscription?.connection.state
-        && "subscription" in this.subscription?.connection.state
-        && this.subscription?.connection.state.subscription
-        && this.subscription.connection.state.subscription === this.subscription
-    );
+    isSubscriptionValid = () => {
+        const state = this.subscription?.connection.state;
+        return !!state
+            && "subscription" in state
+            && state.subscription
+            && state.subscription === this.subscription;
+    };
 
     /**
      * Subscribe to the player.
@@ -944,8 +933,7 @@ function getPlayingPlayers() {
 };
 
 /**
- *
- * @param {any} object
+ * @param {object} object
  * @returns {object is import("soundcloud.ts").SoundcloudTrack}
  */
 function isSoundCloudTrack(object) {
@@ -1000,7 +988,7 @@ function isSoundCloudTrack(object) {
 
 /**
  *
- * @param {Array<import("soundcloud.ts").SoundcloudTrack | MusicTrack | { id: string, title: string, url: string, duration?: number, thumbnail?: string | null, author?: string | null, source?: string }>} objects
+ * @param {Array<import("soundcloud.ts").SoundcloudTrack | MusicTrack | import("../types").AudioFileData | import("../types").FixedAudioFileData>} objects
  * @returns {Promise<MusicTrack[]>}
  */
 async function fixStructure(objects) {
@@ -1012,7 +1000,7 @@ async function fixStructure(objects) {
             continue;
         };
 
-        let id, title, url, duration = 0, thumbnail = null, author = "Unknown", source = "unknown", stream = null;
+        let id, title, url, duration, thumbnail, author, source, stream = null;
         const original_track = object;
 
         if (isSoundCloudTrack(object)) {
@@ -1052,7 +1040,7 @@ async function fixStructure(objects) {
  * This function is used for creating a MusicTrack
  * @param {string} url
  * @param {boolean} [stream]
- * @returns {Promise<{ id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean }>}
+ * @returns {Promise<import("../types").AudioFileData>}
  */
 async function getAudioFileData(url, stream = false) {
     const uri = url.split("/").pop()?.split("?")[0];
@@ -1078,11 +1066,11 @@ async function getAudioFileData(url, stream = false) {
 };
 
 /**
- *
- * @param {any} promiseOrFn
+ * @template T
+ * @param {Promise<T> | (() => T | Promise<T>)} promiseOrFn
  * @param {number} ms
  * @param {boolean} [error]
- * @returns {Promise<any>}
+ * @returns {Promise<T | null>}
  */
 async function withTimeout(promiseOrFn, ms, error = true) {
     let timeoutId;
@@ -1148,14 +1136,14 @@ async function fetchAudioStream(original_url) {
 
     const readable_stream = Readable.fromWeb(WebReadableStream);
 
-    response.body.cancel().catch(() => {});
+    response.body.cancel().catch(() => { });
 
     return [readable_stream, { ext, mime }];
 };
 
 /**
  *
- * @param {Object} options
+ * @param {object} options
  * @param {MusicTrack} options.track
  * @param {string | null} [options.url]
  * @param {string | null} [options.source]
@@ -1165,7 +1153,10 @@ async function getStream({ track, url, source }) {
     let engine;
     try {
         engine = await import(new URL(`./${source?.toLowerCase() ?? "soundcloud"}.js`, import.meta.url).href);
-    } catch { };
+    } catch {
+        // 找不到模塊或導入失敗
+        // 就直接向url發送請求
+    };
 
     if (!url && "url" in track) {
         url = track.url;
@@ -1194,7 +1185,7 @@ async function getStream({ track, url, source }) {
  * @param {boolean} [customURLData.URLOnly]
  * @param {number | null} [customURLData.duration]
  * @param {string | null} [customURLData.track_name]
- * @returns {Promise<(MusicTrack | {id: string, title: string, url: string, duration: number, thumbnail: string | null, author: string, source: string, useStream: boolean})[]>}
+ * @returns {Promise<(MusicTrack)[]>}
  */
 async function search_until(query, amount = 25, { enable: customURL = false, URLOnly = false, duration: file_duration = null, track_name = null } = {}) {
     let results = [];
@@ -1233,7 +1224,7 @@ async function search_until(query, amount = 25, { enable: customURL = false, URL
             continue;
         };
 
-        let tracks = [];
+        let tracks;
         let output = [];
 
         try {
@@ -1264,7 +1255,7 @@ async function search_until(query, amount = 25, { enable: customURL = false, URL
         };
 
         tracks = [...new Set(output)];
-        tracks = output.slice(0, amount);
+        tracks = tracks.slice(0, amount);
         tracks = await fixStructure(tracks);
 
         results.push(...tracks);
@@ -1392,6 +1383,9 @@ async function URLAvaliable(url, statusCodeMatch = null) {
     };
 };
 
+/**
+ * @returns {Promise<boolean>}
+ */
 async function IsFFprobeInstalled() {
     const exec = util.promisify(callbackExec);
 

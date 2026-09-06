@@ -20,6 +20,7 @@ import {
 import {
     loadDvoiceData,
 } from "../file.js";
+import { MusicTrack } from "../music/music.js";
 
 /** @import { ItemKey, FoodKey } from "../rpg.ts" */
 
@@ -106,7 +107,7 @@ class DogClient extends Client {
         /** @type {Collection<string, import("../types").ContextMenu>} */
         this.context_menus = new Collection();
 
-        /** @type {Collection<string, any>} */
+        /** @type {Collection<string, Record<string, { track: MusicTrack, next: boolean, custom_track_name: string | null }[]>>} */
         this.musicTrackSession = new Collection();
 
         /** @type {Collection<string, OvenBakeSession>} */
@@ -240,7 +241,7 @@ class DogClient extends Client {
      * Save the locale cached of a user
      * @param {string} userId
      * @param {Locale} locale
-     * @returns {any}
+     * @returns {Collection<string, Locale>}
      */
     save_user_locale = (userId, locale) => this.locales.set(userId, locale);
 };

@@ -28,6 +28,9 @@ const DEBUG = false;
 
 const logger = get_logger();
 
+/**
+ * @returns {Promise<void>}
+ */
 async function saveAllMusicStates() {
     const queues = getQueues();
 

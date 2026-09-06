@@ -891,7 +891,7 @@ function check_item_data() {
         .flat()
         .filter(item => !(Object.values(animal_products) as string[]).includes(item))
         .filter(item => !(Object.values(bake) as string[]).includes(item))
-        .filter(item => !cook.map(data => data.output).includes(item))
+        .filter(item => !(cook.map(data => data.output) as string[]).includes(item))
         .filter(item => !(item in recipes))
         .filter(item_exists)
     )];
@@ -927,8 +927,8 @@ function get_name_of_id<T extends string, D>(
 ): T extends NameKey
     ? typeof name[T] | D
     : D | (typeof name)[NameKey];
-function get_name_of_id(id: string, default_value: any = id): any {
-    return (name as Record<string, any>)[id] ?? default_value;
+function get_name_of_id(id: string, default_value: unknown = id): unknown {
+    return (name as Record<string, string>)[id] ?? default_value;
 };
 
 /**
@@ -942,8 +942,8 @@ function get_id_of_name<T extends string, D>(
 ): T extends keyof typeof name_reverse
     ? typeof name_reverse[T] | D
     : D | (typeof name_reverse)[keyof typeof name_reverse];
-function get_id_of_name(name: string, default_value: any = name): any {
-    return (name_reverse as Record<string, any>)[name] ?? default_value;
+function get_id_of_name(name: string, default_value: unknown = name): unknown {
+    return (name_reverse as Record<string, string>)[name] ?? default_value;
 };
 
 /**
@@ -994,7 +994,7 @@ async function notEnoughItemEmbed(
             };
 
             const length = Object.keys(item_data).length;
-            if (!item_data.hasOwnProperty("item") || !item_data.hasOwnProperty("amount") || length !== 2) {
+            if (!Object.hasOwn(item_data, "item") || !Object.hasOwn(item_data, "amount") || length !== 2) {
                 logger.warn(`item_data應該只有item和amount屬性，但：\n${JSON.stringify(item_data, null, 4)}`)
             };
 
@@ -1021,13 +1021,7 @@ async function notEnoughItemEmbed(
 ╚═╝  ╚═╝╚═╝      ╚═════╝     ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
 */
 
-/**
- *
- * @param {any} obj
- * @param {any} [default_value]
- * @returns {any}
- */
-function BetterEval(obj: any, default_value: any = null): any {
+function BetterEval(obj: string, default_value: unknown = null): unknown | null {
     try {
         return Function(`"use strict";return ${obj}`)();
     } catch {
@@ -1037,11 +1031,8 @@ function BetterEval(obj: any, default_value: any = null): any {
 
 /**
  * Chunk an array
- * @param {Array<any>} array - the array to chunk
- * @param {number} chunkSize - the size of each chunk
- * @returns {Array<any>}
  */
-function chunkArray(array: Array<any>, chunkSize: number): Array<any> {
+function chunkArray<T>(array: T[], chunkSize: number): T[][] {
     const chunks = [];
     for (let i = 0; i < array.length; i += chunkSize) {
         chunks.push(array.slice(i, i + chunkSize));
@@ -1202,7 +1193,10 @@ async function get_cooldown_time(command_name: string, user_id: string): Promise
     const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href) as typeof import("../cogs/rpg/msg_handler.js");
     const count = await get_count(command_name, user_id) ?? 0;
 
-    return BetterEval(rpg_cooldown[command_name].replace("{c}", String(count)));
+    const result = BetterEval(rpg_cooldown[command_name].replace("{c}", String(count)));
+    return typeof result === "number"
+        ? result
+        : 0;
 };
 
 /**
@@ -1275,7 +1269,7 @@ async function get_failed_embed(failed_reason: string, rpg_data: import("./db/ta
         title = `${emoji_fisher} | a`;
         description = `欸不是鯊魚 快跑`;
     } else if (failed_reason === "acid_rain") {
-
+        //
     } else if (failed_reason === "escape") {
         const emoji_cow = await get_emoji("cow", client);
 
@@ -1451,7 +1445,7 @@ async function get_loophole_embed(text: string | Error, interaction: BaseInterac
  * @returns {Promise<EmbedBuilder | null>}
  */
 async function job_delay_embed(userId: string, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder | null> {
-    const { load_cooldown } = /** @type {import("./db/rpg.js")} */ (await importModules("./db/rpg.js"));
+    const { load_cooldown } = await importModules("./db/rpg.js") as typeof import("./db/rpg.js");
 
     const job_cooldown = await load_cooldown(userId, "job");
     const setJobTime = convertToSecondTimestamp(job_cooldown?.getTime() ?? 0);
@@ -1534,21 +1528,26 @@ interface LsOptions {
     interaction?: BaseInteraction | null;
 };
 
+interface LsReturnObject {
+    embeds?: EmbedBuilder[];          // 自定義 EmbedBuilder Array
+    components?: ActionRowBuilder<ButtonBuilder>[]; // 按鈕 Array
+};
+
 async function ls_function(
     options: LsOptions & { mode: 1 }
-): Promise<{ [k: string]: any }>;
+): Promise<LsReturnObject>;
 
 async function ls_function(
     options: LsOptions & { mode?: 0 }
-): Promise<Message | null>;
+): Promise<import("../cogs/rpg/msg_handler.js").MockMessage | Message | null>;
 
 async function ls_function(
-    options: LsOptions
-): Promise<{ [k: string]: any } | Message | null>;
+    options: LsOptions & { mode: 0 | 1 }
+): Promise<LsReturnObject | import("../cogs/rpg/msg_handler.js").MockMessage | Message | null>;
 
 async function ls_function(
-    options: LsOptions
-): Promise<{ [k: string]: any } | Message | null> {
+    options: LsOptions & { mode?: 0 | 1 }
+): Promise<LsReturnObject | import("../cogs/rpg/msg_handler.js").MockMessage | Message | null> {
     const { client, message, userid, mode = 0, PASS = false, interaction = null } = options;
 
     if (!message.author) return mode === 0 ? null : {};
@@ -1565,11 +1564,11 @@ async function ls_function(
 
         const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
 
-        let embed = new EmbedBuilder()
+        const embed = new EmbedBuilder()
             .setTitle(`${emoji_bag} | 查看包包`)
             .setColor(embed_default_color)
             .setDescription(`為保護包包內容隱私權，戳這顆按鈕來看你的包包，隱私權設定可以透過 \`${prefix}privacy\` 指令更改`)
-            .setEmbedFooter(interaction);
+            .setEmbedFooter(interaction || message.author.id);
 
         const confirm_button = new ButtonBuilder()
             .setCustomId(`ls|${message.author.id}`)

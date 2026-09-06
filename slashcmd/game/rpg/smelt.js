@@ -6,6 +6,7 @@ import {
     ButtonStyle,
     ChatInputCommandInteraction,
     MessageFlags,
+    Message,
 } from "discord.js";
 
 import {
@@ -65,7 +66,7 @@ const logger = get_logger();
  * @param {number} amount
  * @param {DogClient | null} [client]
  * @param {1 | 2} [mode] 1 = interaction.editReply, 2 = interaction.followUp
- * @returns {Promise<any>}
+ * @returns {Promise<Message | void>}
  */
 async function smelt_smelt(interaction, item_id, amount, client = global._client, mode = 1) {
     const userId = interaction.user.id;

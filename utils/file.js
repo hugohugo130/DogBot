@@ -2,16 +2,11 @@ import path from "path";
 import fs from "fs";
 import fsp from "fs/promises";
 import {
-    Logger,
-} from "winston";
-import {
     VoiceChannel,
 } from "discord.js";
 
 import {
     INDENT,
-
-    DATABASE_FILES,
     DEFAULT_VALUES,
     database_folder,
     probabilities,
@@ -37,6 +32,10 @@ import {
     CacheTypes,
     getCacheManager,
 } from "./cache.js";
+import {
+    inDATABASE_FILES,
+    inSingleDefaultValues,
+} from "./check_db_files.js";
 
 const existsSync = fs.existsSync;
 const readdirSync = fs.readdirSync;
@@ -83,19 +82,23 @@ async function exists(path) {
  * Read the contect of a file
  * @param {string} file_path
  * @param {{ encoding?: BufferEncoding | null, flag?: string, return?: object | string | undefined } | null} [options]
+ * @returns {string | NonSharedBuffer}
  */
 function readFileSync(file_path, options = { encoding: "utf-8" }) {
     const filename = path.basename(file_path);
 
     const { return: returnWhat = null, ...readFileOption } = options ?? {};
 
-    if (!existsSync(file_path) && DATABASE_FILES.includes(filename)) {
+    if (!existsSync(file_path) && inDATABASE_FILES(filename)) {
         if (returnWhat) return stringify(returnWhat);
 
         /** @type {object | null} */
-        const default_value = DEFAULT_VALUES.single[filename];
+        const default_value = inSingleDefaultValues(filename)
+            ? DEFAULT_VALUES.single[filename]
+            : null;
 
         const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
+            // @ts-expect-error - e
             return acc || category[filename];
         }, {});
 
@@ -133,11 +136,13 @@ async function readFile(file_path, options = { encoding: "utf-8" }) {
 
     const { return: returnWhat = null, ...readFileOption } = options ?? {};
 
-    if (!(await exists(file_path)) && DATABASE_FILES.includes(filename)) {
+    if (!(await exists(file_path)) && inDATABASE_FILES(filename)) {
         if (returnWhat) return stringify(returnWhat);
 
         /** @type {object | null} */
-        const default_value = DEFAULT_VALUES.single[filename];
+        const default_value = inSingleDefaultValues(filename)
+            ? DEFAULT_VALUES.single[filename]
+            : null;
 
         const other_category_default_value = find_default_value(filename);
 
@@ -157,26 +162,26 @@ async function readFile(file_path, options = { encoding: "utf-8" }) {
 
 /**
  * 轉換 JSON 字串到物件
- * @argument {string} jsonString - 要解析的 JSON 字串
- * @returns {any} 解析後的物件
+ * @param {string} jsonString - 要解析的 JSON 字串
+ * @returns {Record<string, unknown>} 解析後的物件
  */
 const safeJSONParse = (jsonString) => JSON.parse(jsonString);
 
 /**
  * Check whether an object needs to be stringified
- * @param {any} obj
- * @returns {boolean}
+ * @param {object | string} obj
+ * @returns {obj is string}
  */
-const needsStringify = (obj) => !(typeof obj === "string" || (typeof obj !== "object" || obj === null));
+const noNeedsStringify = (obj) => (typeof obj === "string" || (typeof obj !== "object" || obj === null));
 
 /**
  * Stringify an object
- * @param {any} data
- * @param {((this: any, key: string, value: any) => any)} [replacer]
+ * @param {object | string} data
+ * @param {((this: unknown, key: string, value: unknown) => unknown)} [replacer]
  * @returns {string}
  */
 function stringify(data, replacer = undefined) {
-    if (!needsStringify(data)) return data;
+    if (noNeedsStringify(data)) return data;
 
     return JSON.stringify(data, replacer, INDENT);
 };
@@ -185,6 +190,7 @@ function stringify(data, replacer = undefined) {
  * Write a file synchronously
  * @param {string} path
  * @param {string} data
+ * @param {boolean} [p]
  * @returns {void}
  */
 function writeSync(path, data, p = false) {
@@ -203,7 +209,7 @@ function writeSync(path, data, p = false) {
 /**
  * Read a json file synchronously
  * @param {string} path
- * @returns {any}
+ * @returns {object}
  */
 function readJsonSync(path) {
     return safeJSONParse(readFileSync(path));
@@ -213,7 +219,7 @@ function readJsonSync(path) {
  * Write a json file synchronously
  * @param {string} path
  * @param {string | object} data
- * @param {((this: any, key: string, value: any) => any)} [replacer]
+ * @param {((this: unknown, key: string, value: unknown) => unknown)} [replacer]
  * @returns {void}
  */
 function writeJsonSync(path, data, replacer) {
@@ -241,7 +247,7 @@ async function writeFile(path, data, p = false) {
 
 /**
  * Read a json file asynchronously
- * @param {string} path
+ * @param {string} path // eslint-disable-next-line jsdoc/reject-any-type
  * @returns {Promise<any>}
  */
 async function readJson(path) {
@@ -252,7 +258,7 @@ async function readJson(path) {
  * Write a json file asynchronously
  * @param {string} path
  * @param {string | object} data
- * @param {((this: any, key: string, value: any) => any)} [replacer]
+ * @param {((this: unknown, key: string, value: unknown) => unknown)} [replacer]
  * @returns {Promise<void>}
  */
 async function writeJson(path, data, replacer) {
@@ -316,23 +322,16 @@ function join_db_folder(filename) {
 };
 
 /**
- * 
+ * @template T
  * @param {string} filename
- * @param {Logger | Console} log
- * @param {number} maxRetries
- * @returns {Promise<[same: boolean, localContent: string | null, remoteContent: string | null]>}
- */
-/**
- *
- * @param {string} filename
- * @param {any} default_return
- * @returns {any}
+ * @param {T} [default_return]
+ * @returns {Record<string, unknown> | unknown[] | T | undefined}
  */
 function find_default_value(filename, default_return = undefined) {
     const basename = path.basename(filename);
 
     for (const categoryData of
-        /** @type {{ [k: string]: any }[]} */
+        /** @type {{ [k: string]: Record<string, unknown> | unknown[] }[]} */
         (Object.values(DEFAULT_VALUES))
     ) {
         if (Object.hasOwn(categoryData, basename)) return categoryData[basename];
@@ -342,9 +341,10 @@ function find_default_value(filename, default_return = undefined) {
 };
 
 /**
+ * @template T
  * @param {import("./rpg.ts").ItemKey} item
- * @param {any} default_return
- * @returns {[number, number, number] | any}
+ * @param {T} [default_return]
+ * @returns {[number, number, number] | T | undefined}
  */
 function get_probability_of_id(item, default_return = undefined) {
     for (const categoryData of Object.values(probabilities)) {
@@ -355,22 +355,20 @@ function get_probability_of_id(item, default_return = undefined) {
 };
 
 /**
- * @param {any} data
- * @param {any} follow
- * @returns {any}
+ * @template T
+ * @template U
+ * @param {T} data
+ * @param {U} follow
+ * @returns {{ [K in keyof U]: K extends keyof T ? T[K] | U[K] : U[K] }}
  */
 function order_data(data, follow) {
-    if (data instanceof Array) {
-        logger.warn(`list cannot be ordered, called from ${getCallerModuleName(null)}`);
-        return data;
-    };
-
-    /** @type {{ [k: string]: any }} */
+    /** @type {Record<string, unknown>} */
     const orderedData = {};
     for (const key of Object.keys(follow)) {
         orderedData[key] = data[key] ?? follow[key];
     };
 
+    // @ts-expect-error - e
     return orderedData;
 };
 
@@ -451,13 +449,13 @@ async function loadData(guildID = null, mode = 0) {
  * @throws {Error}
  */
 async function saveData(guildID, guildData) {
-    const database_emptyeg = find_default_value("database.json", {});
+    const database_emptyeg = /** @type {import("./config").GuildDatabase} */ (find_default_value("database.json", {}));
 
-    /** @type {{ [k: string]: import("./config").GuildDatabase}} */
+    /** @type {{ [k: string]: import("./config").GuildDatabase }} */
     let data = {};
 
     if (await exists(database_file)) {
-        data = await readJson(database_file);
+        data = /** @type {{ [k: string]: import("./config").GuildDatabase }} */(await readJson(database_file));
     };
 
     if (!(guildID in data)) {

@@ -23,22 +23,17 @@ const client_ready = (client = global._client) => client?.isReady?.();
  * @param {number} [wait] - check per __ ms
  * @returns {Promise<import("./customs/client.js").DogClient | null>}
  *
- * @overload
  * @param {boolean} [waitReady] - whether to wait the client to be ready.
- * @param {number} [timeout] - unit: ms
+ * @param {number | null | undefined} [timeout] - unit: ms
  * @param {number} [wait] - check per __ ms
  * @returns {Promise<import("./customs/client.js").DogClient | null>}
- *
- * @param {boolean} [waitReady] - whether to wait the client to be ready.
- * @param {number} [timeout] - unit: ms
- * @param {number} [wait] - check per __ ms
  */
 export async function wait_for_client(waitReady = true, timeout = 10000, wait = 500) {
     const client = global._client;
     const start = Date.now();
 
     while (true) {
-        if (timeout && (start + timeout) >= Date.now()) break;
+        if (timeout && (start + timeout) <= Date.now()) break;
 
         if (waitReady) {
             if (client_ready(client)) break;

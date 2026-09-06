@@ -225,6 +225,7 @@ export const cookSlash = {
             amount: item.amount * amount,
         }));
 
+        /** @type {{ item: import("../../../utils/rpg.ts").ItemKey, amount: number}[]} */
         const item_needed = [
             ...inputed_foods,
             {

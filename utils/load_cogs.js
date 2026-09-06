@@ -26,14 +26,14 @@ const logger = get_logger();
 /**
  *
  * @param {DogClient} client
- * @param {{ name: keyof typeof Events, execute: Function, once?: boolean }} cog
+ * @param {{ name: keyof typeof Events, execute: (client: DogClient, ...args: unknown[]) => PromiseLike<unknown>, once?: boolean }} cog
  * @param {string} itemPath
  * @returns {Promise<number>}
  */
 async function load_cog(client, cog, itemPath) {
     /**
      *
-     * @param  {...any} args
+     * @param  {...unknown} args
      * @returns {Promise<void>}
      */
     async function run_execute(...args) {
@@ -47,17 +47,19 @@ async function load_cog(client, cog, itemPath) {
         };
     };
 
-    if (cog.name && cog.execute) {
+    if (!Object.hasOwn(cog, "execute")) {
+        logger.warn(`找不到 cog ${itemPath} 的 execute 屬性`);
+        return 0;
+    };
+
+    if (cog.name) {
         const event_name = cog.name;
         const once = cog.once ?? false;
 
         if (once) client.once(event_name, run_execute);
         else client.on(event_name, run_execute);
-    } else if (cog.execute) {
-        await run_execute(client);
     } else {
-        logger.warn(`找不到 cog ${itemPath} 的 name 和 execute 屬性`);
-        return 0;
+        await run_execute(client);
     };
 
     return 1;

@@ -47,18 +47,16 @@ function formatMinutesSeconds(seconds, convertToSec = true) {
     return `${formattedHours}${formattedMins}:${formattedSecs}`;
 };
 
-function DateNow() {
-    return Date.now();
-};
-
+/**
+ * @returns {number}
+ */
 function DateNowSecond() {
-    return convertToSecondTimestamp(DateNow());
+    return convertToSecondTimestamp(Date.now());
 };
 
 export {
     convertToSecondTimestamp,
     convertToSecond,
     formatMinutesSeconds,
-    DateNow,
     DateNowSecond,
 };

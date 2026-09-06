@@ -9,10 +9,10 @@ import {
 /**
  * all keys are in lowercase
  * {0} {1} {2} ... are placeholders
- * 
+ *
  * 所有鍵都是小寫的
  * {0} {1} {2} ... 是文字需要的變量
- * @type {{ [k: Locale[any]]: { [k: string]: { [k: string]: string } } }}
+ * @type {Partial<Record<Locale, Record<string, Record<string, string>>>>}
  */
 const language = {
     [Locale.EnglishUS]: {
@@ -377,6 +377,7 @@ Since <t:{1}:R>`,
 };
 
 const logger = get_logger();
+const default_language_data = /** @type {Record<string, Record<string, string>>} */ (language[Locale.ChineseTW]);
 
 /** @type {Record<import("./types").PermissionTexts, string>} */
 export const PermissionTranslationKeyMapping = {
@@ -439,7 +440,7 @@ export const PermissionTranslationKeyMapping = {
  * 收集所有語言中所有分類及其鍵，然後逐個語言檢查每個分類中是否有相應的鍵
  */
 export function check_language_keys() {
-    /** @type {string[]} */
+    /** @type {Locale[]} */
     const locales = Object.values(Locale);
 
     // 收集所有語言中所有分類及其鍵的集合
@@ -474,9 +475,8 @@ export function check_language_keys() {
 
     // 第二步：逐個語言檢查每個分類中是否有相應的鍵
     for (const locale of Object.values(Locale)) {
-        if (!(locale in language)) continue;
-
         const localeData = language[locale];
+        if (!localeData) continue;
 
         // 檢查每個分類
         for (const category of allCategories) {
@@ -515,7 +515,7 @@ export function check_language_keys() {
 
 /**
  * 遞歸收集對象中的所有鍵（使用點號表示法）
- * @param {Object} obj - 要收集鍵的對象
+ * @param {object} obj - 要收集鍵的對象
  * @param {string} prefix - 當前鍵的前綴
  * @param {Set<string>} keysSet - 存儲鍵的集合
  * @returns {void}
@@ -537,31 +537,26 @@ function collectKeys(obj, prefix, keysSet) {
 };
 
 /**
- *
- * @param {string} lang
- * @param {string} [default_lang]
- * @returns {{ [k: string]: any }}
+ * @param {Locale} lang
+ * @returns {Record<string, Record<string, string>>}
  */
-function get_lang(lang, default_lang = Locale.ChineseTW) {
-    return (lang in language)
-        ? language[lang]
-        : language[default_lang];
+function get_lang(lang) {
+    const data = language[lang];
+    return data || default_language_data;
 };
 
 /**
- *
- * @param {string} lang
+ * @param {Locale} lang
  * @param {string} category
- * @param {string} [default_lang]
- * @returns {{ [k: string]: any }}
+ * @returns {Record<string, string>}
  */
-function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
-    const lang_data = get_lang(lang, default_lang);
+function get_lang_category(lang, category) {
+    const lang_data = get_lang(lang);
     const lang_category = lang_data[category];
 
     return lang_category
         ? lang_category
-        : language[default_lang][category];
+        : default_language_data[category];
 };
 
 /**
@@ -569,7 +564,7 @@ function get_lang_category(lang, category, default_lang = Locale.ChineseTW) {
  * @param {Locale | null | undefined} lang
  * @param {string} category
  * @param {string} key
- * @param {...any} replace - 文字中需要的變量
+ * @param {...(string | number | null)} replace - 文字中需要的變量
  * @returns {string}
  */
 export function get_lang_data(lang, category, key, ...replace) {
@@ -582,14 +577,14 @@ export function get_lang_data(lang, category, key, ...replace) {
         ? lang
         : default_lang;
 
-    const lang_category = get_lang_category(lang, category, default_lang);
+    const lang_category = get_lang_category(lang, category);
 
     /** @type {string} */
     let lang_value = lang_category[key] ?? language[default_lang]?.[category]?.[key] ?? `${lang}.${category}.${key}`;
 
     if (replace?.length > 0) {
         for (let i = 0; i < replace.length; i++) {
-            lang_value = lang_value.replaceAll(`{${i}}`, replace[i]);
+            lang_value = lang_value.replaceAll(`{${i}}`, String(replace[i]));
         };
     };
 

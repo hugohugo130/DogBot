@@ -17,17 +17,20 @@ import {
 const DEBUG = false;
 
 const logger = get_logger();
-
+/* eslint-disable */
 /**
  * @param { { [s: string]: any } | ArrayLike<any> } module
  * @returns {import("./types").Slash | null}
  */
 function findSlashFromModule(module) {
+    /* eslint-enable */
     for (const exp of Object.values(module)) {
         if (
             exp &&
             typeof exp === "object" &&
             "builder" in exp &&
+            "allowedContext" in exp &&
+            "stage" in exp &&
             ("execute" in exp || "subCommands" in exp)
         ) {
             return exp;
@@ -37,11 +40,13 @@ function findSlashFromModule(module) {
     return null;
 };
 
+/* eslint-disable */
 /**
  * @param { { [s: string]: any } | ArrayLike<any> } module
  * @returns {import("./types").ContextMenu | null}
  */
 function findContextMenuFromModule(module) {
+    /* eslint-enable */
     for (const exp of Object.values(module)) {
         if (
             exp &&
@@ -56,14 +61,31 @@ function findContextMenuFromModule(module) {
     return null;
 };
 
+/** @typedef {import("discord.js").RESTPostAPIChatInputApplicationCommandsJSONBody | import("discord.js").APIApplicationCommandSubcommandOption} SlashCmdBody */
+
 /**
  * Process a command directory
+ * @overload
+ * @param {true} bot
+ * @param {string} dirPath
+ * @returns {Promise<Collection<string, import("./types").Slash>>}
+ *
+ * @overload
+ * @param {false} bot
+ * @param {string} dirPath
+ * @returns {Promise<SlashCmdBody[]>}
+ *
+ * @overload
  * @param {boolean} bot
  * @param {string} dirPath
- * @returns {Promise<Collection<string, any> | any[]>}
+ * @returns {Promise<Collection<string, import("./types").Slash | SlashCmdBody> | SlashCmdBody[]>}
+ *
+ * @param {boolean} bot
+ * @param {string} dirPath
+ * @returns {Promise<Collection<string, import("./types").Slash | SlashCmdBody> | SlashCmdBody[]>}
  */
 async function processDirectory(bot, dirPath) {
-    /** @type {Collection<string, any> | any[]} */
+    /** @type {Collection<string, import("./types").Slash | SlashCmdBody> | SlashCmdBody[]} */
     const commands = bot ? new Collection() : [];
 
     const items = (await readdir(dirPath, {
@@ -78,11 +100,11 @@ async function processDirectory(bot, dirPath) {
             const subCommands = await processDirectory(bot, itemPath);
 
             if (commands instanceof Collection) {
-                for (const [name, command] of subCommands) {
-                    commands.set(name, command);
+                for (const [name, command] of subCommands.entries().toArray()) {
+                    if (typeof name === "string") commands.set(name, command);
                 };
             } else {
-                commands.push(...subCommands);
+                commands.push(.../** @type {SlashCmdBody[]} */ (subCommands));
             };
         } else if (item.endsWith(".js")) {
             const module = await import(pathToFileURL(itemPath).href);
@@ -109,11 +131,11 @@ async function processDirectory(bot, dirPath) {
 /**
  * @overload
  * @param {true} [bot] true返回collection, false返回array
- * @returns {Promise<Collection<string, any>>}
+ * @returns {Promise<Collection<string, import("./types").Slash>>}
  *
  * @overload
  * @param {boolean} [bot] true返回collection, false返回array
- * @returns {Promise<Collection<string, any> | any[]>}
+ * @returns {Promise<Collection<string, import("./types").Slash> | SlashCmdBody[]>}
  *
  * @param {boolean} [bot] true返回collection, false返回array
  */
@@ -128,7 +150,7 @@ export async function loadslashcmd(bot = true) {
 
 /**
  *
- * @returns {Promise<any[]>}
+ * @returns {Promise<SlashCmdBody[]>}
  */
 async function loadslashcmd_array() {
     const commandsPath = path.join(process.cwd(), "slashcmd");
@@ -140,14 +162,14 @@ async function loadslashcmd_array() {
 /**
  * @overload
  * @param {true} returnArray
- * @returns {Promise<any[]>}
+ * @returns {Promise<import("discord.js").RESTPostAPIContextMenuApplicationCommandsJSONBody[]>}
  *
  * @overload
  * @param {false} returnArray
  * @returns {Promise<Collection<string, import("./types").ContextMenu>>}
  *
  * @param {boolean} [returnArray]
- * @returns {Promise<any[] | Collection<string, import("./types").ContextMenu>>}
+ * @returns {Promise<import("discord.js").RESTPostAPIContextMenuApplicationCommandsJSONBody[] | Collection<string, import("./types").ContextMenu>>}
  */
 export async function get_context_menus(returnArray = false) {
     /** @type {import("discord.js").RESTPostAPIContextMenuApplicationCommandsJSONBody[] | Collection<string, import("./types").ContextMenu>} */

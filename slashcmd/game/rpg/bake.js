@@ -82,7 +82,7 @@ export function divide(amount, by) {
  * @param {number} amount
  * @param {DogClient} client
  * @param {number} mode 1 = interaction.editReply, 2 = interaction.followUp
- * @returns {Promise<any>}
+ * @returns {Promise<number | void>}
  */
 async function bake_bake(interaction, userId, item_id, amount, client, mode = 1) {
     if (![1, 2].includes(mode)) throw new Error("mode must be 1 or 2");

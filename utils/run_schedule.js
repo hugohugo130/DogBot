@@ -26,9 +26,9 @@ let run_lock = {};
 /**
  * Run a function intervally
  * @param {number} per_sec
- * @param {Function} execute
+ * @param {(client: DogClient, file: string, per: string) => Promise<void>} execute
  * @param {string} file
- * @param  {...any} args
+ * @param  {...unknown} args
  */
 async function interval(per_sec, execute, file, ...args) {
     while (true) {
@@ -58,10 +58,10 @@ async function interval(per_sec, execute, file, ...args) {
 /**
  * Set up a schedule
  * @param {number} per_sec
- * @param {Function} execute
+ * @param {(client: DogClient, file: string, per: string) => Promise<void>} execute
  * @param {string} file
  * @param {DogClient | null} [client]
- * @param  {...any} args
+ * @param  {...unknown} args
  */
 async function setup_schedule(per_sec, execute, file, client = null, ...args) {
     if (!client) client = await wait_for_client();

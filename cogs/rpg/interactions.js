@@ -15,7 +15,6 @@ import {
     StringSelectMenuInteraction,
     SectionBuilder,
     TextDisplayBuilder,
-    DMChannel,
     Message,
     StageChannel,
     TextChannel,
@@ -907,7 +906,7 @@ export async function execute(client, interaction) {
             case "choose_command": {
                 const [command] = otherCustomIDs;
 
-                if (!guild || channel instanceof DMChannel) return;
+                if (!guild || !channel?.isSendable()) return;
 
                 const [_, prefix] = await Promise.all([
                     interaction.deferUpdate(),
@@ -924,14 +923,14 @@ export async function execute(client, interaction) {
                 break;
             }
             case "ls": {
-                if (!guild) return;
+                if (!guild || !channel?.isSendable()) return;
 
                 const [_, prefix] = await Promise.all([
                     interaction.deferReply({ flags: MessageFlags.Ephemeral }),
                     firstPrefix(guild.id),
                 ]);
 
-                const message = new MockMessage(`${prefix}ls`, channel, interaction.user, interaction.guild);
+                const message = new MockMessage(`${prefix}ls`, channel, user, guild);
                 const res = await ls_function({
                     client: client,
                     message,
@@ -1573,7 +1572,7 @@ export async function execute(client, interaction) {
                     queue.setConnection(vconnection);
 
                     if (!queue.voiceChannel && vconnection.joinConfig.channelId) {
-                        const vchannel = await get_channel(vconnection.joinConfig.channelId, interaction.guild);
+                        const vchannel = await get_channel(vconnection.joinConfig.channelId, guild);
                         if (vchannel?.isVoiceBased()) {
                             queue.setVoiceChannel(vchannel);
                         };

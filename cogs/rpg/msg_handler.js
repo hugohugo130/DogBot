@@ -106,7 +106,7 @@ class MockMessage {
     /**
      *
      * @param {string | null} [content]
-     * @param {any | null} [channel]
+     * @param {import("discord.js").SendableChannels | null} [channel]
      * @param {User | null} [author]
      * @param {Guild | null} [guild]
      * @param {User | null} [mention_user]
@@ -115,7 +115,7 @@ class MockMessage {
         /** @type {string | null | undefined} */
         this.content = content;
 
-        /** @type {any | null} */
+        /** @type {import("discord.js").SendableChannels | null} */
         this.channel = channel;
 
         /** @type {User | null} */
@@ -143,11 +143,11 @@ class MockMessage {
 
 /**
  * Check whether a item exists by its ID or name
- * @param {any} item
+ * @param {string | null | undefined} item
  * @returns {item is import("../../utils/rpg.ts").ItemKey}
  */
 export function item_exists(item) {
-    return !!get_name_of_id(get_id_of_name(item), null);
+    return !!(item && get_name_of_id(get_id_of_name(item), null));
 };
 
 
@@ -177,7 +177,7 @@ async function get_amount(item, user, amount_str) {
  * Redirect to another command
  *
  * @overload
- * @param {Object} options
+ * @param {object} options
  * @param {DogClient} options.client
  * @param {Message | MockMessage} options.message
  * @param {string} options.command
@@ -185,22 +185,22 @@ async function get_amount(item, user, amount_str) {
  * @returns {Promise<void | Message | null>}
  *
  * @overload
- * @param {Object} options
+ * @param {object} options
  * @param {DogClient} options.client
  * @param {Message | MockMessage} options.message
  * @param {string} options.command
  * @param {1} options.mode
- * @returns {Promise<void | { [k: string]: any } | null>}
+ * @returns {Promise<void | import("../../utils/types").RPGHandlerReturn | null>}
  *
  * @overload
- * @param {Object} options
+ * @param {object} options
  * @param {DogClient} options.client
  * @param {Message | MockMessage} options.message
  * @param {string} options.command
  * @param {0 | 1} [options.mode]
- * @returns {Promise<void | { [k: string]: any } | Message | null>}
+ * @returns {Promise<void | import("../../utils/types").RPGHandlerReturn | Message | null>}
  *
- * @param {Object} options
+ * @param {object} options
  * @param {DogClient} options.client
  * @param {Message | MockMessage} options.message
  * @param {string} options.command
@@ -216,8 +216,9 @@ async function redirect({ client, message, command, mode = 0 }) {
 
     if (![0, 1].includes(mode)) throw new TypeError("Invalid mode");
 
-    const guild = message.guild;
+    const { channel, guild } = message;
     if (!guild) throw new Error("Guild is invalid");
+    if (channel && !channel.isSendable()) throw new Error("Channel is not sendable");
 
     const pf = (await InPrefix(guild.id, command))?.[0];
 
@@ -235,9 +236,9 @@ async function redirect({ client, message, command, mode = 0 }) {
     const prefix = await firstPrefix(guild.id);
 
     if (!command.includes(prefix)) command = prefix + command;
-    const msg = new MockMessage(command, message.channel, message.author, message.guild, (await mentions_users(message)).first());
+    const msg = new MockMessage(command, channel, message.author, message.guild, (await mentions_users(message)).first());
     const message_args = await rpg_handler({ client, message: msg, d: true, mode: 1 });
-    if (!message_args || message_args instanceof Message) return message_args;
+    if (!message_args || message_args instanceof Message || message_args instanceof MockMessage) return message_args;
 
     if (mode === 1) return message_args;
     return await message.reply(message_args);
@@ -704,7 +705,7 @@ const rpg_commands = {
                     return await message.reply({ embeds: [embed] });
                 };
 
-                if (amount > shop_data.items[item_id].amount) {
+                if (amount > item_exist.amount) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 商店沒有足夠的物品`)
@@ -716,9 +717,11 @@ const rpg_commands = {
 
                 await inventory.add_item(item_id, amount);
 
-                shop_data.items[item_id].amount -= amount;
-                if (shop_data.items[item_id].amount <= 0) {
+                item_exist.amount -= amount;
+                if (item_exist.amount <= 0) {
                     delete shop_data.items[item_id];
+                } else {
+                    shop_data.items[item_id] = item_exist;
                 };
 
                 await Promise.all([
@@ -932,16 +935,20 @@ const rpg_commands = {
                 if (amount) {
                     await inventory.subtract_item(item, item_amount_needed);
 
-                    shop_data.items[item].amount = amount;
+                    item_exist.amount = amount;
 
                     inventory_modified = true;
                     shop_data_modified = true;
                 };
 
                 if (price) {
-                    shop_data.items[item].price = price;
+                    item_exist.price = price;
 
                     shop_data_modified = true;
+                };
+
+                if (shop_data_modified) {
+                    shop_data.items[item] = item_exist;
                 };
 
                 await Promise.all([
@@ -1264,7 +1271,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         args = args.filter(arg => !arg.includes(target_user.id));
 
         const amount = BetterEval(args[0], 1);
-        if (isNaN(amount) || amount <= 0) {
+        if (typeof amount !== "number" || isNaN(amount) || amount <= 0) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 錯誤的數量`)
@@ -1731,7 +1738,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             return await message.reply({ embeds: [embed] });
         };
 
-        let sell_amount = BetterEval((await get_amount(item_id, user, args[1]) || 1), 1);
+        let sell_amount = await get_amount(item_id, user, args[1]) || 1;
         if (item_amount < sell_amount) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -2559,13 +2566,15 @@ function get_random_result(category) {
     });
 
     if (!datas) return empty_template;
-    const items = /** @type {(keyof typeof datas)[]} */ (/** @type {unknown} */ (Object.keys(datas)));
+    const items = /** @type {(keyof import("../../utils/types").ValueOf<typeof probabilities>)[]} */ (/** @type {unknown} */ (Object.keys(datas)));
     if (!items.length) {
         throw new Error(`no probabilities data of category ${category} found`);
     };
 
     let totalWeight = 0;
     const cumulativeWeights = [];
+    /** @type {import("../../utils/config.ts").ItemName[]} */
+    const validItems = [];
     for (const item of items) {
         const data = datas[item];
         if (!data) continue;
@@ -2573,6 +2582,7 @@ function get_random_result(category) {
 
         totalWeight += weight;
         cumulativeWeights.push(totalWeight);
+        validItems.push(item);
     };
 
     // Choose item randomly
@@ -2580,13 +2590,13 @@ function get_random_result(category) {
     let selectedItem = null;
     for (let i = 0; i < cumulativeWeights.length; i++) {
         if (rand < cumulativeWeights[i]) {
-            selectedItem = items[i];
+            selectedItem = validItems[i];
             break;
         };
     };
 
     if (!selectedItem) {
-        selectedItem = items[Math.floor(Math.random() * items.length)];
+        selectedItem = validItems[Math.floor(Math.random() * validItems.length)];
     };
 
     const selectedItemData = datas[selectedItem];
@@ -2610,6 +2620,7 @@ export { event_name as name };
  *
  * @param {DogClient} client
  * @param {Message} message
+ * @returns {Promise<Message | void>}
  */
 export async function execute(client, message) {
     if (message.author.bot) return;
@@ -2631,7 +2642,7 @@ export async function execute(client, message) {
         if (!data["rpg"] || !inpref?.length) return;
     };
 
-    if (client.lock.rpg_handler.hasOwnProperty(userId)) {
+    if (Object.hasOwn(client.lock.rpg_handler, userId)) {
         const emoji_cross = await get_emoji("crosS", client);
 
         const running_cmd = client.lock.rpg_handler[userId];
