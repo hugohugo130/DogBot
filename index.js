@@ -25,9 +25,10 @@ import get_areadline from "./utils/readline.js";
 loadEnvFile(); // load .env file
 
 const args = process.argv.slice(2);
-const debug = args.includes("--debug");
-const isBeta = args.includes("--beta");
-const noCache = args.includes("--no-cache");
+const all_args = args.includes("--all") || args.includes("-a");
+const debug = args.includes("--debug") || all_args;
+const isBeta = args.includes("--beta") || all_args;
+const noCache = args.includes("--no-cache") || all_args;
 
 global.debug = debug;
 global.isBeta = isBeta;
