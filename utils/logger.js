@@ -8,6 +8,7 @@ import {
     EmbedBuilder as djsEmbedBuilder,
     MessageFlags,
     escapeMarkdown,
+    Collection,
 } from "discord.js";
 
 import {
@@ -25,28 +26,27 @@ import {
     get_channel,
 } from "./discord.js";
 
-// 全局管理器 (以 var 宣告 + 延遲初始化，避免循環依賴時本模組 body 尚未執行就被存取的 TDZ)
-/** @type {Map<string, winston.Logger>} */
-var loggerManager;
-/** @type {Map<string, winston.Logger>} */
-var loggerManager_log;
-/** @type {Map<string, winston.Logger>} */
-var loggerManager_nodc;
+/** @import { loggerManagerId } from "./types" */
 
-function getLoggerManager() {
-    if (loggerManager === undefined) loggerManager = new Map();
+/** @type {Collection<loggerManagerId, Map<string, winston.Logger>>} */
+const loggerManagers = new Collection();
+
+/**
+ * @param {loggerManagerId} managerId 
+ * @returns {Map<string, winston.Logger>}
+ */
+function getLoggerManager(managerId) {
+    let loggerManager = loggerManagers.get(managerId);
+
+    if (!loggerManager) {
+        loggerManager = new Map();
+        loggerManagers.set(managerId, loggerManager);
+    };
+
     return loggerManager;
 };
-function getLoggerManagerLog() {
-    if (loggerManager_log === undefined) loggerManager_log = new Map();
-    return loggerManager_log;
-};
-function getLoggerManagerNodc() {
-    if (loggerManager_nodc === undefined) loggerManager_nodc = new Map();
-    return loggerManager_nodc;
-};
 
-var DEBUG = false;
+const DEBUG = false;
 
 // 顏色映射
 /** @type {{ [k: string]: number }} */
@@ -60,20 +60,12 @@ const LEVEL_COLORS = {
 
 // 頻道映射 (延遲建立，避免 config.ts 尚未完成時讀取其 export 的 TDZ)
 /** @type {{ [k: string]: string }} */
-var CHANNEL_MAPPING;
-
-function getChannelMapping() {
-    if (CHANNEL_MAPPING === undefined) {
-        CHANNEL_MAPPING = {
-            error: error_channel_id,
-            warn: warn_channel_id,
-            info: log_channel_id,
-            debug: log_channel_id,
-            verbose: log_channel_id
-        };
-    };
-
-    return CHANNEL_MAPPING;
+const CHANNEL_MAPPING = {
+    error: error_channel_id,
+    warn: warn_channel_id,
+    info: log_channel_id,
+    debug: log_channel_id,
+    verbose: log_channel_id
 };
 
 /**
@@ -171,42 +163,34 @@ class BackendTransport extends Transport {
 };
 
 // 自定義控制台格式 (延遲建立，避免循環依賴時 TDZ)
-/** @type { winston.Logform.Format | undefined } */
-var consoleFormat;
+/** @type {winston.Logform.Format} */
+const consoleFormat = winston.format.combine(
+    winston.format.timestamp(),
+    winston.format((info) => {
+        if (
+            (
+                info.message &&
+                typeof info.message === "object" &&
+                "data" in info.message
+            ) || (
+                console_ignore_keywords.filter((keyword) => {
+                    try {
+                        let msg = String(info.stack || info.message);
 
-function getConsoleFormat() {
-    if (consoleFormat === undefined) {
-        consoleFormat = winston.format.combine(
-            winston.format.timestamp(),
-            winston.format((info) => {
-                if (
-                    (
-                        info.message &&
-                        typeof info.message === "object" &&
-                        "data" in info.message
-                    ) || (
-                        console_ignore_keywords.filter((keyword) => {
-                            try {
-                                let msg = String(info.stack || info.message);
+                        return msg.includes(keyword);
+                    } catch { return false; }
+                }).length
+            )
+        ) {
+            return false; // 返回 false 表示過濾掉此日誌
+        };
 
-                                return msg.includes(keyword);
-                            } catch { return false; }
-                        }).length
-                    )
-                ) {
-                    return false; // 返回 false 表示過濾掉此日誌
-                };
-
-                return info;
-            })(),
-            winston.format.printf(({ timestamp: _, level, message, module }) => {
-                return `${time2()} [${path.basename(String(module), ".js")}] - ${level.toUpperCase()} - ${message}`;
-            }),
-        );
-    };
-
-    return consoleFormat;
-};
+        return info;
+    })(),
+    winston.format.printf(({ timestamp: _, level, message, module }) => {
+        return `${time2()} [${path.basename(String(module), ".js")}] - ${level.toUpperCase()} - ${message}`;
+    }),
+);
 
 /**
  * @param {import("discord.js").SendableChannels} channel
@@ -383,15 +367,15 @@ export function get_logger(options = {}) {
 
     // 返回已存在的 logger
     if (backend) {
-        const cached_logger = getLoggerManagerLog().get(name);
+        const cached_logger = getLoggerManager("log").get(name);
 
         if (cached_logger) return cached_logger;
     } else if (nodc) {
-        const cached_logger = getLoggerManagerNodc().get(name);
+        const cached_logger = getLoggerManager("nodc").get(name);
 
         if (cached_logger) return cached_logger;
     } else {
-        const cached_logger = getLoggerManager().get(name);
+        const cached_logger = getLoggerManager("default").get(name);
 
         if (cached_logger) return cached_logger;
     };
@@ -402,8 +386,8 @@ export function get_logger(options = {}) {
     /** @type {winston.transport[]} */
     const transports = [
         new winston.transports.Console({
-            format: getConsoleFormat(),
-            level: "debug" // 控制台显示所有級別
+            format: consoleFormat,
+            level: "debug",
         }),
     ];
 
@@ -433,9 +417,9 @@ export function get_logger(options = {}) {
     });
 
     // 儲存 logger
-    if (backend) getLoggerManagerLog().set(name, logger);
-    else if (nodc) getLoggerManagerNodc().set(name, logger);
-    else getLoggerManager().set(name, logger);
+    if (backend) getLoggerManager("log").set(name, logger);
+    else if (nodc) getLoggerManager("nodc").set(name, logger);
+    else getLoggerManager("default").set(name, logger);
 
     return logger;
 };
@@ -463,7 +447,7 @@ export async function process_send_queue() {
                 : "unknown";
             const message = info.stack || info.message;
             const color = LEVEL_COLORS[info.level] || 0x000000;
-            const channel_id = (typeof info.channel_id === "string" && info.channel_id) || getChannelMapping()[info.level];
+            const channel_id = (typeof info.channel_id === "string" && info.channel_id) || CHANNEL_MAPPING[info.level];
             const timestamp = typeof info.timestamp === "string" ? Date.parse(info.timestamp) : 0;
 
             const channel = await get_channel(channel_id);
@@ -511,16 +495,23 @@ export async function process_send_queue() {
 /**
  * 關閉所有 logger
  * @param {boolean} [quiet]
- * @param {number} [wait]
  * @returns {Promise<void>}
  */
-export async function shutdown(quiet = false, wait = 1000) {
-    for (const [name, logger] of getLoggerManager()) {
-        logger.end(() => {
-            if (!quiet) console.log(`Logger ${name} closed`);
-        });
+export async function shutdown(quiet = false) {
+    const loggerMaps = loggerManagers.entries().toArray();
+    const loggers = loggerMaps.map(([_, loggerManager]) => loggerManager.entries().toArray()).flat();
+    const promises = [];
+
+    for (const [name, logger] of loggers) {
+        promises.push(
+            new Promise((resolve) => {
+                logger.on('finish', resolve);
+                logger.end(() => {
+                    if (!quiet) console.log(`Logger ${name} closed`);
+                });
+            }),
+        );
     };
 
-    // 等待所有傳輸完成
-    await new Promise(resolve => setTimeout(resolve, wait));
+    await Promise.all(promises);
 };
