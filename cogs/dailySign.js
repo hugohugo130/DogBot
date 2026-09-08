@@ -26,6 +26,16 @@ import DogClient from "../utils/customs/client.js";
 import EmbedBuilder from "../utils/customs/embedBuilder.js";
 
 /**
+ * @param {number} days
+ * @returns {number}
+ */
+function getReward(days) {
+    let base = 160 + 2 * (days - 1);
+    let extra = 2 * randint(0, days);
+    return base + extra;
+};
+
+/**
  * 判斷用戶今天是否已簽到和斷簽
  * @param {Date | string | number | null} lastSignTime - 上次簽到時間
  * @returns {[boolean, boolean]} [今天是否已簽到, 是否斷簽]
@@ -79,20 +89,15 @@ export async function sign(rpg_data, message, client = null) {
 
     // if (brokeSign) daily_times = 0;
 
-    const money_per_dt = randint(4, 6);
-    const bonus = money_per_dt * daily_times;
-    const total = 150 + bonus;
-    const diff = 4; // ± 4
+    daily_times++;
 
-    const amount = randint(total - diff, total + diff);
+    const amount = getReward(daily_times);
     await rpg_data.add_money({
         amount,
         original_user: "系統",
         target_user: user.toString(),
         type: "每日簽到",
     });
-
-    daily_times++;
 
     let sign_msg_send_promise;
 
