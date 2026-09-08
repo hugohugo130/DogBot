@@ -139,7 +139,7 @@ export const name = Events.MessageCreate;
  */
 export async function execute(client, message) {
     try {
-        if (!(message.author.id in adminIDs)) return;
+        if (!adminIDs.includes(message.author.id)) return;
         if (!message.content.startsWith(global.isBeta ? "@" : "!")) return;
 
         // 提取指令和參數
