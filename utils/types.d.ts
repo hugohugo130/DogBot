@@ -148,8 +148,8 @@ export interface RandomItem {
 };
 
 export type RandomResult =
-    | { failed: true; item: (typeof failed)[number]; amount: number }
-    | { failed: false; item: SuccessItem; amount: number };
+    | readonly { failed: true; item: (typeof failed)[number]; amount: number }
+    | readonly { failed: false; item: SuccessItem; amount: number };
 
 export type RPGCommand = [string, RPGCmdFunction, RPGCmdCheckNeedArgFunction | boolean];
 
@@ -206,3 +206,12 @@ export interface FixedAudioFileData {
 };
 
 // #endregion [Music]
+
+// #region [Logger]
+
+export type loggerManagerId =
+    | "default"
+    | "log"
+    | "nodc";
+
+// #endregion [Logger]
