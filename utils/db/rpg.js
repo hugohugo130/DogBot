@@ -1,4 +1,7 @@
 import {
+    get_logger,
+} from "../logger.js";
+import {
     connectPool,
     getPool,
 } from "./db.js";
@@ -31,7 +34,14 @@ export async function load_rpg_data(userid) {
         [userid],
     ));
 
-    if (!rows.length) return new RPGData(null, userid);
+    if (!rows.length) {
+        const rpg_data = new RPGData(null, userid);
+        save_rpg_data(userid, rpg_data).catch((reason) => {
+            const logger = get_logger();
+            logger.error(`新建 ${userid} 的 RPG Data 時出現錯誤：\n${reason}`);
+        });
+        return rpg_data;
+    };
 
     const rpgUserData = rows[0];
 
