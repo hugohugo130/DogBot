@@ -4,16 +4,20 @@ import {
 import {
     join,
 } from "path";
+import type {
+    SoundcloudTrack,
+} from "soundcloud.ts";
 
 import type {
     FightJobNames,
     JobNames,
 } from "./types.d.ts";
-type BakeItemData = import("../slashcmd/game/rpg/bake.js").BakeItemData;
-type SmeltData = import("../slashcmd/game/rpg/smelt.js").SmeltData;
 import type {
-    SoundcloudTrack,
-} from "soundcloud.ts";
+    BakeItemData
+} from "../slashcmd/game/rpg/bake.js";
+import type {
+    SmeltData
+} from "../slashcmd/game/rpg/smelt.js";
 
 // functions for config
 const cwd = process.cwd;
