@@ -1511,8 +1511,6 @@ export async function execute(client, interaction) {
                     await inventory.add_item("wooden_hoe", 4);
                 };
 
-                await set_cooldown(user.id, "job", new Date());
-
                 const embed = new EmbedBuilder()
                     .setColor(embed_job_color)
                     .setTitle(`${emoji_job} | 成功轉職為 ${job_name}!`)
@@ -1522,6 +1520,8 @@ export async function execute(client, interaction) {
                     interaction.update({ embeds: [embed], components: [] }),
                     rpg_data.set_job(job_id),
                 ]);
+
+                await set_cooldown(user.id, "job", new Date());
 
                 break;
             }
