@@ -220,23 +220,16 @@ async function redirect({ client, message, command, mode = 0 }) {
     if (!guild) throw new Error("Guild is invalid");
     if (channel && !channel.isSendable()) throw new Error("Channel is not sendable");
 
-    const pf = (await InPrefix(guild.id, command))?.[0];
-
-    if (pf) {
-        try {
-            throw new Error(`傳送包含${pf}的指令名已棄用，現在只需要傳送指令名稱`);
-        } catch (e) {
-            if (e instanceof Error && e.stack) process.emitWarning(e.stack, {
-                type: "DeprecationWarning",
-                code: "COMMAND_NAME_WITH_PREFIX",
-            });
-        };
-    };
-
-    const prefix = await firstPrefix(guild.id);
+    const [
+        prefix,
+        mentioned_users,
+    ] = await Promise.all([
+        firstPrefix(guild.id),
+        mentions_users(message),
+    ]);
 
     if (!command.includes(prefix)) command = prefix + command;
-    const msg = new MockMessage(command, channel, message.author, message.guild, (await mentions_users(message)).first());
+    const msg = new MockMessage(command, channel, message.author, message.guild, mentioned_users.first());
     const message_args = await rpg_handler({ client, message: msg, d: true, mode: 1 });
     if (!message_args || message_args instanceof Message || message_args instanceof MockMessage) return message_args;
 
@@ -2542,11 +2535,13 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
  */
 function get_random_result(category) {
     const datas = probabilities[category];
-    const empty_template = /** @type {const} */ ({
+
+    /** @type {import("../../utils/types").RandomResult} */
+    const empty_template = {
         failed: true,
         item: "",
         amount: 0,
-    });
+    };
 
     if (!datas) return empty_template;
     const items = /** @type {(keyof import("../../utils/types").ValueOf<typeof probabilities>)[]} */ (/** @type {unknown} */ (Object.keys(datas)));
