@@ -342,6 +342,12 @@ function assertRandomItem(random_item) {
     };
 };
 
+/**
+ * @param {string[]} args
+ * @returns {string[]}
+ */
+const removeMentionsInArgs = args => args.filter(arg => !arg.includes("@"));
+
 /** @type {{ [commandName: string]: import("../../utils/types").RPGCommand }} */
 const rpg_commands = {
     mine: ["挖礦", async function ({ client, message, rpg_data, mode, random_item }) {
@@ -1004,16 +1010,6 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
-        args = args.filter(arg => !arg.includes(target_user.id));
-
-        let args_ = [];
-        for (const arg of args) {
-            if (!arg.includes("@")) {
-                args_.push(arg);
-            };
-        };
-        args = args_.slice();
-
         if (target_user?.id && target_user.id === userid) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -1024,24 +1020,15 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
-        if (args.length === 0 && target_user) {
-            return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
-        } else if (args.length === 0) {
-            const { get_help_command } = await import(new URL("./interactions.js", import.meta.url).href);
-            const embed = await get_help_command("rpg", "buy", message.guild?.id, null, client);
-
-            if (embed) await message.reply({
-                embeds: [embed],
-            });
-
-            return;
-        };
+        args = removeMentionsInArgs(args);
 
         /** @type {string | null} */
         let item = args[0];
-        item = get_id_of_name(item, null);
+        item = get_id_of_name(item);
 
-        if (!item_exists(item)) item = null;
+        if ((args.length === 0 && target_user) || !item_exists(item)) {
+            return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
+        };
 
         const shop_data = await load_shop_data(target_user.id);
         if (Object.keys(shop_data.items).length === 0) {
@@ -1052,10 +1039,6 @@ const rpg_commands = {
 
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
-        };
-
-        if (!item) {
-            return await redirect({ client, message, command: `shop list ${target_user.id}`, mode });
         };
 
         const item_name = get_name_of_id(item);
