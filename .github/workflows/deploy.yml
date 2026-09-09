@@ -20,26 +20,36 @@ jobs:
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
 
+      - name: Debug Tailscale connection
+        run: |
+          echo "Tailscale IP:"
+          tailscale ip -4
+          echo "Tailscale status:"
+          tailscale status
+          echo "Ping server (Tailscale IP):"
+          tailscale ping ${{ secrets.SERVER_HOST }}
+
       - name: Wait for Tailscale and check SSH reachable
         run: |
           HOST="${{ secrets.SERVER_HOST }}"
-          PORT="${{ secrets.SERVER_PORT }}" || PORT=22
+          PORT="${{ secrets.SERVER_PORT }}"
+          if [ -z "$PORT" ]; then PORT=22; fi
 
           echo "Checking TCP connectivity"
           attempts=0
-          max=12
-          sleep_interval=5
+          max=15
+          sleep_interval=10
 
           until timeout 3 bash -c "cat < /dev/tcp/$HOST/$PORT" >/dev/null 2>&1; do
             attempts=$((attempts+1))
-            echo "Attempt $attempts/$max: $HOST:$PORT not reachable yet"
+            echo "Attempt $attempts/$max: SSH not reachable yet"
             if [ "$attempts" -ge "$max" ]; then
-              echo "ERROR: SSH port $PORT on $HOST still unreachable after $((max*sleep_interval))s"
+              echo "ERROR: SSH is still unreachable after $((max*sleep_interval))s"
               exit 1
             fi
             sleep $sleep_interval
           done
-          echo "$HOST:$PORT is reachable"
+          echo "SSH is reachable"
 
       - name: SSH and Deploy
         uses: appleboy/ssh-action@c4f70287fc37c43b14b30b407224bbbc8e8c6327 # v1.2.5 https://github.com/appleboy/ssh-action/commit/c4f70287fc37c43b14b30b407224bbbc8e8c6327
