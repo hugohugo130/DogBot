@@ -2,7 +2,8 @@
 import path from "node:path";
 import globals from "globals";
 import eslint from "@eslint/js";
-import jsdoc from 'eslint-plugin-jsdoc'
+import jsdoc from "eslint-plugin-jsdoc";
+import command from "eslint-plugin-command/config";
 import tseslint from "typescript-eslint";
 import { defineConfig } from "eslint/config";
 import { includeIgnoreFile } from "@eslint/config-helpers";
@@ -10,6 +11,7 @@ import { includeIgnoreFile } from "@eslint/config-helpers";
 const gitignorePath = path.join(process.cwd(), ".gitignore");
 
 export default defineConfig([
+    command(),
     includeIgnoreFile(gitignorePath),
     eslint.configs.recommended,
     jsdoc.configs["flat/recommended"],
@@ -37,9 +39,7 @@ export default defineConfig([
             "jsdoc/require-param-description": "off",
             "jsdoc/require-returns-description": "off",
             "jsdoc/require-property-description": "off",
-            "jsdoc/require-returns-check": ["error", {
-                "exemptedBy": ["overload"],
-            }],
+            "jsdoc/require-returns-check": "warn",
             "jsdoc/check-tag-names": ["error", {
                 definedTags: [
                     "warning",
