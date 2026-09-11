@@ -10,6 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Encapsulate and Audit Run
+        uses: step-security/harden-runner@e14015d583714f6e62063499dc959a02595150a1 # v2.21.1 https://github.com/step-security/harden-runner/commit/e14015d583714f6e62063499dc959a02595150a1
+        with:
+          egress-policy: audit # Logs all outbound traffic without blocking
+
       - name: Checkout code
         uses: actions/checkout@f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a # v7.0.1 https://github.com/actions/checkout/commit/f548e57e544e1ff5a4c46bf1e1b8685f8e4a348a
 
@@ -19,15 +24,6 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
-
-      - name: Debug Tailscale connection
-        run: |
-          echo "Tailscale IP:"
-          tailscale ip -4
-          echo "Tailscale status:"
-          tailscale status
-          echo "Ping server (Tailscale IP):"
-          tailscale ping ${{ secrets.SERVER_HOST }}
 
       - name: Wait for Tailscale and check SSH reachable
         run: |
