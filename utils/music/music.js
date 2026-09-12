@@ -887,12 +887,14 @@ const get_redirected_url = async (original_url) => (await axios.get(original_url
  * @param {string} guildID
  * @param {boolean} [create]
  * @returns {MusicQueue | null}
- *
+ */
+/**
  * @overload
  * @param {string} guildID
  * @param {true} [create]
  * @returns {MusicQueue}
- *
+ */
+/**
  * @param {string} guildID
  * @param {boolean} [create]
  */
@@ -1067,12 +1069,36 @@ async function getAudioFileData(url, stream = false) {
 
 /**
  * @template T
+ * @overload
+ * @param {Promise<T> | (() => T | Promise<T>)} promiseOrFn
+ * @param {number} ms
+ * @param {true} error
+ * @returns {Promise<T>}
+ */
+/**
+ * @template T
+ * @overload
+ * @param {Promise<T> | (() => T | Promise<T>)} promiseOrFn
+ * @param {number} ms
+ * @param {false} [error]
+ * @returns {Promise<T | null>}
+ */
+/**
+ * @template T
+ * @overload
  * @param {Promise<T> | (() => T | Promise<T>)} promiseOrFn
  * @param {number} ms
  * @param {boolean} [error]
  * @returns {Promise<T | null>}
  */
-async function withTimeout(promiseOrFn, ms, error = true) {
+/**
+ * @template T
+ * @param {Promise<T> | (() => T | Promise<T>)} promiseOrFn
+ * @param {number} ms
+ * @param {boolean} [error]
+ * @returns {Promise<T | null>}
+ */
+export async function withTimeout(promiseOrFn, ms, error = true) {
     let timeoutId;
 
     const actualPromise = typeof promiseOrFn === "function"
