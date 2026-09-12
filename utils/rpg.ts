@@ -82,10 +82,7 @@ const mine_gets = [
     "ruby_ore",
     "sapphire_ore",
     "stone",
-].reduce((acc, cur) => {
-    acc[cur] = cur;
-    return acc;
-}, {} as { [key: string]: string });
+] as const;
 
 const ingots = [
     "diamond",
@@ -95,10 +92,7 @@ const ingots = [
     "ruby",
     "sapphire",
     "steel",
-].reduce((acc, cur) => {
-    acc[cur] = cur;
-    return acc;
-}, {} as { [key: string]: string });
+] as const;
 
 const logs = [
     "acacia_wood",
@@ -869,8 +863,8 @@ const name_reverse = (Object.keys(name) as Array<NameKey>).reduce(
 
 function check_item_data() {
     const all_items = [...new Set([
-        ...Object.values(mine_gets),
-        ...Object.values(ingots),
+        ...mine_gets,
+        ...ingots,
         ...Object.values(logs),
         ...Object.values(planks),
         ...Object.values(foods),
@@ -889,8 +883,8 @@ function check_item_data() {
 
     const work_productions = [...new Set([
         ...Object.keys(animal_products),
-        ...Object.values(mine_gets),
-        // ...Object.values(ingots),
+        ...mine_gets,
+        // ...ingots,
         ...Object.values(logs),
         ...Object.values(foods_crops),
         ...foods_meat.filter(e => e.startsWith("raw_")),
@@ -1639,7 +1633,7 @@ async function ls_function(
         for (const [item, amount] of inventory) {
             if (!amount) continue;
 
-            if (Object.keys(mine_gets).includes(item) || Object.keys(ingots).includes(item)) {
+            if ((mine_gets as readonly string[]).includes(item) || (ingots as readonly string[]).includes(item)) {
                 ores[item] = amount;
             } else if (Object.keys(logs).includes(item) || Object.keys(planks).includes(item) || Object.keys(wood_productions).includes(item)) {
                 log_items[item] = amount;

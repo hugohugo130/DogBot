@@ -771,7 +771,7 @@ const rpg_commands = {
 
                 // 礦物
                 const minerals = Object.entries(shop_data.items)
-                    .filter(([item]) => Object.values(mine_gets).includes(item) || Object.values(ingots).includes(item))
+                    .filter(([item]) => /** @type {readonly string[]} */ (mine_gets).includes(item) || /** @type {readonly string[]} */ (ingots).includes(item))
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([item, data]) => `${get_name_of_id(item)} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
                     .join("\n");
@@ -789,7 +789,7 @@ const rpg_commands = {
 
                 // 其他
                 const others = Object.entries(shop_data.items)
-                    .filter(([item]) => !Object.values(mine_gets).includes(item) && !Object.values(ingots).includes(item) && !/** @type {string[]} */(foods).includes(item))
+                    .filter(([item]) => ! /** @type {readonly string[]} */ (mine_gets).includes(item) && ! /** @type {readonly string[]} */ (ingots).includes(item) && !/** @type {string[]} */(foods).includes(item))
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([item, data]) => `${get_name_of_id(item)} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
                     .join("\n");
