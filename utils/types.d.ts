@@ -5,6 +5,8 @@ import {
     ChatInputCommandInteraction as djsChatInputCommandInteraction,
     Interaction,
 
+    Message,
+
     PermissionFlagsBits,
     SlashCommandBuilder,
     SlashCommandOptionsOnlyBuilder,
@@ -140,7 +142,7 @@ type CommandGuideUsage = {
 };
 
 type RPGCmdFunction =
-    ({ client, message, rpg_data, args, mode, random_item }: RPGCmdArgument) => Promise<Message | object>;
+    ({ client, message, rpg_data, args, mode, random_item }: RPGCmdArgument) => Promise<Message | object | null | void>;
 
 export interface RandomItem {
     item: SuccessItem;
