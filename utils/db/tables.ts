@@ -11,6 +11,7 @@ import {
 import {
     get_id_of_name,
     get_name_of_id,
+    type FoodKey,
     type ItemKey,
 } from "../rpg.ts";
 import {
@@ -28,7 +29,9 @@ import type {
 import {
     Mutex,
 } from "./mutex.ts";
-import { item_exists } from "../../cogs/rpg/msg_handler.js";
+import {
+    item_exists,
+} from "../../cogs/rpg/msg_handler.js";
 
 // #region [SQL returned data]
 
@@ -55,6 +58,7 @@ export type RPGUsersSQLRow = (BaseData & {
     married: boolean,
     married_with: string | null,
     married_at: Date | null,
+    autoeat: boolean,
 });
 
 export type RPGUsers = Omit<RPGUsersSQLRow, "money"> & {
@@ -95,6 +99,13 @@ export type RPGUserCountsSQLRow = (BaseData & {
 export type RPGUserPrivacySQLRow = (BaseData & {
     privacy_key: string,
     // primary key: (user_id, privacy_key)
+});
+
+export type RPGAutoEatSQLRow = (BaseData & {
+    position: number,
+    item_id: FoodKey,
+    // primary key: (user_id, position)
+    // unique: (user_id, item_id)
 });
 
 // #endregion [SQL returned data]
@@ -174,6 +185,7 @@ export class RPGData extends UserDataBase {
     married: boolean = false;
     married_with: string | null = null;
     married_at: Date | null = null;
+    autoeat: boolean = false;
 
     constructor(data?: Partial<RPGUserData> | null, userid?: string | null) {
         super();
@@ -419,6 +431,22 @@ export class RPGData extends UserDataBase {
         });
     };
 
+    async set_autoeat(enabled: boolean) {
+        await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
+                    UPDATE rpg_users
+                    SET autoeat = $1::boolean
+                    WHERE user_id = $2::bigint
+                `,
+                    [enabled, userID],
+                );
+            });
+
+            this.autoeat = enabled;
+        });
+    }
+
     toJSON(): RPGUserData {
         return {
             money: this.money,
@@ -432,6 +460,7 @@ export class RPGData extends UserDataBase {
             married: this.married,
             married_with: this.married_with,
             married_at: this.married_at,
+            autoeat: this.autoeat,
         };
     };
 };

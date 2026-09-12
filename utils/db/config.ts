@@ -6,6 +6,7 @@ export const TABLES = [
     "rpg_cooldowns",
     "rpg_user_counts",
     "rpg_user_privacy",
+    "rpg_auto_eat",
 ] as const;
 
 export const TABLES_METADATA: { [k in typeof TABLES[number]]: { CREATE?: string; } } = {
@@ -38,6 +39,7 @@ export const TABLES_METADATA: { [k in typeof TABLES[number]]: { CREATE?: string;
                 married BOOLEAN NOT NULL DEFAULT false,
                 married_with BIGINT NULL,
                 married_at TIMESTAMPTZ NULL,
+                autoeat BOOLEAN NOT NULL DEFAULT false,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
@@ -63,8 +65,9 @@ export const TABLES_METADATA: { [k in typeof TABLES[number]]: { CREATE?: string;
                 created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
 
-                FOREIGN KEY (user_id) REFERENCES rpg_users(user_id),
                 CONSTRAINT inventory_pkey primary key (user_id, item_id),
+                CONSTRAINT inventory_user_id_fkey foreign key (user_id)
+                    REFERENCES rpg_users(user_id),
                 CONSTRAINT inventory_item_id_fkey foreign KEY (item_id)
                     REFERENCES items (item_id) ON DELETE CASCADE
             );
@@ -131,5 +134,25 @@ export const TABLES_METADATA: { [k in typeof TABLES[number]]: { CREATE?: string;
                     REFERENCES rpg_users (user_id) ON DELETE CASCADE
             );
         `,
+    },
+    "rpg_auto_eat": {
+        "CREATE": `
+            CREATE TABLE rpg_auto_eat (
+                user_id   BIGINT  NOT NULL,
+                position  INTEGER NOT NULL,      -- 自動進食順序
+                item_id   TEXT    NOT NULL,
+
+                CONSTRAINT rpg_auto_eat_pkey
+                    PRIMARY KEY (user_id, position)
+                    DEFERRABLE INITIALLY IMMEDIATE,
+
+                CONSTRAINT rpg_auto_eat_user_item_key
+                    UNIQUE (user_id, item_id),   -- 防止同一 user 重複加入同一個 item
+
+                CONSTRAINT chk_auto_eat_position CHECK (position > 0)
+            );
+
+            CREATE INDEX idx_auto_eat_user ON rpg_auto_eat (user_id, position);
+        `
     },
 };

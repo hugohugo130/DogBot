@@ -22,6 +22,8 @@ import {
     BaseInteraction,
     NewsChannel,
     InteractionResponse,
+    Locale,
+    StringSelectMenuOptionBuilder,
 } from "discord.js";
 import util from "util";
 
@@ -66,6 +68,8 @@ import {
     valid_fightjob_id,
     isFoodKey,
     isValidGuideCategory,
+    autoEatCommand,
+    selectAutoEatFoods,
 } from "../../utils/rpg.ts";
 import {
     get_farm_info_embed,
@@ -123,6 +127,10 @@ import {
     set_cooldown,
     save_inventory,
     save_user_privacy,
+    addAutoEat,
+    removeAutoEat,
+    getAutoEatOrder,
+    reorderAutoEat,
 } from "../../utils/db/rpg.js";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
@@ -546,7 +554,18 @@ export const help_data = {
                         value: "&shop close"
                     }
                 ],
-                format: "&shop <list|add|remove|open|close|on|off>",
+                format: "{cmd} <list|add|remove|open|close|on|off>",
+            },
+            "autoeat": {
+                emoji: "food",
+                desc: "當你沒有體力的時候工作，會自動吃背包裡面的食物 (預設停用)",
+                usage: [
+                    {
+                        "name": "檢視並調整目前的設定",
+                        "value": "&autoeat",
+                    },
+                ],
+                format: "{cmd}",
             },
         },
         special: {
@@ -707,6 +726,41 @@ export async function get_help_command(category, command_name, guildID = null, i
     if (alias?.length) embed.addFields({ name: "別名", value: alias });
 
     return embed;
+};
+
+/**
+ * @param {StringSelectMenuInteraction | ButtonInteraction} interaction
+ * @param {"add" | "remove" | null} [mode]
+ * @param {Locale} locale
+ * @param {User} user
+ * @param {DogClient} client
+ * @returns {Promise<void>}
+ */
+async function refreshAutoEatInteraction(interaction, locale, user, client, mode = null) {
+    const components = await autoEatCommand({
+        interaction,
+        user_id: user.id,
+        client,
+    });
+
+    const editOptions = { components };
+
+    const referMessage = interaction.message.reference && await interaction.message.fetchReference();
+    if (referMessage) {
+        const [
+            _,
+            __,
+            replyOptions,
+        ] = await Promise.all([
+            referMessage.edit(editOptions),
+            mode ? interaction.deferUpdate() : null,
+            mode ? selectAutoEatFoods(user.id, mode, locale) : {},
+        ]);
+
+        if (mode !== null) await interaction.editReply(replyOptions);
+    } else {
+        await interaction.update(editOptions);
+    };
 };
 
 export const name = Events.InteractionCreate;
@@ -2085,6 +2139,180 @@ export async function execute(client, interaction) {
                     rpg_data.set_fightjob(jobId),
                     interaction.update({ content: "", embeds: [embed], components: [] }),
                 ]);
+                break;
+            }
+            case "autoeat": {
+                const [subCommand, ...args] = otherCustomIDs;
+
+                switch (subCommand) {
+                    case "toggle": {
+                        const rpg_data = await load_rpg_data(user.id);
+
+                        const enabled = rpg_data.autoeat;
+                        const set_to = !enabled;
+
+                        await rpg_data.set_autoeat(set_to);
+                        const components = await autoEatCommand({
+                            interaction,
+                            user_id: user.id,
+                            client,
+                        });
+
+                        await interaction.update({ components, flags: MessageFlags.IsComponentsV2 });
+                        break;
+                    }
+
+                    case "add_selected_food": {
+                        if (!interaction.isStringSelectMenu()) return;
+
+                        const food = interaction.values
+                            .filter((item) => isFoodKey(item))[0];
+
+                        if (!food) throw new Error("No Food Selected");
+
+                        await addAutoEat(user.id, food);
+                        await refreshAutoEatInteraction(interaction, locale, user, client, "add");
+                        break;
+                    }
+
+                    case "remove_selected_food": {
+                        if (!interaction.isStringSelectMenu()) return;
+
+                        const food = interaction.values
+                            .filter((item) => isFoodKey(item))[0];
+
+                        if (!food) throw new Error("No Food Selected");
+
+                        const itemExistsBefore = await removeAutoEat(user.id, food);
+                        if (!itemExistsBefore) {
+                            const lang_select_foods_not_exists = get_lang_data(locale, "autoeat", "select_foods.not_exists");
+                            await interaction.reply({ content: lang_select_foods_not_exists, flags: MessageFlags.Ephemeral });
+                        } else {
+                            await refreshAutoEatInteraction(interaction, locale, user, client, "remove");
+                        };
+                        break;
+                    }
+
+                    case "show_change_order_b": {
+                        if (!interaction.isButton()) return;
+                        const [offset_str = "0"] = args;
+                        const offset = parseInt(offset_str);
+
+                        const lang_order_select_food = get_lang_data(locale, "autoeat", "order.select_food");
+                        const lang_order_prev = get_lang_data(locale, "autoeat", "order.prev");
+                        const lang_order_next = get_lang_data(locale, "autoeat", "order.next");
+
+                        const eatOrder = await getAutoEatOrder(user.id);
+                        const row = /** @type {ActionRowBuilder<StringSelectMenuBuilder>} */
+                            (new ActionRowBuilder()
+                                .addComponents(
+                                    new StringSelectMenuBuilder()
+                                        .setCustomId(`autoeat|${user.id}|show_change_order`)
+                                        .addOptions(...eatOrder.map(food =>
+                                            new StringSelectMenuOptionBuilder()
+                                                .setLabel(get_name_of_id(food))
+                                                .setValue(food),
+                                        )),
+                                ));
+
+                        const prev_offset = (offset - 25) >= 0
+                            ? offset - 25
+                            : 0;
+
+                        const next_offset = offset + 25;
+
+                        const row2 = /** @type {ActionRowBuilder<ButtonBuilder>} */
+                            (new ActionRowBuilder()
+                                .addComponents(
+                                    new ButtonBuilder()
+                                        .setCustomId(`autoeat|${user.id}|show_change_order_b|${prev_offset}`)
+                                        .setLabel(lang_order_prev)
+                                        .setDisabled(offset === 0)
+                                        .setEmoji("⬅️")
+                                        .setStyle(ButtonStyle.Secondary),
+                                    new ButtonBuilder()
+                                        .setCustomId(`autoeat|${user.id}|show_change_order_b|${next_offset}`)
+                                        .setLabel(lang_order_next)
+                                        .setDisabled(!(eatOrder.length >= next_offset))
+                                        .setEmoji("➡️")
+                                        .setStyle(ButtonStyle.Secondary),
+                                ));
+
+                        const options = { content: lang_order_select_food, components: [row, row2] };
+
+                        if (offset) {
+                            await interaction.update(options);
+                        } else {
+                            await interaction.reply({ ...options, flags: MessageFlags.Ephemeral });
+                        };
+                        break;
+                    }
+
+                    case "show_change_order": {
+                        if (!interaction.isStringSelectMenu()) return;
+                        const [offset_str = "0"] = args;
+                        const offset = parseInt(offset_str);
+
+                        const food = interaction.values
+                            .filter(isFoodKey)[0];
+
+                        if (!food) throw new Error("Invalid Food");
+
+                        const eatOrder = await getAutoEatOrder(user.id);
+                        const lang_choose_position = get_lang_data(locale, "autoeat", "order.choose_position", food);
+
+                        /** @type {ActionRowBuilder<ButtonBuilder>[]} */
+                        const rows = [];
+                        /** @type {ActionRowBuilder<ButtonBuilder>} */
+                        let currentRow = new ActionRowBuilder();
+                        const amount = eatOrder.length;
+                        const maxRows = 5;
+                        const perRow = 5;
+
+                        for (let i = offset + 1; i <= amount; i++) {
+                            const button = new ButtonBuilder()
+                                .setCustomId(`autoeat|${user.id}|change_order|${food}|${i}`)
+                                .setLabel(i.toString())
+                                .setStyle(ButtonStyle.Primary);
+
+                            currentRow.addComponents(button);
+
+                            // 每滿 5 顆就換行，或這是最後一顆按鈕時收尾
+                            if (currentRow.components.length === perRow || i === amount) {
+                                rows.push(currentRow);
+                                currentRow = new ActionRowBuilder();
+                            };
+
+                            // 已達最大列數，且還沒處理完（留給下一頁 offset）
+                            if (rows.length === maxRows && i < amount) break;
+                        };
+
+                        if (rows.length) {
+                            await interaction.update({ content: lang_choose_position, components: rows });
+                        };
+                        break;
+                    }
+
+                    case "change_order": {
+                        if (!interaction.isButton()) return;
+                        const [food, position_str] = args;
+                        const position = parseInt(position_str);
+
+                        if (!isFoodKey(food)) throw new Error("Invalid Food");
+                        if (isNaN(position)) throw new Error("Invalid position");
+
+                        await reorderAutoEat(user.id, food, position);
+
+                        const [_, msg] = await Promise.all([
+                            refreshAutoEatInteraction(interaction, locale, user, client),
+                            interaction.update({ content: "✅", components: [], embeds: [] }),
+                        ]);
+                        await msg.delete();
+                        break;
+                    }
+                };
+
+                break;
             }
         };
     } catch (err) {

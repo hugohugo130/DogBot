@@ -9,6 +9,7 @@ import {
     StringSelectMenuOptionBuilder,
     Guild,
     BaseInteraction,
+    MessageFlags,
 } from "discord.js";
 import {
     inspect,
@@ -56,6 +57,7 @@ import {
     valid_job_id,
     isFoodKey,
     isFailedItem,
+    autoEatCommand,
 } from "../../utils/rpg.ts";
 import {
     load_shop_data,
@@ -96,9 +98,11 @@ import {
     set_count,
     get_count,
     set_cooldown,
+    getAutoEatOrder,
 } from "../../utils/db/rpg.js";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
+import { withTimeout } from "../../utils/music/music.js";
 
 const logger = get_logger();
 
@@ -2253,9 +2257,18 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
         if (mode === 1) return { embeds: [embed], components: [row, row2] };
         return await message.reply({ embeds: [embed], components: [row, row2] });
     }, false],
-    test: ["TEST", async function () {
-        throw new Error("THIS IS A TEST MESSAGE!");
-    }, false],
+    autoeat: ["自動進食", async function ({ client, message, mode }) {
+        const user_id = message.author?.id;
+        if (!user_id) return;
+
+        const components = await autoEatCommand({ client, user_id });
+        /** @type {import("discord.js").MessageReplyOptions} */
+        const replyOptions = { components, flags: MessageFlags.IsComponentsV2 };
+
+        return mode === 1
+            ? replyOptions
+            : message.reply(replyOptions);
+    }, false]
 };
 
 for (const [from, target] of Object.entries(redirect_data)) {
@@ -2399,32 +2412,28 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
     const execute = cmd_data[1];
     const action = cmd_data[0];
 
-    if (rpg_work.includes(command) && rpg_data.hunger <= 0) {
-        const inventory = await load_inventory(message.author.id);
+    if (rpg_data.autoeat && rpg_work.includes(command) && rpg_data.hunger <= 0) {
+        const [inventory, eatOrder] = await Promise.all([
+            load_inventory(userid),
+            getAutoEatOrder(userid),
+        ]);
+
         const found_food = foods
-            .filter(food => inventory.has(food) && food_data[food] < max_hunger)
-            .sort((a, b) => food_data[b] - food_data[a])[0];
+            .filter(food => inventory.has(food) && food_data[food] < max_hunger && eatOrder.includes(food))
+            .sort((a, b) => eatOrder.indexOf(a) - eatOrder.indexOf(b))[0];
 
         if (found_food) {
             // 嘗試自動吃掉一個食物
-            const eatPromise = rpg_commands.eat[1]({
-                client,
-                message,
-                rpg_data,
-                args: [found_food, "all"],
-                mode: 1,
-            });
+            const eatPromise = /** @type {Promise<{ embeds: EmbedBuilder[] }>} */
+                (rpg_commands.eat[1]({
+                    client,
+                    message,
+                    rpg_data,
+                    args: [found_food, "all"],
+                    mode: 1,
+                }));
 
-
-            // 5秒超時
-            const timeoutPromise = new Promise((_, reject) => {
-                setTimeout(() => reject(new Error("eat timeout")), 5000);
-            });
-
-            const res = await Promise.race([
-                eatPromise,
-                timeoutPromise,
-            ]);
+            const res = await withTimeout(eatPromise, 1000, true);
 
             if (res.embeds && res.embeds.length > 1) {
                 res.embeds.length = 1;

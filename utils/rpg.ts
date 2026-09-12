@@ -8,6 +8,11 @@ import {
     ApplicationEmoji,
     Locale,
     BaseInteraction,
+    ContainerBuilder,
+    TextDisplayBuilder,
+    SeparatorBuilder,
+    SeparatorSpacingSize,
+    StringSelectMenuOptionBuilder,
 } from "discord.js";
 import util from "util";
 
@@ -46,8 +51,10 @@ import {
 } from "./customs/custom_import.js";
 import {
     get_count,
+    getAutoEatOrder,
     load_cooldown,
     load_inventory,
+    load_rpg_data,
     load_user_privacy,
 } from "./db/rpg.js";
 import type {
@@ -1533,6 +1540,12 @@ interface LsReturnObject {
     components?: ActionRowBuilder<ButtonBuilder>[]; // 按鈕 Array
 };
 
+interface AutoEatOptions {
+    interaction?: BaseInteraction,
+    client?: DogClient,
+    user_id: string,
+};
+
 async function ls_function(
     options: LsOptions & { mode: 1 }
 ): Promise<LsReturnObject>;
@@ -1669,6 +1682,112 @@ async function ls_function(
 
     if (mode === 1) return { embeds: [embed] };
     return await message.reply({ embeds: [embed] });
+};
+
+export async function autoEatCommand(options: AutoEatOptions): Promise<[ContainerBuilder, ActionRowBuilder<ButtonBuilder>]> {
+    const { interaction = null, client = await wait_for_client(), user_id } = options;
+
+    const locale = interaction?.locale ?? client.get_user_locale(user_id);
+
+    const [
+        rpg_data,
+        autoeat_order,
+        emoji_food
+    ] = await Promise.all([
+        load_rpg_data(user_id),
+        getAutoEatOrder(user_id),
+        get_emoji("food"),
+    ]);
+
+    const enabled = rpg_data.autoeat;
+
+    const lang_order = get_lang_data(locale, "autoeat", "order");
+    const lang_status = get_lang_data(locale, "autoeat", "status");
+    const lang_title = get_lang_data(locale, "autoeat", "title");
+    const lang_none = get_lang_data(locale, "general", "none");
+    const lang_current_status = enabled
+        ? get_lang_data(locale, "autoeat", "enabled")
+        : get_lang_data(locale, "autoeat", "disabled");
+
+    const lang_toggle_label = get_lang_data(locale, "autoeat", "toggle.label");
+    const lang_select_foods_add = get_lang_data(locale, "autoeat", "select_foods.add");
+    const lang_select_foods_remove = get_lang_data(locale, "autoeat", "select_foods.remove");
+    const lang_order_label = get_lang_data(locale, "autoeat", "order.label");
+
+    const eat_order_str = autoeat_order
+        .map(id => get_name_of_id(id))
+        .join(", ");
+
+    const container = new ContainerBuilder()
+        .addTextDisplayComponents(
+            new TextDisplayBuilder()
+                .setContent(`## **${lang_title}**`)
+        )
+        .addSeparatorComponents(
+            new SeparatorBuilder()
+                .setSpacing(SeparatorSpacingSize.Small)
+        )
+        .addTextDisplayComponents(
+            new TextDisplayBuilder()
+                .setContent(`
+${lang_status}: ${lang_current_status}
+
+${lang_order}: ${eat_order_str || lang_none}
+`)
+        );
+
+    const row = new ActionRowBuilder()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId(`autoeat|${user_id}|toggle`)
+                .setLabel(lang_toggle_label)
+                .setStyle(enabled ? ButtonStyle.Success : ButtonStyle.Secondary),
+
+            new ButtonBuilder()
+                .setCustomId(`autoeat|${user_id}|add_select_foods`)
+                .setLabel(lang_select_foods_add)
+                .setEmoji(emoji_food)
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(`autoeat|${user_id}|remove_select_foods`)
+                .setLabel(lang_select_foods_remove)
+                .setEmoji(emoji_food)
+                .setStyle(ButtonStyle.Danger),
+
+            new ButtonBuilder()
+                .setCustomId(`autoeat|${user_id}|show_change_order_b`)
+                .setLabel(lang_order_label)
+                .setEmoji(emoji_food)
+                .setStyle(ButtonStyle.Secondary),
+        ) as ActionRowBuilder<ButtonBuilder>;
+
+    return [container, row];
+};
+
+export async function selectAutoEatFoods(userID: string, mode: "add" | "remove", locale: Locale | null | undefined = null) {
+    const lang_select_foods_title = get_lang_data(locale, "autoeat", "select_foods.title")
+
+    const inventory = await load_inventory(userID);
+    const foods = inventory
+        .keys()
+        .filter((item) => isFoodKey(item));
+
+    const options = foods.map(
+        (food) =>
+            new StringSelectMenuOptionBuilder()
+                .setLabel(get_name_of_id(food))
+                .setValue(food)
+    );
+
+    const row = new ActionRowBuilder()
+        .addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId(`autoeat|${userID}|${mode}_selected_food`)
+                .addOptions(...options)
+        ) as ActionRowBuilder<StringSelectMenuBuilder>;
+
+    return { content: lang_select_foods_title, components: [row] };
 };
 
 /**

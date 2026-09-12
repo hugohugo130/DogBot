@@ -16,6 +16,9 @@ import {
  */
 const language = {
     [Locale.EnglishUS]: {
+        "general": {
+            "none": "None",
+        },
         "embed": {
             "footer": "DogBot · Made by hugo",
         },
@@ -193,9 +196,29 @@ Since <t:{1}:R>`,
             "nowplaying.update": "Update",
             "nowplaying.disconnect": "Disconnect",
         },
+        "autoeat": {
+            "title": "Auto Eat",
+            "order": "Auto eat sequence",
+            "status": "Status",
+            "disabled": "Disabled",
+            "enabled": "Enabled",
+            "toggle.label": "Toggle On/Off",
+            "select_foods.add": "Add Foods",
+            "select_foods.remove": "Remove Selected Foods",
+            "select_foods.title": "Select foods you want to eat automatically",
+            "select_foods.not_exists": "The food items to be removed are not on the list",
+            "order.choose_position": "Choose priority of {0}",
+            "order.label": "Change priority",
+            "order.select_food": "Choose a food",
+            "order.prev": "Previous Page",
+            "order.next": "Next Page",
+        },
     },
 
     [Locale.ChineseTW]: {
+        "general": {
+            "none": "無",
+        },
         "embed": {
             "footer": "狗狗機器犬 ∙ 由哈狗製作",
         },
@@ -372,6 +395,23 @@ Since <t:{1}:R>`,
             "nowplaying.clear_queue": "清空佇列",
             "nowplaying.update": "更新",
             "nowplaying.disconnect": "中斷連線",
+        },
+        "autoeat": {
+            "title": "自動進食",
+            "order": "自動進食順序",
+            "status": "狀態",
+            "disabled": "已停用",
+            "enabled": "已啟用",
+            "toggle.label": "切換啟用",
+            "select_foods.add": "增加食物",
+            "select_foods.remove": "移除食物",
+            "select_foods.title": "選擇要自動吃的食物",
+            "select_foods.not_exists": "要移除的食物不在清單中",
+            "order.choose_position": "選擇 {0} 的優先度",
+            "order.label": "選擇優先度",
+            "order.select_food": "選擇食物",
+            "order.prev": "上一頁",
+            "order.next": "下一頁",
         },
     },
 };

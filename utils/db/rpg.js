@@ -22,7 +22,7 @@ export async function load_rpg_data(userid) {
     const table_name = /** @type {const} */ "rpg_users";
 
     const command = `
-        SELECT money, hunger, daily, daily_times, daily_msg, job, fightjob, badge, married, married_with, married_at
+        SELECT *
         FROM ${table_name}
         WHERE user_id = $1
         LIMIT 1
@@ -72,7 +72,8 @@ export async function save_rpg_data(userid, rpg_data) {
             badge,
             married,
             married_with,
-            married_at
+            married_at,
+            autoeat
         )
         VALUES (
             $1::bigint,
@@ -87,6 +88,7 @@ export async function save_rpg_data(userid, rpg_data) {
             $10::boolean,
             $11::bigint,
             $12::timestamptz
+            $13::boolean,
         )
         ON CONFLICT (user_id)
         DO UPDATE SET
@@ -101,6 +103,7 @@ export async function save_rpg_data(userid, rpg_data) {
             married = EXCLUDED.married,
             married_with = EXCLUDED.married_with,
             married_at = EXCLUDED.married_at
+            autoeat = EXCLUDED.autoeat,
     `;
 
     const {
@@ -115,6 +118,7 @@ export async function save_rpg_data(userid, rpg_data) {
         married,
         married_with,
         married_at,
+        autoeat,
     } = rpg_data;
 
     const pool = getPool();
@@ -133,6 +137,7 @@ export async function save_rpg_data(userid, rpg_data) {
             married,
             married_with,
             married_at,
+            autoeat,
         ],
     );
 };
@@ -554,3 +559,343 @@ export async function delete_user_privacy(userid) {
 };
 
 // #endregion [rpg_user_privacy]
+
+// #region [rpg_auto_eat]
+
+/**
+ * 事務內版本：假設呼叫端已上 advisory lock，且處於 transaction 中。
+ * @param {import("pg").PoolClient} client
+ * @param {string} userid
+ * @param {string} itemid
+ * @returns {Promise<boolean>}
+ */
+async function _addAutoEatTx(client, userid, itemid) {
+    const command = `
+        INSERT INTO rpg_auto_eat (user_id, position, item_id)
+        SELECT $1,
+            COALESCE(MAX(position), 0) + 1,
+            $2
+        FROM rpg_auto_eat
+        WHERE user_id = $1
+            AND NOT EXISTS (
+                SELECT 1 FROM rpg_auto_eat
+                WHERE user_id = $1 AND item_id = $2
+            )
+        ON CONFLICT (user_id, item_id) DO NOTHING
+        RETURNING position
+    `;
+    const { rowCount } = await client.query(command, [userid, itemid]);
+    return (rowCount ?? 0) > 0;
+};
+
+/**
+ * 事務內版本：假設呼叫端已上 advisory lock。
+ * @param {import("pg").PoolClient} client
+ * @param {string} userid
+ * @param {string} itemid
+ * @returns {Promise<boolean>}
+ */
+async function _removeAutoEatTx(client, userid, itemid) {
+    const del = `
+        DELETE FROM rpg_auto_eat
+        WHERE user_id = $1 AND item_id = $2
+        RETURNING position
+    `;
+    const { rows, rowCount } = await client.query(del, [userid, itemid]);
+    if ((rowCount ?? 0) === 0) return false;
+
+    const removedPosition = rows[0].position;
+
+    await client.query(
+        `
+        UPDATE rpg_auto_eat
+        SET position = position - 1
+        WHERE user_id = $1 AND position > $2
+        `,
+        [userid, removedPosition],
+    );
+
+    return true;
+};
+
+/**
+ * 將使用者的自動進食順序同步為 newOrder。
+ *
+ * - DB 有、newOrder 沒有 → 移除
+ * - newOrder 有、DB 沒有 → 依 newOrder 順序追加到最後
+ * - 已在 DB 且也在 newOrder → 原地保留（不重排，因為 add 只追加到最後）
+ *
+ * @param {string} userid
+ * @param {import("../rpg").FoodKey[]} newOrder
+ * @returns {Promise<{ added: import("../rpg").FoodKey[]; removed: import("../rpg").FoodKey[] }>}
+ */
+export async function syncAutoEatOrder(userid, newOrder) {
+    // 1. 去重（避免 UNIQUE(user_id, item_id) 撞）
+    //    Set 保序：以第一次出現為準
+    const dedupedNew = [...new Set(newOrder)];
+
+    const table_name = /** @type {const} */ "rpg_auto_eat";
+    const client = await connectPool();
+
+    await client.init(table_name);
+    return await client.withTransaction(async () => {
+        // 2. 上鎖：整個 sync 期間序列化同一 user 的 add/remove/reorder
+        await client.query(
+            "SELECT pg_advisory_xact_lock(hashtext($1)::int)",
+            [userid],
+        );
+
+        // 3. 讀目前狀態
+        const { rows } = await client.query(
+            `
+            SELECT item_id FROM rpg_auto_eat
+            WHERE user_id = $1
+            ORDER BY position ASC
+            `,
+            [userid],
+        );
+        const current = rows.map((r) => r.item_id);
+        const currentSet = new Set(current);
+        const newSet = new Set(dedupedNew);
+
+        // 4. 計算 diff
+        const toRemove = current.filter((id) => !newSet.has(id));
+        const toAdd = dedupedNew.filter((id) => !currentSet.has(id));
+
+        // 5. 先 remove
+        for (const itemid of toRemove) {
+            await _removeAutoEatTx(client, userid, itemid);
+        };
+
+        // 6. 再 add（依 newOrder 的相對順序追加到最後）
+        for (const itemid of toAdd) {
+            await _addAutoEatTx(client, userid, itemid);
+        };
+
+        return { added: toAdd, removed: toRemove };
+    });
+}
+
+/**
+ * @param {string} userid
+ * @returns {Promise<import("../rpg").FoodKey[]>}
+ */
+export async function getAutoEatOrder(userid) {
+    const table_name = /** @type {const} */ "rpg_auto_eat";
+
+    const command = `
+        SELECT item_id
+        FROM ${table_name}
+        WHERE user_id = $1
+        ORDER BY position ASC
+    `;
+
+    const pool = getPool();
+    const { rows } = /** @type {{ rows: { item_id: import("../rpg").FoodKey }[]} } */ (await pool.query(
+        command,
+        [userid],
+    ));
+
+    return rows.map((row) => row.item_id);
+};
+
+/**
+ * @param {string} userid
+ * @param {import("../rpg").FoodKey} itemid
+ * @returns {Promise<boolean>}
+ */
+export async function hasAutoEat(userid, itemid) {
+    const command = `
+        SELECT 1
+        FROM rpg_auto_eat
+        WHERE user_id = $1 AND item_id = $2
+        LIMIT 1
+    `;
+
+    const pool = getPool();
+    const { rowCount } = await pool.query(
+        command,
+        [userid, itemid]
+    );
+
+    return !!rowCount;
+};
+
+/**
+ * @param {string} userid
+ * @param {import("../rpg").FoodKey} itemid
+ * @returns {Promise<boolean>} Modified?
+ */
+export async function addAutoEat(userid, itemid) {
+    const table_name = /** @type {const} */ "rpg_auto_eat";
+    const client = await connectPool();
+
+    await client.init(table_name);
+    return await client.withTransaction(async () => {
+        await client.query(
+            "SELECT pg_advisory_xact_lock(hashtext($1)::int)",
+            [userid],
+        );
+        return await _addAutoEatTx(client, userid, itemid);
+    });
+};
+
+/**
+ * @param {string} userid
+ * @param {import("../rpg").FoodKey} itemid
+ * @returns {Promise<boolean>} Modified?
+ */
+export async function removeAutoEat(userid, itemid) {
+    const table_name = /** @type {const} */ "rpg_auto_eat";
+    const client = await connectPool();
+
+    await client.init(table_name);
+    return await client.withTransaction(async () => {
+        await client.query(
+            "SELECT pg_advisory_xact_lock(hashtext($1)::int)",
+            [userid],
+        );
+        return await _removeAutoEatTx(client, userid, itemid);
+    });
+};
+
+/**
+ * 將某個 item 移動到指定 position，其餘項目自動遞補/後移。
+ *
+ * - position 會被 clamp 到 [1, 目前總數]
+ * - item 不存在 → 回傳 false
+ * - 位置沒變 → 回傳 true（no-op）
+ * - 其他正常情況 → 回傳 true
+ *
+ * @param {string} userid
+ * @param {string} itemid
+ * @param {number} position  目標位置（1-based）
+ * @returns {Promise<boolean>} Modified?
+ */
+export async function reorderAutoEat(userid, itemid, position) {
+    const table_name = /** @type {const} */ "rpg_auto_eat";
+    const client = await connectPool();
+
+    await client.init(table_name);
+    return await client.withTransaction(async () => {
+        // 1. 鎖該 user，序列化同一 user 的所有順序操作
+        await client.query(
+            "SELECT pg_advisory_xact_lock(hashtext($1)::int)",
+            [userid],
+        );
+
+        // 2. 對這個 transaction 開啟 PK 延遲檢查
+        //    這樣互推 position 的中間狀態撞 PK 也不會報錯
+        await client.query("SET CONSTRAINTS rpg_auto_eat_pkey DEFERRED");
+
+        // 3. 一次拿到目前所有 item 及數量
+        const { rows } = await client.query(`
+            SELECT item_id, position
+            FROM rpg_auto_eat
+            WHERE user_id = $1
+            ORDER BY position ASC
+            `,
+            [userid],
+        );
+
+        const total = rows.length;
+        if (total === 0) return false;
+
+        const current = rows.find((r) => r.item_id === itemid);
+        if (!current) return false;
+
+        const oldPosition = current.position;
+
+        // 4. clamp 目標位置到合法範圍
+        const newPosition = Math.max(1, Math.min(position, total));
+
+        // 5. 位置沒變 → 不用做任何事
+        if (newPosition === oldPosition) return true;
+
+        // 6. 把被擠開的區段整體平移
+        if (newPosition < oldPosition) {
+            // 往上移：newPosition .. oldPosition-1 全部 +1
+            await client.query(`
+                UPDATE rpg_auto_eat
+                SET position = position + 1
+                WHERE user_id = $1
+                    AND position >= $2
+                    AND position < $3
+                `,
+                [userid, newPosition, oldPosition],
+            );
+        } else {
+            // 往下移：oldPosition+1 .. newPosition 全部 -1
+            await client.query(`
+                UPDATE rpg_auto_eat
+                SET position = position - 1
+                WHERE user_id = $1
+                    AND position > $2
+                    AND position <= $3`,
+                [userid, oldPosition, newPosition],
+            );
+        }
+
+        // 7. 把目標 item 放到新位置
+        await client.query(`
+            UPDATE rpg_auto_eat
+            SET position = $3
+            WHERE user_id = $1
+                AND item_id = $2
+            `,
+            [userid, itemid, newPosition],
+        );
+
+        return true;
+    });
+};
+
+/**
+ * 整份覆寫自動進食順序
+ * @param {string} userid
+ * @param {import("../rpg").FoodKey[]} foodKeys 依序排列，index 0 = position 1
+ * @returns {Promise<void>}
+ */
+export async function setAutoEatOrder(userid, foodKeys) {
+    const table_name = /** @type {const} */ "rpg_auto_eat";
+
+    // 應用層去重：保留第一次出現的位置（避免 (user_id, item_id) UNIQUE 衝突）
+    const seen = new Set();
+    const unique = [];
+    for (const key of foodKeys) {
+        if (seen.has(key)) continue;
+        seen.add(key);
+        unique.push(key);
+    };
+
+    const client = await connectPool();
+    await client.init(table_name)
+    try {
+        await client.begin();
+
+        await client.query(
+            `DELETE FROM ${table_name} WHERE user_id = $1`,
+            [userid],
+        );
+
+        if (unique.length) {
+            await client.query(
+                `
+                INSERT INTO ${table_name} (user_id, item_id, position)
+                SELECT $1, item_id, ord
+                FROM unnest($2::text[]) WITH ORDINALITY AS t(item_id, ord)
+                `,
+                [userid, unique],
+            );
+        };
+
+        await client.commit();
+    } catch (err) {
+        await client.rollback();
+        throw err;
+    } finally {
+        client.release();
+    };
+};
+
+// #endregion [rpg_auto_eat]
