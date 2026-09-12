@@ -123,6 +123,25 @@ export class PoolClient extends PGClient {
     };
 
     /**
+     * @template T
+     * @param {() => PromiseLike<T>} fn
+     * @returns {Promise<T>}
+     */
+    async withTransaction(fn) {
+        try {
+            await this.query("BEGIN");
+            const result = await fn();
+            await this.query("COMMIT");
+            return result;
+        } catch (err) {
+            await this.query("ROLLBACK");
+            throw err;
+        } finally {
+            this.release();
+        }
+    }
+
+    /**
      * @param {Error | boolean} [err]
      */ // eslint-disable-next-line @typescript-eslint/no-unused-vars
     release(err) {
