@@ -417,8 +417,7 @@ const rpg_commands = {
 
         const { item: random_animal, amount } = random_item;
         if (!animal_products[random_animal]) {
-            const embeds = await get_loophole_embed(`找不到${random_animal}的動物產品: ${animal_products[random_animal]}`, null, client);
-            return await message.reply({ embeds });
+            throw new Error(`找不到${random_animal}的動物產品: ${animal_products[random_animal]}`);
         };
 
         const [inventory, emoji_cow] = await Promise.all([
@@ -771,7 +770,7 @@ const rpg_commands = {
 
                 // 礦物
                 const minerals = Object.entries(shop_data.items)
-                    .filter(([item]) => /** @type {readonly string[]} */ (mine_gets).includes(item) || /** @type {readonly string[]} */ (ingots).includes(item))
+                    .filter(([item]) => /** @type {readonly string[]} */(mine_gets).includes(item) || /** @type {readonly string[]} */ (ingots).includes(item))
                     .sort((a, b) => a[0].localeCompare(b[0]))
                     .map(([item, data]) => `${get_name_of_id(item)} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
                     .join("\n");
@@ -1505,14 +1504,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             };
 
             const add = food_data[food_id]
-            if (!add) {
-                const embeds = await get_loophole_embed(`food_data[${food_id}] is ${add}`, null, client);
-
-                logger.warn(`食物${food_name} (${food_id})在food_data中沒有這個食物的數據`);
-
-                if (mode === 1) return { embeds };
-                return await message.reply({ embeds });
-            };
+            if (!add) throw new Error(`No food data get of food ${food_id}`);
 
             if (rpg_data.hunger >= max_hunger) {
                 const embed = new EmbedBuilder()
@@ -1648,9 +1640,8 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                         };
                     };
                 } catch (err) {
-                    const errorStack = inspect(err, { depth: null });
-
-                    errors.push(errorStack);
+                    if (!(err instanceof Error)) continue;
+                    errors.push(err);
                 };
             };
 
@@ -1672,7 +1663,9 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                     .addComponents(howToEatButton, buyFoodButton));
 
             if (errors.length > 0) {
-                const embeds = await get_loophole_embed(errors.join("\n"), null, client);
+                const embeds = (await Promise.all(
+                    errors.map((error) => get_loophole_embed(error, null, client)),
+                )).flat();
 
                 if (mode === 1) return { embeds };
                 await message.reply({ embeds });
@@ -1750,12 +1743,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         };
 
         const price = sell_data[item_id];
-        if (!price) {
-            const embeds = await get_loophole_embed(`詳細資訊: sell_data[${item_id}]為${price}`, null, client);
-
-            if (mode === 1) return { embeds };
-            return await message.reply({ embeds });
-        };
+        if (!price) throw new Error(`No price of item ${item_id} got`);
         const total_price = Math.round(price * sell_amount);
 
         const confirm_button = new ButtonBuilder()
@@ -2667,6 +2655,7 @@ export async function execute(client, message) {
             timeoutPromise,
         ]);
     } catch (error) {
+        if (!(error instanceof Error)) return;
         const errorStack = inspect(error, { depth: null });
 
         if (error instanceof Error && error.message === "指令執行超時") {
@@ -2675,7 +2664,7 @@ export async function execute(client, message) {
             logger.error(`處理rpg遊戲訊息時發生錯誤: ${errorStack}`);
         };
 
-        const loophole_embeds = await get_loophole_embed(errorStack, null, client);
+        const loophole_embeds = await get_loophole_embed(error, null, client);
         await message.reply({ embeds: loophole_embeds });
     } finally {
         delete client.lock.rpg_handler[userId];

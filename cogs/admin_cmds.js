@@ -269,6 +269,6 @@ export async function execute(client, message) {
         const errorStack = inspect(err, { depth: null });
 
         logger.error(`admin cmds 錯誤: ${errorStack}`);
-        await message.reply({ embeds: await get_loophole_embed(errorStack, null, client) });
+        await message.reply({ embeds: await get_loophole_embed(err instanceof Error ? err : errorStack, null, client) });
     };
-}
+};

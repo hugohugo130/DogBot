@@ -94,7 +94,7 @@ async function smelt_smelt(interaction, item_id, amount, client = global._client
     const smelt_recipe = smeltable_recipe.find(item => item.input.item === item_id);
     if (!smelt_recipe) {
         logger.warn(`找不到物品id ${item_id} 的熔鍊配方`);
-        const embeds = await get_loophole_embed("找不到熔鍊配方", interaction, client);
+        const embeds = await get_loophole_embed(new Error("找不到熔鍊配方"), interaction, client);
 
         return await interaction.editReply({ embeds });
     };

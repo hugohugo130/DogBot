@@ -2320,7 +2320,7 @@ export async function execute(client, interaction) {
 
         logger.error(errorStack);
 
-        const loophole_embeds = await get_loophole_embed(errorStack, interaction, client);
+        const loophole_embeds = await get_loophole_embed(err instanceof Error ? err : errorStack, interaction, client);
 
         if (!interaction.deferred || !interaction.replied) try {
             await interaction.deferReply({ flags: MessageFlags.Ephemeral });

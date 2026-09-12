@@ -258,7 +258,7 @@ const execute = async function (client, interaction) {
         if (errorStack.includes("Unknown Interaction")) return;
         logger.error(`執行斜線指令 ${fullCommand} 時出錯：${errorStack}`);
 
-        const embeds = await get_loophole_embed(errorStack, interaction, client);
+        const embeds = await get_loophole_embed(error instanceof Error ? error : errorStack, interaction, client);
         try {
             await interaction.followUp({ content: "", embeds, components: [], flags: MessageFlags.Ephemeral });
         } catch {

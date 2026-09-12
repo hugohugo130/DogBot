@@ -52,7 +52,7 @@ const execute = async function (client, message) {
         if (errorStack.includes("Missing Access")) return;
 
         logger.error(`處理訊息時錯誤: ${errorStack}`);
-        await message.reply({ embeds: await get_loophole_embed(errorStack, null, client) });
+        await message.reply({ embeds: await get_loophole_embed(err instanceof Error ? err : errorStack, null, client) });
     };
 }
 
