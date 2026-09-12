@@ -13,6 +13,7 @@ import { safeshutdown } from "./utils/safeshutdown.js";
 import { hot_reload_cogs } from "./utils/hot_reload.js";
 import { check_language_keys } from "./utils/language.js";
 import { create_tables } from "./utils/db/create_tables.js";
+import { wait_for_client } from "./utils/wait_for_client.js";
 import { should_register_cmd } from "./utils/auto_register.js";
 import { update_items } from "./utils/db/update_items_table.js";
 import { check_help_rpg_info } from "./cogs/rpg/interactions.js";
@@ -21,6 +22,7 @@ import { getQueues, IsFFprobeInstalled } from "./utils/music/music.js";
 import { checkDBFilesExists, checkDBFilesCorrupted } from "./utils/check_db_files.js";
 import DogClient from "./utils/customs/client.js";
 import get_areadline from "./utils/readline.js";
+import { update_tables } from "./utils/db/update_tables.ts";
 
 loadEnvFile(); // load .env file
 
@@ -190,7 +192,16 @@ client.once(Events.ClientReady, async () => {
                 switch (option) {
                     case "music-persistence": {
                         await saveAllMusicStates();
-                    };
+                        break;
+                    }
+                    case "get-client": {
+                        const start = performance.now();
+
+                        await wait_for_client();
+
+                        const duration = performance.now() - start;
+                        logger.debug(`got client! duration: ${duration.toFixed(5)}ms`);
+                    }
                 };
 
                 break;
@@ -218,22 +229,23 @@ client.once(Events.ClientReady, async () => {
     })
 });
 
-global._client = null;
-global._areadline = null;
-global.sendQueue = [];
-
-await create_tables(noCache);
-const [_, __, ffprobeInstalled] = await Promise.all([
-    update_items(),
-    checkDBFilesCorrupted(),
-    IsFFprobeInstalled(),
-]);
-
-if (musicSearchEngine.length && !ffprobeInstalled) {
-    logger.warn(`如果FFprobe沒有安裝，那麼將無法偵測音樂功能中，播放自定義URL的音訊長度`);
-};
-
 if (import.meta.main) {
+    global._client = null;
+    global._areadline = null;
+    global.sendQueue = [];
+
+    await create_tables(!noCache);
+    await update_tables(!noCache)
+    const [_, __, ffprobeInstalled] = await Promise.all([
+        update_items(),
+        checkDBFilesCorrupted(),
+        IsFFprobeInstalled(),
+    ]);
+
+    if (musicSearchEngine.length && !ffprobeInstalled) {
+        logger.warn(`如果FFprobe沒有安裝，那麼將無法偵測音樂功能中，播放自定義URL的音訊長度`);
+    };
+
     check_help_rpg_info();
     check_language_keys();
     check_item_data();
