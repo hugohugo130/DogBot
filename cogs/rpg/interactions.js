@@ -567,6 +567,21 @@ export const help_data = {
                 ],
                 format: "{cmd}",
             },
+            "time": {
+                "emoji": "timer",
+                "desc": "查詢時間轉換成時間戳記 (timestamp)",
+                "usage": [
+                    {
+                        "name": "查詢現在的時間戳記",
+                        "value": "{cmd}",
+                    },
+                    {
+                        "name": "查詢11月28號的時間戳記",
+                        "value": "{cmd} 2025-11-28",
+                    },
+                ],
+                "format": "{cmd} [時間格式]"
+            },
         },
         special: {
 

@@ -100,9 +100,11 @@ import {
     set_cooldown,
     getAutoEatOrder,
 } from "../../utils/db/rpg.js";
+import {
+    withTimeout,
+} from "../../utils/music/music.js";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
-import { withTimeout } from "../../utils/music/music.js";
 
 const logger = get_logger();
 
@@ -2256,7 +2258,28 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
         return mode === 1
             ? replyOptions
             : message.reply(replyOptions);
-    }, false]
+    }, false],
+    time: ["時間戳記", async function ({ client, message, args, mode }) {
+        const [time_text = null] = args;
+        const cleaned_time_text = time_text?.trim();
+
+        const emoji_timer = await get_emoji("timer", client);
+
+        const timestamp = cleaned_time_text
+            ? Date.parse(cleaned_time_text)
+            : Date.now()
+
+        const timestamp_second = convertToSecondTimestamp(timestamp)
+
+        const embed = new EmbedBuilder()
+            .setColor(embed_default_color)
+            .setTitle(`${emoji_timer} | 時間戳記`)
+            .setDescription(`<t:${timestamp_second}:F> (<t:${timestamp_second}:R>): \`${timestamp_second}\``)
+            .setEmbedFooter(message.author?.id);
+
+        if (mode === 1) return { embeds: [embed] };
+        await message.reply({ embeds: [embed] });
+    }, false],
 };
 
 for (const [from, target] of Object.entries(redirect_data)) {
