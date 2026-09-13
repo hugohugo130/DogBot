@@ -5,6 +5,7 @@ import eslint from "@eslint/js";
 import jsdoc from "eslint-plugin-jsdoc";
 import command from "eslint-plugin-command/config";
 import tseslint from "typescript-eslint";
+import tsParser from "@typescript-eslint/parser";
 import { defineConfig } from "eslint/config";
 import { includeIgnoreFile } from "@eslint/config-helpers";
 
@@ -19,6 +20,7 @@ export default defineConfig([
     {
         files: ["**/*.{js,mjs,cjs,ts,tsx,mts,cts}"],
         languageOptions: {
+            parser: tsParser,
             globals: globals.node,
             parserOptions: {
                 project: "./jsconfig.json",
@@ -47,6 +49,7 @@ export default defineConfig([
             }],
             "jsdoc/no-undefined-types": ["warn", {
                 definedTypes: [
+                    "K",
                     "NodeJS",
                     "NodeJS.Timeout",
                     "NodeJS.CallSite",
