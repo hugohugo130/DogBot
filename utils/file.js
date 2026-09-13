@@ -357,9 +357,15 @@ function get_probability_of_id(item, default_return = undefined) {
 /**
  * @template {object} T
  * @template {object} U
+ * @typedef {{ [K in keyof U]: K extends keyof T ? T[K] | U[K] : U[K] }} OrderDataResult
+ */
+
+/**
+ * @template {object} T
+ * @template {object} U
  * @param {T} data
  * @param {U} follow
- * @returns {{ [K in keyof U]: K extends keyof T ? T[K] | U[K] : U[K] }}
+ * @returns {OrderDataResult<T, U>}
  */
 function order_data(data, follow) {
     /** @type {Record<string, unknown>} */
@@ -370,8 +376,7 @@ function order_data(data, follow) {
             /** @type {Record<string, unknown>} */ (follow)[key];
     };
 
-    // @ts-expect-error - e
-    return orderedData;
+    return /** @type {OrderDataResult<T, U>} */ (orderedData);
 };
 
 /*
