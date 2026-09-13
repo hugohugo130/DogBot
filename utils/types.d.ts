@@ -150,8 +150,8 @@ export interface RandomItem {
 };
 
 export type RandomResult =
-    | readonly { failed: true; item: (typeof failed)[number]; amount: number }
-    | readonly { failed: false; item: SuccessItem; amount: number };
+    | { failed: true; item: (typeof failed)[number]; amount: number }
+    | { failed: false; item: SuccessItem; amount: number };
 
 export type RPGCommand = [string, RPGCmdFunction, RPGCmdCheckNeedArgFunction | boolean];
 
