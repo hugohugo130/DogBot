@@ -226,11 +226,13 @@ class CacheManager {
  * @overload
  * @param {boolean} [create] - Whether to create the cache manager if not exists.
  * @returns {CacheManager | null}
- *
+ */
+/**
  * @overload
  * @param {true} [create] - Whether to create the cache manager if not exists.
  * @returns {CacheManager}
- *
+ */
+/**
  * Get the cache manager
  * @param {boolean} [create] - Whether to create the cache manager if not exists.
  * @returns {CacheManager | null}

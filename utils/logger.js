@@ -293,12 +293,14 @@ function getCallerFile(skipURLs = []) {
  * @overload
  * @param {"list"} mode
  * @returns {string[]}
- *
+ */
+/**
  * @overload
  * @param {"full" | "url" | null} [mode]
  * @param {string[]} [skipURLs] 額外要跳過的檔案 URL
  * @returns {string | null}
- *
+ */
+/**
  * @param {1 | "list" | "full" | "url" | null} [mode]
  * @param {string[]} [skipURLs] 額外要跳過的檔案 URL
  * @returns {string | string[] | null}

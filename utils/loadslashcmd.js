@@ -134,6 +134,10 @@ async function processDirectory(bot, dirPath) {
  * @returns {Promise<Collection<string, import("./types").Slash>>}
  *
  * @overload
+ * @param {false} [bot] true返回collection, false返回array
+ * @returns {Promise<SlashCmdBody[]>}
+ *
+ * @overload
  * @param {boolean} [bot] true返回collection, false返回array
  * @returns {Promise<Collection<string, import("./types").Slash> | SlashCmdBody[]>}
  *

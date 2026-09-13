@@ -63,17 +63,20 @@ export async function getBotInfoEmbed(locale = null, client = global._client) {
          * @param {number} num
          * @param {number} tofix
          * @returns {string}
-         *
+         */
+        /**
          * @overload
          * @param {number} num
          * @param {null} tofix
          * @returns {number}
-         *
+         */
+        /**
          * @overload
          * @param {number} num
          * @param {number | null} [tofix]
          * @returns {number | string}
-         *
+         */
+        /**
          * @param {number} num
          * @param {number | null} [tofix]
          */
