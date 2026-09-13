@@ -30,7 +30,7 @@ global.isBeta = isBeta;
 /**
  * Log something
  * @param {import("winston").Logger | false | null} logger
- * @param {any} message - the message to be logged
+ * @param {unknown} message - the message to be logged
  */
 function log(logger, message) {
     if (logger) logger.info(message);
@@ -40,7 +40,7 @@ function log(logger, message) {
 /**
  * Log some errors
  * @param {import("winston").Logger | false | null} logger
- * @param {any} message - the message of error to be logged
+ * @param {unknown} message - the message of error to be logged
  */
 function _error(logger, message) {
     if (logger) logger.error(message);
@@ -53,7 +53,7 @@ function _error(logger, message) {
  * @param {boolean | import("winston").Logger} [logger]
  * @param {boolean} [updateHash] 是否在註冊成功後更新 hash 文件
  * @param {boolean} [beta] 是否使用 beta bot
- * @returns {Promise<any[]>}
+ * @returns {Promise<(import("./utils/loadslashcmd.js").SlashCmdBody | import("discord.js").RESTPostAPIContextMenuApplicationCommandsJSONBody)[]>}
  */
 async function registcmd(quiet = true, logger = false, updateHash = true, beta = isBeta) {
     loadEnvFile();
