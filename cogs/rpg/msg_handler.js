@@ -2550,6 +2550,7 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
 
 /**
  * Get a random gain of a rpg work
+ *
  * @param {keyof typeof probabilities} category - work command or ID
  * @returns {import("../../utils/types").RandomResult}
  */
@@ -2565,9 +2566,7 @@ function get_random_result(category) {
 
     if (!datas) return empty_template;
     const items = /** @type {(keyof import("../../utils/types").ValueOf<typeof probabilities>)[]} */ (/** @type {unknown} */ (Object.keys(datas)));
-    if (!items.length) {
-        throw new Error(`no probabilities data of category ${category} found`);
-    };
+    if (!items.length) throw new Error(`no probabilities data of category ${category} found`)
 
     let totalWeight = 0;
     const cumulativeWeights = [];
@@ -2582,9 +2581,12 @@ function get_random_result(category) {
         cumulativeWeights.push(totalWeight);
         validItems.push(item);
     };
+    if (!validItems) return empty_template;
 
     // Choose item randomly
     const rand = Math.random() * totalWeight;
+
+    /** @type {import("../../utils/config.ts").ItemName | null} */
     let selectedItem = null;
     for (let i = 0; i < cumulativeWeights.length; i++) {
         if (rand < cumulativeWeights[i]) {
@@ -2597,6 +2599,7 @@ function get_random_result(category) {
         selectedItem = validItems[Math.floor(Math.random() * validItems.length)];
     };
 
+    if (!selectedItem) return empty_template;
     const selectedItemData = datas[selectedItem];
     if (!selectedItemData) return empty_template;
 
