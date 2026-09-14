@@ -16,6 +16,8 @@ import {
 
 const DEBUG = false;
 
+const extensions = [".js", ".ts"];
+
 const logger = get_logger();
 /* eslint-disable */
 /**
@@ -106,7 +108,7 @@ async function processDirectory(bot, dirPath) {
             } else {
                 commands.push(.../** @type {SlashCmdBody[]} */ (subCommands));
             };
-        } else if (item.endsWith(".js")) {
+        } else if (extensions.some((ext) => itemPath.endsWith(ext))) {
             const module = await import(pathToFileURL(itemPath).href);
 
             let command = findSlashFromModule(module);
