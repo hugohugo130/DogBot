@@ -7,6 +7,8 @@ on:
 
 jobs:
   deploy:
+    # 如果 commit 的 summary 是以 'chore(deps)' 開頭，就不執行
+    if: ${{ !startsWith(github.event.head_commit.message, 'chore(deps') }}
     runs-on: ubuntu-latest
 
     steps:
