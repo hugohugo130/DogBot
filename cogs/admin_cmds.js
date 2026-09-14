@@ -24,7 +24,7 @@ import {
     save_inventory,
     save_rpg_data,
     set_cooldown,
-} from "../utils/db/rpg.js";
+} from "../utils/db/rpg.ts";
 import {
     mentions_users,
 } from "../utils/message.js";

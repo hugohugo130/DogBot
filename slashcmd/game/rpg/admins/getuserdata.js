@@ -16,7 +16,7 @@ import {
 } from "../../../../utils/config.ts";
 import {
     load_rpg_data,
-} from "../../../../utils/db/rpg.js";
+} from "../../../../utils/db/rpg.ts";
 
 /** @type {import("../../../../utils/types").Slash} */
 export const getUserDataSlash = {

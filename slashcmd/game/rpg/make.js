@@ -16,7 +16,7 @@ import {
 import {
     load_inventory,
     save_inventory,
-} from "../../../utils/db/rpg.js";
+} from "../../../utils/db/rpg.ts";
 import {
     embed_error_color,
     embed_default_color,

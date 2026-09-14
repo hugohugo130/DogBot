@@ -13,7 +13,7 @@ import {
 import {
     load_inventory,
     load_rpg_data,
-} from "../utils/db/rpg.js";
+} from "../utils/db/rpg.ts";
 import DogClient from "../utils/customs/client.js";
 
 const smeltable_items = smeltable_recipe.reduce((acc, item) => {

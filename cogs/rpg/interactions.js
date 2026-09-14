@@ -131,7 +131,7 @@ import {
     removeAutoEat,
     getAutoEatOrder,
     reorderAutoEat,
-} from "../../utils/db/rpg.js";
+} from "../../utils/db/rpg.ts";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
 

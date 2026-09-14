@@ -9,17 +9,14 @@ import {
     RPGData,
     RPGInventory,
 } from "./tables.ts";
-
-/** @import { TransactionsInfo } from '../config' */
+import {
+    type TransactionsInfo,
+} from "../config.ts";
 
 // #region [rpg_users]
 
-/**
- * @param {string} userid
- * @returns {Promise<RPGData>}
- */
-export async function load_rpg_data(userid) {
-    const table_name = /** @type {const} */ "rpg_users";
+export async function load_rpg_data(userid: string): Promise<RPGData> {
+    const table_name = "rpg_users" as const;
 
     const command = `
         SELECT *
@@ -29,10 +26,10 @@ export async function load_rpg_data(userid) {
     `;
 
     const pool = getPool();
-    const { rows } = /** @type {{ rows: (Omit<import("./tables").RPGUsersSQLRow, "user_id">)[] }} */ (await pool.query(
+    const { rows } = await pool.query(
         command,
         [userid],
-    ));
+    ) as { rows: (Omit<import("./tables").RPGUsersSQLRow, "user_id">)[] };
 
     if (!rows.length) {
         const rpg_data = new RPGData(null, userid);
@@ -51,13 +48,8 @@ export async function load_rpg_data(userid) {
     }, userid);
 };
 
-/**
- * @param {string} userid
- * @param {RPGData} rpg_data
- * @returns {Promise<void>}
- */
-export async function save_rpg_data(userid, rpg_data) {
-    const table_name = /** @type {const} */ "rpg_users";
+export async function save_rpg_data(userid: string, rpg_data: RPGData): Promise<void> {
+    const table_name = "rpg_users" as const;
 
     const command = `
         INSERT INTO ${table_name} (
@@ -148,11 +140,9 @@ export async function save_rpg_data(userid, rpg_data) {
 
 /**
  * 從 SQL 資料庫中 讀取 RPG 揹包資料
- * @param {string} userid
- * @returns {Promise<RPGInventory>}
  */
-export async function load_inventory(userid) {
-    const table_name = /** @type {const} */ "inventory";
+export async function load_inventory(userid: string): Promise<RPGInventory> {
+    const table_name = "inventory" as const;
 
     const command = `
         SELECT item_id, amount
@@ -161,27 +151,24 @@ export async function load_inventory(userid) {
     `;
 
     const pool = getPool();
-    const { rows } = /** @type {{ rows: import("./tables").InventorySQLRow[] }} */ (await pool.query(
+    const { rows } = await pool.query(
         command,
         [userid],
-    ));
+    ) as { rows: import("./tables").InventorySQLRow[] };
 
     const data = rows.reduce((acc, row) => {
         acc[row.item_id] = Number(row.amount); // 預設返回字符串
         return acc;
-    }, /** @type {{ [k: string]: number }} */({}));
+    }, {} as { [k: string]: number });
 
     return new RPGInventory(data, userid);
 };
 
 /**
  * 保存 RPG 揹包資料 到 SQL 資料庫
- * @param {string} userid
- * @param {RPGInventory} inventory
- * @returns {Promise<void>}
  */
-export async function save_inventory(userid, inventory) {
-    const table_name = /** @type {const} */ "inventory";
+export async function save_inventory(userid: string, inventory: RPGInventory): Promise<void> {
+    const table_name = "inventory" as const;
 
     const command = `
         WITH deleted AS (
@@ -218,12 +205,9 @@ export async function save_inventory(userid, inventory) {
 
 /**
  * 從 SQL 資料庫中 讀取 RPG 交易資料
- * @param {string} userid
- * @param {number} [amount]
- * @returns {Promise<TransactionsInfo[]>}
  */
-export async function load_transactions(userid, amount = 10) {
-    const table_name = /** @type {const} */ "rpg_transactions";
+export async function load_transactions(userid: string, amount: number = 10): Promise<TransactionsInfo[]> {
+    const table_name = "rpg_transactions" as const;
 
     const command = `
         SELECT created_at as "timestamp", original_user, target_user, type, amount
@@ -237,10 +221,10 @@ export async function load_transactions(userid, amount = 10) {
     `;
 
     const pool = getPool();
-    const { rows } = /** @type {{ rows: import("./tables").RPGTransactionsSQLRow[] }} */ (await pool.query(
+    const { rows } = await pool.query(
         command,
         [userid],
-    ));
+    ) as { rows: import("./tables").RPGTransactionsSQLRow[] };
 
     return rows.map(row => ({
         ...row,
@@ -251,11 +235,9 @@ export async function load_transactions(userid, amount = 10) {
 
 /**
  * 增加一筆 RPG 交易資料 到 SQL 資料庫
- * @param {TransactionsInfo} transaction
- * @returns {Promise<void>}
  */
-export async function add_transaction(transaction) {
-    const table_name = /** @type {const} */ "rpg_transactions";
+export async function add_transaction(transaction: TransactionsInfo): Promise<void> {
+    const table_name = "rpg_transactions" as const;
     const { timestamp, original_user, target_user, type, amount } = transaction;
 
     const command = `
@@ -284,12 +266,9 @@ export async function add_transaction(transaction) {
 
 /**
  * 讀取某個冷卻 key 的最後執行時間
- * @param {string} userid
- * @param {string} cooldown_key
- * @returns {Promise<Date | null>}
  */
-export async function load_cooldown(userid, cooldown_key) {
-    const table_name = /** @type {const} */ "rpg_cooldowns";
+export async function load_cooldown(userid: string, cooldown_key: string): Promise<Date | null> {
+    const table_name = "rpg_cooldowns" as const;
 
     const command = `
         SELECT last_run_at
@@ -299,21 +278,19 @@ export async function load_cooldown(userid, cooldown_key) {
     `;
 
     const pool = getPool();
-    const { rows } = /** @type {{ rows: import("./tables").RPGCooldownsSQLRow[]} } */ (await pool.query(
+    const { rows } = await pool.query(
         command,
         [userid, cooldown_key],
-    ));
+    ) as { rows: import("./tables").RPGCooldownsSQLRow[] };
 
     return rows.length ? rows[0].last_run_at : null;
 };
 
 /**
  * 讀取所有冷卻的數據
- * @param {string} userid
- * @returns {Promise<{ [cooldown_key: string]: Date }>}
  */
-export async function get_cooldowns(userid) {
-    const table_name = /** @type {const} */ "rpg_cooldowns";
+export async function get_cooldowns(userid: string): Promise<{ [cooldown_key: string]: Date; }> {
+    const table_name = "rpg_cooldowns" as const;
 
     const command = `
         SELECT cooldown_key, last_run_at
@@ -322,26 +299,22 @@ export async function get_cooldowns(userid) {
     `;
 
     const pool = getPool();
-    const { rows } = /** @type {{ rows: import("./tables").RPGCooldownsSQLRow[]} } */ (await pool.query(
+    const { rows } = await pool.query(
         command,
         [userid],
-    ));
+    ) as { rows: import("./tables").RPGCooldownsSQLRow[] };
 
     return rows.reduce((acc, cooldowns) => {
         acc[cooldowns.cooldown_key] = cooldowns.last_run_at;
         return acc;
-    }, /** @type {{ [cooldown_key: string]: Date }} */({}))
+    }, {} as { [cooldown_key: string]: Date })
 };
 
 /**
  * 更新某個冷卻 key 的最後執行時間
- * @param {string} userid
- * @param {string} cooldown_key
- * @param {Date} last_run_at
- * @returns {Promise<void>}
  */
-export async function set_cooldown(userid, cooldown_key, last_run_at) {
-    const table_name = /** @type {const} */ "rpg_cooldowns";
+export async function set_cooldown(userid: string, cooldown_key: string, last_run_at: Date): Promise<void> {
+    const table_name = "rpg_cooldowns" as const;
 
     const command = `
         INSERT INTO ${table_name} (user_id, cooldown_key, last_run_at)
@@ -361,13 +334,8 @@ export async function set_cooldown(userid, cooldown_key, last_run_at) {
 
 // #region [rpg_user_counts]
 
-/**
- * @param {string} count_key
- * @param {string} userid
- * @returns {Promise<number | null>}
- */
-export async function get_count(count_key, userid) {
-    const table_name = /** @type {const} */ "rpg_user_counts";
+export async function get_count(count_key: string, userid: string): Promise<number | null> {
+    const table_name = "rpg_user_counts" as const;
 
     const command = `
         SELECT count_value
@@ -377,22 +345,16 @@ export async function get_count(count_key, userid) {
     `;
 
     const pool = getPool();
-    const { rows } = /** @type {{ rows: {count_value: number}[] }} */ (await pool.query(
+    const { rows } = await pool.query(
         command,
         [userid, count_key],
-    ));
+    ) as { rows: { count_value: number }[] };
 
     return rows[0]?.count_value ?? null;
 };
 
-/**
- * 設定某個key的計數
- * @param {string} userid
- * @param {string} count_key
- * @param {number} count
- */
-export async function set_count(userid, count_key, count) {
-    const table_name = /** @type {const} */ "rpg_user_counts";
+export async function set_count(userid: string, count_key: string, count: number) {
+    const table_name = "rpg_user_counts" as const;
 
     const command = `
         INSERT INTO ${table_name} (user_id, count_key, count_value)
@@ -411,11 +373,9 @@ export async function set_count(userid, count_key, count) {
 
 /**
  * 讀取使用者的所有計數
- * @param {string} userid
- * @returns {Promise<Record<string, number>>}
  */
-export async function load_user_counts(userid) {
-    const table_name = /** @type {const} */ "rpg_user_counts";
+export async function load_user_counts(userid: string): Promise<Record<string, number>> {
+    const table_name = "rpg_user_counts" as const;
 
     const command = `
         SELECT count_key, count_value
@@ -424,25 +384,22 @@ export async function load_user_counts(userid) {
     `;
 
     const pool = getPool();
-    const { rows } = /** @type {{ rows: import("./tables.ts").RPGUserCountsSQLRow[] }} */ (await pool.query(
+    const { rows } = await pool.query(
         command,
         [userid],
-    ));
+    ) as { rows: import("./tables.ts").RPGUserCountsSQLRow[] };
 
     return rows.reduce((acc, row) => {
         acc[row.count_key] = Number(row.count_value);
         return acc;
-    }, /** @type {Record<string, number>} */({}));
+    }, {} as Record<string, number>);
 };
 
 /**
  * 保存使用者的所有計數
- * @param {string} userid
- * @param {Record<string, number>} counts
- * @returns {Promise<void>}
  */
-export async function save_user_counts(userid, counts) {
-    const table_name = /** @type {const} */ "rpg_user_counts";
+export async function save_user_counts(userid: string, counts: Record<string, number>): Promise<void> {
+    const table_name = "rpg_user_counts" as const;
 
     const command = `
         WITH deleted AS (
@@ -475,11 +432,9 @@ export async function save_user_counts(userid, counts) {
 
 /**
  * 讀取使用者的隱私設定
- * @param {string} userid
- * @returns {Promise<string[]>}
  */
-export async function load_user_privacy(userid) {
-    const table_name = /** @type {const} */ "rpg_user_privacy";
+export async function load_user_privacy(userid: string): Promise<string[]> {
+    const table_name = "rpg_user_privacy" as const;
 
     const command = `
         SELECT privacy_key
@@ -498,12 +453,9 @@ export async function load_user_privacy(userid) {
 
 /**
  * 保存使用者的隱私設定
- * @param {string} userid
- * @param {string[]} privacy
- * @returns {Promise<void>}
  */
-export async function save_user_privacy(userid, privacy) {
-    const table_name = /** @type {const} */ "rpg_user_privacy";
+export async function save_user_privacy(userid: string, privacy: string[]): Promise<void> {
+    const table_name = "rpg_user_privacy" as const;
 
     const client = await connectPool();
     await client.begin();
@@ -540,11 +492,9 @@ export async function save_user_privacy(userid, privacy) {
 
 /**
  * 刪除使用者的所有隱私設定
- * @param {string} userid
- * @returns {Promise<void>}
  */
-export async function delete_user_privacy(userid) {
-    const table_name = /** @type {const} */ "rpg_user_privacy";
+export async function delete_user_privacy(userid: string): Promise<void> {
+    const table_name = "rpg_user_privacy" as const;
 
     const command = `
         DELETE FROM ${table_name}
@@ -564,12 +514,8 @@ export async function delete_user_privacy(userid) {
 
 /**
  * 事務內版本：假設呼叫端已上 advisory lock，且處於 transaction 中。
- * @param {import("pg").PoolClient} client
- * @param {string} userid
- * @param {string} itemid
- * @returns {Promise<boolean>}
  */
-async function _addAutoEatTx(client, userid, itemid) {
+async function _addAutoEatTx(client: import("pg").PoolClient, userid: string, itemid: string): Promise<boolean> {
     const command = `
         INSERT INTO rpg_auto_eat (user_id, position, item_id)
         SELECT $1,
@@ -590,12 +536,8 @@ async function _addAutoEatTx(client, userid, itemid) {
 
 /**
  * 事務內版本：假設呼叫端已上 advisory lock。
- * @param {import("pg").PoolClient} client
- * @param {string} userid
- * @param {string} itemid
- * @returns {Promise<boolean>}
  */
-async function _removeAutoEatTx(client, userid, itemid) {
+async function _removeAutoEatTx(client: import("pg").PoolClient, userid: string, itemid: string): Promise<boolean> {
     const del = `
         DELETE FROM rpg_auto_eat
         WHERE user_id = $1 AND item_id = $2
@@ -624,17 +566,13 @@ async function _removeAutoEatTx(client, userid, itemid) {
  * - DB 有、newOrder 沒有 → 移除
  * - newOrder 有、DB 沒有 → 依 newOrder 順序追加到最後
  * - 已在 DB 且也在 newOrder → 原地保留（不重排，因為 add 只追加到最後）
- *
- * @param {string} userid
- * @param {import("../rpg").FoodKey[]} newOrder
- * @returns {Promise<{ added: import("../rpg").FoodKey[]; removed: import("../rpg").FoodKey[] }>}
  */
-export async function syncAutoEatOrder(userid, newOrder) {
+export async function syncAutoEatOrder(userid: string, newOrder: import("../rpg").FoodKey[]): Promise<{ added: import("../rpg").FoodKey[]; removed: import("../rpg").FoodKey[]; }> {
     // 1. 去重（避免 UNIQUE(user_id, item_id) 撞）
     //    Set 保序：以第一次出現為準
     const dedupedNew = [...new Set(newOrder)];
 
-    const table_name = /** @type {const} */ "rpg_auto_eat";
+    const table_name = "rpg_auto_eat" as const;
     const client = await connectPool();
 
     await client.init(table_name);
@@ -676,12 +614,8 @@ export async function syncAutoEatOrder(userid, newOrder) {
     });
 }
 
-/**
- * @param {string} userid
- * @returns {Promise<import("../rpg").FoodKey[]>}
- */
-export async function getAutoEatOrder(userid) {
-    const table_name = /** @type {const} */ "rpg_auto_eat";
+export async function getAutoEatOrder(userid: string): Promise<import("../rpg").FoodKey[]> {
+    const table_name = "rpg_auto_eat" as const;
 
     const command = `
         SELECT item_id
@@ -691,20 +625,15 @@ export async function getAutoEatOrder(userid) {
     `;
 
     const pool = getPool();
-    const { rows } = /** @type {{ rows: { item_id: import("../rpg").FoodKey }[]} } */ (await pool.query(
+    const { rows } = await pool.query(
         command,
         [userid],
-    ));
+    ) as { rows: { item_id: import("../rpg").FoodKey }[] };
 
     return rows.map((row) => row.item_id);
 };
 
-/**
- * @param {string} userid
- * @param {import("../rpg").FoodKey} itemid
- * @returns {Promise<boolean>}
- */
-export async function hasAutoEat(userid, itemid) {
+export async function hasAutoEat(userid: string, itemid: import("../rpg").FoodKey): Promise<boolean> {
     const command = `
         SELECT 1
         FROM rpg_auto_eat
@@ -721,13 +650,8 @@ export async function hasAutoEat(userid, itemid) {
     return !!rowCount;
 };
 
-/**
- * @param {string} userid
- * @param {import("../rpg").FoodKey} itemid
- * @returns {Promise<boolean>} Modified?
- */
-export async function addAutoEat(userid, itemid) {
-    const table_name = /** @type {const} */ "rpg_auto_eat";
+export async function addAutoEat(userid: string, itemid: import("../rpg").FoodKey): Promise<boolean> {
+    const table_name = "rpg_auto_eat" as const;
     const client = await connectPool();
 
     await client.init(table_name);
@@ -740,13 +664,8 @@ export async function addAutoEat(userid, itemid) {
     });
 };
 
-/**
- * @param {string} userid
- * @param {import("../rpg").FoodKey} itemid
- * @returns {Promise<boolean>} Modified?
- */
-export async function removeAutoEat(userid, itemid) {
-    const table_name = /** @type {const} */ "rpg_auto_eat";
+export async function removeAutoEat(userid: string, itemid: import("../rpg").FoodKey): Promise<boolean> {
+    const table_name = "rpg_auto_eat" as const;
     const client = await connectPool();
 
     await client.init(table_name);
@@ -767,13 +686,10 @@ export async function removeAutoEat(userid, itemid) {
  * - 位置沒變 → 回傳 true（no-op）
  * - 其他正常情況 → 回傳 true
  *
- * @param {string} userid
- * @param {string} itemid
- * @param {number} position  目標位置（1-based）
- * @returns {Promise<boolean>} Modified?
+ * Returns: Modified?
  */
-export async function reorderAutoEat(userid, itemid, position) {
-    const table_name = /** @type {const} */ "rpg_auto_eat";
+export async function reorderAutoEat(userid: string, itemid: string, position: number): Promise<boolean> {
+    const table_name = "rpg_auto_eat" as const;
     const client = await connectPool();
 
     await client.init(table_name);
@@ -852,12 +768,9 @@ export async function reorderAutoEat(userid, itemid, position) {
 
 /**
  * 整份覆寫自動進食順序
- * @param {string} userid
- * @param {import("../rpg").FoodKey[]} foodKeys 依序排列，index 0 = position 1
- * @returns {Promise<void>}
  */
-export async function setAutoEatOrder(userid, foodKeys) {
-    const table_name = /** @type {const} */ "rpg_auto_eat";
+export async function setAutoEatOrder(userid: string, foodKeys: import("../rpg").FoodKey[]): Promise<void> {
+    const table_name = "rpg_auto_eat" as const;
 
     // 應用層去重：保留第一次出現的位置（避免 (user_id, item_id) UNIQUE 衝突）
     const seen = new Set();
@@ -899,3 +812,11 @@ export async function setAutoEatOrder(userid, foodKeys) {
 };
 
 // #endregion [rpg_auto_eat]
+
+// #region [rpg_partner]
+
+async function load_partner(userid: string) {
+
+}
+
+// #endregion [rpg_partner]

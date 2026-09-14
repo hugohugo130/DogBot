@@ -56,7 +56,7 @@ import {
     load_inventory,
     load_rpg_data,
     load_user_privacy,
-} from "./db/rpg.js";
+} from "./db/rpg.ts";
 import type {
     JobNames,
     SuccessItem,
@@ -1446,7 +1446,7 @@ async function get_loophole_embed(text: string | Error, interaction: BaseInterac
  * @returns {Promise<EmbedBuilder | null>}
  */
 async function job_delay_embed(userId: string, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder | null> {
-    const { load_cooldown } = await importModules("./db/rpg.js") as typeof import("./db/rpg.js");
+    const { load_cooldown } = await importModules("./db/rpg.ts") as typeof import("./db/rpg");
 
     const job_cooldown = await load_cooldown(userId, "job");
     const setJobTime = convertToSecondTimestamp(job_cooldown?.getTime() ?? 0);

@@ -26,7 +26,7 @@ import {
     load_rpg_data,
     save_inventory,
     set_cooldown,
-} from "../../../utils/db/rpg.js";
+} from "../../../utils/db/rpg.ts";
 import {
     convertToSecondTimestamp,
     DateNowSecond,

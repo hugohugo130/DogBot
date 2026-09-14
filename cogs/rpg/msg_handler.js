@@ -99,7 +99,7 @@ import {
     get_count,
     set_cooldown,
     getAutoEatOrder,
-} from "../../utils/db/rpg.js";
+} from "../../utils/db/rpg.ts";
 import {
     withTimeout,
 } from "../../utils/music/music.js";

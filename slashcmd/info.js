@@ -22,7 +22,7 @@ import {
 import {
     load_rpg_data,
     load_user_privacy,
-} from "../utils/db/rpg.js";
+} from "../utils/db/rpg.ts";
 import {
     get_emojis,
     get_emoji,

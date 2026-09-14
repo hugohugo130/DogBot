@@ -5,7 +5,7 @@ import {
 
 import {
     load_rpg_data,
-} from "../utils/db/rpg.js";
+} from "../utils/db/rpg.ts";
 import {
     get_emoji,
 } from "../utils/rpg.ts";

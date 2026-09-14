@@ -23,7 +23,7 @@ import {
 import {
     load_rpg_data,
     save_rpg_data,
-} from "./db/rpg.js";
+} from "./db/rpg.ts";
 import DogClient from "./customs/client.js";
 
 const logger = get_logger();

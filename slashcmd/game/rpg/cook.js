@@ -24,7 +24,7 @@ import {
     load_inventory,
     save_inventory,
     load_rpg_data,
-} from "../../../utils/db/rpg.js";
+} from "../../../utils/db/rpg.ts";
 import {
     generateSessionId,
 } from "../../../utils/random.js";
