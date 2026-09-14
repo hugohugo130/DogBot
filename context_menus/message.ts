@@ -13,7 +13,7 @@ import {
 
 export const avatarMenu: ContextMenu = {
     builder: new ContextMenuCommandBuilder()
-        .setName("message-detail")
+        .setName("Message Detail")
         .setNameLocalizations({
             "zh-CN": "訊息資訊",
             "zh-TW": "讯息资讯",
