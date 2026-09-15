@@ -70,6 +70,7 @@ import {
     isValidGuideCategory,
     autoEatCommand,
     selectAutoEatFoods,
+    RPGPrivacy,
 } from "../../utils/rpg.ts";
 import {
     get_farm_info_embed,
@@ -89,7 +90,6 @@ import {
     embed_job_color,
     cookBurntOverTime,
     cookBurntWeight,
-    PrivacySettings,
     cookClickAmount,
     embed_sign_color,
     default_prefix,
@@ -130,7 +130,7 @@ import {
     addAutoEat,
     removeAutoEat,
     getAutoEatOrder,
-    reorderAutoEat,
+    reorderAutoEat
 } from "../../utils/db/rpg.ts";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
@@ -913,9 +913,9 @@ export async function execute(client, interaction) {
                     get_emojis(["shield", "bag", "pet"], client),
                 ]);
 
-                const privacy = /** @type {(PrivacySettings[keyof PrivacySettings])[]} */
+                const privacy = /** @type {RPGPrivacy[]} */
                     (interaction.values
-                        .filter(e => /** @type {string[]} */(Object.values(PrivacySettings)).includes(e)));
+                        .filter(e => /** @type {string[]} */(/** @type {RPGPrivacy[]} */(["money", "backpack", "partner"])).includes(e)));
 
                 await save_user_privacy(user.id, privacy);
 
@@ -923,9 +923,9 @@ export async function execute(client, interaction) {
                 if (privacy.length) {
                     text = privacy
                         .join("、")
-                        .replace(PrivacySettings.Money, "金錢")
-                        .replace(PrivacySettings.Inventory, "背包")
-                        .replace(PrivacySettings.Partner, "夥伴");
+                        .replace("money", "金錢")
+                        .replace("backpack", "背包")
+                        .replace("partner", "夥伴");
                 };
 
                 const embed = new EmbedBuilder()
@@ -946,23 +946,23 @@ export async function execute(client, interaction) {
                         {
                             label: "金錢",
                             description: "擁有的金錢數量、交易記錄",
-                            value: PrivacySettings.Money,
+                            value: "money",
                             emoji: "💰",
-                            default: privacy.includes(PrivacySettings.Money),
+                            default: privacy.includes("money"),
                         },
                         {
                             label: "背包",
                             description: "背包內的物品",
-                            value: PrivacySettings.Inventory,
+                            value: "backpack",
                             emoji: emoji_backpack,
-                            default: privacy.includes(PrivacySettings.Inventory),
+                            default: privacy.includes("backpack"),
                         },
                         {
                             label: "夥伴",
                             description: "夥伴的清單",
-                            value: PrivacySettings.Partner,
+                            value: "partner",
                             emoji: emoji_pet,
-                            default: privacy.includes(PrivacySettings.Partner),
+                            default: privacy.includes("partner"),
                         }
                     ]);
 
@@ -992,11 +992,11 @@ export async function execute(client, interaction) {
                 break;
             }
             case "ls": {
-                if (!guild || !channel?.isSendable()) return;
+                if (!channel?.isSendable()) return;
 
                 const [_, prefix] = await Promise.all([
                     interaction.deferReply({ flags: MessageFlags.Ephemeral }),
-                    firstPrefix(guild.id),
+                    firstPrefix(guild?.id),
                 ]);
 
                 const message = new MockMessage(`${prefix}ls`, channel, user, guild);

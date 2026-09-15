@@ -38,7 +38,6 @@ import {
     setJobDelay,
     jobs,
     workCmdJobs,
-    PrivacySettings,
     fightjobs,
     failed,
     type ItemName,
@@ -1561,9 +1560,7 @@ async function ls_function(
 
     const privacy = await load_user_privacy(userid);
 
-    if (!privacy.includes(PrivacySettings.Inventory) && !PASS) {
-        if (!message.guild) throw new Error("Invalid Guild of the message");
-
+    if (!privacy.includes(RPGPrivacy.Inventory) && !PASS) {
         const [guildData, emoji_bag] = await Promise.all([
             message.guild?.id ? loadData(message.guild.id) : null,
             get_emoji("bag", client),
@@ -1786,11 +1783,9 @@ export async function selectAutoEatFoods(userID: string, mode: "add" | "remove",
 
 /**
  * Get the first prefix of a guild
- * @param {string} guildID
- * @returns {Promise<string>}
  */
-async function firstPrefix(guildID: string): Promise<string> {
-    const guildData = await loadData(guildID);
+async function firstPrefix(guildID: string | null = null): Promise<string> {
+    const guildData = guildID ? await loadData(guildID) : null;
 
     const prefix = guildData?.prefix?.[0] ?? reserved_prefixes[0];
 
@@ -1799,9 +1794,6 @@ async function firstPrefix(guildID: string): Promise<string> {
 
 /**
  * Check whether a prefix is included in the prefixes of the guild
- * @param {string} guildID
- * @param {string} prefix
- * @returns {Promise<string[]>}
  */
 async function InPrefix(guildID: string, prefix: string): Promise<string[]> {
     const guildData = await loadData(guildID);
@@ -1815,9 +1807,6 @@ async function InPrefix(guildID: string, prefix: string): Promise<string[]> {
 
 /**
  * Check whether a string is starts with one of the prefixes of the guild
- * @param {string} guildID
- * @param {string} str
- * @returns {Promise<false | string>}
  */
 async function startsWith_prefixes(guildID: string, str: string): Promise<false | string> {
     const guildData = await loadData(guildID);
@@ -1889,10 +1878,18 @@ export type NameReverseKey = keyof typeof name_reverse;
 export type TagKey = keyof typeof tags;
 export type ItemKey = Exclude<
     NameKey,
-    | `#${TagKey}`   // 排除 "#planks" 等以 # 開頭的標籤鍵
+    | `#${TagKey}`              // 排除 "#planks" 等以 # 開頭的標籤鍵
     | typeof animals[number]    // 排除動物鍵
     | JobNames                  // 排除職業鍵
 >;
+
+export const RPGPrivacy = {
+    Inventory: "backpack",
+    Money: "money",
+    Partner: "partner",
+} as const;
+
+export type RPGPrivacy = typeof RPGPrivacy[keyof typeof RPGPrivacy];
 
 const oven_slots = 6;
 const smelter_slots = 6;
