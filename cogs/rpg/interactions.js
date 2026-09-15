@@ -975,11 +975,11 @@ export async function execute(client, interaction) {
             case "choose_command": {
                 const [command] = otherCustomIDs;
 
-                if (!guild || !channel?.isSendable()) return;
+                if (!channel?.isSendable()) return;
 
                 const [_, prefix] = await Promise.all([
                     interaction.deferUpdate(),
-                    firstPrefix(guild.id),
+                    firstPrefix(guild?.id),
                 ]);
 
                 const message = new MockMessage(`${prefix}${command}`, channel, user, guild);
