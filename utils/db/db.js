@@ -129,17 +129,17 @@ export class PoolClient extends PGClient {
      */
     async withTransaction(fn) {
         try {
-            await this.query("BEGIN");
+            await this.begin()
             const result = await fn();
-            await this.query("COMMIT");
+            await this.commit()
             return result;
         } catch (err) {
-            await this.query("ROLLBACK");
+            await this.rollback();
             throw err;
         } finally {
             this.release();
-        }
-    }
+        };
+    };
 
     /**
      * @param {Error | boolean} [err]
