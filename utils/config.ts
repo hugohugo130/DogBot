@@ -21,7 +21,8 @@ import type {
 
 // functions for config
 const cwd = process.cwd;
-const isBeta = (global.isBeta ?? process.argv.slice(2).includes("--beta"));
+const argv = process.argv.slice(2);
+const isBeta = (global.isBeta ?? argv.includes("--beta")) || argv.includes("-a");
 
 
 // Database
