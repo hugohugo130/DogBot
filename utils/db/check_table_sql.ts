@@ -1,33 +1,26 @@
-import { parse } from "pgsql-ast-parser";
-import { TABLES, TABLES_METADATA } from "./config.ts";
+import {
+    parse,
+} from "pgsql-parser";
+import {
+    TABLES,
+    TABLES_METADATA
+} from "./config.ts";
+import {
+    get_logger,
+} from "../logger.js";
 
-export interface TableSqlValidation {
-    table: string;
-    ok: boolean;
-    error?: string;
-};
-
-export function validateTableCreateSql(): TableSqlValidation[] {
-    const results: TableSqlValidation[] = [];
+export async function validateTableCreateSql() {
+    const logger = get_logger();
 
     for (const table of TABLES) {
         const sql = TABLES_METADATA[table]?.CREATE;
         if (!sql) continue;
 
         try {
-            const ast = parse(sql);
-            if (!Array.isArray(ast) || ast.length === 0) {
-                throw new Error("Parser returned empty AST");
-            };
-            results.push({ table, ok: true });
+            await parse(sql);
         } catch (err) {
-            results.push({
-                table,
-                ok: false,
-                error: err instanceof Error ? err.message : String(err),
-            });
+            const error_msg = err instanceof Error ? err.message : String(err)
+            logger.warn(`{${table}} SQL 驗證失敗：\n${error_msg}`)
         };
     };
-
-    return results;
 };

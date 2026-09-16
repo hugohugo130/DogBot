@@ -235,7 +235,7 @@ if (import.meta.main) {
     global._areadline = null;
     global.sendQueue = [];
 
-    validateTableCreateSql();
+    await validateTableCreateSql();
     await create_tables(!noCache);
     await update_tables(!noCache)
     const [_, __, ffprobeInstalled] = await Promise.all([
