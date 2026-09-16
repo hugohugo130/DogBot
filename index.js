@@ -13,16 +13,17 @@ import { safeshutdown } from "./utils/safeshutdown.js";
 import { hot_reload_cogs } from "./utils/hot_reload.js";
 import { check_language_keys } from "./utils/language.js";
 import { create_tables } from "./utils/db/create_tables.js";
+import { update_tables } from "./utils/db/update_tables.ts";
 import { wait_for_client } from "./utils/wait_for_client.js";
 import { should_register_cmd } from "./utils/auto_register.js";
 import { update_items } from "./utils/db/update_items_table.js";
 import { check_help_rpg_info } from "./cogs/rpg/interactions.js";
 import { saveAllMusicStates } from "./utils/music/persistence.js";
+import { validateTableCreateSql } from "./utils/db/check_table_sql.ts";
 import { getQueues, IsFFprobeInstalled } from "./utils/music/music.js";
 import { checkDBFilesExists, checkDBFilesCorrupted } from "./utils/check_db_files.js";
 import DogClient from "./utils/customs/client.js";
 import get_areadline from "./utils/readline.js";
-import { update_tables } from "./utils/db/update_tables.ts";
 
 loadEnvFile(); // load .env file
 
@@ -234,6 +235,7 @@ if (import.meta.main) {
     global._areadline = null;
     global.sendQueue = [];
 
+    validateTableCreateSql();
     await create_tables(!noCache);
     await update_tables(!noCache)
     const [_, __, ffprobeInstalled] = await Promise.all([
