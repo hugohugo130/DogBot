@@ -32,6 +32,19 @@ import {
 const loggerManagers = new Collection();
 
 /**
+ * @param {string} str
+ * @param {string[]} extesions
+ * @returns {string}
+ */
+function rmExt(str, extesions = [".js", ".ts"]) {
+    for (const ext of extesions) {
+        str = path.basename(str, ext);
+    };
+
+    return str;
+};
+
+/**
  * @param {loggerManagerId} managerId 
  * @returns {Map<string, winston.Logger>}
  */
@@ -188,7 +201,7 @@ const consoleFormat = winston.format.combine(
         return info;
     })(),
     winston.format.printf(({ timestamp: _, level, message, module }) => {
-        return `${time2()} [${path.basename(String(module), ".js")}] - ${level.toUpperCase()} - ${message}`;
+        return `${time2()} [${rmExt(String(module))}] - ${level.toUpperCase()} - ${message}`;
     }),
 );
 
@@ -216,7 +229,7 @@ async function send_msg(channel, level, color, logger_name, message, timestamp =
     for (const msg of messages) {
         const embed = new EmbedBuilder()
             .setColor(color)
-            .setTitle(`${level.toUpperCase()} - ${path.basename(logger_name, ".js")}`)
+            .setTitle(`${level.toUpperCase()} - ${rmExt(logger_name)}`)
             .setDescription(`\`\`\`\n${msg}\n\`\`\``)
             .setTimestamp(timestamp);
 
@@ -273,7 +286,7 @@ function getCallerFile(skipURLs = []) {
                 ? fullPath.slice(1)
                 : fullPath;
 
-            const callerFileName = path.basename(normalizedPath, '.js');
+            const callerFileName = rmExt(normalizedPath);
 
             return [callerFileName, callerFileURL];
         };
@@ -327,7 +340,7 @@ export function getCallerModuleName(mode = 1, skipURLs = []) {
                 const fileName = fullPath.split(/[\\/]/).pop() || unknown_word;
                 const lineNumber = match[2];
                 const columnNumber = match[3];
-                callers.push(`${fileName.replace(".js", "")}:${lineNumber}:${columnNumber}`);
+                callers.push(`${rmExt(fileName)}:${lineNumber}:${columnNumber}`);
             };
         };
 
