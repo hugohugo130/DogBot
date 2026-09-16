@@ -14,7 +14,6 @@ import {
 import type {
     Statement,
     CreateTableStatement,
-    CreateIndexStatement,
     CreateColumnDef,
     TableConstraint,
 } from "pgsql-ast-parser";
@@ -23,8 +22,81 @@ function isCreateTable(s: Statement): s is CreateTableStatement {
     return s.type === "create table";
 };
 
-function isCreateIndex(s: Statement): s is CreateIndexStatement {
-    return s.type === "create index";
+function splitSqlStatements(sql: string): string[] {
+    const result: string[] = [];
+    let current = "";
+    let inSingle = false;
+    let inDouble = false;
+    let dollarTag: string | null = null;
+
+    for (let i = 0; i < sql.length; i++) {
+        const ch = sql[i];
+        const next = sql[i + 1];
+
+        if (dollarTag) {
+            if (sql.startsWith(dollarTag, i)) {
+                current += dollarTag;
+                i += dollarTag.length - 1;
+                dollarTag = null;
+            } else {
+                current += ch;
+            };
+            continue;
+        };
+
+        if (inSingle) {
+            current += ch;
+            if (ch === "'" && next === "'") {
+                current += next;
+                i++;
+            } else if (ch === "'") {
+                inSingle = false;
+            };
+            continue;
+        };
+
+        if (inDouble) {
+            current += ch;
+            if (ch === '"' && next === '"') {
+                current += next;
+                i++;
+            } else if (ch === '"') {
+                inDouble = false;
+            };
+            continue;
+        };
+
+        if (ch === "'") {
+            inSingle = true;
+            current += ch;
+            continue;
+        };
+        if (ch === '"') {
+            inDouble = true;
+            current += ch;
+            continue;
+        };
+        if (ch === "$") {
+            const m = sql.slice(i).match(/^\$[A-Za-z_]*\$/);
+            if (m) {
+                dollarTag = m[0];
+                current += dollarTag;
+                i += dollarTag.length - 1;
+                continue;
+            };
+        };
+
+        if (ch === ";") {
+            result.push(current);
+            current = "";
+            continue;
+        };
+
+        current += ch;
+    };
+
+    if (current.trim()) result.push(current);
+    return result;
 };
 
 /**
@@ -35,9 +107,10 @@ function stripDeferrable(sql: string): { cleaned: string; deferrables: Map<strin
     const deferrables: Map<string, string> = new Map();
 
     // 匹配 "CONSTRAINT <name> ... DEFERRABLE INITIALLY <mode>"
-    // [\s\S]*? 用 lazy match，遇到第一個 DEFERRABLE 就停
+    // [^;]*?          -> 不跨語句
+    // (?!\bCONSTRAINT\b) -> 不跨到下一條約束
     const re =
-        /CONSTRAINT\s+(\w+)\s+([\s\S]*?)(DEFERRABLE\s+INITIALLY\s+(IMMEDIATE|DEFERRED))/gi;
+        /CONSTRAINT\s+(\w+)\s+((?:(?!\bCONSTRAINT\b|;)[^;])*?)(DEFERRABLE\s+INITIALLY\s+(IMMEDIATE|DEFERRED))/gi;
 
     const cleaned = sql.replace(
         re,
@@ -121,24 +194,40 @@ export async function update_tables(cache: boolean = true): Promise<void> {
         );
         if (!existsResult.rows[0]?.exists) continue;
 
-        const { cleaned, deferrables } = stripDeferrable(meta.CREATE);
+        const rawStatements = splitSqlStatements(meta.CREATE);
 
-        let statements: import("pgsql-ast-parser").Statement[];
-        try {
-            statements = parse(cleaned);
-        } catch (err) {
-            logger.error(
-                err instanceof Error
-                    ? `表 ${table_name} 的 CREATE 語句解析失敗: ${err.message}`
-                    : String(err),
-            );
-            continue;
+        let createStmt: CreateTableStatement | undefined;
+        let deferrables = new Map<string, string>();
+        const indexSqls: string[] = [];
+
+        for (const raw of rawStatements) {
+            const trimmed = raw.trim();
+            if (!trimmed) continue;
+
+            if (/^CREATE\s+TABLE\b/i.test(trimmed)) {
+                const { cleaned, deferrables: d } = stripDeferrable(trimmed);
+                try {
+                    const stmts = parse(cleaned);
+                    const stmt = stmts.find(
+                        (s): s is CreateTableStatement =>
+                            isCreateTable(s) && s.name.name === table_name
+                    );
+                    if (stmt) {
+                        createStmt = stmt;
+                        deferrables = d;
+                    };
+                } catch (err) {
+                    logger.error(
+                        err instanceof Error
+                            ? `表 ${table_name} 的 CREATE TABLE 解析失敗: ${err.message}`
+                            : String(err)
+                    );
+                };
+            } else if (/^CREATE\s+(?:UNIQUE\s+)?INDEX\b/i.test(trimmed)) {
+                indexSqls.push(trimmed);
+            };
         };
 
-        // 找出該表的 CREATE TABLE 語句
-        const createStmt = statements.find(
-            (s) => isCreateTable(s) && s.name.name === table_name
-        ) as CreateTableStatement;
         if (!createStmt) {
             logger.warn(`找不到表 ${table_name} 的 CREATE TABLE 定義`);
             continue;
@@ -215,14 +304,13 @@ export async function update_tables(cache: boolean = true): Promise<void> {
         };
 
         /* ---------- 3. 補上缺少的索引 ---------- */
-        const indexStmts = statements.filter(
-            (s) => isCreateIndex(s) && s.table.name === table_name
-        ) as CreateIndexStatement[];
-
-        for (const idxStmt of indexStmts) {
-            const indexName = idxStmt.indexName?.name;
+        for (const indexSql of indexSqls) {
+            const m = indexSql.match(
+                /^CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?("?[\w]+"?)\s+ON\b/i
+            );
+            const indexName = m?.[1]?.replace(/"/g, "");
             if (!indexName) {
-                logger.warn(`表 ${table_name} 有未命名的索引無法自動同步`);
+                logger.warn(`表 ${table_name} 有無法辨識名稱的索引: ${indexSql.slice(0, 80)}...`);
                 continue;
             };
 
@@ -230,14 +318,13 @@ export async function update_tables(cache: boolean = true): Promise<void> {
                 SELECT 1 FROM pg_indexes
                 WHERE schemaname = current_schema()
                     AND indexname = $1
-                `,
+            `,
                 [indexName],
             );
             if (idxExists.rows.length > 0) continue;
 
             logger.info(`表 ${table_name} 補上索引: ${indexName}`);
             try {
-                const indexSql = toSql.statement(idxStmt);
                 await pool.query(indexSql);
             } catch (err) {
                 logger.error(
