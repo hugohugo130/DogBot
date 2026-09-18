@@ -1808,10 +1808,10 @@ async function InPrefix(guildID: string, prefix: string): Promise<string[]> {
 /**
  * Check whether a string is starts with one of the prefixes of the guild
  */
-async function startsWith_prefixes(guildID: string, str: string): Promise<false | string> {
-    const guildData = await loadData(guildID);
+async function startsWith_prefixes(guildID: string | null, str: string): Promise<false | string> {
+    const guildData = guildID ? await loadData(guildID) : null;
 
-    const prefixes = (guildData.prefix ?? [])
+    const prefixes = (guildData?.prefix ?? [])
         .concat(reserved_prefixes);
 
     for (const p of prefixes) {

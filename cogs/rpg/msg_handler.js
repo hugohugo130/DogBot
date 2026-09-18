@@ -2321,25 +2321,22 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
     let content = message.content?.toLowerCase().trim();
     if (!content) return null;
 
-    let allowedPrefix;
-
-    if (dm || !guildID) {
-        allowedPrefix = default_prefix;
-        if (!content.startsWith(allowedPrefix)) return;
-    } else {
-        allowedPrefix = await startsWith_prefixes(guildID, content);
-
-        if (!allowedPrefix) return null;
-    };
+    const allowedPrefix = (
+        await startsWith_prefixes(guildID, content)
+        || (
+            dm
+            && content.startsWith(default_prefix)
+            && default_prefix
+        )
+    );
+    if (!allowedPrefix) return null;
 
     content = content.replace(allowedPrefix, "").trim();
     let [command, ...args] = content.split(" ");
 
-    // 移除所有元素的空白字元
-    args = args.map(arg => arg.trim());
-
-    // 移除所有空白的元素 ""
-    args = args.filter(arg => arg !== "");
+    args = args
+        .map(arg => arg.trim())     // 移除所有元素的空白字元
+        .filter(arg => arg !== ""); // 移除所有空白的元素 ""
 
     command = command.toLowerCase().trim();
     command = command in redirect_data
