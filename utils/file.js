@@ -75,13 +75,13 @@ async function exists(path) {
  * @overload
  * @param {string} file_path
  * @param {{ encoding?: BufferEncoding | null | undefined, flag?: import("node:fs").OpenMode | undefined, return?: object | string | null } | null} [options]
- * @returns {string | NonSharedBuffer}
+ * @returns {string | Buffer<ArrayBuffer>}
  */
 /**
- * Read the contect of a file
+ * Read the content of a file
  * @param {string} file_path
  * @param {{ encoding?: BufferEncoding | null, flag?: string, return?: object | string | undefined } | null} [options]
- * @returns {string | NonSharedBuffer}
+ * @returns {string | Buffer<ArrayBuffer>}
  */
 function readFileSync(file_path, options = { encoding: "utf-8" }) {
     const filename = path.basename(file_path);
@@ -110,7 +110,9 @@ function readFileSync(file_path, options = { encoding: "utf-8" }) {
         };
     };
 
-    return fs.readFileSync(file_path, options ? readFileOption : null);
+    if (Object.keys(readFileOption).length)
+        return fs.readFileSync(file_path, readFileOption);
+    return fs.readFileSync(file_path);
 };
 
 /**
@@ -123,10 +125,10 @@ function readFileSync(file_path, options = { encoding: "utf-8" }) {
  * @overload
  * @param {string} file_path
  * @param {{ encoding?: BufferEncoding | null | undefined, flag?: import("node:fs").OpenMode | undefined, return?: object | string | null } | null} [options]
- * @returns {Promise<string | NonSharedBuffer>}
+ * @returns {Promise<string | Buffer<ArrayBuffer>>}
  */
 /**
- * Read the contect of a file
+ * Read the content of a file
  * @param {string} file_path
  * @param {{ encoding?: BufferEncoding | null | undefined, flag?: import("node:fs").OpenMode | undefined, return?: object | string | null } | null} [options]
  */

@@ -24,6 +24,7 @@ import {
     InteractionResponse,
     Locale,
     StringSelectMenuOptionBuilder,
+    escapeMarkdown,
 } from "discord.js";
 import util from "util";
 
@@ -93,6 +94,7 @@ import {
     cookClickAmount,
     embed_sign_color,
     default_prefix,
+    embed_marry_color,
 } from "../../utils/config.ts";
 import {
     getQueueListEmbedRow,
@@ -101,6 +103,7 @@ import {
     get_channel,
     get_message_by_guild,
     get_message_by_channel,
+    get_user,
 } from "../../utils/discord.js";
 import {
     getRandomBooleanWithWeight,
@@ -130,10 +133,13 @@ import {
     addAutoEat,
     removeAutoEat,
     getAutoEatOrder,
-    reorderAutoEat
+    reorderAutoEat,
+    load_partner
 } from "../../utils/db/rpg.ts";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
+import { getPartnerList } from "../../slashcmd/game/rpg/partner.ts";
+import { RPGPartner } from "../../utils/db/tables.ts";
 
 /** @import { ValidGuideCategory } from "../../utils/types.d.ts" */
 
@@ -975,15 +981,15 @@ export async function execute(client, interaction) {
             case "choose_command": {
                 const [command] = otherCustomIDs;
 
-                if (!channel?.isSendable()) return;
+                if (!channel?.isSendable() || !command) return;
 
                 const [_, prefix] = await Promise.all([
                     interaction.deferUpdate(),
                     firstPrefix(guild?.id),
                 ]);
 
-                const message = new MockMessage(`${prefix}${command}`, channel, user, guild);
-                let response = await rpg_handler({ client: client, message, d: true, mode: 1 });
+                const mockmessage = new MockMessage(`${prefix}${command}`, channel, user, guild);
+                let response = await rpg_handler({ client, message: mockmessage, dm: channel.isDMBased(), mode: 1 });
                 if (!response || response instanceof Message || response instanceof MockMessage) return;
 
                 response.components ??= [];
@@ -1418,7 +1424,11 @@ export async function execute(client, interaction) {
                 const [userId] = otherCustomIDs;
                 const targetUserId = user.id;
 
-                const [rpg_data, t_rpg_data, [emoji_cross, emoji_check]] = await Promise.all([
+                const [
+                    rpg_data,
+                    t_rpg_data,
+                    [emoji_cross, emoji_check],
+                ] = await Promise.all([
                     load_rpg_data(userId),
                     load_rpg_data(targetUserId),
                     get_emojis(["crosS", "check"], client),
@@ -1446,15 +1456,23 @@ export async function execute(client, interaction) {
                     };
                 };
 
+                /** @type {import("../../utils/config.ts").MarryInfo} */
                 const married_data = {
                     status: true,
                     with: targetUserId,
                     time: Date.now(),
                 };
 
+                /** @type {import("../../utils/config.ts").MarryInfo} */
+                const t_married_data = {
+                    status: true,
+                    with: userId,
+                    time: Date.now(),
+                };
+
                 await Promise.all([
                     rpg_data.setMarryInfo(married_data),
-                    t_rpg_data.setMarryInfo(married_data),
+                    t_rpg_data.setMarryInfo(t_married_data),
                 ]);
 
                 const embed = new EmbedBuilder()
@@ -2329,6 +2347,88 @@ export async function execute(client, interaction) {
 
                 break;
             }
+            case "partner": {
+                const [subcommand, ...args] = otherCustomIDs;
+
+                switch (subcommand) {
+                    case "accept": {
+                        const [originalUserId] = args;
+
+                        const [emoji_cross, originalUserPartner, userPartner] = await Promise.all([
+                            get_emoji("crosS", client),
+                            load_partner(originalUserId).catch((err) => err),
+                            load_partner(user.id),
+                        ]);
+
+                        if (originalUserId === user.id) {
+                            const embed = new EmbedBuilder()
+                                .setColor(embed_error_color)
+                                .setTitle(`${emoji_cross} | 你想成為你自己的夥伴?`)
+                                .setEmbedFooter(interaction);
+
+                            return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                        };
+
+                        const userCurrentBoss = userPartner.getBoss();
+                        if (userCurrentBoss) {
+                            const embed = new EmbedBuilder()
+                                .setColor(embed_error_color)
+                                .setTitle(`${emoji_cross} | 你已經有其他夥伴了!`)
+                                .setDescription(`目前的夥伴是 <@${userCurrentBoss}>`)
+                                .setEmbedFooter(interaction);
+
+                            return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                        };
+
+                        if (!(originalUserPartner instanceof RPGPartner)) throw originalUserPartner;
+
+                        const { ok, code, ps } = await originalUserPartner.addPartner(user.id);
+
+                        if (!ok) {
+                            switch (code) {
+                                case 1: {
+                                    const escaped_username = escapeMarkdown(user.username);
+
+                                    const embed = new EmbedBuilder()
+                                        .setColor(embed_error_color)
+                                        .setTitle(`${emoji_cross} | ${escaped_username} 已經有其他夥伴了!`)
+                                        .setDescription(`<@${ps}> 為他目前的夥伴`)
+                                        .setEmbedFooter(interaction);
+
+                                    await interaction.update({ embeds: [embed] });
+
+                                    break;
+                                }
+                            };
+                        };
+
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_marry_color)
+                            .setTitle("🐶 | 成功成為夥伴")
+                            .setDescription(`你現在是 <@${originalUserId}> 的夥伴了`)
+                            .setEmbedFooter(interaction);
+
+                        await interaction.update({
+                            embeds: [embed],
+                            components: [],
+                        });
+                        break;
+                    }
+
+                    case "list": {
+                        const [targetUserId, pageStr = "0"] = args;
+
+                        const targetUser = await get_user(targetUserId, client);
+                        const page = parseInt(pageStr);
+                        if (!targetUser || typeof page !== "number") return;
+                        const { embed, row } = await getPartnerList(user, targetUser, guild, interaction, client, page);
+
+                        await interaction.update({ embeds: [embed], components: row ? [row] : [] });
+
+                        break;
+                    }
+                };
+            };
         };
     } catch (err) {
         const errorStack = util.inspect(err, { depth: null });

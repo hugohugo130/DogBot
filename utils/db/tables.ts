@@ -7,10 +7,11 @@ import {
 
 import {
     add_transaction,
-} from "./rpg.js";
+} from "./rpg.ts";
 import {
     get_id_of_name,
     get_name_of_id,
+    type RPGPrivacy,
     type FoodKey,
     type ItemKey,
 } from "../rpg.ts";
@@ -32,6 +33,9 @@ import {
 import {
     item_exists,
 } from "../../cogs/rpg/msg_handler.js";
+import {
+    TABLES,
+} from "./config.ts";
 
 // #region [SQL returned data]
 
@@ -97,7 +101,7 @@ export type RPGUserCountsSQLRow = (BaseData & {
 });
 
 export type RPGUserPrivacySQLRow = (BaseData & {
-    privacy_key: string,
+    privacy_key: RPGPrivacy,
     // primary key: (user_id, privacy_key)
 });
 
@@ -106,6 +110,11 @@ export type RPGAutoEatSQLRow = (BaseData & {
     item_id: FoodKey,
     // primary key: (user_id, position)
     // unique: (user_id, item_id)
+});
+
+export type RPGPartnerSQLRow = ({
+    boss_id: string,
+    member_id: string,
 });
 
 // #endregion [SQL returned data]
@@ -158,6 +167,24 @@ function WithUserID<TBase extends Constructor>(Base: TBase) {
         };
     };
 };
+
+export type RPGPartnerReturnCode =
+    | 1;
+
+interface RPGPartnerReturnSuccess {
+    ok: true;
+    code?: undefined;
+    ps?: undefined;
+};
+interface RPGPartnerReturnFailed {
+    ok: false;
+    code: RPGPartnerReturnCode;
+    ps: string;
+};
+
+type RPGPartnerReturn =
+    | RPGPartnerReturnSuccess
+    | RPGPartnerReturnFailed;
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Constructor<T = object> = new (...args: any[]) => T;
@@ -293,12 +320,12 @@ export class RPGData extends UserDataBase {
         await this._mutex.runExclusive(async () => {
             await this.poolWithUserID(async (pool, userID) => {
                 await pool.query(`
-                UPDATE rpg_users
-                SET married = $1::boolean,
-                    married_with = $2::text,
-                    married_at = $3::timestamptz
-                WHERE user_id = $4::bigint
-            `,
+                    UPDATE rpg_users
+                    SET married = $1::boolean,
+                        married_with = $2::bigint,
+                        married_at = $3::timestamptz
+                    WHERE user_id = $4::bigint
+                `,
                     [married, married_with, married_at, userID],
                 );
             });
@@ -577,5 +604,111 @@ export class RPGInventory extends CollectionWithUserID {
                 .entries()
                 .filter(([_, amount]) => !!amount),
         );
+    };
+};
+
+export class RPGPartner {
+    readonly #userId: string;
+    #bossOf: Map<string, string> = new Map();          // memberId -> bossId
+    #membersOf: Map<string, Set<string>> = new Map();  // bossId -> Set<memberId>
+    #tableID = "rpg_partner" as const satisfies typeof TABLES[number];
+
+    constructor(userId: string, rows?: readonly Pick<RPGPartnerSQLRow, "boss_id" | "member_id">[] | null) {
+        this.#userId = userId;
+        if (!rows) return;
+        for (const { boss_id, member_id } of rows) {
+            this.#link(boss_id, member_id);
+        };
+    };
+
+    #link(bossId: string, memberId: string) {
+        this.#bossOf.set(memberId, bossId);
+
+        let set = this.#membersOf.get(bossId);
+        if (!set) {
+            set = new Set();
+            this.#membersOf.set(bossId, set);
+        };
+        set.add(memberId);
+    };
+
+    #unlink(bossId: string, memberId: string) {
+        this.#bossOf.delete(memberId);
+
+        const set = this.#membersOf.get(bossId);
+        if (!set) return;
+
+        set.delete(memberId);
+        if (set.size === 0) this.#membersOf.delete(bossId);
+    };
+
+    /** 邀請某人成為夥伴 */
+    async addPartner(memberId: string): Promise<RPGPartnerReturn> {
+        const bossId = this.#userId;
+
+        // 1. 不能聘請自己
+        if (bossId === memberId) throw new Error("不能成為自己的夥伴");
+
+        // 2. 對方已經有老闆？
+        const currentBossId = this.#bossOf.get(memberId);
+        if (currentBossId) {
+            return {
+                ok: false,
+                code: 1,
+                ps: currentBossId,
+            };
+        };
+
+        const pool = getPool();
+
+        // 3. 保存到資料庫
+        await pool.query(`
+            INSERT INTO ${this.#tableID} (boss_id, member_id)
+            VALUES ($1::bigint, $2::bigint)
+            `,
+            [bossId, memberId],
+        );
+
+        // 4. 建立關係
+        this.#link(bossId, memberId);
+
+        return { ok: true };
+    };
+
+    /** 解除夥伴關係（老闆和員工都能解除） */
+    async removePartner(bossId: string, memberId: string) {
+        if (this.#bossOf.get(memberId) !== bossId) {
+            throw new Error(`member ${memberId} is not owned by boss ${bossId}`);
+        };
+
+        // 1. 保存到資料庫
+        const pool = getPool();
+        await pool.query(`
+            DELETE FROM ${this.#tableID}
+            WHERE boss_id = $1::bigint
+                AND member_id = $2::bigint
+            `,
+            [bossId, memberId],
+        );
+
+        // 2. 解除關係
+        this.#unlink(bossId, memberId);
+    };
+
+    hasRelationship(userId: string): boolean {
+        return !!(
+            this.getBoss() === userId ||
+            this.getMembers().includes(userId)
+        );
+    };
+
+    /** 查詢：這個人的老闆是誰 */
+    getBoss() {
+        return this.#bossOf.get(this.#userId) ?? null;
+    };
+
+    /** 查詢：這個老闆底下的所有夥伴 */
+    getMembers() {
+        return [...(this.#membersOf.get(this.#userId) ?? [])];
     };
 };

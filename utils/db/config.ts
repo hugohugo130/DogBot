@@ -7,9 +7,10 @@ export const TABLES = [
     "rpg_user_counts",
     "rpg_user_privacy",
     "rpg_auto_eat",
+    "rpg_partner",
 ] as const;
 
-export const TABLES_METADATA: { [k in typeof TABLES[number]]: { CREATE?: string; } } = {
+export const TABLES_METADATA: Record<typeof TABLES[number], { CREATE?: string; }> = {
     "items": {
         "CREATE":
             `
@@ -138,9 +139,9 @@ export const TABLES_METADATA: { [k in typeof TABLES[number]]: { CREATE?: string;
     "rpg_auto_eat": {
         "CREATE": `
             CREATE TABLE rpg_auto_eat (
-                user_id   BIGINT  NOT NULL,
-                position  INTEGER NOT NULL,      -- 自動進食順序
-                item_id   TEXT    NOT NULL,
+                user_id  BIGINT  NOT NULL,
+                position INTEGER NOT NULL,       -- 自動進食順序
+                item_id  TEXT    NOT NULL,
 
                 CONSTRAINT rpg_auto_eat_pkey
                     PRIMARY KEY (user_id, position)
@@ -149,10 +150,37 @@ export const TABLES_METADATA: { [k in typeof TABLES[number]]: { CREATE?: string;
                 CONSTRAINT rpg_auto_eat_user_item_key
                     UNIQUE (user_id, item_id),   -- 防止同一 user 重複加入同一個 item
 
+                CONSTRAINT rpg_auto_eat_user_id_fkey FOREIGN KEY (user_id)
+                    REFERENCES rpg_users (user_id) ON DELETE CASCADE,
+
                 CONSTRAINT chk_auto_eat_position CHECK (position > 0)
             );
-
-            CREATE INDEX idx_auto_eat_user ON rpg_auto_eat (user_id, position);
-        `
+        `,
     },
+    "rpg_partner": {
+        "CREATE": `
+            CREATE TABLE rpg_partner (
+                boss_id     BIGINT      NOT NULL,
+                member_id   BIGINT      NOT NULL,
+                created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+                updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+                last_fed_at TIMESTAMPTZ NULL,
+
+                CONSTRAINT rpg_partner_pkey
+                    PRIMARY KEY (member_id),
+
+                CONSTRAINT rpg_partner_boss_id_fkey FOREIGN KEY (boss_id)
+                    REFERENCES rpg_users (user_id) ON DELETE CASCADE,
+
+                CONSTRAINT rpg_partner_member_id_fkey FOREIGN KEY (member_id)
+                    REFERENCES rpg_users (user_id) ON DELETE CASCADE,
+
+                CONSTRAINT rpg_partner_no_self
+                    CHECK (boss_id <> member_id)
+            );
+
+            -- 老闆要查「我底下有誰」時會用到
+            CREATE INDEX rpg_partner_boss_idx ON rpg_partner (boss_id);
+        `,
+    }
 };

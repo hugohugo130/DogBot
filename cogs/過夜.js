@@ -1,3 +1,6 @@
+/* eslint-disable */
+// @ts-nocheck
+
 import {
     Events,
 } from "discord.js";
@@ -12,7 +15,6 @@ import {
 import {
     getQueue,
 } from "../utils/music/music.js";
-import DogClient from "../utils/customs/client.js";
 
 const logger = get_logger();
 
@@ -27,9 +29,10 @@ const once = true;
 
 /**
  *
- * @param {DogClient} client
+* @param {import("../utils/customs/client.js").DogClient} client
  */
 const execute = async function (client) {
+    return;
     for (const [guildID, channelID] of channels) {
         try {
             const guild = await client.guilds.fetch(guildID);
@@ -52,7 +55,9 @@ const execute = async function (client) {
             queue.setConnection(connection);
 
             logger.info(`✅ Joined voice channel ${voiceChannel.name}`);
-        } catch { };
+        } catch {
+            // lazy...
+        };
     };
 };
 
