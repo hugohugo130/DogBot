@@ -108,7 +108,7 @@ async function processDirectory(bot, dirPath) {
             } else {
                 commands.push(.../** @type {SlashCmdBody[]} */ (subCommands));
             };
-        } else if (extensions.some((ext) => itemPath.endsWith(ext))) {
+        } else if (extensions.some((ext) => item.endsWith(ext))) {
             const module = await import(pathToFileURL(itemPath).href);
 
             let command = findSlashFromModule(module);

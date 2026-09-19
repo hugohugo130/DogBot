@@ -20,6 +20,8 @@ import {
 import DogClient from "./customs/client.js";
 
 /** @type {string[]} */
+const extensions = [".js", ".ts"];
+/** @type {string[]} */
 const load_skiplist = [];
 const logger = get_logger();
 
@@ -87,7 +89,7 @@ async function processDirectory(client, dirPath, quiet = false) {
 
         if (stat.isDirectory()) {
             loadedFiles += await processDirectory(client, itemPath);
-        } else if (item.endsWith(".js")) {
+        } else if (extensions.some((ext) => item.endsWith(ext))) {
             try {
                 const cog = await import(pathToFileURL(itemPath).href);
 
