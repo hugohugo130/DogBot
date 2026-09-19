@@ -102,9 +102,44 @@ async function renderMinimalCreateStmt(
 function extractCreateTableBody(sql: string): string {
     const open = sql.indexOf("(");
     if (open < 0) return "";
-    const close = sql.lastIndexOf(")");
-    if (close <= open) return "";
-    return sql.slice(open + 1, close);
+
+    let depth = 0;
+    let inSingle = false;
+    let inDouble = false;
+
+    for (let i = open; i < sql.length; i++) {
+        const ch = sql[i];
+
+        if (inSingle) {
+            if (ch === "'") {
+                if (sql[i + 1] === "'") { i++; continue; }
+                inSingle = false;
+            }
+            continue;
+        };
+
+        if (inDouble) {
+            if (ch === '"') {
+                if (sql[i + 1] === '"') { i++; continue; }
+                inDouble = false;
+            }
+            continue;
+        };
+
+        if (ch === "'") { inSingle = true; continue; }
+        if (ch === '"') { inDouble = true; continue; }
+
+        if (ch === "(") {
+            depth++;
+        } else if (ch === ")") {
+            depth--;
+            if (depth === 0) {
+                return sql.slice(open + 1, i);
+            };
+        };
+    };
+
+    return "";
 };
 
 /** 依「最外層逗號」切分，忽略字串與括號內的逗號 */
@@ -155,8 +190,7 @@ function splitTopLevel(body: string): string[] {
 
 async function renderColumn(colEl: AstNode, version: number): Promise<string> {
     const sql = await renderMinimalCreateStmt([colEl], version);
-    const parts = splitTopLevel(extractCreateTableBody(sql));
-    return parts[0] ?? "";
+    return extractCreateTableBody(sql).trim();
 };
 
 /** 用來當 ALTER TABLE ADD 時的佔位欄位，避免只有約束的 CREATE TABLE 被拒 */
