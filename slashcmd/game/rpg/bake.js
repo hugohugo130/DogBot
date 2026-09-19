@@ -210,7 +210,7 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
 
     const replyOption = { embeds: [embed], components: [row] };
 
-    if (mode == 1) {
+    if (mode === 1) {
         await interaction.editReply(replyOption);
     } else {
         await interaction.followUp(replyOption);

@@ -133,7 +133,7 @@ async function smelt_smelt(interaction, item_id, amount, client = global._client
     if (item_missing.length > 0) {
         const embed = await notEnoughItemEmbed(item_missing, interaction, client);
 
-        if (mode == 1) await interaction.editReply({ embeds: [embed] });
+        if (mode === 1) await interaction.editReply({ embeds: [embed] });
         else await interaction.followUp({ embeds: [embed] });
 
         return;
@@ -172,7 +172,7 @@ async function smelt_smelt(interaction, item_id, amount, client = global._client
 
     const replyOption = { embeds: [embed], components: [row] };
 
-    if (mode == 1) await interaction.editReply(replyOption);
+    if (mode === 1) await interaction.editReply(replyOption);
     else await interaction.followUp(replyOption);
 };
 

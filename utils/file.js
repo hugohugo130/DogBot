@@ -419,7 +419,7 @@ async function loadData(guildID = null, mode = 0) {
 
     if (!(await exists(database_file))) return {};
 
-    if (mode == 0 && guildID) {
+    if (mode === 0 && guildID) {
         // 從緩存中獲取
         const cacheManager = getCacheManager();
 
@@ -431,7 +431,7 @@ async function loadData(guildID = null, mode = 0) {
 
     const data = await readJson(database_file);
 
-    if (mode == 0 && guildID) {
+    if (mode === 0 && guildID) {
         const cacheManager = getCacheManager();
 
         if (!data[guildID]) {
