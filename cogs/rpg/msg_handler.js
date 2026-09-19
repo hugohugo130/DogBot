@@ -99,6 +99,7 @@ import {
     get_count,
     set_cooldown,
     getAutoEatOrder,
+    load_partner,
 } from "../../utils/db/rpg.ts";
 import {
     withTimeout,
@@ -343,9 +344,10 @@ function assertRandomItem(random_item) {
 
 /**
  * @param {string[]} args
+ * @param {string[]} [more]
  * @returns {string[]}
  */
-const removeMentionsInArgs = args => args.filter(arg => !arg.includes("@"));
+const removeMentionsInArgs = (args, more = []) => args.filter(arg => !arg.includes("@") && !more.includes(arg));
 
 /** @type {{ [commandName: string]: import("../../utils/types").RPGCommand }} */
 const rpg_commands = {
@@ -1018,7 +1020,7 @@ const rpg_commands = {
             return await message.reply({ embeds: [embed] });
         };
 
-        args = removeMentionsInArgs(args);
+        args = removeMentionsInArgs(args, [target_user.id]);
 
         /** @type {string | null} */
         let item = args[0];
@@ -2280,6 +2282,158 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
         if (mode === 1) return { embeds: [embed] };
         await message.reply({ embeds: [embed] });
     }, false],
+    feed: ["餵食對方", async function ({ client, message, args, mode }) {
+        if (!message.author) return;
+        const mentions = await mentions_users(message);
+
+        const original_user = message.author;
+        const target_user = mentions.first();
+        if (!target_user) {
+            const emoji_cross = await get_emoji("crosS", client);
+
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 錯誤的使用者`)
+                .setEmbedFooter(message.author.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        const [
+            inventory,
+            rpg_data,
+            partner,
+            [emoji_cross, emoji_drumstick],
+        ] = await Promise.all([
+            load_inventory(original_user.id),
+            load_rpg_data(target_user.id),
+            load_partner(target_user.id),
+            get_emojis(["crosS", "drumstick"], client),
+        ]);
+        const isPartner = partner.hasRelationship(original_user.id);
+        if (!isPartner) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 你沒有這隻寵物或是你沒有和她結婚`)
+                .setEmbedFooter(original_user.id);
+
+            return await message.reply({ embeds: [embed] });
+        };
+
+        args = removeMentionsInArgs(args, [target_user.id]);
+        const food_id = args[0]
+        const food_name = get_name_of_id(food_id);
+
+        if (!isFoodKey(food_id)) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 這東東不能吃ㄟ`)
+                .setEmbedFooter(original_user.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        const inventory_food_amount = inventory.get(food_id);
+        if (!inventory_food_amount) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 你沒有這個食物`)
+                .setEmbedFooter(original_user.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        let eat_amount = /** @type {number} */ (BetterEval(args[1], 1) || 1);
+        if (typeof eat_amount !== "number" || eat_amount < 1) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 錯誤的數量`)
+                .setEmbedFooter(target_user.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        if (eat_amount > inventory_food_amount) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 你沒有那麼多的食物`)
+                .setEmbedFooter(target_user.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+        const force_eat = typeof args[2] === "string" && args[2] === "force";
+        const add = food_data[food_id]
+        if (!add) throw new Error(`No food data get of food ${food_id}`);
+
+        if (rpg_data.hunger >= max_hunger) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 他已經吃太飽了`)
+                .setEmbedFooter(original_user.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        const extra_embeds = [];
+        let newadd = add * eat_amount;
+        if ((rpg_data.hunger + newadd) > max_hunger) {
+            const old_amount = eat_amount;
+
+            const new_amount = Math.floor((max_hunger - rpg_data.hunger) / add);
+            const new_newadd = add * new_amount;
+
+            if (!force_eat) {
+                eat_amount = new_amount;
+                newadd = new_newadd;
+            };
+
+            if (eat_amount < 1) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 他已經吃太飽了`)
+                    .setEmbedFooter(original_user.id);
+
+                if (mode === 1) return { embeds: [embed] };
+                return await message.reply({ embeds: [embed] });
+            };
+
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 他會吃太飽撐死!`)
+                .setDescription(`你想餵 \`${old_amount.toLocaleString()}\` 個 \`${food_name}\`\n但他最多只能吃掉 \`${eat_amount}\` 個 \`${food_name}\``)
+                .setEmbedFooter(original_user.id);
+
+            if (force_eat) {
+                embed.setColor(embed_warn_color)
+                    .setTitle(`${emoji_cross} | 爆體保護被停用！`)
+                    .setDescription(`你停用了爆體保護，浪費了 \`${(rpg_data.hunger + newadd) - max_hunger}\` 飽食度`);
+            };
+
+            extra_embeds.push(embed);
+        };
+
+        await Promise.all([
+            inventory.subtract_item(food_id, eat_amount),
+            rpg_data.add_hunger(newadd),
+        ]);
+
+        const embed = new EmbedBuilder()
+            .setColor(embed_default_color)
+            .setTitle(`${emoji_drumstick} | 成功進食`)
+            .setDescription(`你餵給 ${target_user.toString()} \`${eat_amount}\` 個 \`${food_name}\`，他的體力值增加到了 \`${rpg_data.hunger}\``)
+            .setEmbedFooter(original_user.id);
+
+        const embeds = [embed, ...extra_embeds];
+
+        if (mode === 1) return { embeds };
+        return await message.reply({ embeds });
+    }, true],
 };
 
 for (const [from, target] of Object.entries(redirect_data)) {
@@ -2603,11 +2757,8 @@ function get_random_result(category) {
     const [_, minAmount, maxAmount] = selectedItemData;
     const amount = randint(minAmount, maxAmount);
 
-    if (isFailedItem(selectedItem)) {
-        return { failed: true, item: selectedItem, amount };
-    } else {
-        return { failed: false, item: selectedItem, amount };
-    };
+    if (isFailedItem(selectedItem)) return { failed: true, item: selectedItem, amount };
+    return { failed: false, item: selectedItem, amount };
 };
 
 const event_name = Events.MessageCreate;
