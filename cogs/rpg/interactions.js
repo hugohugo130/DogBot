@@ -136,10 +136,14 @@ import {
     reorderAutoEat,
     load_partner
 } from "../../utils/db/rpg.ts";
+import {
+    getPartnerList,
+} from "../../slashcmd/game/rpg/partner.ts";
+import {
+    RPGPartner,
+} from "../../utils/db/tables.ts";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
-import { getPartnerList } from "../../slashcmd/game/rpg/partner.ts";
-import { RPGPartner } from "../../utils/db/tables.ts";
 
 /** @import { ValidGuideCategory } from "../../utils/types.d.ts" */
 
@@ -2356,7 +2360,7 @@ export async function execute(client, interaction) {
 
                         const [emoji_cross, originalUserPartner, userPartner] = await Promise.all([
                             get_emoji("crosS", client),
-                            load_partner(originalUserId).catch((err) => err),
+                            load_partner(originalUserId),
                             load_partner(user.id),
                         ]);
 
@@ -2400,6 +2404,7 @@ export async function execute(client, interaction) {
                                     break;
                                 }
                             };
+                            return;
                         };
 
                         const embed = new EmbedBuilder()
@@ -2420,7 +2425,7 @@ export async function execute(client, interaction) {
 
                         const targetUser = await get_user(targetUserId, client);
                         const page = parseInt(pageStr);
-                        if (!targetUser || typeof page !== "number") return;
+                        if (!targetUser || Number.isNaN(page)) return;
                         const { embed, row } = await getPartnerList(user, targetUser, guild, interaction, client, page);
 
                         await interaction.update({ embeds: [embed], components: row ? [row] : [] });

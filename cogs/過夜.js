@@ -1,6 +1,3 @@
-/* eslint-disable */
-// @ts-nocheck
-
 import {
     Events,
 } from "discord.js";
@@ -28,11 +25,9 @@ const name = Events.ClientReady;
 const once = true;
 
 /**
- *
-* @param {import("../utils/customs/client.js").DogClient} client
+ * @param {import("../utils/customs/client.js").DogClient} client
  */
 const execute = async function (client) {
-    return;
     for (const [guildID, channelID] of channels) {
         try {
             const guild = await client.guilds.fetch(guildID);

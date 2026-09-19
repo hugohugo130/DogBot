@@ -23,7 +23,7 @@ import {
 import util from "util";
 
 const args = process.argv.slice(2);
-const isBeta = (global.isBeta ?? args.includes("--beta")) || args.includes("-a");
+const isBeta = global.isBeta || args.includes("--beta") || args.includes("-a");
 
 global.isBeta = isBeta;
 

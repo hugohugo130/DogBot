@@ -114,9 +114,9 @@ export async function getPartnerList(
             .setTitle(`${emoji_cross} | ${!isOther ? "你" : "對方"}還沒有新增任何夥伴`)
             .setEmbedFooter(interaction ?? request_user.id);
 
-    const next_page = page + 1;
-    const prev_page = page
-        ? page - 1
+    const next_page = safePage + 1;
+    const prev_page = safePage
+        ? safePage - 1
         : -1;
 
     const row = new ActionRowBuilder()
@@ -129,7 +129,7 @@ export async function getPartnerList(
 
             new ButtonBuilder()
                 .setCustomId(`_`)
-                .setLabel(`${page + 1} / ${max_pages} 頁`)
+                .setLabel(`${safePage + 1} / ${max_pages} 頁`)
                 .setDisabled(true)
                 .setStyle(ButtonStyle.Secondary),
 
@@ -140,7 +140,7 @@ export async function getPartnerList(
                 .setStyle(ButtonStyle.Primary),
 
             new ButtonBuilder()
-                .setCustomId(`partner|${request_user.id}|list|${target_user.id}|${page}`)
+                .setCustomId(`partner|${request_user.id}|list|${target_user.id}|${safePage}`)
                 .setEmoji(emoji_loop)
                 .setLabel("更新")
                 .setStyle(ButtonStyle.Success),
@@ -350,7 +350,7 @@ export const partnerSlash: Slash = {
                 const escaped_username = escapeMarkdown(target_user.username);
 
                 const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
+                    .setColor(embed_marry_color)
                     .setTitle(`你解除綁定了夥伴 ${escaped_username}`)
                     .setEmbedFooter(interaction);
 
@@ -400,7 +400,7 @@ export const partnerSlash: Slash = {
                 ] as const);
 
                 const embed = new EmbedBuilder()
-                    .setColor(embed_error_color)
+                    .setColor(embed_marry_color)
                     .setTitle(`${emoji_dog} | 你成功脫離了夥伴`)
                     .setEmbedFooter(interaction);
 

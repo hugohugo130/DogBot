@@ -100,6 +100,7 @@ import {
     set_cooldown,
     getAutoEatOrder,
     load_partner,
+    set_partner_feed_time,
 } from "../../utils/db/rpg.ts";
 import {
     withTimeout,
@@ -2312,7 +2313,8 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
             get_emojis(["crosS", "drumstick"], client),
         ]);
         const isPartner = partner.hasRelationship(original_user.id);
-        if (!isPartner) {
+        const isMarried = rpg_data.married_with === original_user.id;
+        if (!isPartner && !isMarried) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你沒有這隻寵物或是你沒有和她結婚`)
@@ -2366,7 +2368,8 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         };
-        const force_eat = typeof args[2] === "string" && args[2] === "force";
+
+        const force_eat = [1, 2].some((index) => typeof args[index] === "string" && args[index] === "force");
         const add = food_data[food_id]
         if (!add) throw new Error(`No food data get of food ${food_id}`);
 
@@ -2421,6 +2424,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
         await Promise.all([
             inventory.subtract_item(food_id, eat_amount),
             rpg_data.add_hunger(newadd),
+            set_partner_feed_time(target_user.id),
         ]);
 
         const embed = new EmbedBuilder()
@@ -2595,7 +2599,7 @@ async function rpg_handler({ client, message, d = false, dm = false, mode = 0 })
                     mode: 1,
                 }));
 
-            const res = await withTimeout(eatPromise, 1000, true);
+            const res = await withTimeout(eatPromise, 3500, true);
 
             if (res.embeds && res.embeds.length > 1) {
                 res.embeds.length = 1;

@@ -1687,7 +1687,7 @@ export async function autoEatCommand(options: AutoEatOptions): Promise<[Containe
     ] = await Promise.all([
         load_rpg_data(user_id),
         getAutoEatOrder(user_id),
-        get_emoji("food"),
+        get_emoji("food", client),
     ]);
 
     const enabled = rpg_data.autoeat;
