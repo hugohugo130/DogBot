@@ -25,14 +25,8 @@ import DogClient from "../utils/customs/client.js";
 
 const logger = get_logger();
 
-/**
- * Handle shutdown event(s)
- *
- * @param {string} sign - signal string
- * @param {DogClient} client - Discord Client
- * @returns {Promise<void>}
- */
-async function handle_shutdown(sign, client) {
+
+async function handle_shutdown(sign: string, client: DogClient): Promise<void> {
     logger.info(`收到 ${sign} 信號，準備安全關閉...`);
 
     try {
@@ -45,14 +39,10 @@ async function handle_shutdown(sign, client) {
     };
 };
 
-const name = Events.ClientReady;
-const once = true;
+export const name = Events.ClientReady;
+export const once = true;
 
-/**
- *
- * @param {DogClient} client - Discord Client
- */
-const execute = async function (client) {
+export async function execute(client: DogClient) {
     global._client = client;
 
     await client.on_ready();
@@ -60,18 +50,16 @@ const execute = async function (client) {
     logger.info(`✅ Loaded ${client.context_menus.size} context menus`);
 
     const schedules = await run_schedule(client);
-    logger.info(`已加載 ${schedules} 個排程`);
+    logger.info(`✅ Loaded ${schedules} schedules`);
 
-    logger.info(`機器人 ${client.name} 啟動成功`);
-    logger.info(`好欸！已經有${client.guilds.cache.size}個伺服器在使用${client.name}了！`);
+    logger.info(`Bot ${client.name} started`);
+    logger.info(`Yeee! There are ${client.guilds.cache.size} servers using ${client.name}!`);
 
-    process.on("SIGTERM", async () => {
-        await handle_shutdown("SIGTERM", client);
-    });
-
-    process.on("SIGINT", async () => {
-        await handle_shutdown("SIGINT", client);
-    });
+    for (const signal of ["SIGTERM", "SIGINT"] as const) {
+        process.on(signal, async () => {
+            await handle_shutdown(signal, client);
+        });
+    };
 
     await Promise.all([
         client.user?.setPresence({
@@ -87,5 +75,3 @@ const execute = async function (client) {
 
     await restoreAllMusicStates(client);
 };
-
-export { name, once, execute };
