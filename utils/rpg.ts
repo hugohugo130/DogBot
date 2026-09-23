@@ -1006,14 +1006,6 @@ async function notEnoughItemEmbed(
 ╚═╝  ╚═╝╚═╝      ╚═════╝     ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
 */
 
-function BetterEval(obj: string, default_value: unknown = null): unknown | null {
-    try {
-        return Function(`"use strict";return ${obj}`)();
-    } catch {
-        return default_value;
-    };
-};
-
 /**
  * Chunk an array
  */
@@ -1178,7 +1170,7 @@ async function get_cooldown_time(command_name: string, user_id: string): Promise
     const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href) as typeof import("../cogs/rpg/msg_handler.js");
     const count = await get_count(command_name, user_id) ?? 0;
 
-    const result = BetterEval(rpg_cooldown[command_name].replace("{c}", String(count)));
+    const result = safeCalculate(rpg_cooldown[command_name].replace("{c}", String(count)));
     return typeof result === "number"
         ? result
         : 0;
@@ -1917,7 +1909,6 @@ export {
     get_emoji_object,
     get_emoji_objects,
     wrong_job_embed,
-    BetterEval,
     chunkArray,
     get_cooldown_embed,
     is_cooldown_finished,
