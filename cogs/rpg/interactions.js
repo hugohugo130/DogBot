@@ -128,7 +128,6 @@ import {
     load_rpg_data,
     load_inventory,
     set_cooldown,
-    save_inventory,
     save_user_privacy,
     addAutoEat,
     removeAutoEat,
@@ -1307,8 +1306,7 @@ export async function execute(client, interaction) {
                     output_item_id,
                 });
 
-                const [_, __, emoji_drumstick] = await Promise.all([
-                    save_inventory(user.id, inventory),
+                const [_, emoji_drumstick] = await Promise.all([
                     save_bake_data(user.id, bake_data),
                     get_emoji("drumstick", client),
                 ]);
@@ -2091,7 +2089,11 @@ export async function execute(client, interaction) {
 
                 const inventory = await load_inventory(user.id);
 
-                const [__, ___, ____, emoji_check] = await Promise.all([
+                const [
+                    /* discarded */,
+                    /* discarded */,
+                    emoji_check,
+                ] = await Promise.all([
                     interaction.message.delete(),
                     interaction.deferReply({ flags: MessageFlags.Ephemeral }),
                     get_emoji("check", client),
