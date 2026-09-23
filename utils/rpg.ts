@@ -40,7 +40,7 @@ import {
     workCmdJobs,
     fightjobs,
     failed,
-    type ItemName,
+    ProbKey,
 } from "./config.ts";
 import {
     get_lang_data,
@@ -58,7 +58,6 @@ import {
 } from "./db/rpg.ts";
 import type {
     JobNames,
-    SuccessItem,
     ValidGuideCategory,
 } from "./types.d.ts";
 import {
@@ -363,16 +362,6 @@ const animals = [
     "cow",
     "pig",
 ] as const;
-
-const animal_products: Partial<Record<SuccessItem, ItemKey>> = {
-    a_chicken: "raw_chicken",
-    a_duck: "raw_duck",
-    a_sheep: "raw_mutton",
-    a_hugo: "raw_hugo",
-    a_dog: "dogdog",
-    cow: "raw_beef",
-    pig: "raw_pork",
-};
 
 const shop_lowest_price: Record<ItemKey, number> = {
     // ==============材料==============
@@ -869,19 +858,16 @@ function check_item_data() {
         ...Object.values(foods),
         ...Object.keys(recipes),
         ...Object.values(wood_productions),
-        ...Object.values(animal_products),
         ...Object.keys(name),
     ]
         .flat()
         .filter(item => !item.startsWith("#"))
         .filter(item => !(item in jobs))
-        .filter(item => !Object.keys(animal_products).includes(item))
         .filter(item => !(animals as readonly string[]).includes(item))
         .filter(item_exists)
     )];
 
     const work_productions = [...new Set([
-        ...Object.keys(animal_products),
         ...mine_gets,
         // ...ingots,
         ...Object.values(logs),
@@ -889,7 +875,6 @@ function check_item_data() {
         ...foods_meat.filter(e => e.startsWith("raw_")),
     ]
         .flat()
-        .filter(item => !(Object.values(animal_products) as string[]).includes(item))
         .filter(item => !(Object.values(bake) as string[]).includes(item))
         .filter(item => !(cook.map(data => data.output) as string[]).includes(item))
         .filter(item => !(item in recipes))
@@ -964,7 +949,7 @@ function userHaveNotEnoughItems(
     inventory: import("./db/tables").RPGInventory,
     item: ItemKey,
     amount_needed: number
-): null | { item: string; amount: number; } {
+): null | { item: ItemKey; amount: number; } {
     const item_amount = inventory.get(item) ?? 0;
 
     if (item_amount && item_amount >= amount_needed) {
@@ -1841,7 +1826,7 @@ export const isFoodKey = (key: string): key is FoodKey => {
     return key in food_data;
 };
 
-export const isFailedItem = (item: ItemName): item is (typeof failed)[number] =>
+export const isFailedItem = (item: ProbKey): item is (typeof failed)[number] =>
     (failed as readonly string[]).includes(item);
 
 export const isRecipe = (input_item: ItemKey): input_item is keyof typeof recipes =>
@@ -1908,7 +1893,6 @@ export {
     recipes,
     smeltable_recipe,
     animals,
-    animal_products,
     shop_lowest_price,
     brew,
     fish,

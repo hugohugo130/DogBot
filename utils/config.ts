@@ -18,6 +18,9 @@ import type {
 import type {
     SmeltData
 } from "../slashcmd/game/rpg/smelt.js";
+import type {
+    ItemKey,
+} from "./rpg.ts";
 
 // functions for config
 const cwd = process.cwd;
@@ -290,7 +293,9 @@ const failed = [
     "epidemic",
 ] as const;
 
-export type ItemName = import("./rpg.ts").NameKey | (typeof failed)[number];
+export type ProbKey =
+    | ItemKey
+    | (typeof failed)[number]
 
 /**
  * the first number is weight
@@ -300,7 +305,7 @@ export type ItemName = import("./rpg.ts").NameKey | (typeof failed)[number];
  * the third number is maximum gain amount
  */
 const probabilities: {
-    [category: string]: Partial<Record<ItemName, [number, number, number]>>
+    [category: string]: Partial<Record<ProbKey, [number, number, number]>>
 } = {
     "farm": {
         // "acid_rain": [2, 1, 1],
@@ -337,13 +342,13 @@ const probabilities: {
     "herd": {
         "escape": [1.68, 1, 1],
         "epidemic": [1.68, 1, 1],
-        "a_chicken": [20.99, 1, 2],
-        "pig": [16.79, 1, 1],
-        "cow": [16.79, 1, 1],
-        "a_duck": [16.79, 1, 1],
-        "a_sheep": [12.60, 1, 1],
-        "a_hugo": [12.60, 1, 1],
-        "a_dog": [0.08, 1, 1]
+        "raw_chicken": [20.99, 1, 2],
+        "raw_pork": [16.79, 1, 1],
+        "raw_beef": [16.79, 1, 1],
+        "raw_duck": [16.79, 1, 1],
+        "raw_mutton": [12.60, 1, 1],
+        "raw_hugo": [12.60, 1, 1],
+        "dogdog": [0.08, 1, 1]
     },
     "mine": {
         "boom": [2, 1, 1],

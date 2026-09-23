@@ -110,11 +110,16 @@ export async function get_farm_info_embed(user, interaction = null, client = glo
 /**
  * 獲取農作物採收物品
  * @param {number} amount - 需要獲得的物品總數
- * @returns {{ [k: string]: number }} - 物品ID到數量的映射字典
+ * @returns {Map<import("../../../utils/rpg.ts").ItemKey, number>} - 物品ID到數量的映射字典
  * @throws {Error} - 如果amount不是正整數 或 amount不是整數
  */
 function get_harvest_items(amount) {
-    const farm_probability = probabilities.farm;
+    const farm_probability =
+        /** @type {Partial<Record<import("../../../utils/rpg.ts").ItemKey, [number, number, number]>>} */
+        (Object.fromEntries(
+        /** @type {[keyof typeof probabilities, [number, number, number]][]} */(Object.entries(probabilities.farm))
+                .filter(([item, _]) => typeof item === "string" && item_exists(item))
+        ));
 
     // 驗證 amount 參數
     if (typeof amount !== 'number' || amount <= 0) {
@@ -126,8 +131,8 @@ function get_harvest_items(amount) {
         throw new Error('amount must be an integer');
     };
 
-    /** @type {{ [k: string]: number }} */
-    const result = {};
+    /** @type {Map<import("../../../utils/rpg.ts").ItemKey, number>} */
+    const result = new Map();
 
     // 預先計算加權選擇的數據
     const items = /** @type {(keyof typeof farm_probability)[]} */ (Object.keys(farm_probability));
@@ -138,7 +143,7 @@ function get_harvest_items(amount) {
 
     // 如果所有物品權重都是0或沒有物品，直接返回空結果
     if (totalWeight <= 0 || items.length === 0) {
-        return {};
+        return result;
     };
 
     // 進行 amount 次抽取
@@ -164,7 +169,8 @@ function get_harvest_items(amount) {
                 const quantity = randint(minAmount, maxAmount);
 
                 // 累加到結果中
-                result[selectedItem] = (result[selectedItem] || 0) + quantity;
+                const current_quantity = result.get(selectedItem) || 0;
+                result.set(selectedItem, current_quantity + quantity);
                 break;
             };
         };
@@ -433,13 +439,17 @@ export const farmSlash = {
                     return farm.amount;
                 }).reduce((pre, cur) => pre + cur, 0);
 
-                const items = get_harvest_items(farmlands);
-                const items_str = Object.entries(items).map(([item, amount]) => `${amount} 個${get_name_of_id(item)}`).join("、");
+                const items = get_harvest_items(farmlands)
+                    .entries()
+                    .toArray();
+
+                const items_str = items
+                    .map(([item, amount]) => `${amount} 個${get_name_of_id(item)}`)
+                    .join("、");
 
                 farm_data.farms = farm_data.farms.filter(farm => !completed_farms.includes(farm));
                 await Promise.all([
-                    ...Object
-                        .entries(items)
+                    ...items
                         .map(([item, amount]) => inventory.add_item(item, amount)),
                     save_farm_data(userId, farm_data),]
                 );

@@ -147,8 +147,8 @@ export const makeSlash = {
         const output_amount = recipes[item_id].amount * amount;
 
         await Promise.all([
-            ...Object
-                .entries(item_need)
+            ... /** @type {[import("../../../utils/rpg.ts").ItemKey, number][]} */(Object
+                .entries(item_need))
                 .map(([item, amount]) => inventory.subtract_item(item, amount)),
             inventory.add_item(item_id, output_amount),
             interaction.deferReply(),

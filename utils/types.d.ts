@@ -22,7 +22,7 @@ import {
 } from "../cogs/rpg/msg_handler.js";
 import {
     failed,
-    ItemName,
+    type ProbKey,
 } from "./config.ts";
 import DogClient from "./customs/client.js";
 
@@ -122,7 +122,7 @@ export type FightJobNames =
     | "ninja"
     | "tank";
 
-type SuccessItem = Exclude<ItemName, (typeof failed)[number]>;
+type SuccessItem = Exclude<ProbKey, (typeof failed)[number]>;
 
 type RPGCmdCheckNeedArgFunction =
     (client: DogClient, userId: string) => Promise<boolean> | boolean;
