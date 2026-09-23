@@ -194,6 +194,8 @@ export async function execute(client, interaction) {
                             || value.startsWith(focusedValue)
                         );
                     })
+                    .slice(0, 25)
+
             );
 
             break;
