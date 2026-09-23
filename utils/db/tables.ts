@@ -131,7 +131,7 @@ function assertValidHunger(hunger: number): asserts hunger is number {
     };
 };
 
-function checkValidItemId(id: string): asserts id is ItemKey {
+function assertValidItemID(id: string): asserts id is ItemKey {
     const item_id = item_exists(id);
     if (!item_id) {
         throw new Error("unknown item id");
@@ -501,10 +501,10 @@ export class RPGInventory extends CollectionWithUserID {
         if (data) {
             const _data = data instanceof RPGInventory
                 ? data
-                : Object.entries(data);
+                : Object.entries(data) as [ItemKey, number][];
 
             for (const [key, value] of _data) {
-                this.#add_item(key, value);
+                this.#set_item(key, value);
             };
         };
         if (userid) {
@@ -512,16 +512,16 @@ export class RPGInventory extends CollectionWithUserID {
         };
     };
 
-    #add_item(key: string, value: number) {
+    #set_item(key: ItemKey, value: number) {
         if (!key || !value || !item_exists(key)) return;
         assertValidAmount(value);
         this.set(key, value);
     }
 
-    async add_item(item: string, amount: number) {
+    async add_item(item: ItemKey, amount: number) {
         assertValidAmount(amount);
 
-        checkValidItemId(item);
+        assertValidItemID(item);
         const item_id = get_id_of_name(item);
 
         return await this._mutex.runExclusive(async () => {
@@ -543,10 +543,10 @@ export class RPGInventory extends CollectionWithUserID {
         });
     };
 
-    async subtract_item(item: string, amount: number) {
+    async subtract_item(item: ItemKey, amount: number) {
         assertValidAmount(amount);
 
-        checkValidItemId(item);
+        assertValidItemID(item);
         const item_id = get_id_of_name(item);
 
         return await this._mutex.runExclusive(async () => {
@@ -574,13 +574,13 @@ export class RPGInventory extends CollectionWithUserID {
         });
     };
 
-    async add_random_item({ item, amount }: { item: string, amount: number }) {
+    async add_random_item({ item, amount }: { item: ItemKey, amount: number }) {
         await this.add_item(item, amount);
         return get_name_of_id(item);
     };
 
-    async delete_item(item: string) {
-        checkValidItemId(item);
+    async delete_item(item: ItemKey) {
+        assertValidItemID(item);
         const item_id = get_id_of_name(item);
 
         await this._mutex.runExclusive(async () => {
@@ -598,12 +598,40 @@ export class RPGInventory extends CollectionWithUserID {
         });
     };
 
-    toObject(): Record<string, number> {
+    async set_item(item: ItemKey, amount: number) {
+        assertValidAmount(amount);
+        assertValidItemID(item);
+
+        return await this._mutex.runExclusive(async () => {
+            const result = await this.poolWithUserID(async (pool, userID) => {
+                const res = await pool.query(`
+                    UPDATE inventory
+                    SET amount = $3
+                    WHERE user_id = $1::bigint
+                        AND item_id = $2::text
+                    RETURNING amount
+                `,
+                    [userID, item, amount],
+                );
+
+                if (res.rowCount === 0) {
+                    throw new Error("Not enough item");
+                };
+
+                return res.rows[0].amount;
+            });
+
+            this.set(item, result);
+            return result;
+        });
+    };
+
+    toObject(): Record<ItemKey, number> {
         return Object.fromEntries(
             this
                 .entries()
                 .filter(([_, amount]) => !!amount),
-        );
+        ) as Record<ItemKey, number>;
     };
 };
 

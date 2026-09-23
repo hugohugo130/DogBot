@@ -21,7 +21,6 @@ import {
 import {
     load_inventory,
     load_rpg_data,
-    save_inventory,
     save_rpg_data,
     set_cooldown,
 } from "../utils/db/rpg.ts";
@@ -76,9 +75,7 @@ async function handleInvCommand(message, args) {
     if (!user) return message.reply("請標記一個用戶！");
 
     const inventory = await load_inventory(user.id);
-    inventory.set(item, amount);
-
-    await save_inventory(user.id, inventory);
+    await inventory.set_item(item, amount);
 
     return await message.reply(`done setting ${user.toString()}'s ${item} to ${amount}`);
 };
