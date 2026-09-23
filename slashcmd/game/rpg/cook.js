@@ -40,8 +40,8 @@ import DogClient from "../../../utils/customs/client.js";
 
 /**
  * Get Cooking Container
- * @param {{ item: string, amount: number }[]} inputed_foods - inputed foods data
- * @param {{ item: string, amount: number }[]} item_needed - item needed data
+ * @param {{ item: import("../../../utils/rpg.ts").ItemKey, amount: number }[]} inputed_foods - inputed foods data
+ * @param {{ item: import("../../../utils/rpg.ts").ItemKey, amount: number }[]} item_needed - item needed data
  * @param {string} userId - User ID
  * @param {string} sessionId - Cooking session ID
  * @param {number} [progress] progress

@@ -49,7 +49,6 @@ import {
     food_data,
     foods_crops,
     foods_meat,
-    animal_products,
     shop_lowest_price,
     sell_data,
     userHaveNotEnoughItems,
@@ -419,38 +418,33 @@ const rpg_commands = {
         const userid = message.author.id;
         assertRandomItem(random_item);
 
-        const { item: random_animal, amount } = random_item;
-        if (!animal_products[random_animal]) {
-            throw new Error(`找不到${random_animal}的動物產品: ${animal_products[random_animal]}`);
-        };
+        const { item, amount } = random_item;
 
         const [inventory, emoji_cow] = await Promise.all([
             load_inventory(userid),
             get_emoji("cow", client),
         ]);
 
-        const product = animal_products[random_animal];
+        await inventory.add_item(item, amount);
 
-        await inventory.add_item(product, amount);
-
-        const product_name = get_name_of_id(product);
+        const product_name = get_name_of_id(item);
         const animal_name = product_name.replace("生", "").replace("肉", "");
 
         let title = `是${animal_name}`;
         let description = `你宰了一隻${animal_name}，獲得了 \`${amount}\` 個 ${product_name}！`;
-        if (product === "raw_chicken") {
+        if (item === "raw_chicken") {
             const egg_amount = randint(1, 3);
             description += `\n不僅如此！你還發現了 \`${egg_amount}\` 顆 ${get_name_of_id("egg")}！`
             await inventory.add_item("egg", egg_amount);
-        } else if (product === "raw_pork") {
+        } else if (item === "raw_pork") {
             title = "佩佩豬";
-        } else if (product === "raw_duck") {
+        } else if (item === "raw_duck") {
             title = `呱!`;
             description = `呱呱呱呱呱，呱呱呱呱 \`${amount}\` 呱呱呱！`;
-        } else if (product === "raw_hugo") {
+        } else if (item === "raw_hugo") {
             title = `哈狗!`;
             description = `你把哈狗的巢穴連根拔起，並且抓到了 \`${amount}\` 隻 ${product_name} 並逃走了！`;
-        } else if (product === "dogdog") {
+        } else if (item === "dogdog") {
             title = `🐶 汪!`
             description = `你偷走了機器犬的幼崽！拿到了 \`${amount}\` 隻 ${product_name}`
         };
@@ -2717,7 +2711,8 @@ function get_random_result(category) {
 
     let totalWeight = 0;
     const cumulativeWeights = [];
-    /** @type {import("../../utils/config.ts").ItemName[]} */
+
+    /** @type {typeof items} */
     const validItems = [];
     for (const item of items) {
         const data = datas[item];
@@ -2733,7 +2728,7 @@ function get_random_result(category) {
     // Choose item randomly
     const rand = Math.random() * totalWeight;
 
-    /** @type {import("../../utils/config.ts").ItemName | null} */
+    /** @type {typeof items[number] | null} */
     let selectedItem = null;
     for (let i = 0; i < cumulativeWeights.length; i++) {
         if (rand < cumulativeWeights[i]) {

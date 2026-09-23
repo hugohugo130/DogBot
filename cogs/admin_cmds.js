@@ -113,6 +113,7 @@ async function handleGive2Command(message, args) {
     let log = "";
     for (let [item, amount] of Object.entries(object)) {
         item = get_id_of_name(item);
+        if (!item_exists(item)) continue;
 
         try {
             await inventory.add_item(item, parseInt(amount));
@@ -197,7 +198,7 @@ export async function execute(client, message) {
         /**
          * @param {Message} message
          * @param {string[]} args
-         * @returns {Promise<Message>}
+         * @returns {Promise<Message | void>}
          */
         async function handleGiveCommand(message, args) {
             if (args.length < 3) {
@@ -206,6 +207,7 @@ export async function execute(client, message) {
 
             let [_, item, amount] = args;
             item = get_id_of_name(item);
+            if (!item_exists(item)) return;
 
             const user = (await mentions_users(message)).first();
 

@@ -1029,6 +1029,7 @@ export async function execute(client, interaction) {
                 ]);
 
                 const [item_id, amount_str, total_price_str] = otherCustomIDs;
+                if (!item_exists(item_id)) throw new Error("Invalid item");
 
                 const amount = parseInt(amount_str);
                 const total_price = Math.round(parseFloat(total_price_str));

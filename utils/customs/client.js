@@ -42,8 +42,8 @@ import { MusicTrack } from "../music/music.js";
  * @typedef CookSession
  * @property {string} userId
  * @property {{ input: { name: ItemKey, amount: number }[], output: FoodKey, amount: number }} recipe
- * @property {{ item: string, amount: number}[]} inputed_foods
- * @property {{ item: string, amount: number}[]} item_needed
+ * @property {{ item: ItemKey, amount: number}[]} inputed_foods
+ * @property {{ item: ItemKey, amount: number}[]} item_needed
  * @property {number} amount
  * @property {number} cooked
  * @property {number} last_cook_time
@@ -51,7 +51,7 @@ import { MusicTrack } from "../music/music.js";
 
 /**
  * @typedef GbmiSession
- * @property {{ item: string, amount: number }[]} item_needed
+ * @property {{ item: ItemKey, amount: number }[]} item_needed
  * @property {string} userId
  */
 
