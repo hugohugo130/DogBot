@@ -34,7 +34,7 @@ const execute = async function (client) {
             if (!guild) return;
 
             const voiceChannel = await guild.channels.fetch(channelID);
-            if (!voiceChannel?.isVoiceBased()) return;
+            if (!voiceChannel?.isVoiceBased()) continue;
 
             const queue = getQueue(guildID, true);
 
