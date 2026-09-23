@@ -52,7 +52,6 @@ import {
     shop_lowest_price,
     sell_data,
     userHaveNotEnoughItems,
-    BetterEval,
     valid_job_id,
     isFoodKey,
     isFailedItem,
@@ -103,6 +102,9 @@ import {
 import {
     withTimeout,
 } from "../../utils/music/music.js";
+import {
+    safeCalculate,
+} from "../../utils/math.ts";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
 
@@ -1240,7 +1242,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
         args = args.filter(arg => !arg.includes(target_user.id));
 
-        const amount = BetterEval(args[0], 1);
+        const amount = safeCalculate(args[0], 1);
         if (typeof amount !== "number" || isNaN(amount) || amount <= 0) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -2334,7 +2336,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
             return await message.reply({ embeds: [embed] });
         };
 
-        let eat_amount = /** @type {number} */ (BetterEval(args[1], 1) || 1);
+        let eat_amount = /** @type {number} */ (safeCalculate(args[1], 1) || 1);
         if (typeof eat_amount !== "number" || eat_amount < 1) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)

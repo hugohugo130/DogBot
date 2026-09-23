@@ -66,6 +66,9 @@ import {
 import {
     help_data,
 } from "../cogs/rpg/interactions.js";
+import {
+    safeCalculate,
+} from "./math.ts";
 import EmbedBuilder from "./customs/embedBuilder.js";
 import DogClient, { type CookSession } from "./customs/client.js";
 
