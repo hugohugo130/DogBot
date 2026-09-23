@@ -40,7 +40,7 @@ import {
     workCmdJobs,
     fightjobs,
     failed,
-    ProbKey,
+    type ProbKey,
 } from "./config.ts";
 import {
     get_lang_data,
@@ -840,7 +840,7 @@ const name = {
     // ==============....==============
 } as const;
 
-const name_reverse = (Object.keys(name) as Array<NameKey>).reduce(
+const name_reverse = (Object.keys(name) as NameKey[]).reduce(
     (acc, key) => {
         const value = name[key];
         acc[value] = key;

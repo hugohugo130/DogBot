@@ -38,14 +38,12 @@ const logger = get_logger();
 
 /**
  * @param {Message} message
- * @param {(string | number)[]} args
+ * @param {string[]} args
  * @returns {Promise<Message>}
  */
 async function handleMoneyCommand(message, args) {
     const user = (await mentions_users(message)).first();
-    const amount = typeof args[1] === "number"
-        ? args[1]
-        : parseInt(args[1]);
+    const amount = parseInt(args[1]);
 
     if (!user) return await message.reply("請標記一個用戶！");
     if (!amount) return await message.reply("amount must be a number");
@@ -66,9 +64,7 @@ async function handleMoneyCommand(message, args) {
 async function handleInvCommand(message, args) {
     const user = (await mentions_users(message)).first();
     const item = args[1];
-    const amount = typeof args[2] === "number"
-        ? args[2]
-        : parseInt(args[2]);
+    const amount = parseInt(args[2]);
 
     if (!item_exists(item)) return await message.reply("無效的物品");
     if (isNaN(amount)) return message.reply("amount must be a number");
@@ -82,7 +78,7 @@ async function handleInvCommand(message, args) {
 
 /**
  * @param {Message} message
- * @param {Array<string>} args
+ * @param {string[]} args
  * @returns {Promise<Message>}
  */
 async function handleGive2Command(message, args) {
@@ -207,7 +203,7 @@ export async function execute(client, message) {
 
             let [_, item, amount] = args;
             item = get_id_of_name(item);
-            if (!item_exists(item)) return;
+            if (!item_exists(item)) return message.reply("物品不存在");
 
             const user = (await mentions_users(message)).first();
 
@@ -224,7 +220,7 @@ export async function execute(client, message) {
         /**
          *
          * @param {Message} message
-         * @param {(string | number)[]} args
+         * @param {string[]} args
          * @returns {Promise<Message | void>}
          */
         async function handleRunCommand(message, args) {

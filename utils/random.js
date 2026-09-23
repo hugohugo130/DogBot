@@ -13,7 +13,7 @@ function randint(min, max) {
 /**
  * Choose a random element from a non-empty sequence.
  * @template T
- * @param {Array<T>} array
+ * @param {T[]} array
  * @returns {T}
  */
 function choice(array) {
@@ -24,9 +24,9 @@ function choice(array) {
 /**
  * Choose some random elements from a non-empty sequence.
  * @template T
- * @param {Array<T>} array
+ * @param {T[]} array
  * @param {number} [amount]
- * @returns {Array<T>}
+ * @returns {T[]}
  */
 function choicesSync(array, amount = 1) {
     const result = [];
@@ -40,9 +40,9 @@ function choicesSync(array, amount = 1) {
 /**
  * Choose some random elements from a non-empty sequence.
  * @template T
- * @param {Array<T>} array
+ * @param {T[]} array
  * @param {number} [amount]
- * @returns {Promise<Array<T>>}
+ * @returns {Promise<T[]>}
  */
 async function choices(array, amount = 1) {
     // 使用Promise.all並行執行choice amount次

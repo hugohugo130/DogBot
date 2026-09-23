@@ -15,8 +15,8 @@ import {
 const DEBUG = false;
 
 /**
- * Get SHA256 of an array<string>
- * @param {Array<string>} file_datas
+ * Get SHA256 of a string array
+ * @param {string[]} file_datas
  * @returns {string}
  */
 function get_hash_of_datas(file_datas) {

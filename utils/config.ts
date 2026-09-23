@@ -76,7 +76,7 @@ export interface RpgFarm {
     exp: number;
     lvl: number;
     waterAt: number;
-    farms: Array<FarmData>;
+    farms: FarmData[];
 };
 
 export interface CountingData {
@@ -136,8 +136,8 @@ const DEFAULT_VALUES: {
     "user": {
         "rpg_shop.json": RpgShop;
         "rpg_farm.json": RpgFarm;
-        "bake_db.json": Array<BakeItemData>;
-        "smelt_db.json": Array<SmeltData>;
+        "bake_db.json": BakeItemData[];
+        "smelt_db.json": SmeltData[];
     };
     "single": {
         "music.json": Record<string, MusicStatus>;

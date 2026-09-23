@@ -31,7 +31,7 @@ const execute = async function (client) {
     for (const [guildID, channelID] of channels) {
         try {
             const guild = await client.guilds.fetch(guildID);
-            if (!guild) return;
+            if (!guild) continue;
 
             const voiceChannel = await guild.channels.fetch(channelID);
             if (!voiceChannel?.isVoiceBased()) continue;

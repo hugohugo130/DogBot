@@ -989,8 +989,7 @@ function isSoundCloudTrack(object) {
 };
 
 /**
- *
- * @param {Array<import("soundcloud.ts").SoundcloudTrack | MusicTrack | import("../types").AudioFileData | import("../types").FixedAudioFileData>} objects
+ * @param {(import("soundcloud.ts").SoundcloudTrack | MusicTrack | import("../types").AudioFileData | import("../types").FixedAudioFileData)[]} objects
  * @returns {Promise<MusicTrack[]>}
  */
 async function fixStructure(objects) {

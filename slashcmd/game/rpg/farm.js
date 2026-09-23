@@ -115,10 +115,10 @@ export async function get_farm_info_embed(user, interaction = null, client = glo
  */
 function get_harvest_items(amount) {
     const farm_probability =
-        /** @type {Partial<Record<import("../../../utils/rpg.ts").ItemKey, [number, number, number]>>} */
+        /** @type {Partial<Record<import("../../../utils/rpg").ItemKey, [number, number, number]>>} */
         (Object.fromEntries(
-        /** @type {[keyof typeof probabilities, [number, number, number]][]} */(Object.entries(probabilities.farm))
-                .filter(([item, _]) => typeof item === "string" && item_exists(item))
+        /** @type {[keyof import("../../../utils/types").ValueOf<probabilities>, [number, number, number]][]} */(Object.entries(probabilities.farm))
+                .filter(([item, _]) => item_exists(item))
         ));
 
     // 驗證 amount 參數

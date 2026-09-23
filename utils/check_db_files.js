@@ -87,8 +87,8 @@ async function checkDBFilesCorrupted() {
 
 /**
  *
- * @param {Array<User>} users
- * @param {Array<Guild>} guilds
+ * @param {User[]} users
+ * @param {Guild[]} guilds
  * @returns {Promise<void>}
  */ /* eslint-disable */
 async function make_db_compatible(users, guilds) {
