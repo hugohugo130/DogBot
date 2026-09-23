@@ -22,7 +22,6 @@ import {
 } from "../../../utils/rpg.ts";
 import {
     load_inventory,
-    save_inventory,
     load_rpg_data,
 } from "../../../utils/db/rpg.ts";
 import {
@@ -249,9 +248,8 @@ export const cookSlash = {
         const reservedLength = 5;
         const sessionId = generateSessionId(buttonCustomIdLengthLimit - `cook|${userId}|`.length - reservedLength);
 
-        const [container, _, __] = await Promise.all([
+        const [container] = await Promise.all([
             getCookingContainer(inputed_foods, item_needed, userId, sessionId, 0, client),
-            save_inventory(userId, inventory),
             interaction.deferReply(),
         ]);
 

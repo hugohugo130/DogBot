@@ -24,7 +24,6 @@ import {
 import {
     load_inventory,
     load_rpg_data,
-    save_inventory,
     set_cooldown,
 } from "../../../utils/db/rpg.ts";
 import {
@@ -437,18 +436,13 @@ export const farmSlash = {
                 const items = get_harvest_items(farmlands);
                 const items_str = Object.entries(items).map(([item, amount]) => `${amount} 個${get_name_of_id(item)}`).join("、");
 
-                await Promise.all(
-                    Object
+                farm_data.farms = farm_data.farms.filter(farm => !completed_farms.includes(farm));
+                await Promise.all([
+                    ...Object
                         .entries(items)
                         .map(([item, amount]) => inventory.add_item(item, amount)),
+                    save_farm_data(userId, farm_data),]
                 );
-
-                farm_data.farms = farm_data.farms.filter(farm => !completed_farms.includes(farm));
-
-                await Promise.all([
-                    save_inventory(userId, inventory),
-                    save_farm_data(userId, farm_data),
-                ]);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)

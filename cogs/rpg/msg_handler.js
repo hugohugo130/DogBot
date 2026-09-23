@@ -91,7 +91,6 @@ import {
 import {
     load_rpg_data,
     load_inventory,
-    save_inventory,
     get_cooldowns,
     load_user_counts,
     load_user_privacy,
@@ -731,10 +730,7 @@ const rpg_commands = {
                     shop_data.items[item_id] = item_exist;
                 };
 
-                await Promise.all([
-                    save_inventory(userid, inventory),
-                    save_shop_data(userid, shop_data),
-                ]);
+                await save_shop_data(userid, shop_data);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
@@ -937,14 +933,13 @@ const rpg_commands = {
                     return await message.reply({ embeds: [embed] });
                 };
 
-                let inventory_modified = false, shop_data_modified = false;
+                let shop_data_modified = false;
 
                 if (amount) {
                     await inventory.subtract_item(item, item_amount_needed);
 
                     item_exist.amount = amount;
 
-                    inventory_modified = true;
                     shop_data_modified = true;
                 };
 
@@ -958,10 +953,7 @@ const rpg_commands = {
                     shop_data.items[item] = item_exist;
                 };
 
-                await Promise.all([
-                    inventory_modified ? save_inventory(userid, inventory) : null,
-                    shop_data_modified ? save_shop_data(userid, shop_data) : null,
-                ]);
+                if (shop_data_modified) await save_shop_data(userid, shop_data);
 
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)

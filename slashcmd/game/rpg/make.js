@@ -15,7 +15,6 @@ import {
 } from "../../../utils/rpg.ts";
 import {
     load_inventory,
-    save_inventory,
 } from "../../../utils/db/rpg.ts";
 import {
     embed_error_color,
@@ -161,9 +160,6 @@ export const makeSlash = {
             .setDescription(`你製作出了 \`${output_amount}\` 個 ${get_name_of_id(item_id)}`)
             .setEmbedFooter(interaction);
 
-        await Promise.all([
-            save_inventory(userid, inventory),
-            interaction.editReply({ embeds: [embed] }),
-        ]);
+        await interaction.editReply({ embeds: [embed] });
     },
 };

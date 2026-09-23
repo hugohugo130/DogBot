@@ -66,10 +66,10 @@ async function handleMoneyCommand(message, args) {
  */
 async function handleInvCommand(message, args) {
     const user = (await mentions_users(message)).first();
-    const item = args[0];
-    const amount = typeof args[1] === "number"
-        ? args[1]
-        : parseInt(args[1]);
+    const item = args[1];
+    const amount = typeof args[2] === "number"
+        ? args[2]
+        : parseInt(args[2]);
 
     if (!item_exists(item)) return await message.reply("無效的物品");
     if (isNaN(amount)) return message.reply("amount must be a number");
@@ -126,8 +126,6 @@ async function handleGive2Command(message, args) {
         };
     };
 
-    await save_inventory(user.id, inventory);
-
     return message.reply(`done adding user ${user.toString()} 's inventory:\n${log}`);
 };
 
@@ -147,7 +145,7 @@ export async function execute(client, message) {
         args = args.map(arg => arg.trim());
         args = args.filter(arg => arg !== "");
 
-        const command = args[0].substring(1); // 移除開頭的 "!"
+        const command = args[0].substring(1); // 移除開頭的 prefix
         const commandArgs = args.slice(1); // 獲取所有參數
 
         const rpg_data = await load_rpg_data(message.author.id);
