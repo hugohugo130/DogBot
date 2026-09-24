@@ -4,3 +4,6 @@ updates:
     directory: "/" # 根目錄
     schedule:
       interval: "daily" # 每天檢查更新
+    ignore:
+      - dependency-name: "opusscript"
+        versions: [">=0.1.1"]
