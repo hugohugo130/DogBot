@@ -36,6 +36,8 @@ import {
 import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 import DogClient from "../../../utils/customs/client.js";
 
+/** @import { ItemKey } from "../../../utils/rpg.ts" */
+
 /**
  * Divide an amount by a number
  * @param {number} amount
@@ -126,7 +128,7 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
 
     const coal_amount = Math.ceil(amount / 2);
 
-    /** @type { { item: import("../../../utils/rpg.ts").ItemKey, amount: number }[] } */
+    /** @type { { item: ItemKey, amount: number }[] } */
     const item_need = [
         {
             item: item_id,
@@ -199,7 +201,7 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
         .setStyle(ButtonStyle.Danger);
 
     const help_buy_coal_button = new ButtonBuilder()
-        .setCustomId(`help|${userId}|rpg|buy`)
+        .setCustomId(`help|${userId}|command|rpg|buy`)
         .setLabel("購買煤炭？")
         .setStyle(ButtonStyle.Secondary);
 
@@ -223,8 +225,8 @@ async function bake_bake(interaction, userId, item_id, amount, client, mode = 1)
  * @typedef BakeItemData
  * @property {string} userId
  * @property {number} coal_amount
- * @property {string} item_id
- * @property {string} output_item_id
+ * @property {ItemKey} item_id
+ * @property {ItemKey} output_item_id
  * @property {number} amount - output amount
  * @property {number} end_time
  */
