@@ -54,7 +54,7 @@ export async function execute(oldState, newState) {
     } else if (
         oldState.channel !== null
         && newState.channel !== null
-        && oldState.channel != newState.channel
+        && oldState.channel !== newState.channel
     ) { // 移動
         const before_channel = oldState.channel;
         const after_channel = newState.channel;
