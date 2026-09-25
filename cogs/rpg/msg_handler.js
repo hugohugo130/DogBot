@@ -801,7 +801,7 @@ const rpg_commands = {
                 };
 
                 const buyItemButton = new ButtonBuilder()
-                    .setCustomId(`help|${message.author.id}|rpg|buy`)
+                    .setCustomId(`help|${message.author.id}|command|rpg|buy`)
                     .setLabel("購買食物")
                     .setEmoji(emoji_store)
                     .setStyle(ButtonStyle.Primary);
@@ -1314,7 +1314,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         };
 
         const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId(`help|${message.author.id}`)
+            .setCustomId(`help|${message.author.id}|category`)
             .setPlaceholder(`指令教學`)
             .addOptions([
                 {
@@ -1328,7 +1328,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
                     value: `music`,
                 },
                 {
-                    label: `rpg系統`,
+                    label: `RPG系統`,
                     description: `找不到手游玩就來玩RPG`,
                     value: `rpg`,
                 },
@@ -1639,13 +1639,13 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             };
 
             const howToEatButton = new ButtonBuilder()
-                .setCustomId(`help|any|rpg|eat`)
+                .setCustomId(`help|any|command|rpg|eat`)
                 .setLabel("如何吃食物")
                 .setEmoji(emoji_food)
                 .setStyle(ButtonStyle.Primary);
 
             const buyFoodButton = new ButtonBuilder()
-                .setCustomId(`help|any|rpg|buy`)
+                .setCustomId(`help|any|command|rpg|buy`)
                 .setLabel("購買食物")
                 .setEmoji(emoji_store)
                 .setStyle(ButtonStyle.Primary);

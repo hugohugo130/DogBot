@@ -635,13 +635,19 @@ export function check_help_rpg_info() {
  * @param {string} category
  * @param {User} user
  * @param {DogClient} client
+ * @param {number} [page]
  * @param {BaseInteraction | null} [interaction]
- * @returns {[ EmbedBuilder, ActionRowBuilder<StringSelectMenuBuilder> | null ]}
+ * @returns {[ EmbedBuilder, [ActionRowBuilder<StringSelectMenuBuilder>, ActionRowBuilder<ButtonBuilder>] | null ]}
  */
-export function get_help_embed(category, user, client, interaction = null) {
+export function get_help_embed(category, user, client, page = 0, interaction = null) {
     if (!isValidGuideCategory(category)) throw new Error(`${category} is not a valid category`);
+    page = Math.max(0, Number(page) || 0)
+    const optionsPerPage = 25;
+    const offset = page * optionsPerPage;
 
-    const options = Object.entries(help_data.group[category])
+    const commandGuides = Object.entries(help_data.group[category]);
+    const options = commandGuides
+        .slice(offset, offset + optionsPerPage)
         .flatMap(([name, data]) => {
             return [{
                 label: name,
@@ -658,16 +664,43 @@ export function get_help_embed(category, user, client, interaction = null) {
 
     if (options.length > 0) {
         const selectMenu = new StringSelectMenuBuilder()
-            .setCustomId(`help|${user.id}|${category}`)
+            .setCustomId(`help|${user.id}|command|${category}|${offset}`)
             .setPlaceholder(`指令教學`)
-            .addOptions(...options.slice(0, 25));
+            .addOptions(...options);
 
         const row =
             /** @type {ActionRowBuilder<StringSelectMenuBuilder>} */
             (new ActionRowBuilder()
-                .setComponents(selectMenu));
+                .addComponents(selectMenu));
 
-        return [embed, row];
+
+        const prevPage = page > 0
+            ? page - 1
+            : 0;
+        const nextPage = page + 1;
+        const totalPage = Math.ceil(commandGuides.length / optionsPerPage);
+
+        const pages_btn_row = /** @type {ActionRowBuilder<ButtonBuilder>} */
+            (new ActionRowBuilder()
+                .addComponents(
+                    new ButtonBuilder()
+                        .setCustomId(`help|${user.id}|category|${category}|${prevPage}`)
+                        .setDisabled(prevPage === page)
+                        .setEmoji("◀️")
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
+                        .setCustomId("_")
+                        .setDisabled(true)
+                        .setLabel(`${page + 1} / ${totalPage} 頁`)
+                        .setStyle(ButtonStyle.Primary),
+                    new ButtonBuilder()
+                        .setCustomId(`help|${user.id}|category|${category}|${nextPage}`)
+                        .setDisabled(page + 1 >= totalPage)
+                        .setEmoji("▶️")
+                        .setStyle(ButtonStyle.Primary),
+                ));
+
+        return [embed, [row, pages_btn_row]];
     };
 
     return [embed, null];
@@ -693,7 +726,7 @@ export async function get_help_command(category, command_name, guildID = null, i
     if (!command_data) return null;
 
     if (!client) client = await wait_for_client();
-    const prefix = guildID ? await firstPrefix(guildID) : default_prefix;
+    const prefix = await firstPrefix(guildID);
 
     /*
     Field name: 使用方法
@@ -837,33 +870,57 @@ export async function execute(client, interaction) {
                 break;
             }
             case "help": {
-                const [category, cmd = null] = otherCustomIDs;
+                const [subcommand, ...args] = otherCustomIDs;
                 let embed = null, row = null;
 
-                const choseValue = interaction.isStringSelectMenu()
-                    ? interaction.values[0]
-                    : cmd;
-
-                if (!choseValue || !guild) return;
-
                 await interaction.deferUpdate();
+                const { flags } = await interaction.fetchReply();
 
+                switch (subcommand) {
+                    case "category": {
+                        const [given_category = null, offset_str = "0"] = args;
+                        const choseValue = interaction.isStringSelectMenu()
+                            ? interaction.values[0]
+                            : null;
 
-                if (category) {
-                    if (!isValidGuideCategory(category)) throw new Error(`${category} is not a valid guide category`);
+                        const category = choseValue || given_category;
+                        const offset = parseInt(offset_str) || 0;
 
-                    embed = await get_help_command(category, choseValue || cmd || "buy", guild.id);
-                } else {
-                    if (!isValidGuideCategory(choseValue)) throw new Error(`${choseValue} is not a valid guide category`);
+                        if (typeof category !== "string" || !isValidGuideCategory(category)) throw new Error(`Invalid category`);
 
-                    [embed, row] = get_help_embed(choseValue, user, client, interaction);
+                        [embed, row] = get_help_embed(category, user, client, offset, interaction);
+                        break;
+                    }
+                    case "command": {
+                        const [category, given_cmd = "buy"] = args;
+                        const cmd = interaction.isStringSelectMenu()
+                            ? interaction.values[0]
+                            : given_cmd;
+
+                        if (typeof category !== "string" || !isValidGuideCategory(category)) throw new Error(`Invalid category`);
+
+                        embed = await get_help_command(category, cmd, guild?.id);
+                        break;
+                    }
                 };
 
-                await interaction.followUp({
+                const isEphemeral = flags.has(MessageFlags.Ephemeral);
+                const replyOptions = {
                     embeds: embed ? [embed] : [],
-                    components: row ? [row] : [],
-                    flags: MessageFlags.Ephemeral,
-                });
+                    components: row ? row : [],
+                };
+
+                if (
+                    isEphemeral                  // 先前有以 Ephemeral 的 flags 回應過了
+                    && subcommand === "category" // 只在 category 翻頁，沒有點進command detail
+                ) { // 翻頁直接更新訊息
+                    await interaction.editReply(replyOptions);
+                } else {
+                    await interaction.followUp({
+                        ...replyOptions,
+                        flags: MessageFlags.Ephemeral,
+                    });
+                };
                 break;
             }
             case "pay_confirm": {
