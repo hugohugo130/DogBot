@@ -12,6 +12,7 @@ import {
     auto_register_cmd_file,
 } from "./config.ts";
 
+const extensions = [".ts", ".js"];
 const DEBUG = false;
 
 /**
@@ -39,7 +40,7 @@ async function read_all_files_in_dir(dir) {
         recursive: true,
         encoding: "utf-8",
     }))
-        .filter(file => file.endsWith(".js"))
+        .filter(file => extensions.some((ext) => file.endsWith(ext)))
         .sort(); // 排序確保順序一致
 
     const file_datas = [];
