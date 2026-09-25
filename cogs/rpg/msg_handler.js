@@ -2801,13 +2801,13 @@ export async function execute(client, message) {
     try {
         const command = message.content.split(" ")[0].toLowerCase();
 
+        let cmdName = command;
+
+        for (const pref of inpref) {
+            cmdName = cmdName.replace(pref, "");
+        };
+
         if (rpg_commands[command]) {
-            let cmdName = command;
-
-            for (const pref of inpref) {
-                cmdName = cmdName.replace(pref, "");
-            };
-
             client.lock.rpg_handler[userId] = cmdName;
         };
 
