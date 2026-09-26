@@ -453,7 +453,7 @@ async function loadData(guildID = null, mode = 0) {
 /**
  * 儲存伺服器資料庫
  * @param {string} guildID - 伺服器ID
- * @param {object} guildData - 伺服器資料
+ * @param {import("./config").GuildDatabase} guildData - 伺服器資料
  * @returns {Promise<void>}
  * @throws {Error}
  */
