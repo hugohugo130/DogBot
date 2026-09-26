@@ -27,7 +27,7 @@ async function safeshutdown(client) {
         await saveAllMusicStates();
         console.log("成功保存音樂狀態！");
 
-        await shutdown(true, 200);
+        await shutdown(true);
         console.log("已關閉所有logger");
 
         await client?.destroy?.();
