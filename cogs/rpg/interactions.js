@@ -1909,7 +1909,7 @@ export async function execute(client, interaction) {
 
                         await Promise.all([
                             queue.nextTrack(),
-                            interaction.update({ content: `${emoji_skip} | \`${user.username}\` 跳過了 \`${currentTrack.title}\``, embeds: [] }),
+                            interaction.update({ content: `${emoji_skip} | \`${user.username}\` 跳過了 \`${escapeMarkdown(currentTrack.title)}\``, embeds: [] }),
                         ]);
 
                         break;

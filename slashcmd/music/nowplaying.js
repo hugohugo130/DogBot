@@ -6,6 +6,7 @@ import {
     ButtonStyle,
     BaseInteraction,
     Locale,
+    escapeMarkdown,
 } from "discord.js";
 import util from "util";
 
@@ -291,7 +292,7 @@ ${emoji} ${formattedPlayingAt}${progressBar}${formattedDuration}
         .setThumbnail(currentTrack.thumbnail)
         .setAuthor({ name: currentTrack.author })
         .setURL(currentTrack.url)
-        .setTitle(currentTrack.title)
+        .setTitle(escapeMarkdown(currentTrack.title))
         .setDescription(description)
         .setEmbedFooter(interaction);
 
