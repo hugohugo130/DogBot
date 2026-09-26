@@ -130,7 +130,7 @@ type RPGCmdCheckNeedArgFunction =
 interface RPGCmdArgument {
     client: DogClient;
     message: Message | MockMessage;
-    rpg_data: RPGData;
+    rpg_data?: RPGData;
     args: string[];
     mode: 0 | 1;
     random_item?: RandomItem
