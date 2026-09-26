@@ -198,7 +198,7 @@ async function get_amount(item, user, amount_str) {
  * @param {Message | MockMessage} options.message
  * @param {string} options.command
  * @param {1} options.mode
- * @returns {Promise<void | import("../../utils/types").RPGHandlerReturn | null>}
+ * @returns {Promise<void | Exclude<import("../../utils/types").RPGHandlerReturn, MockMessage> | null>}
  *
  * @overload
  * @param {object} options
@@ -224,21 +224,20 @@ async function redirect({ client, message, command, mode = 0 }) {
 
     if (![0, 1].includes(mode)) throw new TypeError("Invalid mode");
 
-    const { channel, guild } = message;
-    if (!guild) throw new Error("Guild is invalid");
+    const { channel, author, guild } = message;
     if (channel && !channel.isSendable()) throw new Error("Channel is not sendable");
 
     const [
         prefix,
         mentioned_users,
     ] = await Promise.all([
-        firstPrefix(guild.id),
+        firstPrefix(guild?.id),
         mentions_users(message),
     ]);
 
     if (!command.includes(prefix)) command = prefix + command;
-    const msg = new MockMessage(command, channel, message.author, message.guild, mentioned_users.first());
-    const message_args = await rpg_handler({ client, message: msg, d: true, mode: 1 });
+    const msg = new MockMessage(command, channel, author, guild, mentioned_users.first());
+    const message_args = await rpg_handler({ client, message: msg, bypass_rpg_check: true, bypass_botcheck: true, mode: 1 });
     if (!message_args || message_args instanceof Message || message_args instanceof MockMessage) return message_args;
 
     if (mode === 1) return message_args;
@@ -2445,19 +2444,20 @@ function find_redirect_targets_from_id(id) {
  * @param {object} options
  * @param {DogClient} options.client - Discord Client
  * @param {Message | MockMessage} options.message - Discord Message
- * @param {boolean} [options.d]
+ * @param {boolean} [options.bypass_rpg_check]
+ * @param {boolean} [options.bypass_botcheck]
  * @param {boolean} [options.dm] - 私訊模式
  * @param {0 | 1} [options.mode] - 請求模式 - 0: 預設模式 - 1: 取得訊息回傳參數
  * @returns {Promise<import("../../utils/types").RPGHandlerReturn>}
  */
-async function rpg_handler({ client, message, d = false, dm = false, mode = 0 }) {
+async function rpg_handler({ client, message, bypass_rpg_check = false, bypass_botcheck = false, dm = false, mode = 0 }) {
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
 
-    if (!d && message.author?.bot) return null;
+    if (!bypass_botcheck && message.author?.bot) return null;
 
     const guildID = message.guild?.id ?? null;
 
-    if (!dm) {
+    if (!dm && !bypass_rpg_check) {
         if (!guildID) return null;
 
         const data = await loadData(guildID);

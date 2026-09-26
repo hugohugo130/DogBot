@@ -169,11 +169,17 @@ export interface CommandGuide {
     format: string,
 };
 
-export type RPGHandlerReturn = {
+export interface RPGHandlerRespondArgs {
     embeds?: EmbedBuilder[];
     components?: (ActionRowBuilder<ButtonBuilder> | ActionRowBuilder<StringSelectMenuBuilder>)[];
     content?: string;
-} | MockMessage | Record<string, never> | null | void;
+};
+export type RPGHandlerReturn =
+    | RPGHandlerRespondArgs
+    | MockMessage
+    | Record<string, never>
+    | null
+    | void;
 
 // #endregion [RPG]
 
