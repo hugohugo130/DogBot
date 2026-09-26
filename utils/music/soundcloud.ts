@@ -14,7 +14,7 @@ import {
 } from "./music.js";
 
 /** @type {Soundcloud} */
-const sc = global._sc ?? new Soundcloud();
+const sc: Soundcloud = global._sc ?? new Soundcloud();
 global._sc = sc;
 
 const logger = get_logger();
@@ -31,7 +31,7 @@ const Constants = {
  * @param {string} query
  * @returns {Promise<import("soundcloud.ts").SoundcloudTrack[]>}
  */
-async function search_tracks(query) {
+async function search_tracks(query: string): Promise<import("soundcloud.ts").SoundcloudTrack[]> {
     try {
         const tracks = await sc.tracks.search({ q: query });
 
@@ -49,7 +49,7 @@ async function search_tracks(query) {
  * @param {import("soundcloud.ts").SoundcloudTrack | string} track - The soundcloud track
  * @returns {Promise<[Readable, string | null]>} - [Readable, string] string is FileTypeResult.mime, usually "audio/mpeg"
  */
-async function getAudioStream(track) {
+async function getAudioStream(track: import("soundcloud.ts").SoundcloudTrack | string): Promise<[Readable, string | null]> {
     // const stream_url = await sc.util.streamLink(track);
     const stream_url = false; // too bad so sad, this spend a loooooooooooooooot of time.
     if (stream_url) {
@@ -65,31 +65,15 @@ async function getAudioStream(track) {
     };
 };
 
-/**
- * Get info of a Soundcloud Track
- * @param {string} url
- * @returns {Promise<import("soundcloud.ts").SoundcloudTrack>}
- */
-async function get_track_info(url) {
+async function get_track_info(url: string): Promise<import("soundcloud.ts").SoundcloudTrack> {
     return await sc.tracks.get(url);
 };
 
-/**
- * Get the tracks related to a track.
- * @param {string | number} track_id - the ID of a track
- * @returns {Promise<import("soundcloud.ts").SoundcloudSearch>}
- */
-async function get_related_tracks(track_id) {
+async function get_related_tracks(track_id: string | number): Promise<import("soundcloud.ts").SoundcloudSearch> {
     return await sc.tracks.related(track_id);
 };
 
-/**
- * Check whether a string is a valid soundcloud url
- * @param {string | null} [url]
- * @param {string | null} [type]
- * @returns {boolean}
- */
-export function validateURL(url = null, type = "track") {
+export function validateURL(url: string | null = null, type: string | null = "track"): boolean {
     if (typeof url !== "string") return false;
 
     switch (type) {
