@@ -227,6 +227,7 @@ const farm_slots = 4;
 const setJobDelay = 604800 // 24 * 24 * 60 * 7 = 604800
 const max_hunger = 20;
 const default_prefix = "&";
+const prefix_compatible_with_yee = "*";
 
 const cannot_sell: string[] = [];
 
@@ -254,6 +255,7 @@ const cookBurntWeight = 0.25 // 25%
 const cookClickAmount = 10 // 10次
 
 // misc
+const YEE_ID = "584213384409382953";
 const daily_sign_guildIDs = ["1422545977226690683"];
 const reserved_prefixes = [`<@${BotID}>`];
 const enable_auto_register_cmd = true;
@@ -597,6 +599,7 @@ export {
     setJobDelay,
     max_hunger,
     default_prefix,
+    prefix_compatible_with_yee,
     cannot_sell,
 
     // counting
@@ -614,6 +617,7 @@ export {
     cookBurntWeight,
     cookClickAmount,
 
+    YEE_ID,
     daily_sign_guildIDs,
     reserved_prefixes,
     temp_folder,

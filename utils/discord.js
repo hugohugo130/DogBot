@@ -8,7 +8,6 @@ import {
 import {
     wait_for_client,
 } from "./wait_for_client.js";
-
 /**
  * Get all members in a guild by its ID
  * @param {string} guildID - Guild ID
@@ -60,7 +59,6 @@ export async function get_user(userID, client = global._client) {
     } catch {
         return null;
     };
-
 };
 
 /**
@@ -74,6 +72,21 @@ export async function get_user_by_username(username, client = global._client) {
         if (!client) client = await wait_for_client();
 
         return client.users.cache.find(u => u.username === username) ?? null;
+    } catch {
+        return null;
+    };
+};
+
+/**
+ * @param {string} user_id
+ * @param {Guild} guild
+ */
+export async function get_member(user_id, guild) {
+    try {
+        return (
+            guild.members.cache.get(user_id)
+            || await guild.members.fetch(user_id)
+        );
     } catch {
         return null;
     };
