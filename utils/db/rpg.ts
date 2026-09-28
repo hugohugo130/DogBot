@@ -417,7 +417,7 @@ export async function save_user_counts(userid: string, counts: Record<string, nu
         SELECT $1::bigint, count_key, count_value::int
         FROM UNNEST($2::text[], $3::int[]) AS t(count_key, count_value)
         ON CONFLICT (user_id, count_key)
-            DO UPDATE SETcount_value = EXCLUDED.count_value
+            DO UPDATE SET count_value = EXCLUDED.count_value
     `;
 
     const entries = Object.entries(counts);
