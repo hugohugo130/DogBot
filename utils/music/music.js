@@ -1428,11 +1428,11 @@ async function IsFFprobeInstalled() {
  * @returns {Promise<number | null>}
  */
 async function getAudioDuration(url, timeoutMs = 15000) {
-    return new Promise((resolve, reject) => {
-        if (!IsFFprobeInstalled()) {
-            reject(new Error("ffprobe is not installed"));
-        };
+    if (!(await IsFFprobeInstalled())) {
+        throw new Error("ffprobe is not installed");
+    };
 
+    return new Promise((resolve, reject) => {
         const args = [
             "-v", "quiet",
             "-print_format", "json",
