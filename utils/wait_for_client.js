@@ -59,7 +59,7 @@ export async function wait_until_ready(client = global._client, timeout = 10000,
     const start = Date.now();
 
     while (true) {
-        if (client_ready(client) || (start + timeout) >= Date.now()) break;
+        if (client_ready(client) || (start + timeout) <= Date.now()) break;
 
         await asleep(wait);
     };
