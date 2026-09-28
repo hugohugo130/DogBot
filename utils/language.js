@@ -495,7 +495,7 @@ export function check_language_keys() {
             ? language[locale]
             : null;
 
-        if (!localeData) return;
+        if (!localeData) continue;
 
         for (const [category, translations] of Object.entries(localeData)) {
             // 添加分類到集合
