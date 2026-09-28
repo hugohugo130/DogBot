@@ -49,14 +49,14 @@ export default {
             logger.debug(`[${channels.indexOf(channel) + 1}/${channels.length}] fetching messages of channel ${"name" in channel ? channel.name : "unknown"}`);
 
             const options = limit ? { limit: limit } : undefined;
-            if (!("messages" in channel)) return;
+            if (!("messages" in channel)) continue;
 
             const messages = await channel.messages.fetch(options);
 
             const userMessages = messages.filter((msg) => msg.author?.id === userID);
 
             if (userMessages.size === 0) continue;
-            if (!("bulkDelete" in channel)) return;
+            if (!("bulkDelete" in channel)) continue;
 
             try {
                 const deletedMessages = await channel.bulkDelete(userMessages, true);
