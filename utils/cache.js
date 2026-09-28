@@ -238,19 +238,11 @@ class CacheManager {
  * @returns {CacheManager | null}
  */
 function getCacheManager(create = true) {
-    /** @type {CacheManager | null} */
-    const global_cacheManager = global._cacheManager;
+    if (create && !(global._cacheManager instanceof CacheManager)) {
+        global._cacheManager = new CacheManager(30 * 60 * 1000);
+    };
 
-    return (
-        global_cacheManager instanceof CacheManager
-            ? global_cacheManager
-            : null
-    )
-        ?? (
-            create
-                ? new CacheManager(30 * 60 * 1000) // 30 分鐘 TTL
-                : null
-        );
+    return global._cacheManager ?? null;
 };
 
 /**
