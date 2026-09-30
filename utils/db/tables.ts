@@ -14,6 +14,7 @@ import {
     type RPGPrivacy,
     type FoodKey,
     type ItemKey,
+    type RPGCooldownKeys,
 } from "../rpg.ts";
 import {
     max_hunger,
@@ -89,7 +90,7 @@ export type RPGTransactionsSQLRow = ({
 });
 
 export type RPGCooldownsSQLRow = (BaseData & {
-    cooldown_key: string,
+    cooldown_key: RPGCooldownKeys,
     last_run_at: Date,
     // primary key: (user_id, cooldown_key)
 });

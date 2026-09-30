@@ -56,6 +56,8 @@ import {
     isFoodKey,
     isFailedItem,
     autoEatCommand,
+    getCooldownCommandEmbed,
+    isRPGCooldownKey,
 } from "../../utils/rpg.ts";
 import {
     load_shop_data,
@@ -90,7 +92,6 @@ import {
     load_rpg_data,
     load_inventory,
     get_cooldowns,
-    load_user_counts,
     load_user_privacy,
     set_count,
     get_count,
@@ -274,9 +275,8 @@ async function show_marry_info(marry_info, interaction = null, client = global._
 
 /**
  * command_name: "{c} will be replaced with the command execution times"
- * @type {{ [k: string]: string }}
  */
-const rpg_cooldown = {
+const rpg_cooldown = /** @type {const} */({
     // 單位: 秒
     // mine: "180 + {c} * 30",
     // hew: "180 + {c} * 30",
@@ -289,7 +289,7 @@ const rpg_cooldown = {
     fish: "60 * 5",
     fell: "60 * 5",
     farm_water: "60 * 60 * 12" // 12小時
-};
+});
 
 /** @type {{ [k: string]: [string, string] }} */
 const rpg_actions = {
@@ -1152,44 +1152,9 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
     }, false],
     cd: ["查看冷卻剩餘時間", async function ({ message, mode }) {
         const user = message.author;
-        if (!user) return;
+        if (!user?.id) return;
 
-        const [cooldowns, counts] = await Promise.all([
-            get_cooldowns(user.id),
-            load_user_counts(user.id)
-        ]);
-
-        const filtered_lastRunTimestamp = Object.fromEntries(
-            Object.
-                entries(cooldowns)
-                .filter(([command]) => command in rpg_cooldown),
-        );
-
-        const embed = new EmbedBuilder()
-            .setColor(embed_default_color)
-            .setTitle("⏲️ | 冷卻剩餘時間")
-            .setEmbedFooter(user.id);
-
-        if (Object.keys(filtered_lastRunTimestamp).length === 0) {
-            embed.setDescription(`你沒有工作過(挖礦、伐木、放牧等)，所以快快開始工作吧！`);
-        } else {
-            for (const [command, time] of Object.entries(filtered_lastRunTimestamp)) {
-                if (!rpg_cooldown[command]) continue;
-                const time_second = Math.floor(time.getTime() / 1000);
-
-                const { is_finished, remaining_time } = await is_cooldown_finished(command, user.id);
-                const field_name = command;
-
-                const target_time = Math.floor(Date.now() / 1000 + remaining_time / 1000);
-                const target_time_str = `<t:${target_time}:R>`;
-
-                let value = is_finished ? `冷卻完畢 (${target_time_str})` : target_time_str;
-                value += `\n上次執行時間: <t:${time_second}:D> <t:${Math.floor(time_second)}:T>`;
-                value += `\n今天執行了 \`${counts[command]?.toLocaleString() || 0}\` 次`;
-
-                embed.addFields({ name: field_name, value: value, inline: true });
-            };
-        };
+        const embed = await getCooldownCommandEmbed(user.id);
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -1198,35 +1163,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
         const user = message.author;
         if (!user) return;
 
-        const cooldowns = await get_cooldowns(user.id);
-        const filtered_lastRunTimestamp = Object.fromEntries(
-            Object.
-                entries(cooldowns)
-                .filter(([command]) => command in rpg_cooldown),
-        );
-
-        const embed = new EmbedBuilder()
-            .setColor(embed_default_color)
-            .setTitle("⏲️ | 冷卻剩餘時間")
-            .setEmbedFooter(user.id);
-
-        if (Object.keys(filtered_lastRunTimestamp).length === 0) {
-            embed.setDescription(`你沒有工作過(挖礦、伐木、放牧等)，所以快快開始工作吧！`);
-        } else {
-            for (const [command] of Object.entries(filtered_lastRunTimestamp)) {
-                if (!rpg_cooldown[command]) continue;
-
-                const { is_finished, remaining_time } = await is_cooldown_finished(command, user.id);
-                const field_name = command;
-
-                const target_time = Math.floor(Date.now() / 1000 + remaining_time / 1000);
-                const target_time_str = `<t:${target_time}:R>`;
-
-                let value = is_finished ? `冷卻完畢 (${target_time_str})` : target_time_str;
-
-                embed.addFields({ name: field_name, value: value, inline: true });
-            };
-        };
+        const embed = await getCooldownCommandEmbed(user.id, false);
 
         if (mode === 1) return { embeds: [embed] };
         return await message.reply({ embeds: [embed] });
@@ -2477,6 +2414,7 @@ async function rpg_handler({ client, message, bypass_rpg_check = false, bypass_b
     if (![0, 1].includes(mode)) throw new TypeError("args 'mode' must be 0(default) or 1(get message response args)");
 
     if (!bypass_botcheck && message.author?.bot) return null;
+    if (!message.author) return null;
 
     const guildID = message.guild?.id ?? null;
 
@@ -2513,8 +2451,6 @@ async function rpg_handler({ client, message, bypass_rpg_check = false, bypass_b
         : command;
 
     if (command.length === 0 || content === allowedPrefix) return null;
-
-    if (!message.author) return;
 
     const userid = message.author.id;
     let rpg_data = await load_rpg_data(userid);
@@ -2653,7 +2589,7 @@ async function rpg_handler({ client, message, bypass_rpg_check = false, bypass_b
         };
     };
 
-    if (rpg_cooldown[command]) {
+    if (isRPGCooldownKey(command)) {
         const [fetched_current_count, { is_finished, remaining_time }] = await Promise.all([
             get_count(command, userid),
             is_cooldown_finished(command, userid),

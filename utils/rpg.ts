@@ -49,11 +49,13 @@ import {
     importModules,
 } from "./customs/custom_import.js";
 import {
+    get_cooldowns,
     get_count,
     getAutoEatOrder,
     load_cooldown,
     load_inventory,
     load_rpg_data,
+    load_user_counts,
     load_user_privacy,
 } from "./db/rpg.ts";
 import type {
@@ -62,6 +64,7 @@ import type {
 } from "./types.d.ts";
 import {
     item_exists,
+    rpg_cooldown,
 } from "../cogs/rpg/msg_handler.js";
 import {
     help_data,
@@ -1165,11 +1168,11 @@ async function get_cooldown_embed(remaining_time: number, action: string, count:
 
 /**
  * Get work cooldown time
- * @param {string} command_name
- * @param {string} user_id
- * @returns {Promise<number>}
  */
-async function get_cooldown_time(command_name: string, user_id: string): Promise<number> {
+async function get_cooldown_time(
+    command_name: RPGCooldownKeys,
+    user_id: string
+): Promise<number> {
     const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href) as typeof import("../cogs/rpg/msg_handler.js");
     const count = await get_count(command_name, user_id) ?? 0;
 
@@ -1181,12 +1184,18 @@ async function get_cooldown_time(command_name: string, user_id: string): Promise
 
 /**
  * 檢查指令是否已經冷卻完畢
- * @param {string} command_name - 指令名稱
- * @param {string} user_id
  * @returns {Promise<{ is_finished: boolean, remaining_time: number, endsAtms: number, endsAts: number }>} - is_finished: 冷卻是否結束 - remaining_time: 剩餘時間
  */
-async function is_cooldown_finished(command_name: string, user_id: string): Promise<{ is_finished: boolean; remaining_time: number; endsAtms: number; endsAts: number; }> {
-    const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href);
+async function is_cooldown_finished(
+    command_name: RPGCooldownKeys,
+    user_id: string
+): Promise<{
+    is_finished: boolean;
+    remaining_time: number;
+    endsAtms: number;
+    endsAts: number;
+}> {
+    const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href) as typeof import("../cogs/rpg/msg_handler.js");
 
     if (!rpg_cooldown[command_name]) return {
         is_finished: true,
@@ -1761,6 +1770,49 @@ export async function selectAutoEatFoods(userID: string, mode: "add" | "remove",
     return { content: lang_select_foods_title, components: [row] };
 };
 
+export async function getCooldownCommandEmbed(userID: string, detail: boolean = true): Promise<EmbedBuilder> {
+    const [cooldowns, counts] = await Promise.all([
+        get_cooldowns(userID),
+        load_user_counts(userID)
+    ]);
+
+    const filtered_lastRunTimestamp =
+        Object.
+            entries(cooldowns)
+            .filter(([command]) => command in rpg_cooldown) as [RPGCooldownKeys, Date][];
+
+    const embed = new EmbedBuilder()
+        .setColor(embed_default_color)
+        .setTitle("⏲️ | 冷卻剩餘時間")
+        .setEmbedFooter(userID);
+
+    if (filtered_lastRunTimestamp.length === 0) {
+        embed.setDescription(`你沒有工作過(挖礦、伐木、放牧等)，所以快快開始工作吧！`);
+    } else {
+        for (const [command, time] of filtered_lastRunTimestamp) {
+            if (!rpg_cooldown[command]) continue;
+            const time_second = Math.floor(time.getTime() / 1000);
+
+            const { is_finished, remaining_time } = await is_cooldown_finished(command, userID);
+            const field_name = command;
+
+            const target_time = Math.floor(Date.now() / 1000 + remaining_time / 1000);
+            const countdown_str = `<t:${target_time}:R>`;
+            const target_time_str = `<t:${target_time}:D><t:${target_time}:T>`;
+
+            let value = is_finished ? `冷卻完畢 (${countdown_str})` : `${countdown_str} (${target_time_str})`;
+            if (detail) {
+                value += `\n上次執行時間: <t:${time_second}:D><t:${Math.floor(time_second)}:T>`;
+                value += `\n今天執行了 \`${counts[command]?.toLocaleString() || 0}\` 次`;
+            };
+
+            embed.addFields({ name: field_name, value: value, inline: true });
+        };
+    };
+
+    return embed;
+};
+
 /**
  * Get the first prefix of a guild
  */
@@ -1840,6 +1892,8 @@ export const isTagKey = (tag: string): tag is TagKeys => {
 export const isValidGuideCategory = (value: string): value is ValidGuideCategory =>
     value in help_data.group && value in help_data.name;
 
+export const isRPGCooldownKey = (key: string): key is RPGCooldownKeys =>
+    key in rpg_cooldown;
 
 type TagKeys = TagKey | `#${TagKey}`;
 type PlankKey = typeof planks[number];
@@ -1870,6 +1924,7 @@ export const RPGPrivacy = {
 } as const;
 
 export type RPGPrivacy = typeof RPGPrivacy[keyof typeof RPGPrivacy];
+export type RPGCooldownKeys = keyof typeof import("../cogs/rpg/msg_handler.js").rpg_cooldown;
 
 const oven_slots = 6;
 const smelter_slots = 6;

@@ -18,6 +18,9 @@ import {
 import {
     TABLES,
 } from "./config.ts";
+import {
+    type RPGCooldownKeys,
+} from "../rpg.ts";
 
 // #region [rpg_users]
 
@@ -295,7 +298,7 @@ export async function load_cooldown(userid: string, cooldown_key: string): Promi
 /**
  * 讀取所有冷卻的數據
  */
-export async function get_cooldowns(userid: string): Promise<{ [cooldown_key: string]: Date; }> {
+export async function get_cooldowns(userid: string): Promise<Partial<Record<RPGCooldownKeys, Date>>> {
     const table_name = "rpg_cooldowns" as const satisfies typeof TABLES[number];
 
     const command = `
