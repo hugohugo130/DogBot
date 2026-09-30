@@ -55,7 +55,8 @@ function getRandomBooleanWithWeight(weight) {
  * @returns {string}
  */
 function generateSessionId(length = 32) {
-    return crypto.randomBytes(Math.floor(length / 2)).toString('hex');
+    const bytes = crypto.randomBytes(Math.ceil(length / 2));
+    return bytes.toString('hex').slice(0, length);
 };
 
 /**
