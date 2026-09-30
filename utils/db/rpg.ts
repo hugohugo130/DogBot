@@ -19,7 +19,7 @@ import {
     TABLES,
 } from "./config.ts";
 import {
-    FoodKey,
+    type FoodKey,
     type RPGCooldownKeys,
 } from "../rpg.ts";
 
