@@ -21,7 +21,7 @@ import DogClient from "./customs/client.js";
  */
 async function safeshutdown(client) {
     try {
-        await saveDvoiceData(client.dvoice.entries().toArray() || []);
+        await saveDvoiceData(client.dvoice.entries().toArray());
         console.log("成功保存dvoice資料！");
 
         await saveAllMusicStates();
