@@ -96,10 +96,7 @@ function readFileSync(file_path, options = { encoding: "utf-8" }) {
             ? DEFAULT_VALUES.single[filename]
             : null;
 
-        const other_category_default_value = Object.values(DEFAULT_VALUES).reduce((acc, category) => {
-            // @ts-expect-error - e
-            return acc || category[filename];
-        }, {});
+        const other_category_default_value = find_default_value(filename);
 
         if (!default_value) {
             if (!Object.keys(other_category_default_value).length) logger.warn(`警告：資料庫檔案 ${filename} 缺失預設值，請及時補充。`);
