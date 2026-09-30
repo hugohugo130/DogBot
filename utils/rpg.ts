@@ -1057,9 +1057,8 @@ async function wrong_job_embed(rpg_data: import("./db/tables").RPGData, command:
                     .setLabel("選擇職業")
                     .setStyle(ButtonStyle.Primary);
 
-                row =
-                    (new ActionRowBuilder()
-                        .addComponents(chooseJobButton)) as ActionRowBuilder<ButtonBuilder>;
+                row = new ActionRowBuilder<ButtonBuilder>()
+                    .addComponents(chooseJobButton);
             };
 
             return [embed, row];
@@ -1483,13 +1482,11 @@ async function choose_job_row(userid: string): Promise<[ActionRowBuilder<StringS
         .setLabel("取消")
         .setStyle(ButtonStyle.Danger);
 
-    const row1 =
-        (new ActionRowBuilder()
-            .addComponents(selectMenu)) as ActionRowBuilder<StringSelectMenuBuilder>;
+    const row1 = new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(selectMenu);
 
-    const row2 =
-        (new ActionRowBuilder()
-            .addComponents(cancel_button)) as ActionRowBuilder<ButtonBuilder>;
+    const row2 = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(cancel_button);
 
     return [row1, row2];
 };
@@ -1564,9 +1561,8 @@ async function ls_function(
             .setLabel("查看包包")
             .setStyle(ButtonStyle.Success);
 
-        const row =
-            (new ActionRowBuilder()
-                .addComponents(confirm_button)) as ActionRowBuilder<ButtonBuilder>;
+        const row = new ActionRowBuilder<ButtonBuilder>()
+            .addComponents(confirm_button);
 
         if (mode === 1) return { embeds: [embed], components: [row] };
         return await message.reply({ embeds: [embed], components: [row] });
@@ -1711,7 +1707,7 @@ ${lang_order}: ${eat_order_str || lang_none}
 `)
         );
 
-    const row = new ActionRowBuilder()
+    const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
             new ButtonBuilder()
                 .setCustomId(`autoeat|${user_id}|toggle`)
@@ -1735,7 +1731,7 @@ ${lang_order}: ${eat_order_str || lang_none}
                 .setLabel(lang_order_label)
                 .setEmoji(emoji_food)
                 .setStyle(ButtonStyle.Secondary),
-        ) as ActionRowBuilder<ButtonBuilder>;
+        );
 
     return [container, row];
 };
@@ -1755,12 +1751,12 @@ export async function selectAutoEatFoods(userID: string, mode: "add" | "remove",
                 .setValue(food)
     );
 
-    const row = new ActionRowBuilder()
+    const row = new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(
             new StringSelectMenuBuilder()
                 .setCustomId(`autoeat|${userID}|${mode}_selected_food`)
                 .addOptions(...options)
-        ) as ActionRowBuilder<StringSelectMenuBuilder>;
+        );
 
     return { content: lang_select_foods_title, components: [row] };
 };

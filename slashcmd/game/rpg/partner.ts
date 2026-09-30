@@ -119,7 +119,7 @@ export async function getPartnerList(
         ? safePage - 1
         : -1;
 
-    const row = new ActionRowBuilder()
+    const row = new ActionRowBuilder<ButtonBuilder>()
         .addComponents(
             new ButtonBuilder()
                 .setCustomId(`partner|${request_user.id}|list|${target_user.id}|${prev_page}`)
@@ -144,7 +144,7 @@ export async function getPartnerList(
                 .setEmoji(emoji_loop)
                 .setLabel("更新")
                 .setStyle(ButtonStyle.Success),
-        ) as ActionRowBuilder<ButtonBuilder>;
+        );
 
     return {
         embed,
@@ -316,7 +316,7 @@ export const partnerSlash: Slash = {
                     .setDescription(`你願意成為 ${user.toString()} 的夥伴嗎?`)
                     .setEmbedFooter(interaction);
 
-                const row = new ActionRowBuilder()
+                const row = new ActionRowBuilder<ButtonBuilder>()
                     .addComponents(
                         new ButtonBuilder()
                             .setCustomId(`cancel|${target_user.id}|partner`)
@@ -326,7 +326,7 @@ export const partnerSlash: Slash = {
                             .setCustomId(`partner|${target_user.id}|accept|${user.id}`)
                             .setLabel("我同意")
                             .setStyle(ButtonStyle.Success),
-                    ) as ActionRowBuilder<ButtonBuilder>;
+                    );
 
                 await interaction.reply({
                     content: target_user.toString(),
