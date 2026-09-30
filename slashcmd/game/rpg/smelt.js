@@ -272,8 +272,16 @@ export const smeltSlash = {
                 "en-US": "Take items out from smelter",
             })
             .addIntegerOption(option =>
-                option.setName("編號")
-                    .setDescription("要取出的物品編號（1, 2, 3...）")
+                option.setName("id")
+                    .setNameLocalizations({
+                        "zh-CN": "编号",
+                        "zh-TW": "編號"
+                    })
+                    .setDescription("The item ID to take out (1, 2, 3...)")
+                    .setDescriptionLocalizations({
+                        "zh-CN": "要取出的物品编号（1, 2, 3...）",
+                        "zh-TW": "要取出的物品編號（1, 2, 3...）"
+                    })
                     .setRequired(true)
                     .setMinValue(1),
             ),
@@ -450,7 +458,7 @@ export const smeltSlash = {
                     return await interaction.editReply({ embeds: [embed] });
                 };
 
-                const index = (interaction.options.getInteger("編號") ?? 0) - 1;
+                const index = (interaction.options.getInteger("id") ?? 0) - 1;
                 if (index < 0 || index >= smelt_data.length) {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
