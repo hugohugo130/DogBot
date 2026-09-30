@@ -1383,6 +1383,9 @@ export async function execute(client, interaction) {
             }
             case "smelter_smelt": {
                 const [item_id, amount, coal_amount, duration, output_amount, session_id] = otherCustomIDs;
+
+                if (!item_exists(item_id)) throw new Error("Invalid Item");
+
                 let [_, inventory, smelt_data, emoji_cross] = await Promise.all([
                     interaction.deferUpdate(),
                     load_inventory(user.id),

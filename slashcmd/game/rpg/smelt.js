@@ -49,8 +49,8 @@ import DogClient from "../../../utils/customs/client.js";
 /**
  * @typedef SmeltData
  * @property {string} userId
- * @property {string} item_id
- * @property {string} output_item_id
+ * @property {import("../../../utils/rpg.ts").ItemKey} item_id
+ * @property {import("../../../utils/rpg.ts").ItemKey} output_item_id
  * @property {number} coal_amount
  * @property {number} amount
  * @property {number} output_amount

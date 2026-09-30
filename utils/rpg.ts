@@ -250,7 +250,7 @@ const recipes = {
     ...plankRecipes,
 } as const satisfies Record<RecipeKey, Recipe>;
 
-const smeltable_recipe = [
+const smeltable_recipe: { input: {item: ItemKey, amount: number}, output: ItemKey, amount: number }[] = [
     {
         input: {
             item: "iron_ore",
