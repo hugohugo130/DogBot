@@ -178,6 +178,7 @@ export interface RPGHandlerRespondArgs {
 };
 export type RPGHandlerReturn =
     | RPGHandlerRespondArgs
+    | Message
     | MockMessage
     | Record<string, never>
     | null
