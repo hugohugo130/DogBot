@@ -19,6 +19,7 @@ import {
     TABLES,
 } from "./config.ts";
 import {
+    FoodKey,
     type RPGCooldownKeys,
 } from "../rpg.ts";
 
@@ -783,7 +784,7 @@ export async function setAutoEatOrder(userid: string, foodKeys: import("../rpg")
 
     // 應用層去重：保留第一次出現的位置（避免 (user_id, item_id) UNIQUE 衝突）
     const seen = new Set();
-    const unique = [];
+    const unique: FoodKey[] = [];
     for (const key of foodKeys) {
         if (seen.has(key)) continue;
         seen.add(key);
