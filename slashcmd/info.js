@@ -99,7 +99,7 @@ export async function getBotInfoEmbed(locale = null, client = global._client) {
     const userCount = client.users.cache.size;
     const readyAt = client.readyAt
         ? convertToSecondTimestamp(client.readyAt.getTime())
-        : "無法獲取資料";
+        : null;
 
     return new EmbedBuilder()
         .setColor(embed_default_color)
@@ -116,7 +116,7 @@ export async function getBotInfoEmbed(locale = null, client = global._client) {
             },
             {
                 name: `${emoji_timer} ${lang_uptime}`,
-                value: `<t:${readyAt}:R>`,
+                value: readyAt ? `<t:${readyAt}:R>` : "無法獲取資料",
                 inline: true,
             },
             {
