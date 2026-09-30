@@ -2474,7 +2474,6 @@ async function rpg_handler({ client, message, bypass_rpg_check = false, bypass_b
                 .filter((cmd) => {
                     return (
                         cmd.startsWith(firstChar) // 以 firstChar 開頭的指令
-                        && !rpg_commands[cmd][2] // 且不需要參數
                     );
                 })
                 .map((cmd) => {
@@ -2496,15 +2495,27 @@ async function rpg_handler({ client, message, bypass_rpg_check = false, bypass_b
             .setTitle(`${emoji_cross} | 是不是打錯指令了？我找到了你可能想要的指令`)
             .setEmbedFooter(userid);
 
-        const buttons = similarCommands.map(cmd => {
-            return new ButtonBuilder()
-                .setCustomId(`choose_command|${userid}|${cmd}`)
-                .setLabel(cmd)
-                .setStyle(ButtonStyle.Primary);
-        });
+        const baseCustomIDLength = `choose_command|${userid}|`.length;
+        const customIDMaxLength = 100;
+
+        const buttons = similarCommands
+            .filter(cmd => {
+                const argumentsLength = args.join("|").length;
+                const commandLength = `${cmd}|`.length;
+                return baseCustomIDLength + argumentsLength + commandLength <= customIDMaxLength;
+            })
+            .map(cmd => {
+                const argsStr = args.length
+                    ? `|${args.join("|")}`
+                    : "";
+
+                return new ButtonBuilder()
+                    .setCustomId(`choose_command|${userid}|${cmd}${argsStr}`)
+                    .setLabel(cmd)
+                    .setStyle(ButtonStyle.Primary);
+            });
 
         // 將按鈕分成每組最多5個
-
         /** @type {ActionRowBuilder<ButtonBuilder>[]} */
         const rows = [];
         for (let i = 0; i < buttons.length; i += 5) {

@@ -1039,7 +1039,7 @@ export async function execute(client, interaction) {
                 return await interaction.editReply({ embeds: [embed], components: [row] });
             }
             case "choose_command": {
-                const [command] = otherCustomIDs;
+                const [command, ...args] = otherCustomIDs;
 
                 if (!channel?.isSendable() || !command) return;
 
@@ -1048,7 +1048,7 @@ export async function execute(client, interaction) {
                     firstPrefix(guild?.id),
                 ]);
 
-                const mockmessage = new MockMessage(`${prefix}${command}`, channel, user, guild);
+                const mockmessage = new MockMessage(`${prefix}${command} ${args.join(" ")}`, channel, user, guild);
                 let response = await rpg_handler({ client, message: mockmessage, dm: channel.isDMBased(), mode: 1 });
                 if (!response || response instanceof Message || response instanceof MockMessage) return;
 
