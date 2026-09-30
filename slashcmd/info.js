@@ -141,7 +141,7 @@ export function getMsgInfoContainer(message, locale = null) {
     const createdAt = Math.floor(message.createdAt.getTime() / 1000);
     const editedAt = message.editedAt ? Math.floor(message.editedAt.getTime() / 1000) : null;
 
-    const jump_url = `https://discord.com/channels/${message.guildId}/${msg_channel_id}/${messageId}`;
+    const jump_url = `https://discord.com/channels/${message.guildId || "@me"}/${msg_channel_id}/${messageId}`
 
     /*
     const embed = new EmbedBuilder()
