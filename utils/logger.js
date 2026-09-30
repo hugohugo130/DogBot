@@ -71,7 +71,6 @@ const LEVEL_COLORS = {
     verbose: 0x800080
 };
 
-// 頻道映射 (延遲建立，避免 config.ts 尚未完成時讀取其 export 的 TDZ)
 /** @type {{ [k: string]: string }} */
 const CHANNEL_MAPPING = {
     error: error_channel_id,
@@ -175,7 +174,6 @@ class BackendTransport extends Transport {
     };
 };
 
-// 自定義控制台格式 (延遲建立，避免循環依賴時 TDZ)
 /** @type {winston.Logform.Format} */
 const consoleFormat = winston.format.combine(
     winston.format.timestamp(),
