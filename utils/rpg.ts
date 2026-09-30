@@ -590,7 +590,7 @@ const food_data = {
 
 const foods = [...foods_crops, ...foods_meat]
     .filter(e => e in food_data)
-    .sort((a, b) => food_data[a as FoodKey] - food_data[b as FoodKey]); // 透過food_data排序foods, 從高到低
+    .sort((a, b) => food_data[a as FoodKey] - food_data[b as FoodKey]); // 透過food_data排序foods, 從低到高
 
 const brew: { [k: string]: string; } = {
     cough_potion: "cough_potion",
