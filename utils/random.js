@@ -28,30 +28,13 @@ function choice(array) {
  * @param {number} [amount]
  * @returns {T[]}
  */
-function choicesSync(array, amount = 1) {
+function choices(array, amount = 1) {
     const result = [];
     for (let i = 0; i < amount; i++) {
         result.push(choice(array));
     };
 
     return result;
-};
-
-/**
- * Choose some random elements from a non-empty sequence.
- * @template T
- * @param {T[]} array
- * @param {number} [amount]
- * @returns {Promise<T[]>}
- */
-async function choices(array, amount = 1) {
-    // 使用Promise.all並行執行choice amount次
-
-    const promises = Array.from({ length: amount }, () => new Promise((resolve) => {
-        resolve(choice(array));
-    }));
-
-    return await Promise.all(promises);
 };
 
 /**
@@ -105,7 +88,6 @@ export {
     randint,
     choice,
     choices,
-    choicesSync,
     getRandomBooleanWithWeight,
     generateSessionId,
     generateSHA256,
