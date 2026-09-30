@@ -433,7 +433,7 @@ async function loadData(guildID = null, mode = 0) {
     if (mode === 0 && guildID) {
         const cacheManager = getCacheManager();
 
-        if (!data[guildID]) {
+        if (!Object.hasOwn(data, guildID)) {
             data[guildID] = database_emptyeg;
             await saveData(guildID, data[guildID]);
         };
