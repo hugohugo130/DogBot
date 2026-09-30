@@ -126,6 +126,12 @@ function assertValidAmount(amount: number): asserts amount is number {
     };
 };
 
+function assertValidAmountWithZero(amount: number): asserts amount is number {
+    if (!Number.isSafeInteger(amount) || amount < 0) {
+        throw new Error("Amount must be a positive safe integer");
+    };
+};
+
 function assertValidHunger(hunger: number): asserts hunger is number {
     if (!Number.isInteger(hunger) || hunger < 0 || hunger > 20) {
         throw new Error("Hunger must be an integer between 0 and 20");
@@ -289,7 +295,7 @@ export class RPGData extends UserDataBase {
     };
 
     async set_money(money: number): Promise<void> {
-        assertValidAmount(money);
+        assertValidAmountWithZero(money);
 
         await this._mutex.runExclusive(async () => {
             await this.poolWithUserID(async (pool, userID) => {
