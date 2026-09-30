@@ -54,7 +54,7 @@ async function checkDBFilesExists() {
         const defaultValue = DEFAULT_VALUES?.single?.[file] || {};
 
         const filePath = join_db_folder(file);
-        if (!(exists(filePath)) && defaultValue) {
+        if (!(await exists(filePath)) && defaultValue) {
             const default_value = await writeJson(filePath, defaultValue);
             logger.warn(`資料庫檔案 ${file} 不存在，已建立 (預設值為: ${default_value})`);
         };
@@ -267,7 +267,7 @@ async function checkDBFilesDefault(client = global._client) {
     for (const [file, default_value] of Object.entries(user_files)) {
         let modified = false;
         const filePath = join_db_folder(file);
-        if (!(exists(filePath))) continue;
+        if (!(await exists(filePath))) continue;
 
         /** @type {{ [k: string]: object }} */
         const data = await readJson(filePath);
@@ -289,7 +289,7 @@ async function checkDBFilesDefault(client = global._client) {
     for (const [file, default_value] of Object.entries(guild_files)) {
         let modified = false;
         const filePath = join_db_folder(file);
-        if (!(exists(filePath))) continue;
+        if (!(await exists(filePath))) continue;
 
         /** @type {{ [k: string]: object }} */
         const data = await readJson(filePath);
