@@ -58,21 +58,33 @@ async function read_all_files_in_dir(dir) {
 };
 
 /**
+ * 計算所有指令相關檔案的 SHA256
+ * 包含 slashcmd 與 context_menus 下的 .ts/.js
+ * @returns {Promise<string>}
+ */
+async function compute_hash() {
+    const file_datas = [
+        ...await read_all_files_in_dir("slashcmd"),
+        ...await read_all_files_in_dir("context_menus"),
+    ];
+
+    return get_hash_of_datas(file_datas);
+};
+
+/**
  * 檢查是否需要註冊命令
  * @returns {Promise<boolean>}
  */
-async function should_register_cmd() {
+export async function should_register_cmd() {
     if (!enable_auto_register_cmd) return false;
 
     if (await (exists(auto_register_cmd_file))) {
-        const hash = await readFile(auto_register_cmd_file);
+        const old_hash = String(await readFile(auto_register_cmd_file)).trim();
+        const new_hash = await compute_hash();
 
-        const file_datas_new = await read_all_files_in_dir("slashcmd");
-        const hash_new = get_hash_of_datas(file_datas_new);
+        if (DEBUG) console.debug(`old_hash(${old_hash}) !== new_hash(${new_hash}): ${old_hash !== new_hash}`);
 
-        if (DEBUG) console.debug(`hash(${hash}) !== hash_new(${hash_new}): ${hash !== hash_new}`);
-
-        return hash !== hash_new;
+        return old_hash !== new_hash;
     } else {
         // 文件不存在時，需要註冊
         return true;
@@ -83,16 +95,9 @@ async function should_register_cmd() {
  * 更新 hash 文件（應在成功註冊命令後調用）
  * @returns {Promise<void>}
  */
-async function update_cmd_hash() {
-    const file_datas = [...await read_all_files_in_dir("slashcmd"), ...await read_all_files_in_dir("context_menus")];
-    const hash = get_hash_of_datas(file_datas);
-    await writeFile(auto_register_cmd_file, `${hash}`);
+export async function update_cmd_hash() {
+    const hash = await compute_hash();
+    await writeFile(auto_register_cmd_file, hash);
 
     if (DEBUG) console.debug(`已更新 hash 文件: ${hash}`);
-};
-
-
-export {
-    should_register_cmd,
-    update_cmd_hash,
 };
