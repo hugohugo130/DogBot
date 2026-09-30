@@ -64,6 +64,7 @@ import type {
 } from "./types.d.ts";
 import {
     item_exists,
+    rpg_actions,
     rpg_cooldown,
 } from "../cogs/rpg/msg_handler.js";
 import {
@@ -1147,10 +1148,7 @@ async function get_emojis(names: string[], client: DogClient | null = global._cl
  * @returns {Promise<EmbedBuilder>}
  */
 async function get_cooldown_embed(remaining_time: number, action: string, count: number | string, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder> {
-    const [emoji, { rpg_actions }] = await Promise.all([
-        get_emoji("crosS", client),
-        import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href),
-    ]) as [string, typeof import("../cogs/rpg/msg_handler.js")];
+    const emoji_cross = await get_emoji("crosS", client);
 
     const timestamp = Math.floor(Date.now() / 1000) + Math.floor(remaining_time / 1000);
     const time = `<t:${timestamp}:T> (<t:${timestamp}:R>)`;
@@ -1159,7 +1157,7 @@ async function get_cooldown_embed(remaining_time: number, action: string, count:
 
     const embed = new EmbedBuilder()
         .setColor(embed_error_color)
-        .setTitle(`${emoji} | 你過勞了！`)
+        .setTitle(`${emoji_cross} | 你過勞了！`)
         .setDescription(`你今天${verb}了 \`${count}\` 次${noun}，等待到 ${time} 可以繼續${verb}${noun}`)
         .setEmbedFooter(interaction);
 
@@ -1173,7 +1171,6 @@ async function get_cooldown_time(
     command_name: RPGCooldownKeys,
     user_id: string
 ): Promise<number> {
-    const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href) as typeof import("../cogs/rpg/msg_handler.js");
     const count = await get_count(command_name, user_id) ?? 0;
 
     const result = safeCalculate(rpg_cooldown[command_name].replace("{c}", String(count)));
@@ -1195,8 +1192,6 @@ async function is_cooldown_finished(
     endsAtms: number;
     endsAts: number;
 }> {
-    const { rpg_cooldown } = await import(new URL("../cogs/rpg/msg_handler.js", import.meta.url).href) as typeof import("../cogs/rpg/msg_handler.js");
-
     if (!rpg_cooldown[command_name]) return {
         is_finished: true,
         remaining_time: 0,
