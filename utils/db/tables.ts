@@ -310,7 +310,7 @@ export class RPGData extends UserDataBase {
         return {
             status: this.married,
             with: this.married_with,
-            time: this.married_at?.getTime() ?? 0,
+            time: this.married_at?.getTime() ?? null,
         };
     };
 
