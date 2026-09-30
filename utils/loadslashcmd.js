@@ -162,7 +162,7 @@ async function loadslashcmd_array() {
     const commandsPath = path.join(process.cwd(), "slashcmd");
 
     const commands = await processDirectory(false, commandsPath);
-    return Array.from(commands);
+    return commands;
 };
 
 /**
