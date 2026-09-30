@@ -34,7 +34,7 @@ const logger_nodc = get_logger({ nodc: true });
  * @returns {file is keyof typeof DEFAULT_VALUES['single']}
  */
 export function inSingleDefaultValues(file) {
-    return file in DEFAULT_VALUES;
+    return file in DEFAULT_VALUES.single;
 };
 
 /**
