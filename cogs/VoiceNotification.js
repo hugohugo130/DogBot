@@ -8,14 +8,16 @@ import {
     loadData,
 } from "../utils/file.js";
 import EmbedBuilder from "../utils/customs/embedBuilder.js";
+import DogClient from "../utils/customs/client.js";
 
 export const name = Events.VoiceStateUpdate;
 
 /**
+ * @param {DogClient} _client
  * @param {import("discord.js").VoiceState} oldState
  * @param {import("discord.js").VoiceState} newState
  */
-export async function execute(oldState, newState) {
+export async function execute(_client, oldState, newState) {
     const guild = newState.guild;
     const member = newState.member;
     const user = member?.user;
