@@ -1195,7 +1195,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
         args = args.filter(arg => !arg.includes(target_user.id));
 
-        const amount = safeCalculate(args[0], 1);
+        const amount = safeCalculate(args[0]) || 1;
         if (typeof amount !== "number" || isNaN(amount) || amount <= 0) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -2295,7 +2295,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
             return await message.reply({ embeds: [embed] });
         };
 
-        let eat_amount = /** @type {number} */ (safeCalculate(args[1], 1) || 1);
+        let eat_amount = safeCalculate(args[1]) || 1;
         if (typeof eat_amount !== "number" || eat_amount < 1) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
@@ -2384,6 +2384,112 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
 
         if (mode === 1) return { embeds };
         return await message.reply({ embeds });
+    }, true],
+    give: ["贈送對方物品", async function ({ client, message, args, mode }) {
+        const user = message.author;
+        if (!user) return;
+
+        const mentions = await mentions_users(message);
+        const target_user = mentions.first();
+        if (!target_user) {
+            const emoji_cross = await get_emoji("crosS", client);
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 錯誤的使用者`)
+                .setEmbedFooter(user.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        args = removeMentionsInArgs(args, mentions.map(u => u.id));
+        const [item_str, amount_str = "1"] = args;
+
+        const amount = safeCalculate(amount_str) || 1;
+        const item_id = get_id_of_name(item_str);
+        const item_name = get_name_of_id(item_id);
+
+        if (!item_exists(item_id)) {
+            const emoji_cross = await get_emoji("crosS", client);
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 未知的物品`)
+                .setEmbedFooter(user.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        if (typeof amount !== "number" || amount < 1 || !Number.isSafeInteger(amount)) {
+            const emoji_cross = await get_emoji("crosS", client);
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 錯誤的數量`)
+                .setEmbedFooter(user.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        if (user.id === target_user.id) {
+            const emoji_cross = await get_emoji("crosS", client);
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 不能送自己東西`)
+                .setEmbedFooter(user.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        const [
+            emoji_trade,
+            source_inventory,
+            target_inventory,
+        ] = await Promise.all([
+            get_emoji("trade", client),
+            load_inventory(user.id),
+            load_inventory(target_user.id),
+        ]);
+
+        const source_item_amount = source_inventory.get(item_id) || 0;
+        if (source_item_amount === 0) {
+            const emoji_cross = await get_emoji("crosS", client);
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 你沒有這個物品`)
+                .setEmbedFooter(user.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        const missing_amount = amount - source_item_amount;
+        if (missing_amount > 0) {
+            const emoji_cross = await get_emoji("crosS", client);
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 歐不!`)
+                .setDescription(`你缺少了 ${missing_amount} 個 ${item_name}`)
+                .setEmbedFooter(user.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        const embed = new EmbedBuilder()
+            .setColor(embed_default_color)
+            .setTitle(`${emoji_trade} | 贈送物品`)
+            .setDescription(`你給了 ${target_user.toString()} ${amount} 個 ${item_name}`)
+            .setEmbedFooter(user.id);
+
+        await Promise.all([
+            source_inventory.subtract_item(item_id, amount),
+            target_inventory.add_item(item_id, amount),
+            mode !== 1 ? message.reply({ embeds: [embed] }) : null,
+        ])
+
+        if (mode === 1) return { embeds: [embed] };
     }, true],
 };
 

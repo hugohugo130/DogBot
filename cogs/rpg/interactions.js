@@ -576,9 +576,9 @@ export const help_data = {
                 format: "{cmd}",
             },
             "time": {
-                "emoji": "timer",
-                "desc": "查詢時間轉換成時間戳記 (timestamp)",
-                "usage": [
+                emoji: "timer",
+                desc: "查詢時間轉換成時間戳記 (timestamp)",
+                usage: [
                     {
                         "name": "查詢現在的時間戳記",
                         "value": "{cmd}",
@@ -588,8 +588,19 @@ export const help_data = {
                         "value": "{cmd} 2025-11-28",
                     },
                 ],
-                "format": "{cmd} [時間格式]"
+                format: "{cmd} [時間格式]",
             },
+            "give": {
+                emoji: "trade",
+                desc: "贈送物品給其他玩家",
+                usage: [
+                    {
+                        "name": "送一個哈狗堡給{author}",
+                        "value": "{cmd} @{author} 哈狗堡 1"
+                    },
+                ],
+                format: "{cmd} <成員> <物品名稱> [數量]",
+            }
         },
         special: {
 
