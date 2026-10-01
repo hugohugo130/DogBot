@@ -1175,13 +1175,7 @@ async function fetchAudioStream(original_url) {
  * @returns {Promise<[Readable, string]>} [Audio Stream - It must be an audio stream, fileType ([MediaType](https://en.wikipedia.org/wiki/Media_type))]
  */
 async function getStream({ track, url, source }) {
-    let engine;
-    try {
-        engine = await import(new URL(`./${source?.toLowerCase() ?? "soundcloud"}.js`, import.meta.url).href);
-    } catch {
-        // 找不到模塊或導入失敗
-        // 就直接向url發送請求
-    };
+    const engine = await getMusicEngine(source ?? "soundcloud");
 
     if (!url && "url" in track) {
         url = track.url;
@@ -1191,7 +1185,7 @@ async function getStream({ track, url, source }) {
 
     if (typeof engine?.getAudioStream === "function") {
         [stream, fileType] = await engine.getAudioStream(track.original_track ?? track);
-    } else if (url) {
+    } else if (url) { // 找不到模塊或導入失敗 就直接向url發送請求
         const [fetched_stream, fileTypes] = await fetchAudioStream(url);
 
         stream = fetched_stream;
@@ -1207,15 +1201,16 @@ async function getStream({ track, url, source }) {
  * @param {number} amount
  * @param {object} [customURLData]
  * @param {boolean} [customURLData.enable]
+ * @param {boolean} [customURLData.isSupportMusic]
  * @param {boolean} [customURLData.URLOnly]
  * @param {number | null} [customURLData.duration]
  * @param {string | null} [customURLData.track_name]
  * @returns {Promise<(MusicTrack)[]>}
  */
-async function search_until(query, amount = 25, { enable: customURL = false, URLOnly = false, duration: file_duration = null, track_name = null } = {}) {
+async function search_until(query, amount = 25, { enable: customURL = false, isSupportMusic = false, URLOnly = false, duration: file_duration = null, track_name = null } = {}) {
     let results = [];
 
-    if (customURL && !(await IsSupportMusicURL(query))) {
+    if (customURL && !isSupportMusic) {
         const url = await get_redirected_url(query);
         if (DEBUG) logger.debug(`given track_name: ${track_name}`)
 
@@ -1237,7 +1232,7 @@ async function search_until(query, amount = 25, { enable: customURL = false, URL
     };
 
     for (const engine of musicSearchEngine) {
-        const file = await import(new URL(`./${engine}.js`, import.meta.url).href);
+        const file = await getMusicEngine(engine);
 
         if (!file) {
             logger.error(`找不到 搜索引擎 ${engine} 的 API模塊: ${engine}.js`);
@@ -1348,6 +1343,23 @@ function IsValidURL(str) {
 };
 
 /**
+ * @param {typeof musicSearchEngine[number]} engine_id
+ */
+export async function getMusicEngine(engine_id) {
+    return (await Promise.all(
+        ["js", "ts"]
+            .map(async (ext) => {
+                try {
+                    return await import(new URL(`./${engine_id}.${ext}`, import.meta.url).href)
+                } catch {
+                    return null;
+                };
+            }))
+    )
+        .filter(e => e !== null)[0] || null;
+};
+
+/**
  * Check whether a string is a valid URL and we support it
  * @param {string} url
  * @returns {Promise<boolean>}
@@ -1357,7 +1369,8 @@ async function IsSupportMusicURL(url) {
 
     const checks = musicSearchEngine.map(async (engine_id) => {
         try {
-            const engine = await import(new URL(`./${engine_id}`, import.meta.url).href);
+            const engine = await getMusicEngine(engine_id);
+
             const validateURL = engine?.validateURL;
             return typeof validateURL === "function" && await validateURL(url);
         } catch {

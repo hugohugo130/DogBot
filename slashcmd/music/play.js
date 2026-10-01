@@ -36,6 +36,7 @@ import {
     getPlayingPlayers,
     URLAvaliable,
     GDriveDirectLink,
+    IsSupportMusicURL,
 } from "../../utils/music/music.js";
 import {
     formatMinutesSeconds,
@@ -278,15 +279,17 @@ export const playSlash = {
         const will_play_audio_url = IsValidURL(queryOrURL);
         const converted_gdrive_custom_url_or_query = will_play_audio_url && GDriveDirectLink(queryOrURL);
         const custom_url_or_query = converted_gdrive_custom_url_or_query || queryOrURL;
+        const isSupportMusic = !converted_gdrive_custom_url_or_query && await IsSupportMusicURL(custom_url_or_query);
 
         if (DEBUG) logger.debug(`是否自定義url: ${will_play_audio_url}`);
         if (DEBUG) logger.debug(`轉換後的gdrive url: ${converted_gdrive_custom_url_or_query}`);
         if (DEBUG) logger.debug(`使用的自定義url: ${custom_url_or_query}`);
+        if (DEBUG) logger.debug(`是否是支援的音樂串流平臺: ${isSupportMusic}`);
         if (DEBUG) logger.debug(`上傳檔案: ${!!file}`);
 
         let audioerr = null;
         try { // 檢查自定義url是否可訪問
-            if (will_play_audio_url) {
+            if (will_play_audio_url && !isSupportMusic) {
                 if (DEBUG) logger.debug(`正在檢查自定義url是否可訪問`);
 
                 if (!(await URLAvaliable(custom_url_or_query))) {
@@ -294,7 +297,7 @@ export const playSlash = {
                 };
             };
         } catch (error) {
-            audioerr = error instanceof Error ? error.message : null;
+            audioerr = error instanceof Error ? error.message : String(error);
         };
 
         if (will_play_audio_url && audioerr) {
@@ -309,6 +312,7 @@ export const playSlash = {
         if (DEBUG) logger.debug(`正在搜尋曲目`);
         const tracks = await search_until(custom_url_or_query, 25, {
             enable: will_play_audio_url,
+            isSupportMusic,
             URLOnly: !!file,
             duration: custom_file_duration,
             track_name: file?.title || file?.name,
