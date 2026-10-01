@@ -128,7 +128,7 @@ function assertValidAmount(amount: number): asserts amount is number {
 
 function assertValidAmountWithZero(amount: number): asserts amount is number {
     if (!Number.isSafeInteger(amount) || amount < 0) {
-        throw new Error("Amount must be a positive safe integer");
+        throw new Error("Amount must be a non-negative safe integer");
     };
 };
 
