@@ -93,7 +93,6 @@ import {
     cookBurntWeight,
     cookClickAmount,
     embed_sign_color,
-    default_prefix,
     embed_marry_color,
 } from "../../utils/config.ts";
 import {
@@ -236,11 +235,11 @@ export const help_data = {
                 usage: [
                     {
                         name: "向{author}購買 `2` 個麵包",
-                        value: "&buy @{author} bread 2"
+                        value: "{cmd} @{author} bread 2"
                     },
                     {
                         name: "列出{author}有販賣的物品",
-                        value: "&buy @{author}"
+                        value: "{cmd} @{author}"
                     }
                 ],
                 format: "{cmd} @使用者 商品ID 數量",
@@ -251,7 +250,7 @@ export const help_data = {
                 usage: [
                     {
                         name: "查看冷卻時間",
-                        value: "&cd"
+                        value: "{cmd}"
                     }
                 ],
                 format: "{cmd}",
@@ -262,7 +261,7 @@ export const help_data = {
                 usage: [
                     {
                         name: "查看冷卻時間",
-                        value: "&cdd"
+                        value: "{cmd}"
                     }
                 ],
                 format: "{cmd}",
@@ -273,7 +272,7 @@ export const help_data = {
                 usage: [
                     {
                         name: "每日簽到獲得金錢",
-                        value: "&daily"
+                        value: "{cmd}"
                     }
                 ],
                 format: "{cmd}",
@@ -290,19 +289,19 @@ export const help_data = {
                 usage: [
                     {
                         name: "顯示所有可以食用的食物",
-                        value: "&eat"
+                        value: "{cmd}"
                     },
                     {
                         name: "吃一個麵包",
-                        value: "&eat bread"
+                        value: "{cmd} bread"
                     },
                     {
                         name: "吃三個牛肉",
-                        value: "&eat beef 3"
+                        value: "{cmd} beef 3"
                     },
                     {
-                        name: "[不建議] 停用爆體保護下吃掉所有麵包",
-                        value: "&eat bread all force"
+                        name: "[不建議] 在停用爆體保護的情況下吃掉所有麵包",
+                        value: "{cmd} bread all force"
                     }
                 ],
                 format: "{cmd} [食物ID] [數量]",
@@ -313,15 +312,15 @@ export const help_data = {
                 usage: [
                     {
                         name: "餵{author}吃 2 個牛肉",
-                        value: "&feed @{author} beef 2"
+                        value: "{cmd} @{author} beef 2"
                     },
                     {
                         name: "自己吃一個麵包",
-                        value: "&eat bread"
+                        value: "{prefix}eat bread"
                     },
                     {
                         name: "查看你還有多少食物",
-                        value: "&food"
+                        value: "{cmd}"
                     }
                 ],
                 format: "{cmd} <寵物標記> <食物ID> [數量]",
@@ -356,7 +355,7 @@ export const help_data = {
                 usage: [
                     {
                         name: "獲取小麥的ID(wheat)",
-                        value: "&id 小麥"
+                        value: "{cmd} 小麥"
                     },
                 ],
                 format: "{cmd} <物品名稱>",
@@ -367,7 +366,7 @@ export const help_data = {
                 usage: [
                     {
                         name: "取得你的背包清單",
-                        value: "&items"
+                        value: "{cmd}"
                     }
                 ],
                 format: "{cmd}",
@@ -378,11 +377,11 @@ export const help_data = {
                 "usage": [
                     {
                         "name": "在跳出的下拉選單選擇職業",
-                        "value": "&job"
+                        "value": "{cmd}"
                     },
                     {
                         "name": "選擇冒險職業",
-                        "value": "&job fight"
+                        "value": "{cmd} fight"
                     }
                 ],
                 "format": "{cmd}"
@@ -393,7 +392,7 @@ export const help_data = {
                 usage: [
                     {
                         name: "顯示金錢排行榜",
-                        value: "&top"
+                        value: "{cmd}"
                     }
                 ],
                 format: "{cmd}",
@@ -404,7 +403,7 @@ export const help_data = {
                 usage: [
                     {
                         name: "顯示倒數金錢排行榜",
-                        value: "&last"
+                        value: "{cmd}"
                     }
                 ],
                 format: "{cmd}",
@@ -415,11 +414,11 @@ export const help_data = {
                 usage: [
                     {
                         "name": "合成製作出石劍",
-                        "value": "&make 石劍"
+                        "value": "{cmd} 石劍"
                     },
                     {
                         "name": "使用 2個木材 製作出木棒",
-                        "value": "&make stick"
+                        "value": "{cmd} stick"
                     }
                 ],
                 format: "{cmd} <目標物品ID> [數量]"
@@ -430,15 +429,15 @@ export const help_data = {
                 usage: [
                     {
                         name: "查詢感情狀態",
-                        value: "&marry"
+                        value: "{cmd}"
                     },
                     {
                         name: "和{author}結婚",
-                        value: "&marry @{author}"
+                        value: "{cmd} @{author}"
                     },
                     {
                         name: "離婚 :((",
-                        value: "&divorce"
+                        value: "{prefix}divorce"
                     }
                 ],
                 format: "{cmd} [使用者]",
@@ -455,11 +454,11 @@ export const help_data = {
                 usage: [
                     {
                         name: "查看金錢",
-                        value: "&money"
+                        value: "{cmd}"
                     },
                     {
                         name: "付給{author} 1000$",
-                        value: "&pay @{author} 1000"
+                        value: "{prefix}pay @{author} 1000"
                     }
                 ],
                 format: "{cmd}",
@@ -470,7 +469,7 @@ export const help_data = {
                 usage: [
                     {
                         name: "獲取wheat的中文(小麥)",
-                        value: "&name wheat"
+                        value: "{cmd} wheat"
                     },
                 ],
                 format: "{cmd} <物品ID>",
@@ -481,19 +480,19 @@ export const help_data = {
                 usage: [
                     {
                         name: "和{author}結為夥伴",
-                        value: "&partner add @{author}"
+                        value: "{cmd} add @{author}"
                     },
                     {
                         name: "離開你的夥伴",
-                        value: "&partner leave"
+                        value: "{cmd} leave"
                     },
                     {
                         name: "顯示你的夥伴",
-                        value: "&partner list"
+                        value: "{cmd} list"
                     },
                     {
                         name: "餵食夥伴",
-                        value: "&feed @{author}"
+                        value: "{prefix}feed @{author}"
                     }
                 ],
                 format: "{cmd} [成員]",
@@ -504,7 +503,7 @@ export const help_data = {
                 usage: [
                     {
                         name: "付1000塊給{author}",
-                        value: "&pay @{author} 1000"
+                        value: "{cmd} @{author} 1000"
                     }
                 ],
                 format: "{cmd} <使用者> <數量>",
@@ -521,15 +520,15 @@ export const help_data = {
                 usage: [
                     {
                         name: "出售2個小麥",
-                        value: "&sell 小麥 2"
+                        value: "{cmd} 小麥 2"
                     },
                     {
                         name: "出售所有小麥",
-                        value: "&sell 小麥 all"
+                        value: "{cmd} 小麥 all"
                     },
                     {
                         name: "出售所有麵包(英文)",
-                        value: "&sell bread all"
+                        value: "{cmd} bread all"
                     }
                 ],
                 format: "{cmd} <物品ID> [數量]",
@@ -540,27 +539,27 @@ export const help_data = {
                 usage: [
                     {
                         name: "列出{author}有販賣的物品",
-                        value: "&shop @{author}"
+                        value: "{cmd} @{author}"
                     },
                     {
                         name: "上架麵包 10個，每個價格150$",
-                        value: "&shop add 麵包 10 150"
+                        value: "{cmd} add 麵包 10 150"
                     },
                     {
                         name: "下架5個鐵礦",
-                        value: "&shop remove 鐵礦 5"
+                        value: "{cmd} remove 鐵礦 5"
                     },
                     {
                         name: "下架所有煤炭",
-                        value: "&shop remove 煤炭"
+                        value: "{cmd} remove 煤炭"
                     },
                     {
                         name: "將你的店舖狀態設為營業中",
-                        value: "&shop open"
+                        value: "{cmd} open"
                     },
                     {
                         name: "關閉店鋪，其他人將無法查看或是購買物品",
-                        value: "&shop close"
+                        value: "{cmd} close"
                     }
                 ],
                 format: "{cmd} <list|add|remove|open|close|on|off>",
@@ -571,7 +570,7 @@ export const help_data = {
                 usage: [
                     {
                         "name": "檢視並調整目前的設定",
-                        "value": "&autoeat",
+                        "value": "{cmd}",
                     },
                 ],
                 format: "{cmd}",
@@ -743,10 +742,12 @@ export async function get_help_command(category, command_name, guildID = null, i
         ? command_data.usage.map((info, i) => {
             const value = info.value
                 .replace(/{author}/g, client.author)
+                .replace(/{prefix}/g, prefix)
                 .replace(/{cmd}/g, `${prefix}${command_name}`)
 
             const name = info.name
                 .replace(/{author}/g, client.author)
+                .replace(/{prefix}/g, prefix)
                 .replace(/{cmd}/g, `${prefix}${command_name}`)
 
             return `${i + 1}. ${name}\n\`\`\`${value}\`\`\``;
