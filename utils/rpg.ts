@@ -1770,7 +1770,7 @@ export async function getCooldownCommandEmbed(userID: string, detail: boolean = 
     const filtered_lastRunTimestamp =
         Object.
             entries(cooldowns)
-            .filter(([command]) => command in rpg_cooldown) as [RPGCooldownKeys, Date][];
+            .filter(([command]) => isRPGCooldownKey(command)) as [RPGCooldownKeys, Date][];
 
     const embed = new EmbedBuilder()
         .setColor(embed_default_color)
@@ -1884,7 +1884,7 @@ export const isValidGuideCategory = (value: string): value is ValidGuideCategory
     value in help_data.group && value in help_data.name;
 
 export const isRPGCooldownKey = (key: string): key is RPGCooldownKeys =>
-    key in rpg_cooldown;
+    Object.hasOwn(rpg_cooldown, key);
 
 type TagKeys = TagKey | `#${TagKey}`;
 type PlankKey = typeof planks[number];
