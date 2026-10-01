@@ -25,11 +25,11 @@ parser.functions = Object.create(null);
 parser.consts = Object.create(null);
 parser.consts.pi = Math.PI;
 
-export function safeCalculate(input: string, defaultValue: unknown = null) {
+export function safeCalculate(input: string): number | null {
     const EMPTY_SCOPE = Object.create(null);
 
-    if (typeof input !== "string") return defaultValue;
-    if (input.length > 1000) return defaultValue;
+    if (typeof input !== "string") return null;
+    if (input.length > 1000) return null;
 
     try {
         const expr = parser.parse(input);
@@ -38,11 +38,11 @@ export function safeCalculate(input: string, defaultValue: unknown = null) {
         const result = expr.evaluate(EMPTY_SCOPE);
 
         if (typeof result !== 'number' || !Number.isFinite(result)) {
-            return defaultValue;
+            return null;
         };
 
         return result;
     } catch {
-        return defaultValue;
+        return null;
     };
 };
