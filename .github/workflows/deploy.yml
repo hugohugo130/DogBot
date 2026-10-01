@@ -38,7 +38,7 @@ jobs:
           max=15
           sleep_interval=10
 
-          until nc -z -w 3 "$HOST" "$PORT"; do
+          until timeout 3 bash -c "echo > /dev/tcp/$HOST/$PORT" >/dev/null 2>&1; do
             attempts=$((attempts+1))
             echo "Attempt $attempts/$max: SSH not reachable yet"
             if [ "$attempts" -ge "$max" ]; then
