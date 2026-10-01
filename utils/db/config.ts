@@ -31,7 +31,7 @@ export const TABLES_METADATA: Record<typeof TABLES[number], { CREATE?: string; }
                 user_id BIGINT NOT NULL,
                 money BIGINT NOT NULL DEFAULT 1000,
                 hunger SMALLINT NOT NULL DEFAULT 20,
-                daily TIMESTAMPTZ NULL DEFAULT to_timestamp(0),
+                daily TIMESTAMPTZ NULL,
                 daily_times SMALLINT NOT NULL DEFAULT 0,
                 daily_msg BOOLEAN NOT NULL DEFAULT false,
                 job TEXT NULL,

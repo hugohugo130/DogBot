@@ -84,7 +84,7 @@ export async function sign(rpg_data, message, client = null) {
     let daily_times = rpg_data.daily_times;
 
     // const [signedToday, brokeSign] = hasSignedTodayOrBrokeSign(rpg_data.daily || new Date(0));
-    const [signedToday, _] = hasSignedTodayOrBrokeSign(rpg_data.daily || new Date(0));
+    const [signedToday, _] = hasSignedTodayOrBrokeSign(rpg_data.daily);
     if (signedToday) return false;
 
     // if (brokeSign) daily_times = 0;

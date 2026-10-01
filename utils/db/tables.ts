@@ -209,7 +209,7 @@ export class RPGData extends UserDataBase {
     private _mutex = new Mutex();
     money: number = 1000;
     hunger: number = 20;
-    daily: Date | null = new Date(0);
+    daily: Date | null = null;
     daily_times: number = 0;
     daily_msg: boolean = false;
     job: JobNames | null = null;
@@ -383,7 +383,7 @@ export class RPGData extends UserDataBase {
 
     async resetDailyInfo(): Promise<void> {
         await this.setDailyInfo({
-            daily: new Date(0),
+            daily: null,
             daily_times: 0,
             daily_msg: false,
         });
