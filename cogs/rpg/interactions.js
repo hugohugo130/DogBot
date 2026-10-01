@@ -743,11 +743,11 @@ export async function get_help_command(category, command_name, guildID = null, i
         ? command_data.usage.map((info, i) => {
             const value = info.value
                 .replace(/{author}/g, client.author)
-                .replace(default_prefix, prefix);
+                .replace(/{cmd}/g, `${prefix}${command_name}`)
 
             const name = info.name
                 .replace(/{author}/g, client.author)
-                .replace(default_prefix, prefix);
+                .replace(/{cmd}/g, `${prefix}${command_name}`)
 
             return `${i + 1}. ${name}\n\`\`\`${value}\`\`\``;
         }).join("\n")
