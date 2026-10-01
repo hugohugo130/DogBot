@@ -33,11 +33,11 @@ const loggerManagers = new Collection();
 
 /**
  * @param {string} str
- * @param {string[]} extesions
+ * @param {string[]} extensions
  * @returns {string}
  */
-function rmExt(str, extesions = [".js", ".ts"]) {
-    for (const ext of extesions) {
+function rmExt(str, extensions = [".js", ".ts"]) {
+    for (const ext of extensions) {
         str = path.basename(str, ext);
     };
 
@@ -117,7 +117,7 @@ class DiscordTransport extends Transport {
     /**
      * @param {import("logform").TransformableInfo} info
      * @param {() => unknown} [callback]
-     * @returns {boolean | void}
+     * @returns {unknown}
      */
     log(info, callback) {
         setImmediate(() => {
@@ -128,12 +128,13 @@ class DiscordTransport extends Transport {
 
         // 如果message含有config.dc_send_ignore_keywords中任何一個關鍵字，則不發送
         const { message, stack } = info;
-        if (typeof message === "string" && any(dc_send_ignore_keywords.map(keyword => message.includes(keyword)))) return;
-        if (typeof stack === "string" && any(dc_send_ignore_keywords.map(keyword => stack.includes(keyword)))) return;
+        if (
+            (typeof message === "string" && any(dc_send_ignore_keywords.map(keyword => message.includes(keyword))))
+            || (typeof stack === "string" && any(dc_send_ignore_keywords.map(keyword => stack.includes(keyword))))
+        ) return callback?.();
 
         if (global.sendQueue) global.sendQueue.push(info);
-
-        if (callback && this.levels[info.level] <= this.levels[this.level]) callback();
+        callback?.();
 
         return true;
     };
@@ -168,7 +169,7 @@ class BackendTransport extends Transport {
         if (DEBUG) console.debug(`[DEBUG] [BackendTransport] pushed info to sendQueue: ${JSON.stringify(info, null, 4)}`);
         if (global.sendQueue) global.sendQueue.push(info);
 
-        if (callback && this.levels[info.level] <= this.levels[this.level]) callback();
+        callback?.();
 
         return true;
     };
@@ -464,18 +465,15 @@ export async function process_send_queue() {
             const timestamp = typeof info.timestamp === "string" ? Date.parse(info.timestamp) : 0;
 
             const channel = await get_channel(channel_id);
-            if (!channel?.isSendable()) {
+            if (!channel?.isSendable() || !message) {
                 continue;
             };
 
             // 檢查 message 是否為 EmbedBuilder 實例
             if (
-                message
-                && (
-                    (typeof message === "object" && Object.hasOwn(message, "data"))
-                    || message instanceof djsEmbedBuilder
-                    || message instanceof EmbedBuilder
-                )
+                (typeof message === "object" && Object.hasOwn(message, "data"))
+                || message instanceof djsEmbedBuilder
+                || message instanceof EmbedBuilder
             ) {
                 const embed = /** @type {djsEmbedBuilder} */ (message);
                 if (!embed.data.color) {
@@ -491,13 +489,7 @@ export async function process_send_queue() {
                     flags: MessageFlags.SuppressNotifications
                 });
             } else if (typeof message === "string") {
-                const send_messages = splitStringByLength(message, 4000);
-
-                for (const msg of send_messages) {
-                    if (!msg) continue;
-
-                    await send_msg(channel, level, color, logger_name, msg, timestamp);
-                };
+                await send_msg(channel, level, color, logger_name, message, timestamp);
             };
         } catch (error) {
             console.error("Failed to process queued message:", error);
