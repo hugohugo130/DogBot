@@ -527,25 +527,28 @@ export class RPGInventory extends CollectionWithUserID {
 
     async add_item(item: ItemKey, amount: number) {
         assertValidAmount(amount);
-
         assertValidItemID(item);
-        const item_id = get_id_of_name(item);
 
         return await this._mutex.runExclusive(async () => {
             const result = await this.poolWithUserID(async (pool, userID) => {
                 const res = await pool.query(`
+                    WITH ensure_user AS (
+                        INSERT INTO rpg_users (user_id)
+                        VALUES ($1::bigint)
+                        ON CONFLICT (user_id) DO NOTHING
+                    )
                     INSERT INTO inventory (user_id, item_id, amount)
                     VALUES ($1::bigint, $2::text, $3::bigint)
                     ON CONFLICT (user_id, item_id)
                         DO UPDATE SET amount = inventory.amount + EXCLUDED.amount
                     RETURNING amount
                 `,
-                    [userID, item_id, amount],
+                    [userID, item, amount],
                 );
                 return res.rows[0].amount;
             });
 
-            this.set(item_id, result);
+            this.set(item, result);
             return result;
         });
     };
@@ -612,6 +615,11 @@ export class RPGInventory extends CollectionWithUserID {
         return await this._mutex.runExclusive(async () => {
             const result = await this.poolWithUserID(async (pool, userID) => {
                 const res = await pool.query(`
+                    WITH ensure_user AS (
+                        INSERT INTO rpg_users (user_id)
+                        VALUES ($1::bigint)
+                        ON CONFLICT (user_id) DO NOTHING
+                    )
                     INSERT INTO inventory (user_id, item_id, amount)
                     VALUES ($1::bigint, $2::text, $3)
                     ON CONFLICT (user_id, item_id)
