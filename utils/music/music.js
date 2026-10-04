@@ -837,7 +837,15 @@ class MusicQueue {
      * @returns {void}
      */
     setConnection(connection) {
+        const oldConncetion = this.connection;
+        oldConncetion?.destroy();
+
         this.connection = connection;
+        if (DEBUG) {
+            this.connection.on('stateChange', (o, n) => {
+                logger.debug(`[${connection.joinConfig.guildId}] Connection stage change: ${o.status} -> ${n.status}`);
+            });
+        };
     };
 
     /**
