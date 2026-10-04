@@ -250,7 +250,7 @@ const recipes = {
     ...plankRecipes,
 } as const satisfies Record<RecipeKey, Recipe>;
 
-const smeltable_recipe: { input: {item: ItemKey, amount: number}, output: ItemKey, amount: number }[] = [
+const smeltable_recipe: { input: { item: ItemKey, amount: number }, output: ItemKey, amount: number }[] = [
     {
         input: {
             item: "iron_ore",
@@ -1052,13 +1052,18 @@ async function wrong_job_embed(rpg_data: import("./db/tables").RPGData, command:
             if (!rpg_data.job) {
                 embed.setTitle(`${emoji_cross} | 你沒有選擇職業`);
 
-                const chooseJobButton = new ButtonBuilder()
-                    .setCustomId(`job_menu|${userId}`)
-                    .setLabel("選擇職業")
-                    .setStyle(ButtonStyle.Primary);
-
                 row = new ActionRowBuilder<ButtonBuilder>()
-                    .addComponents(chooseJobButton);
+                    .addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`job_menu|${userId}`)
+                            .setLabel("選擇職業")
+                            .setStyle(ButtonStyle.Primary),
+
+                        new ButtonBuilder()
+                            .setURL("https://discord.com/vanityurl/dotcom/steakpants/flour/flower/index11.html") // TODO: do it
+                            .setLabel("了解更多")
+                            .setStyle(ButtonStyle.Link),
+                    );
             };
 
             return [embed, row];
