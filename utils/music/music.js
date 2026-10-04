@@ -1049,9 +1049,10 @@ async function fixStructure(objects) {
  * This function is used for creating a MusicTrack
  * @param {string} url
  * @param {boolean} [stream]
+ * @param {string | null} [title]
  * @returns {Promise<import("../types").AudioFileData>}
  */
-async function getAudioFileData(url, stream = false) {
+async function getAudioFileData(url, stream = false, title = null) {
     const uri = url.split("/").pop()?.split("?")[0];
 
     const response = await axios.get(url);
@@ -1060,7 +1061,7 @@ async function getAudioFileData(url, stream = false) {
 
     await response.data?.destroy?.();
 
-    const filename = match?.[1] || uri || "unknown";
+    const filename = title || await getAudioTitle(url) || match?.[1] || uri || "unknown";
 
     return {
         id: `a${generateSessionId(8)}${Date.now().toFixed(5)}`,
@@ -1505,7 +1506,68 @@ async function getAudioDuration(url, timeoutMs = 15000) {
             reject(err);
         });
     });
-}
+};
+
+/**
+ * @param {string} url
+ * @param {number} [timeoutMs]
+ * @returns {Promise<string | null>}
+ */
+export async function getAudioTitle(url, timeoutMs = 15000) {
+    if (!(await IsFFprobeInstalled())) {
+        return null;
+    };
+
+    return new Promise((resolve, reject) => {
+        const args = [
+            "-v", "quiet",
+            "-print_format", "json",
+            "-show_entries", "format_tags=title",
+            "-rw_timeout", (timeoutMs * 1000).toString(), // 單位為微秒
+            "-user_agent", "Mozilla/5.0 (compatible; Dogbot/2.0)",
+            "-threads", "1",
+            url,
+        ];
+
+        const proc = spawn("ffprobe", args);
+        let stdout = "";
+        let stderr = "";
+
+        proc.stdout.on("data", (data) => { stdout += data; });
+        proc.stderr.on("data", (data) => { stderr += data; });
+
+        const timer = setTimeout(() => {
+            proc.kill("SIGKILL");
+            reject(new Error(`ffprobe timed out (${timeoutMs}ms)`));
+        }, timeoutMs);
+
+        proc.on("close", (code) => {
+            clearTimeout(timer);
+
+            if (code !== 0) {
+                reject(new Error(`ffprobe exit code ${code}: ${stderr}`));
+                return;
+            };
+
+            try {
+                const { format } = JSON.parse(stdout);
+                const received_title = format?.tags?.title;
+                const title = typeof received_title === "string"
+                    ? received_title
+                    : null;
+
+                resolve(title);
+            } catch {
+                reject(new Error("Failed to parse ffprobe JSON"));
+            };
+        });
+
+        proc.on("error", (err) => {
+            clearTimeout(timer);
+            reject(err);
+        });
+    });
+};
 
 /**
  *

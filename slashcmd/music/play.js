@@ -37,6 +37,7 @@ import {
     URLAvaliable,
     GDriveDirectLink,
     IsSupportMusicURL,
+    getAudioTitle,
 } from "../../utils/music/music.js";
 import {
     formatMinutesSeconds,
@@ -309,13 +310,17 @@ export const playSlash = {
             return await interaction.editReply({ content: "", embeds: [embed] });
         };
 
+        const track_name = file
+            ? await getAudioTitle(custom_url_or_query) || file.title || file.name
+            : null;
+
         if (DEBUG) logger.debug(`正在搜尋曲目`);
         const tracks = await search_until(custom_url_or_query, 25, {
             enable: will_play_audio_url,
             isSupportMusic,
             URLOnly: !!file,
             duration: custom_file_duration,
-            track_name: file?.title || file?.name,
+            track_name,
         });
 
         if (DEBUG) logger.debug(`搜到了${tracks.length}首曲目`);
