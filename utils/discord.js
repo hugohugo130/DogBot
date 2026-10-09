@@ -3,11 +3,14 @@ import {
     Guild,
     GuildMember,
     User,
+    parseEmoji,
 } from "discord.js";
+import emojiRegex from "emoji-regex";
 
 import {
     wait_for_client,
 } from "./wait_for_client.js";
+
 /**
  * Get all members in a guild by its ID
  * @param {string} guildID - Guild ID
@@ -245,4 +248,57 @@ export const VCJoinConfig = (voiceChannel, guild) => {
         "selfMute": false,
         "adapterCreator": guild.voiceAdapterCreator,
     };
+};
+
+/**
+ * @param {string} str
+ * @returns {boolean}
+ */
+function isSingleUnicodeEmoji(str) {
+    const matches = str.match(emojiRegex());
+    return matches !== null && matches.length === 1 && matches[0] === str;
+}
+
+/**
+ * 從 parseEmoji 的結果中取得自訂 emoji 的 ID
+ * @param {import("discord.js").PartialEmoji} parsed
+ * @returns {string | null}
+ */
+function getEmojiId(parsed) {
+    if (parsed.id) return parsed.id;
+
+    // 支援使用者直接輸入純 ID
+    if (parsed.name && /^\d{17,20}$/.test(parsed.name)) {
+        return parsed.name;
+    };
+
+    return null;
+};
+
+/**
+ * 檢查一個 emoji 字串是否可用。
+ * - Unicode emoji：直接視為可用
+ * - 自訂 emoji（<:name:id> 或純 ID）：確認機器人是否看得到
+ * @param {string} input
+ * @param {import("../utils/customs/client.js").DogClient | null} [client]
+ * @returns {Promise<boolean>}
+ */
+export async function isUsableEmoji(input, client = null) {
+    if (!client) client = await wait_for_client();
+
+    if (typeof input !== "string") return false;
+
+    const str = input.trim();
+    if (!str) return false;
+
+    const parsed = parseEmoji(str);
+    if (!parsed) return false;
+
+    const id = getEmojiId(parsed);
+
+    // 沒有 ID → Unicode emoji，直接可用
+    if (!id) return isSingleUnicodeEmoji(str);
+
+    // 自訂 emoji → 確認機器人是否看得到
+    return client.emojis.cache.has(id);
 };

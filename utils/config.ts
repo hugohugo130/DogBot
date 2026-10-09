@@ -86,12 +86,19 @@ export interface CountingData {
     last_counter: string | null;
 };
 
+export interface AutoReactData {
+    channel: string | null;
+    author: string | null,
+    reactions: string[];
+};
+
 export interface GuildDatabase {
     rpg: boolean;
     counting: CountingData;
     dynamicVoice: string | null;
     voiceNotification: boolean;
     prefix: string[];
+    autoReact: AutoReactData;
 };
 
 export interface DvoiceData {
@@ -178,6 +185,11 @@ const DEFAULT_VALUES: {
             "dynamicVoice": null,
             "voiceNotification": false,
             "prefix": ["&"],
+            "autoReact": {
+                "author": null,
+                "channel": null,
+                "reactions": [],
+            },
         },
     },
 };
@@ -255,6 +267,7 @@ const cookBurntWeight = 0.25 // 25%
 const cookClickAmount = 10 // 10次
 
 // misc
+export const MAX_AUTO_REACT = 20;
 const YEE_ID = "584213384409382953";
 const daily_sign_guildIDs = ["1422545977226690683"];
 const reserved_prefixes = [`<@${BotID}>`];

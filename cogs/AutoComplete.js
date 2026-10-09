@@ -14,6 +14,9 @@ import {
     load_inventory,
     load_rpg_data,
 } from "../utils/db/rpg.ts";
+import {
+    loadData,
+} from "../utils/file.js";
 import DogClient from "../utils/customs/client.js";
 
 const smeltable_items = smeltable_recipe.reduce((acc, item) => {
@@ -56,10 +59,10 @@ export const name = Events.InteractionCreate;
 export async function execute(client, interaction) {
     if (!interaction.isAutocomplete()) return;
 
-    const { user } = interaction;
+    const { options, guild, user } = interaction;
 
     const userid = user.id;
-    const focusedValue = interaction.options.getFocused();
+    const focusedValue = options.getFocused();
 
     switch (interaction.commandName) {
         case "play": {
@@ -72,7 +75,6 @@ export async function execute(client, interaction) {
             // };
             break;
         }
-
         case "bake": {
             const rpg_data = await load_rpg_data(userid);
 
@@ -97,7 +99,6 @@ export async function execute(client, interaction) {
 
             break;
         }
-
         case "smelt": {
             const rpg_data = await load_rpg_data(userid);
 
@@ -132,7 +133,6 @@ export async function execute(client, interaction) {
 
             break;
         }
-
         case "cook": {
             const rpg_data = await load_rpg_data(userid);
 
@@ -171,7 +171,6 @@ export async function execute(client, interaction) {
 
             break;
         }
-
         case "make": {
             await interaction.respond(
                 Object.entries(recipes)
@@ -200,5 +199,17 @@ export async function execute(client, interaction) {
 
             break;
         }
+        case "auto_react": {
+            if (!guild) return;
+            const guildData = await loadData(guild.id);
+
+            const choices = guildData.autoReact.reactions
+                .filter(r => r.includes(focusedValue))
+                .slice(0, 25) // Discord 上限 25 個
+                .map(r => ({ name: r, value: r }));
+
+            await interaction.respond(choices);
+            break;
+        }
     };
-}
+};
