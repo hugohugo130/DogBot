@@ -51,13 +51,23 @@ export enum CommandCategory {
 // 允許的 context (組合使用元組聯合)
 type AllowedContextTuple = ("dm" | "guild")[]
 
+type WithNonNull<
+    T,
+    K extends keyof T,
+> = T & { [P in K]-?: NonNullable<T[P]> };
+
+type WithNull<
+    T,
+    K extends keyof T,
+> = T & { [P in K]: null };
+
 // 根據 context 推斷 interaction 的 guild 屬性
 type ChatInputCommandInteractionFromContext<C extends AllowedContextTuple> =
     C extends readonly ["dm"]
-    ? djsChatInputCommandInteraction & { guild: null }
-    : C extends readonly ["guild"]
-    ? djsChatInputCommandInteraction & { guild: NonNullable<djsChatInputCommandInteraction["guild"]> }
-    : djsChatInputCommandInteraction; // 允許 DM 與 guild 的原始型別
+        ? WithNull<djsChatInputCommandInteraction, "guild" | "guildId">
+        : C extends readonly ["guild"]
+        ? WithNonNull<djsChatInputCommandInteraction, "guild" | "guildId">
+        : djsChatInputCommandInteraction;
 
 export type ButtonExecutor = (
     interaction: ButtonInteraction,
@@ -176,6 +186,7 @@ export interface RPGHandlerRespondArgs {
     components?: (ActionRowBuilder<ButtonBuilder> | ActionRowBuilder<StringSelectMenuBuilder>)[];
     content?: string;
 };
+
 export type RPGHandlerReturn =
     | RPGHandlerRespondArgs
     | Message
