@@ -135,6 +135,19 @@ export const playSlash = {
                     "zh-CN": "隐藏指令输出",
                 })
                 .setRequired(false),
+        )
+        .addBooleanOption(option => // direct_url
+            option.setName("direct_url")
+                .setNameLocalizations({
+                    "zh-TW": "直接連結",
+                    "zh-CN": "直接链接",
+                })
+                .setDescription("Treat the query as a direct audio URL without searching")
+                .setDescriptionLocalizations({
+                    "zh-TW": "將關鍵字視為直接音訊連結，不進行搜尋",
+                    "zh-CN": "将关键字视为直接音频链接，不进行搜索",
+                })
+                .setRequired(false),
         ),
     // .addBooleanOption(option =>
     //     option.setName("shuffle")
@@ -162,6 +175,7 @@ export const playSlash = {
         const next = interaction.options.getBoolean("next", false) ?? false;
         const custom_track_name = interaction.options.getString("track_name", false) ?? null;
         const hide = interaction.options.getBoolean("hide", false) ?? false;
+        const direct_url = interaction.options.getBoolean("direct_url", false) ?? null;
         // const shuffle = interaction.options.getBoolean("shuffle") ?? false;
 
         if (!query && !file) {
@@ -318,7 +332,7 @@ export const playSlash = {
         const tracks = await search_until(custom_url_or_query, 25, {
             enable: will_play_audio_url,
             isSupportMusic,
-            URLOnly: !!file,
+            URLOnly: direct_url === null ? !!file : direct_url, // direct_url 最優先，並且false可以覆蓋file為true
             duration: custom_file_duration,
             track_name,
         });
