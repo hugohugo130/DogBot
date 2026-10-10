@@ -176,6 +176,9 @@ Since <t:{1}:R>`,
 
             "remove.invalid_track": "Invalid track index",
             "remove.success": "Removed track",
+
+            "clear.empty_queue": "The queue is empty",
+            "clear.queue_cleared": "Emptied the queue",
         },
         "/play": {
             "no_query": "You must provide a query or file to play",
@@ -376,6 +379,9 @@ Since <t:{1}:R>`,
 
             "remove.invalid_track": "沒有這首歌",
             "remove.success": "成功移除",
+
+            "clear.empty_queue": "佇列是空的",
+            "clear.queue_cleared": "清空了佇列",
         },
         "/play": {
             "no_query": "你必須提供一個搜尋字串或文件來播放",

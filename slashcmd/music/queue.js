@@ -9,6 +9,7 @@ import {
 } from "discord.js";
 
 import {
+    get_emoji,
     get_emojis,
 } from "../../utils/rpg.ts";
 import {
@@ -185,6 +186,18 @@ export const queueSlash = {
                     .setMinValue(1)
                     .setRequired(false),
             ),
+        )
+        .addSubcommand(new SlashCommandSubcommandBuilder() // clear
+            .setName("clear")
+            .setNameLocalizations({
+                "zh-CN": "清空",
+                "zh-TW": "清空"
+            })
+            .setDescription("Clear the entire queue")
+            .setDescriptionLocalizations({
+                "zh-CN": "清空整个队列",
+                "zh-TW": "清空整個佇列"
+            })
         ),
     allowedContext: ["guild"],
     stage: "beta",
@@ -236,6 +249,34 @@ export const queueSlash = {
                     interaction.reply({ embeds: [embed] }),
                 ]);
 
+                break;
+            }
+
+            case "clear": {
+                const lang_empty_queue = get_lang_data(locale, "/queue", "clear.empty_queue"); // 佇列是空的
+                const lang_queue_cleared = get_lang_data(locale, "/queue", "clear.queue_cleared"); // 清空了佇列
+
+                if (queue.tracks.length < 1) {
+                    const emoji_cross = await get_emoji("crosS", client);
+
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | ${lang_empty_queue}`) // :cross: 佇列是空的
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [embed], components: [], flags: MessageFlags.Ephemeral });
+                };
+
+                queue.tracks.length = 0; // 清空佇列的列表
+
+                const emoji_bin = await get_emoji("bin", client);
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_bin} | ${lang_queue_cleared}`)
+                    .setEmbedFooter(interaction);
+
+                await interaction.reply({ embeds: [embed] });
                 break;
             }
         };
