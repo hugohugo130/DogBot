@@ -18,6 +18,7 @@ import {
     get_emoji,
 } from "../../../utils/rpg.ts";
 import {
+    type AutoReactData,
     embed_default_color,
     embed_error_color,
     MAX_AUTO_REACT,
@@ -95,6 +96,16 @@ export const autoReactSlash: Slash<["guild"]> = {
         const subCommand = options.getSubcommand();
 
         const guildData = await loadData(guild.id);
+        const default_value: AutoReactData = {
+            author: null,
+            channel: null,
+            reactions: [],
+        };
+
+        if (!guildData.autoReact) {
+            guildData.autoReact = default_value;
+            await saveData(guild.id, guildData);
+        };
         const { autoReact } = guildData;
 
         switch (subCommand) {
@@ -103,11 +114,7 @@ export const autoReactSlash: Slash<["guild"]> = {
                 const user = options.getUser("user", false);
                 const setDisable = !channel && !user;
                 if (setDisable) {
-                    guildData.autoReact = {
-                        author: null,
-                        channel: null,
-                        reactions: [],
-                    };
+                    guildData.autoReact = default_value;
                 } else {
                     if (channel) autoReact.channel = channel.id;
                     autoReact.author = user?.id ?? null;
