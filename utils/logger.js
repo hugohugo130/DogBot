@@ -216,11 +216,7 @@ const consoleFormat = winston.format.combine(
 async function send_msg(channel, level, color, logger_name, message, timestamp = null) {
     const { default: EmbedBuilder } = await import(new URL("./customs/embedBuilder.js", import.meta.url).href);
 
-    message = message.replaceAll("```", "");
-    message = escapeMarkdown(message, {
-        codeBlockContent: false,
-        codeBlock: true,
-    });
+    message = message.replaceAll("```", "'''");
 
     const embeds = [];
     const messages = splitStringByLength(message, 4000);
