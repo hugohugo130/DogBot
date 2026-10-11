@@ -13,7 +13,6 @@ import {
     SeparatorSpacingSize,
     StringSelectMenuOptionBuilder,
 } from "discord.js";
-import util from "util";
 
 import {
     loadData,
@@ -1384,7 +1383,7 @@ async function get_loophole_embed(text: string | Error, interaction: BaseInterac
     const emoji_cross = await get_emoji("crosS", client);
 
     if (text instanceof Error) {
-        text = util.inspect(text, { depth: null });
+        text = text.message;
     };
 
     if (typeof text !== "string") {

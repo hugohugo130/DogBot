@@ -208,9 +208,10 @@ export async function execute(client, message) {
             return message.reply(`done adding user ${user.toString()} 's inventory: ${item}*${amount}`);
         };
     } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
         const errorStack = inspect(err, { depth: null });
 
-        logger.error(`admin cmds 錯誤: ${errorStack}`);
+        logger.error(`admin cmds 錯誤: ${msg}`);
         await message.reply({ embeds: await get_loophole_embed(err instanceof Error ? err : errorStack, null, client) });
     };
 };
