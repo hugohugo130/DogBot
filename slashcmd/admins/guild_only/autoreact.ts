@@ -30,7 +30,7 @@ import EmbedBuilder from "../../../utils/customs/embedBuilder.js";
 
 export const autoReactSlash: Slash<["guild"]> = {
     builder: new SlashCommandBuilder()
-        .setName("auto_react")
+        .setName("auto-react")
         .setDescription("Configure auto reacting messages")
         .addSubcommandGroup(group => // config
             group.setName('config')
@@ -246,7 +246,7 @@ export const autoReactSlash: Slash<["guild"]> = {
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 目前尚未設定自動表情反應`)
-                        .setDescription("使用 `/auto_react config set` 來啟用此功能")
+                        .setDescription("使用 `/auto-react config set` 來啟用此功能")
                         .setEmbedFooter(interaction);
 
                     return await interaction.reply({

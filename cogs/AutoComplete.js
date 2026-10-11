@@ -199,7 +199,7 @@ export async function execute(client, interaction) {
 
             break;
         }
-        case "auto_react": {
+        case "auto-react": {
             if (!guild) return;
             const guildData = await loadData(guild.id);
 
