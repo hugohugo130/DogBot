@@ -14,6 +14,7 @@ import {
     fileTypeFromStream,
 } from "file-type";
 import {
+    PassThrough,
     Readable,
 } from "node:stream";
 import {
@@ -58,6 +59,9 @@ import {
 import {
     asleep,
 } from "../sleep.js";
+import {
+    isSafeURL,
+} from "../ssrf.ts";
 import EmbedBuilder from "../customs/embedBuilder.js";
 import DogClient from "../customs/client.js";
 
@@ -887,7 +891,25 @@ class MusicQueue {
  * @param {string} original_url
  * @returns {Promise<string>}
  */
-const get_redirected_url = async (original_url) => (await axios.get(original_url)).request.res.responseUrl
+const get_redirected_url = async (original_url) => {
+    if (!(await isSafeURL(original_url))) {
+        throw new Error("Unsafe URL blocked");
+    };
+
+    const response = await axios.get(original_url, {
+        maxRedirects: 0,
+        validateStatus: (status) => status >= 200 && status < 400,
+        // 若允許重定向，需在 beforeRedirect 檢查
+        beforeRedirect: async (options) => {
+            const redirectUrl = options.href;
+            if (!(await isSafeURL(redirectUrl))) {
+                throw new Error("Unsafe redirect blocked");
+            };
+        },
+    });
+
+    return response.request.res.responseUrl || original_url;
+};
 
 /**
  * Get a music queue by a guildID
@@ -1130,49 +1152,97 @@ export async function withTimeout(promiseOrFn, ms, error = true) {
     };
 };
 
-/**
- *
- * @param {string} original_url - 音檔網址
- * @returns {Promise<[Readable, {ext: string | null, mime: string | null}]>}
- */
-async function fetchAudioStream(original_url) {
-    // const redirected_url = await get_redirected_url(original_url);
-    const redirected_url = original_url;
+const MAX_REDIRECTS = 5;
+const USER_AGENT =
+    "Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) " +
+    "AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 " +
+    "Chrome/127.0.6533.103 Mobile Safari/537.36";
 
-    const response = await fetch(redirected_url, {
-        headers: {
-            "User-Agent": "Mozilla/5.0 (Linux; Android 15; SM-S931B Build/AP3A.240905.015.A2; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/127.0.6533.103 Mobile Safari/537.36"
-        },
+/**
+ * @param {string} original_url - 音檔網址
+ * @param {number} [_redirectCount]
+ * @returns {Promise<[Readable, { ext: string | null, mime: string | null }]>}
+ */
+async function fetchAudioStream(original_url, _redirectCount = 0) {
+    // 1. 驗證 URL 安全
+    if (!(await isSafeURL(original_url))) {
+        throw new Error("Unsafe URL blocked");
+    };
+
+    if (_redirectCount > MAX_REDIRECTS) {
+        throw new Error("Too many redirects");
+    };
+
+    // 2. 發送請求
+    const response = await axios.get(original_url, {
+        headers: { "User-Agent": USER_AGENT },
+        responseType: "stream",
+        maxRedirects: 0,             // 禁止 axios 自動跟隨重定向
+        validateStatus: () => true,  // 不因非 2xx 拋錯，自己處理狀態碼
+        timeout: 30_000,
     });
 
     const statusCode = response.status;
-    const statusText = response.statusText;
 
-    if (statusCode !== 200 || !response.body) throw new Error(statusText);
+    // 3. 處理重定向
+    if ([301, 302, 303, 307, 308].includes(statusCode)) {
+        // 釋放目前串流避免洩漏
+        response.data?.destroy?.();
 
-    const clonedStream = response.clone().body;
+        const location = response.headers["location"];
+        if (!location) throw new Error("Redirect without location");
 
-    // if (!clonedStream) throw new Error("Received no stream");
+        const redirectUrl = new URL(location, original_url).href;
+        if (!(await isSafeURL(redirectUrl))) {
+            throw new Error("Unsafe redirect blocked");
+        };
 
-    let fileType = null;
-    if (clonedStream) {
-        fileType = await withTimeout(fileTypeFromStream(clonedStream), 10000, false);
+        return fetchAudioStream(redirectUrl, _redirectCount + 1);
+    };
+
+    if (statusCode !== 200) {
+        response.data?.destroy?.();
+        throw new Error(response.statusText || `HTTP ${statusCode}`);
+    };
+
+    const stream = response.data;
+    if (!stream) throw new Error("Received no stream");
+
+    // 4. 用 PassThrough 分流：一份偵測檔案類型，一份回傳給呼叫者
+    const typeDetectionStream = new PassThrough();
+    const playableStream = new PassThrough();
+
+    stream.pipe(typeDetectionStream);
+    stream.pipe(playableStream);
+
+    // 來源串流錯誤時，轉發給兩個分流
+    stream.on("error", (/** @type {Error} */ err) => {
+        typeDetectionStream.destroy(err);
+        playableStream.destroy(err);
+    });
+
+    /** @type {import("file-type").FileTypeResult | null} */
+    let fileType;
+    try {
+        fileType = await withTimeout(
+            fileTypeFromStream(Readable.toWeb(typeDetectionStream)),
+            10_000,
+            false,
+        ) ?? null;
+    } finally {
+        // 偵測完成，不再需要此分流
+        typeDetectionStream.destroy();
     };
 
     const ext = fileType?.ext || null;
     const mime = fileType?.mime?.replace("video/", "audio/") || null;
 
-    if (mime && !mime?.startsWith("audio/")) throw new Error("Not an audio stream");
+    if (mime && !mime.startsWith("audio/")) {
+        playableStream.destroy();
+        throw new Error("Not an audio stream");
+    };
 
-    const WebReadableStream = response.clone().body;
-
-    if (!WebReadableStream) throw new Error("Received no stream");
-
-    const readable_stream = Readable.fromWeb(WebReadableStream);
-
-    response.body.cancel().catch(() => { });
-
-    return [readable_stream, { ext, mime }];
+    return [playableStream, { ext, mime }];
 };
 
 /**
@@ -1454,6 +1524,18 @@ async function getAudioDuration(url, timeoutMs = 15000) {
         return 0;
     };
 
+    // 1. 驗證 URL
+    if (!(await isSafeURL(url))) {
+        // throw new Error("Unsafe URL blocked");
+        return 0;
+    };
+
+    // 2. 確保 URL 以 http:// 或 https:// 開頭，防止選項注入
+    if (!/^https?:\/\//i.test(url)) {
+        // throw new Error("Only http/https URLs are allowed");
+        return 0;
+    };
+
     return new Promise((resolve, reject) => {
         const args = [
             "-v", "quiet",
@@ -1462,6 +1544,7 @@ async function getAudioDuration(url, timeoutMs = 15000) {
             "-rw_timeout", "10000000", // 10秒
             "-user_agent", "Mozilla/5.0 (compatible; Dogbot/2.0)",
             "-threads", "1",
+            "-protocol_whitelist", "http,https,tcp,tls",
             url,
         ];
 
@@ -1526,6 +1609,7 @@ export async function getAudioTitle(url, timeoutMs = 15000) {
             "-rw_timeout", (timeoutMs * 1000).toString(), // 單位為微秒
             "-user_agent", "Mozilla/5.0 (compatible; Dogbot/2.0)",
             "-threads", "1",
+            "-protocol_whitelist", "http,https,tcp,tls",
             url,
         ];
 
@@ -1545,7 +1629,9 @@ export async function getAudioTitle(url, timeoutMs = 15000) {
             clearTimeout(timer);
 
             if (code !== 0) {
-                reject(new Error(`ffprobe exit code ${code}: ${stderr}`));
+                // reject(new Error(`ffprobe exit code ${code}: ${stderr}`));
+                logger.error(`ffprobe exit code ${code}: ${stderr}`);
+                resolve(null);
                 return;
             };
 
