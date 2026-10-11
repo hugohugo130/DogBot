@@ -336,7 +336,7 @@ function find_default_value(filename, default_return = undefined) {
         if (Object.hasOwn(categoryData, basename)) return categoryData[basename];
     };
 
-    return default_return;
+    return structuredClone(default_return);
 };
 
 /**
