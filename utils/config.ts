@@ -290,6 +290,7 @@ const embed_fell_color = 0x966e33;
 const embed_job_color = 0x3498db;
 const embed_sign_color = 0x3498db;
 const embed_marry_color = 0x6bce99;
+const embed_guide_color = 0x6bce99;
 
 // Container colors
 // No "random"
@@ -642,6 +643,7 @@ export {
     embed_job_color,
     embed_sign_color,
     embed_marry_color,
+    embed_guide_color,
 
     container_default_color,
 

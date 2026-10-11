@@ -25,6 +25,7 @@ import {
     Locale,
     StringSelectMenuOptionBuilder,
     escapeMarkdown,
+    AttachmentBuilder,
 } from "discord.js";
 import util from "util";
 
@@ -94,6 +95,7 @@ import {
     cookClickAmount,
     embed_sign_color,
     embed_marry_color,
+    embed_guide_color,
 } from "../../utils/config.ts";
 import {
     getQueueListEmbedRow,
@@ -933,6 +935,33 @@ export async function execute(client, interaction) {
                         flags: MessageFlags.Ephemeral,
                     });
                 };
+                break;
+            }
+            case "guide": {
+                const [guide_id] = otherCustomIDs;
+
+                switch (guide_id) {
+                    case "emoji_id": {
+                        const filename = "how-to-get-emoji-id.gif";
+                        const emoji_search = await get_emoji("search", client);
+
+                        const attachment = new AttachmentBuilder(`./assets/${filename}`, { name: filename });
+                        const embed = new EmbedBuilder()
+                            .setColor(embed_guide_color)
+                            .setTitle(`${emoji_search} | 如何獲得表情符號ID?`)
+                            .setDescription("你可以先打出表情符號，在開頭輸入一個反斜線，最後發送訊息就可以看到那串數字了")
+                            .setImage(`attachment://${filename}`)
+                            .setEmbedFooter(interaction);
+
+                        await interaction.reply({
+                            embeds: [embed],
+                            files: [attachment],
+                            flags: MessageFlags.Ephemeral,
+                        });
+                        break;
+                    }
+                };
+
                 break;
             }
             case "pay_confirm": {
