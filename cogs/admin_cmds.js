@@ -3,10 +3,6 @@ import {
     Message,
 } from "discord.js";
 import {
-    exec,
-} from "child_process";
-import {
-    promisify,
     inspect,
 } from "util";
 
@@ -33,7 +29,6 @@ import {
 import DogClient from "../utils/customs/client.js";
 import { item_exists } from "./rpg/msg_handler.js";
 
-const execPromise = promisify(exec);
 const logger = get_logger();
 
 /**
@@ -163,10 +158,6 @@ export async function execute(client, message) {
                 break;
             };
 
-            case "run":
-                await handleRunCommand(message, commandArgs);
-                break;
-
             case "money":
                 await handleMoneyCommand(message, commandArgs);
                 break;
@@ -215,48 +206,6 @@ export async function execute(client, message) {
             await inventory.add_item(item, parseInt(amount));
 
             return message.reply(`done adding user ${user.toString()} 's inventory: ${item}*${amount}`);
-        };
-
-        /**
-         *
-         * @param {Message} message
-         * @param {string[]} args
-         * @returns {Promise<Message | void>}
-         */
-        async function handleRunCommand(message, args) {
-            if (args.length === 0) {
-                return await message.reply("用法: !run COMMAND");
-            };
-
-            const cmd = args.join(" ");
-
-            try {
-                if (process.platform === "linux") {
-                    await message.reply(`執行指令: \`${cmd}\`\n請稍候...`);
-
-                    const { stdout, stderr } = await execPromise(cmd, {
-                        cwd: "/home/hugo/dogbot",
-                        timeout: 30000 // 30秒超時
-                    });
-
-                    let response = "**執行結果:**\n";
-
-                    if (stdout) {
-                        response += `\`\`\`\n${stdout.substring(0, 1800)}\`\`\``;
-                    };
-
-                    if (stderr) {
-                        response += `\n**錯誤輸出:**\n\`\`\`\n${stderr.substring(0, 1800)}\`\`\``;
-                    };
-
-                    return await message.reply(response);
-                } else {
-                    return await message.reply("不支援的操作系統。");
-                };
-            } catch (error) {
-                if (error instanceof Error) await message.reply(`**執行失敗:**\n\`\`\`\n${error.message}\`\`\``);
-                return;
-            };
         };
     } catch (err) {
         const errorStack = inspect(err, { depth: null });
