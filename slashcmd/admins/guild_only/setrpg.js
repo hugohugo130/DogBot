@@ -32,7 +32,6 @@ export const setRPGSlash = {
                 })
                 .setRequired(true),
         ),
-        // .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
     permissions: {
         user: ["ManageGuild"],
     },

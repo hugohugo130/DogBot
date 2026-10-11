@@ -93,7 +93,9 @@ export const prefixSlash = {
                 "zh-TW": "列出所有前綴",
             }),
         ),
-    // .setDefaultMemberPermissions(0), // 只有管理員可以使用這個指令
+    permissions: {
+        user: ["ManageGuild"],
+    },
     allowedContext: ["guild"],
     stage: "beta",
 

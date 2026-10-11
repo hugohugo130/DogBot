@@ -84,6 +84,9 @@ export const autoReactSlash: Slash<["guild"]> = {
                 ),
         ),
 
+    permissions: {
+        user: ["ManageGuild"],
+    },
     allowedContext: ["guild"],
     stage: "beta",
 
