@@ -3,7 +3,6 @@ import {
     ButtonBuilder,
     ButtonStyle,
     StringSelectMenuBuilder,
-    escapeMarkdown,
     Message,
     ApplicationEmoji,
     Locale,
@@ -1392,10 +1391,7 @@ async function get_loophole_embed(text: string | Error, interaction: BaseInterac
         text = String(text);
     };
 
-    text = escapeMarkdown(text, {
-        codeBlockContent: false,
-        codeBlock: true,
-    });
+    text = text.replaceAll("```", "'''");
 
     // embed 描述最長：4096 字元
     if (text.length > 4000) {

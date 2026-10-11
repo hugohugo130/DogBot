@@ -7,7 +7,6 @@ import {
 import {
     EmbedBuilder as djsEmbedBuilder,
     MessageFlags,
-    escapeMarkdown,
     Collection,
 } from "discord.js";
 
