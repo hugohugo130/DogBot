@@ -42,7 +42,7 @@ export async function wait_for_client(waitReady = true, timeout = 10000, wait = 
         await asleep(wait);
     };
 
-    return client;
+    return client ?? null;
 };
 
 /**
