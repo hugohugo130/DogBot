@@ -55,8 +55,8 @@ async function checkDBFilesExists() {
 
         const filePath = join_db_folder(file);
         if (!(await exists(filePath)) && defaultValue) {
-            const default_value = await writeJson(filePath, defaultValue);
-            logger.warn(`資料庫檔案 ${file} 不存在，已建立 (預設值為: ${default_value})`);
+            await writeJson(filePath, defaultValue);
+            logger.warn(`資料庫檔案 ${file} 不存在，已建立 (預設值為: ${defaultValue})`);
         };
     };
 };
