@@ -1,3 +1,4 @@
+import "./utils/globalsetup.ts"; // setup global values
 import "./utils/check.env.js"; // check .env file
 import { inspect } from "util";
 import { loadEnvFile } from "node:process";
@@ -27,16 +28,7 @@ import get_areadline from "./utils/readline.js";
 
 loadEnvFile(); // load .env file
 
-const args = process.argv.slice(2);
-const all_args = args.includes("--all") || args.includes("-a");
-const debug = args.includes("--debug") || all_args;
-const isBeta = args.includes("--beta") || all_args;
-const noCache = args.includes("--no-cache") || all_args;
-
-global.debug = debug;
-global.isBeta = isBeta;
-
-const TOKEN = !isBeta
+const TOKEN = !global.isBeta
     ? process.env.TOKEN
     : process.env.BETA_TOKEN;
 
@@ -231,13 +223,9 @@ client.once(Events.ClientReady, async () => {
 });
 
 if (import.meta.main) {
-    global._client = null;
-    global._areadline = null;
-    global.sendQueue = [];
-
     await validateTableCreateSql();
-    await create_tables(!noCache);
-    await update_tables(!noCache)
+    await create_tables(!global.noCache);
+    await update_tables(!global.noCache)
     const [_, __, ffprobeInstalled] = await Promise.all([
         update_items(),
         checkDBFilesCorrupted(),

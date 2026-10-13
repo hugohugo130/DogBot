@@ -10,7 +10,14 @@
         "strictNullChecks": true,
         "strictFunctionTypes": true,
         "skipLibCheck": true,
+        "noEmit": true,
     },
+    "include": [
+        "**/*.js",
+        "**/*.ts",
+        "**/*.d.ts",
+        "global.d.ts"
+    ],
     "exclude": [
         "node_modules",
         "**/node_modules",

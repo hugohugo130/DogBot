@@ -13,7 +13,6 @@ import {
     fetchAudioStream,
 } from "./music.js";
 
-/** @type {Soundcloud} */
 const sc: Soundcloud = global._sc ?? new Soundcloud();
 global._sc = sc;
 

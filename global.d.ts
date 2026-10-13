@@ -15,6 +15,7 @@ declare global {
     var _sc: Soundcloud | null | undefined;
     var debug: boolean | undefined;
     var isBeta: boolean | undefined;
+    var noCache: boolean | undefined;
     var sendQueue: import("logform").TransformableInfo[] | undefined;
 };
 

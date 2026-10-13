@@ -1,3 +1,4 @@
+import "./utils/globalsetup.ts";
 import {
     loadEnvFile,
 } from "node:process";
@@ -23,9 +24,6 @@ import {
 import util from "util";
 
 const args = process.argv.slice(2);
-const isBeta = global.isBeta || args.includes("--beta") || args.includes("-a");
-
-global.isBeta = isBeta;
 
 /**
  * Log something
@@ -55,7 +53,7 @@ function _error(logger, message) {
  * @param {boolean} [beta] 是否使用 beta bot
  * @returns {Promise<(import("./utils/loadslashcmd.js").SlashCmdBody | import("discord.js").RESTPostAPIContextMenuApplicationCommandsJSONBody)[]>}
  */
-async function registcmd(quiet = true, logger = false, updateHash = true, beta = isBeta) {
+async function registcmd(quiet = true, logger = false, updateHash = true, beta = global.isBeta) {
     loadEnvFile();
 
     const token_key = beta ? "BETA_TOKEN" : "TOKEN";
