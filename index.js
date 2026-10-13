@@ -134,12 +134,6 @@ client.once(Events.ClientReady, async () => {
                 break;
             }
 
-            case "uploadall": {
-                logger.info(`done uploading all database files`)
-
-                break;
-            }
-
             case "ping": {
                 logger.info(`Pong! ${client.ws.ping}ms`);
 
