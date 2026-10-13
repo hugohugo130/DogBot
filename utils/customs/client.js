@@ -20,7 +20,9 @@ import {
 import {
     loadDvoiceData,
 } from "../file.js";
-import { MusicTrack } from "../music/music.js";
+import {
+    MusicTrack,
+} from "../music/music.js";
 
 /** @import { ItemKey, FoodKey } from "../rpg.ts" */
 
@@ -139,6 +141,9 @@ class DogClient extends Client {
         this.lock = {
             rpg_handler: {},
         };
+
+        /** @type {Collection<keyof ClientEvents, Set<(...args: unknown[]) => unknown>>} */
+        this.eventListeners = new Collection();
 
         this.setMaxListeners(Infinity);
     };

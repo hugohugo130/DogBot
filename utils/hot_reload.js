@@ -16,7 +16,12 @@ import DogClient from "./customs/client.js";
 async function hot_reload_cogs({ quiet = false, client = global._client } = {}) {
     if (!client) client = await wait_for_client();
 
-    client.removeAllListeners();
+    for (const [event_name, listeners] of client.eventListeners) {
+        for (const listener of listeners) {
+            client.removeListener(event_name, listener);
+        };
+        if (DEBUG) logger.debug(`removed listener for ${event_name}`);
+    };
 
     return await load_cogs(client, quiet);
 };
