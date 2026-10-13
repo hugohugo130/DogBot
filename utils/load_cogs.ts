@@ -2,7 +2,7 @@ import fsp from "fs/promises";
 import path from "path";
 import util from "util";
 import {
-    Events,
+    type ClientEvents,
 } from "discord.js";
 import {
     pathToFileURL,
@@ -40,10 +40,11 @@ export const asyncFilter = async <T>(
 async function load_cog(
     client: DogClient,
     cog: {
-        name: keyof typeof Events;
+        name: keyof ClientEvents;
         execute: (client: DogClient, ...args: unknown[]) => PromiseLike<unknown>;
         once?: boolean;
-    }, itemPath: string
+    },
+    itemPath: string,
 ): Promise<number> {
     async function run_execute(...args: unknown[]): Promise<void> {
         try {

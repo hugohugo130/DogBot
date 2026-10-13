@@ -25,6 +25,7 @@ import {
 } from "../music/music.js";
 
 /** @import { ItemKey, FoodKey } from "../rpg.ts" */
+/** @import { ClientEvents } from "discord.js" */
 
 /**
  * @typedef OvenBakeSession

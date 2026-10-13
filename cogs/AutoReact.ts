@@ -12,21 +12,10 @@ import {
 import {
     MAX_AUTO_REACT,
 } from "../utils/config.ts";
+import {
+    asyncFilter,
+} from "../utils/load_cogs.ts";
 import DogClient from "../utils/customs/client.js";
-
-type AsyncPredicate<T> = (
-    value: T,
-    index: number,
-    array: readonly T[]
-) => boolean | Promise<boolean>;
-
-const asyncFilter = async <T>(
-    arr: readonly T[],
-    predicate: AsyncPredicate<T>
-): Promise<T[]> => {
-    const results = await Promise.all(arr.map(predicate));
-    return arr.filter((_value, index) => results[index]);
-};
 
 export const name = Events.MessageCreate
 export async function execute(client: DogClient, message: Message) {
