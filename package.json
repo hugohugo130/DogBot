@@ -37,7 +37,7 @@
     "@types/node": "^26.6.2",
     "@types/pg": "^8.23.1",
     "@types/pg-pool": "^2.0.7",
-    "@typescript-eslint/eslint-plugin": "^8.69.0",
+    "@typescript-eslint/eslint-plugin": "^8.71.2",
     "@typescript-eslint/parser": "^8.69.0",
     "eslint": "^10.11.0",
     "eslint-plugin-command": "^4.0.0",
