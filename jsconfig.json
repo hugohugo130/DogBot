@@ -19,10 +19,14 @@
         "global.d.ts"
     ],
     "exclude": [
+        "website",
+        "dist",
+        "ai_update",
         "node_modules",
         "**/node_modules",
-        "dist",
+
+        "analyze_circular.js",
         "error_reader.js",
-        "*test*.js",
+        "*test*.*js",
     ]
 }
