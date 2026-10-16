@@ -38,7 +38,7 @@
     "@types/pg": "^8.23.1",
     "@types/pg-pool": "^2.0.7",
     "@typescript-eslint/eslint-plugin": "^8.69.0",
-    "@typescript-eslint/parser": "^8.69.0",
+    "@typescript-eslint/parser": "^8.71.2",
     "eslint": "^10.11.0",
     "eslint-plugin-command": "^4.0.0",
     "eslint-plugin-jsdoc": "^64.5.4",
