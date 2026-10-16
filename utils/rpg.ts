@@ -71,6 +71,9 @@ import {
 import {
     safeCalculate,
 } from "./math.ts";
+import {
+    categorize_backpack,
+} from "./rpg/categorize.ts";
 import EmbedBuilder from "./customs/embedBuilder.js";
 import DogClient, { type CookSession } from "./customs/client.js";
 
@@ -123,9 +126,9 @@ const planks = [
     "warped_planks",
 ] as const;
 
-const wood_productions = {
-    stick: "stick",
-};
+const wood_productions = [
+    "stick"
+] as const;
 
 const staticRecipes = {
     iron_armor: {
@@ -231,62 +234,6 @@ const staticRecipes = {
     },
 } as const;
 
-// 動態生成木材到木板的合成配方，比例 1:4
-const plankRecipes = {} as Record<PlankKey, Recipe>;
-
-for (const logKey of logs) {
-    const plankKey = logKey.replace("_wood", "_planks") as PlankKey;
-    plankRecipes[plankKey] = {
-        input: [{ item: logKey, amount: 1 }],
-        output: plankKey,
-        amount: 4,
-    };
-};
-
-const recipes = {
-    ...staticRecipes,
-    ...plankRecipes,
-} as const satisfies Record<RecipeKey, Recipe>;
-
-const smeltable_recipe: { input: { item: ItemKey, amount: number }, output: ItemKey, amount: number }[] = [
-    {
-        input: {
-            item: "iron_ore",
-            amount: 2
-        },
-        output: "iron",
-        amount: 1
-    },
-    {
-        input: {
-            item: "iron",
-            amount: 3
-        },
-        output: "steel",
-        amount: 1
-    },
-    {
-        input: {
-            item: "diamond_ore",
-            amount: 1
-        },
-        output: "diamond",
-        amount: 1
-    },
-    {
-        input: {
-            item: "gold_ore",
-            amount: 5
-        },
-        output: "gold",
-        amount: 1
-    },
-];
-
-const tags = {
-    "planks": Object.keys(planks) as unknown as typeof planks,
-} as const;
-
 const foods_crops = [
     "apple",
     "bread",
@@ -367,6 +314,115 @@ const animals = [
     "cow",
     "pig",
 ] as const;
+
+const brew = [
+    "cough_potion",
+    "dizzy_potion",
+    "eye_potion",
+    "floating_potion",
+    "gold_potion",
+    "ha_potion",
+    "hair_growth_potion",
+    "invisibility_potion",
+    "jump_potion",
+    "lucky_potion",
+    "mystery_potion",
+    "nausea_potion",
+    "poison_potion",
+    "regen_potion",
+    "revive_potion",
+    "unlucky_potion",
+] as const;
+
+const fish = [
+    "raw_anglerfish",
+    "raw_catfish",
+    "raw_clownfish",
+    "raw_cod",
+    "raw_crab",
+    "raw_eel",
+    "raw_goldfish",
+    "raw_jellyfish",
+    "raw_koi",
+    "raw_lobster",
+    "raw_octopus",
+    "raw_pufferfish",
+    "raw_salmon",
+    "raw_shrimp",
+    "raw_squid",
+    "raw_swordfish",
+    "raw_tropical_fish",
+    "raw_tuna",
+    "raw_whale",
+] as const;
+
+const weapons_armor = [
+    "iron_armor",
+    "iron_axe",
+    "iron_hoe",
+    "iron_short_knife",
+    "iron_sword",
+    "stone_axe",
+    "stone_short_knife",
+    "stone_sword",
+    "wooden_hoe",
+] as const;
+
+// 動態生成木材到木板的合成配方，比例 1:4
+const plankRecipes = {} as Record<PlankKey, Recipe>;
+
+for (const logKey of logs) {
+    const plankKey = logKey.replace("_wood", "_planks") as PlankKey;
+    plankRecipes[plankKey] = {
+        input: [{ item: logKey, amount: 1 }],
+        output: plankKey,
+        amount: 4,
+    };
+};
+
+const recipes = {
+    ...staticRecipes,
+    ...plankRecipes,
+} as const satisfies Record<RecipeKey, Recipe>;
+
+const smeltable_recipe: { input: { item: ItemKey, amount: number }, output: ItemKey, amount: number }[] = [
+    {
+        input: {
+            item: "iron_ore",
+            amount: 2
+        },
+        output: "iron",
+        amount: 1
+    },
+    {
+        input: {
+            item: "iron",
+            amount: 3
+        },
+        output: "steel",
+        amount: 1
+    },
+    {
+        input: {
+            item: "diamond_ore",
+            amount: 1
+        },
+        output: "diamond",
+        amount: 1
+    },
+    {
+        input: {
+            item: "gold_ore",
+            amount: 5
+        },
+        output: "gold",
+        amount: 1
+    },
+];
+
+const tags = {
+    "planks": planks,
+} as const;
 
 const shop_lowest_price: Record<ItemKey, number> = {
     // ==============材料==============
@@ -590,59 +646,6 @@ const foods = [...foods_crops, ...foods_meat]
     .filter(e => e in food_data)
     .sort((a, b) => food_data[a as FoodKey] - food_data[b as FoodKey]); // 透過food_data排序foods, 從低到高
 
-const brew: { [k: string]: string; } = {
-    cough_potion: "cough_potion",
-    dizzy_potion: "dizzy_potion",
-    eye_potion: "eye_potion",
-    floating_potion: "floating_potion",
-    gold_potion: "gold_potion",
-    ha_potion: "ha_potion",
-    hair_growth_potion: "hair_growth_potion",
-    invisibility_potion: "invisibility_potion",
-    jump_potion: "jump_potion",
-    lucky_potion: "lucky_potion",
-    mystery_potion: "mystery_potion",
-    nausea_potion: "nausea_potion",
-    poison_potion: "poison_potion",
-    regen_potion: "regen_potion",
-    revive_potion: "revive_potion",
-    unlucky_potion: "unlucky_potion",
-};
-
-const fish: { [k: string]: string; } = {
-    raw_anglerfish: "raw_anglerfish",
-    raw_catfish: "raw_catfish",
-    raw_clownfish: "raw_clownfish",
-    raw_cod: "raw_cod",
-    raw_crab: "raw_crab",
-    raw_eel: "raw_eel",
-    raw_goldfish: "raw_goldfish",
-    raw_jellyfish: "raw_jellyfish",
-    raw_koi: "raw_koi",
-    raw_lobster: "raw_lobster",
-    raw_octopus: "raw_octopus",
-    raw_pufferfish: "raw_pufferfish",
-    raw_salmon: "raw_salmon",
-    raw_shrimp: "raw_shrimp",
-    raw_squid: "raw_squid",
-    raw_swordfish: "raw_swordfish",
-    raw_tropical_fish: "raw_tropical_fish",
-    raw_tuna: "raw_tuna",
-    raw_whale: "raw_whale",
-};
-
-const weapons_armor: { [k: string]: string; } = {
-    iron_armor: "iron_armor",
-    iron_axe: "iron_axe",
-    iron_hoe: "iron_hoe",
-    iron_short_knife: "iron_short_knife",
-    iron_sword: "iron_sword",
-    stone_axe: "stone_axe",
-    stone_short_knife: "stone_short_knife",
-    stone_sword: "stone_sword",
-    wooden_hoe: "wooden_hoe",
-};
-
 const bake: Partial<Record<FoodKey, FoodKey>> = {
     raw_beef: "beef",
     raw_chicken: "chicken",
@@ -858,11 +861,11 @@ function check_item_data() {
     const all_items = [...new Set([
         ...mine_gets,
         ...ingots,
-        ...Object.values(logs),
-        ...Object.values(planks),
-        ...Object.values(foods),
+        ...logs,
+        ...planks,
+        ...foods,
+        ...wood_productions,
         ...Object.keys(recipes),
-        ...Object.values(wood_productions),
         ...Object.keys(name),
     ]
         .flat()
@@ -875,8 +878,8 @@ function check_item_data() {
     const work_productions = [...new Set([
         ...mine_gets,
         // ...ingots,
-        ...Object.values(logs),
-        ...Object.values(foods_crops),
+        ...logs,
+        ...foods_crops,
         ...foods_meat.filter(e => e.startsWith("raw_")),
     ]
         .flat()
@@ -1011,9 +1014,6 @@ async function notEnoughItemEmbed(
 ╚═╝  ╚═╝╚═╝      ╚═════╝     ╚═╝      ╚═════╝ ╚═╝  ╚═══╝ ╚═════╝   ╚═╝   ╚═╝ ╚═════╝ ╚═╝  ╚═══╝╚══════╝
 */
 
-/**
- * Chunk an array
- */
 function chunkArray<T>(array: T[], chunkSize: number): T[][] {
     const chunks = [];
     for (let i = 0; i < array.length; i += chunkSize) {
@@ -1023,16 +1023,13 @@ function chunkArray<T>(array: T[], chunkSize: number): T[][] {
     return chunks;
 };
 
-/**
- * 
- * @param {import("./db/tables").RPGData} rpg_data
- * @param {string} command
- * @param {string} userId
- * @param {BaseInteraction | null} [interaction]
- * @param {DogClient | null} [client]
- * @returns {Promise<[EmbedBuilder | null, ActionRowBuilder<ButtonBuilder> | null]>}
- */
-async function wrong_job_embed(rpg_data: import("./db/tables").RPGData, command: string, userId: string, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<[EmbedBuilder | null, ActionRowBuilder<ButtonBuilder> | null]> {
+async function wrong_job_embed(
+    rpg_data: import("./db/tables").RPGData,
+    command: string,
+    userId: string,
+    interaction: BaseInteraction | null = null,
+    client: DogClient | null = global._client
+): Promise<[EmbedBuilder | null, ActionRowBuilder<ButtonBuilder> | null]> {
     const workJobShouldBe = workCmdJobs[command];
 
     if (workJobShouldBe?.length > 0) {
@@ -1071,12 +1068,6 @@ async function wrong_job_embed(rpg_data: import("./db/tables").RPGData, command:
     return [null, null];
 };
 
-/**
- *
- * @param {string} name
- * @param {DogClient | null} [client]
- * @returns {Promise<ApplicationEmoji | null>}
- */
 async function get_emoji_object(name: string, client: DogClient | null = global._client): Promise<ApplicationEmoji | null> {
     if (!client) client = await wait_for_client();
 
@@ -1091,12 +1082,6 @@ async function get_emoji_object(name: string, client: DogClient | null = global.
     return emoji || null;
 };
 
-/**
- *
- * @param {string[]} names
- * @param {DogClient | null} [client]
- * @returns {Promise<(ApplicationEmoji | null)[]>}
- */
 async function get_emoji_objects(names: string[], client: DogClient | null = global._client): Promise<(ApplicationEmoji | null)[]> {
     if (!client) client = await wait_for_client();
 
@@ -1107,12 +1092,6 @@ async function get_emoji_objects(names: string[], client: DogClient | null = glo
     return emojis;
 };
 
-/**
- *
- * @param {string} name
- * @param {DogClient | null} [client]
- * @returns {Promise<string>}
- */
 async function get_emoji(name: string, client: DogClient | null = global._client): Promise<string> {
     if (!client) client = await wait_for_client();
 
@@ -1124,12 +1103,6 @@ async function get_emoji(name: string, client: DogClient | null = global._client
     return emoji;
 };
 
-/**
- *
- * @param {string[]} names
- * @param {DogClient | null} [client]
- * @returns {Promise<string[]>}
- */
 async function get_emojis(names: string[], client: DogClient | null = global._client): Promise<string[]> {
     if (!client) client = await wait_for_client();
 
@@ -1140,16 +1113,13 @@ async function get_emojis(names: string[], client: DogClient | null = global._cl
     return emojis;
 };
 
-/**
- * 
- * @param {number} remaining_time
- * @param {string} action
- * @param {number | string} count
- * @param {BaseInteraction | null} [interaction]
- * @param {DogClient | null} [client]
- * @returns {Promise<EmbedBuilder>}
- */
-async function get_cooldown_embed(remaining_time: number, action: string, count: number | string, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder> {
+async function get_cooldown_embed(
+    remaining_time: number,
+    action: string,
+    count: number | string,
+    interaction: BaseInteraction | null = null,
+    client: DogClient | null = global._client
+): Promise<EmbedBuilder> {
     const emoji_cross = await get_emoji("crosS", client);
 
     const timestamp = Math.floor(Date.now() / 1000) + Math.floor(remaining_time / 1000);
@@ -1183,7 +1153,6 @@ async function get_cooldown_time(
 
 /**
  * 檢查指令是否已經冷卻完畢
- * @returns {Promise<{ is_finished: boolean, remaining_time: number, endsAtms: number, endsAts: number }>} - is_finished: 冷卻是否結束 - remaining_time: 剩餘時間
  */
 async function is_cooldown_finished(
     command_name: RPGCooldownKeys,
@@ -1214,15 +1183,12 @@ async function is_cooldown_finished(
     };
 };
 
-/**
- * 
- * @param {string} failed_reason
- * @param {import("./db/tables").RPGData} rpg_data
- * @param {BaseInteraction | null} [interaction]
- * @param {DogClient | null} [client]
- * @returns {Promise<EmbedBuilder>}
- */
-async function get_failed_embed(failed_reason: string, rpg_data: import("./db/tables").RPGData, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder> {
+async function get_failed_embed(
+    failed_reason: string,
+    rpg_data: import("./db/tables").RPGData,
+    interaction: BaseInteraction | null = null,
+    client: DogClient | null = global._client
+): Promise<EmbedBuilder> {
     let color = embed_error_color;
 
     let title = "失敗";
@@ -1279,9 +1245,6 @@ async function get_failed_embed(failed_reason: string, rpg_data: import("./db/ta
 
 /**
  * Generate analyze template
- * @param {string} title
- * @param {string} description
- * @returns {{ title: string, description: string }}
  */
 function generate_analyze_data(title: string, description: string): { title: string; description: string; } {
     return {
@@ -1292,8 +1255,6 @@ function generate_analyze_data(title: string, description: string): { title: str
 
 /**
  * Analyze an error stack
- * @param {string} errorStack
- * @returns {{ title: string, description: string }[]}
  */
 function error_analyze(errorStack: string): { title: string; description: string; }[] {
     const analyzes = [];
@@ -1373,12 +1334,6 @@ function error_analyze(errorStack: string): { title: string; description: string
     return analyzes;
 };
 
-/**
- * @param {string | Error} text
- * @param {BaseInteraction | null} [interaction]
- * @param {DogClient | null} [client]
- * @returns {Promise<EmbedBuilder[]>}
- */
 async function get_loophole_embed(text: string | Error, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder[]> {
     const emoji_cross = await get_emoji("crosS", client);
 
@@ -1421,12 +1376,6 @@ async function get_loophole_embed(text: string | Error, interaction: BaseInterac
     return [embed, error_analyze_embed];
 };
 
-/**
- * @param {string} userId
- * @param {BaseInteraction | null} [interaction]
- * @param {DogClient | null} [client]
- * @returns {Promise<EmbedBuilder | null>}
- */
 async function job_delay_embed(userId: string, interaction: BaseInteraction | null = null, client: DogClient | null = global._client): Promise<EmbedBuilder | null> {
     const { load_cooldown } = await importModules("./db/rpg.ts") as typeof import("./db/rpg");
 
@@ -1451,8 +1400,6 @@ async function job_delay_embed(userId: string, interaction: BaseInteraction | nu
 
 /**
  * Get the row of the "choose job"
- * @param {string} userid
- * @returns {Promise<[ActionRowBuilder<StringSelectMenuBuilder>, ActionRowBuilder<ButtonBuilder>]>}
  */
 async function choose_job_row(userid: string): Promise<[ActionRowBuilder<StringSelectMenuBuilder>, ActionRowBuilder<ButtonBuilder>]> {
     const selectMenu = new StringSelectMenuBuilder()
@@ -1493,8 +1440,6 @@ async function choose_job_row(userid: string): Promise<[ActionRowBuilder<StringS
 
 /**
  * Checks if the given amount exceeds the maximum or minimum safe integer limit.
- * @param {number} amount
- * @returns {boolean}
  */
 function amount_limit(amount: number): boolean {
     return amount > Number.MAX_SAFE_INTEGER || amount < Number.MIN_SAFE_INTEGER;
@@ -1579,76 +1524,14 @@ async function ls_function(
         .setEmbedFooter(message.author.id);
 
     // 如果背包是空的
-    if (inventory.keys().toArray().length === 0) {
+    if (inventory.isEmpty()) {
         embed.setTitle(`${emoji_bag} | 你的背包裡沒有東西`);
     } else {
-        const [
-            ore_emoji,
-            farmer_emoji,
-            cow_emoji,
-            swords_emoji,
-            potion_emoji,
-        ] = await get_emojis([
-            "ore",
-            "farmer",
-            "cow",
-            "swords",
-            "potion",
-        ], client);
-
-        // 分類物品
-        const ores: { [s: string]: number; } = {};
-        const log_items: { [s: string]: number; } = {};
-        const food_crops_items: { [s: string]: number; } = {};
-        const food_meat_items: { [s: string]: number; } = {}
-        const fish_items: { [s: string]: number; } = {};
-        const weapons_armor_items: { [s: string]: number; } = {};
-        const potions_items: { [s: string]: number; } = {}
-        const other_items: { [s: string]: number; } = {};
-
-        // 遍歷背包中的物品並分類
-        for (const [item, amount] of inventory) {
-            if (!amount) continue;
-
-            if ((mine_gets as readonly string[]).includes(item) || (ingots as readonly string[]).includes(item)) {
-                ores[item] = amount;
-            } else if (Object.keys(logs).includes(item) || Object.keys(planks).includes(item) || Object.keys(wood_productions).includes(item)) {
-                log_items[item] = amount;
-            } else if (Object.keys(foods_crops).includes(item)) {
-                food_crops_items[item] = amount;
-            } else if ((foods_meat as readonly string[]).includes(item) && !Object.keys(fish).includes(item)) {
-                food_meat_items[item] = amount;
-            } else if (Object.keys(fish).includes(item)) {
-                fish_items[item] = amount;
-            } else if (Object.keys(weapons_armor).includes(item)) {
-                weapons_armor_items[item] = amount;
-            } else if (Object.keys(brew).includes(item)) {
-                potions_items[item] = amount;
-            } else {
-                other_items[item] = amount;
-            };
-        };
-
-        // 使用循環添加各類物品欄位
-        const categories = [
-            { items: ores, name: `${ore_emoji} 礦物` },
-            { items: log_items, name: "🪵 木材" },
-            { items: food_crops_items, name: `${farmer_emoji} 農作物` },
-            { items: food_meat_items, name: `${cow_emoji} 肉類` },
-            { items: fish_items, name: `🐟 魚類` },
-            { items: weapons_armor_items, name: `${swords_emoji} 武器 & 防具` },
-            { items: potions_items, name: `${potion_emoji} 藥水` },
-            { items: other_items, name: "📦 其他物品" }
-        ];
-
-        for (const category of categories) {
-            if (Object.keys(category.items).length > 0) {
-                const itemsText = Object.entries(category.items)
-                    .map(([item, amount]) => `${get_name_of_id(item)} \`x${amount.toLocaleString()}\``)
-                    .join("\n");
-                embed.addFields({ name: category.name, value: String(itemsText), inline: true });
-            };
-        };
+        const fields = await categorize_backpack({
+            inventory,
+            client,
+        });
+        embed.addFields(...fields);
     };
 
     if (mode === 1) return { embeds: [embed] };
