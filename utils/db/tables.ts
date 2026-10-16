@@ -637,6 +637,10 @@ export class RPGInventory extends CollectionWithUserID {
         });
     };
 
+    isEmpty(): boolean {
+        return !this.size;
+    };
+
     toObject(): Record<ItemKey, number> {
         return Object.fromEntries(
             this
