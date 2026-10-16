@@ -29,7 +29,6 @@ import {
     get_emoji,
     ls_function,
     is_cooldown_finished,
-    chunkArray,
     get_emojis,
     get_number_of_items,
     firstPrefix,
@@ -106,15 +105,20 @@ import {
 import {
     safeCalculate,
 } from "../../utils/math.ts";
+import {
+    RPGData,
+} from "../../utils/db/tables.ts";
+import {
+    addCategorizedFields,
+    addInventoryFields,
+} from "../../utils/rpg/categorize.ts";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
-import { RPGData } from "../../utils/db/tables.ts";
 
 const logger = get_logger();
 
 class MockMessage {
     /**
-     *
      * @param {string | null} [content]
      * @param {import("discord.js").SendableChannels | null} [channel]
      * @param {User | null} [author]
@@ -162,7 +166,6 @@ export function item_exists(item) {
 
 
 /**
- *
  * @param {string} item
  * @param {User} user
  * @param {string} amount_str
@@ -778,36 +781,51 @@ const rpg_commands = {
                     })
                     .setEmbedFooter(userid);
 
-                // 礦物
-                const minerals = Object.entries(shop_data.items)
-                    .filter(([item]) => /** @type {readonly string[]} */(mine_gets).includes(item) || /** @type {readonly string[]} */ (ingots).includes(item))
-                    .sort((a, b) => a[0].localeCompare(b[0]))
-                    .map(([item, data]) => `${get_name_of_id(item)} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
-                    .join("\n");
+                /** @type {import("../../utils/rpg/categorize.ts").CategoryDef<{ price: number; amount: number }>[]} */
+                const shopCategories = [
+                    { // ores
+                        key: "ores",
+                        label: "礦物",
+                        emojiKey: "ore",
+                        match: i =>
+                            /** @type {readonly string[]} */(mine_gets).includes(i)
+                            || /** @type {readonly string[]} */ (ingots).includes(i),
+                        formatItem: (id, d) =>
+                            `${get_name_of_id(id)} \`${d.price.toLocaleString()}$\` / 個 (現有 \`${d.amount.toLocaleString()}\` 個)`,
+                        sortKey: id => id,
+                        chunk: true,
+                    },
+                    { // food
+                        key: "food",
+                        label: "食物",
+                        emojiKey: "bread",
+                        match: i => /** @type {readonly string[]} */(foods).includes(i),
+                        formatItem: (id, d) =>
+                            `${get_name_of_id(id)} \`${d.price.toLocaleString()}$\` / 個 (現有 \`${d.amount.toLocaleString()}\` 個)`,
+                        sortKey: id => id,
+                        chunk: true,
+                    },
+                    { // other
+                        key: "other",
+                        label: "📦 其他物品",
+                        match: () => true,
+                        formatItem: (id, d) =>
+                            `${get_name_of_id(id)} \`${d.price.toLocaleString()}$\` / 個 (現有 \`${d.amount.toLocaleString()}\` 個)`,
+                        sortKey: id => id,
+                        chunk: true,
+                    },
+                ];
 
-                if (minerals) embed.addFields({ name: `${emoji_ore} 礦物`, value: minerals, inline: false });
+                addCategorizedFields(
+                    embed,
+                    shop_data.items,
+                    shopCategories,
+                    { ore: emoji_ore, bread: emoji_bread },
+                    false, // inline: false
+                );
 
-                // 食物
-                const food = Object.entries(shop_data.items)
-                    .filter(([item]) => /** @type {string[]} */(foods).includes(item))
-                    .sort((a, b) => a[0].localeCompare(b[0]))
-                    .map(([item, data]) => `${get_name_of_id(item)} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
-                    .join("\n");
-
-                if (food) embed.addFields({ name: `${emoji_bread} 食物`, value: food, inline: false });
-
-                // 其他
-                const others = Object.entries(shop_data.items)
-                    .filter(([item]) => ! /** @type {readonly string[]} */ (mine_gets).includes(item) && ! /** @type {readonly string[]} */ (ingots).includes(item) && !/** @type {string[]} */(foods).includes(item))
-                    .sort((a, b) => a[0].localeCompare(b[0]))
-                    .map(([item, data]) => `${get_name_of_id(item)} \`${data.price.toLocaleString()}$\` / 個 (現有 \`${data.amount.toLocaleString()}\` 個)`)
-                    .join("\n");
-
-                if (others) embed.addFields({ name: `其他`, value: others, inline: false });
-
-                const nothing_sell = !minerals && !food && !others;
-
-                if (nothing_sell) {
+                const empty_shop = !embed.data.fields?.length;
+                if (empty_shop) {
                     embed.setColor(embed_error_color)
                     embed.setTitle(`${emoji_cross} | 商店裡沒有販賣任何東西`);
                     embed.setAuthor(null);
@@ -824,8 +842,12 @@ const rpg_commands = {
                     (new ActionRowBuilder()
                         .addComponents(buyItemButton));
 
-                if (mode === 1) return { embeds: [embed], components: nothing_sell ? [] : [row] };
-                return await message.reply({ embeds: [embed], components: nothing_sell ? [] : [row] });
+                const options = {
+                    embeds: [embed],
+                    components: empty_shop ? [] : [row]
+                };
+                if (mode === 1) return options;
+                return await message.reply(options);
             }
 
             case "open":
@@ -1394,9 +1416,9 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         if (!user) return;
         assertRPGData(rpg_data);
 
-        const [inventory, [emoji_cross, emoji_drumstick]] = await Promise.all([
+        const [inventory, [emoji_cross, emoji_drumstick, emoji_food, emoji_store]] = await Promise.all([
             load_inventory(user.id),
-            get_emojis(["crosS", "drumstick"], client),
+            get_emojis(["crosS", "drumstick", "food", "store"], client),
         ]);
 
         if (args.length > 0) {
@@ -1521,29 +1543,47 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 .setDescription(`體力值: ${rpg_data.hunger} / ${max_hunger} 點`)
                 .setEmbedFooter(user.id);
 
-            /** @type {Partial<Record<import("../../utils/rpg.ts").FoodKey, number>>} */
-            const food_crops_items = {};
-            /** @type {Partial<Record<import("../../utils/rpg.ts").FoodKey, number>>} */
-            const food_meat_items = {};
-
-            // 遍歷背包中的物品並分類
-            for (const [item, amount] of inventory.entries().toArray()) {
-                if (amount <= 0) continue;
-                // if (!/** @type {string[]} */ (foods).includes(item)) continue;
-                if (!isFoodKey(item)) continue;
-                // if (item.startsWith("raw_")) continue;
-
-                if (/** @type {readonly string[]} */ (foods_crops).includes(item)) {
-                    food_crops_items[item] = amount;
-                } else if (/** @type {readonly string[]} */ (foods_meat).includes(item) || Object.keys(fish).includes(item)) {
-                    food_meat_items[item] = amount;
-                };
+            /**
+             * @param {string} id
+             * @param {number} amt
+             * @returns {string}
+             */
+            const formatFood = (id, amt) => {
+                const hunger = food_data[/** @type {keyof typeof food_data} */ (id)];
+                return `${get_name_of_id(id)} \`${amt.toLocaleString()}\` 個 (回復 \`${hunger}\` ${emoji_drumstick})`;
             };
 
-            if (
-                Object.keys(food_crops_items).length === 0 &&
-                Object.keys(food_meat_items).length === 0
-            ) {
+            /** @type {import("../../utils/rpg/categorize.ts").CategoryDef[]} */
+            const eatCategories = [
+                {
+                    key: "food_crops",
+                    label: "農作物",
+                    emojiKey: "farmer",
+                    match: (i) => /** @type {readonly string[]} */(foods_crops).includes(i),
+                    formatItem: formatFood,
+                    chunk: true,
+                },
+                {
+                    key: "food_meat",
+                    label: "肉類",
+                    emojiKey: "cow",
+                    match: (i) =>
+                        /** @type {readonly string[]} */(foods_meat).includes(i)
+                        || /** @type {readonly string[]} */ (fish).includes(i),   // 肉類含魚
+                    formatItem: formatFood,
+                    chunk: true,
+                },
+            ];
+
+            await addInventoryFields({
+                embed,
+                inventory,
+                client,
+                categories: eatCategories,
+                inline: false,
+            });
+
+            if (!embed.data.fields?.length) {
                 const embed = new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 你沒有任何食物`)
@@ -1551,44 +1591,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
                 if (mode === 1) return { embeds: [embed] };
                 return await message.reply({ embeds: [embed] });
-            };
-
-            const [emoji_farmer, emoji_cow, emoji_food, emoji_store] = await get_emojis(["farmer", "cow", "food", "store"], client);
-
-            const categories = [
-                { items: food_crops_items, name: `${emoji_farmer} 農作物` },
-                { items: food_meat_items, name: `${emoji_cow} 肉類` },
-            ];
-
-            let errors = [];
-            const embed_field_value_limit = 1024;
-
-            for (const category of categories) {
-                try {
-                    const category_items = category.items;
-                    if (Object.keys(category_items).length > 0) {
-                        const itemsTexts = Object.entries(category_items)
-                            .map(([item, amount]) => {
-                                const item_name = get_name_of_id(item);
-                                const item_amount = amount.toLocaleString();
-                                const food_hunger = food_data[/** @type {keyof typeof category_items} */ (item)];
-                                return `${item_name} \`${item_amount}\` 個 (回復 \`${food_hunger}\` ${emoji_drumstick})`
-                            });
-
-                        const longestItemNameLength = Math.max(...itemsTexts.map(item => item.length));
-                        const itemsPerChunk = Math.floor(embed_field_value_limit / longestItemNameLength);
-                        const chunks = chunkArray(itemsTexts, itemsPerChunk);
-
-                        for (const chunk of chunks) {
-                            const itemsText = chunk.join("\n");
-
-                            embed.addFields({ name: category.name, value: itemsText });
-                        };
-                    };
-                } catch (err) {
-                    if (!(err instanceof Error)) continue;
-                    errors.push(err);
-                };
             };
 
             const howToEatButton = new ButtonBuilder()
@@ -1607,15 +1609,6 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 /** @type {ActionRowBuilder<ButtonBuilder>} */
                 (new ActionRowBuilder()
                     .addComponents(howToEatButton, buyFoodButton));
-
-            if (errors.length > 0) {
-                const embeds = (await Promise.all(
-                    errors.map((error) => get_loophole_embed(error, null, client)),
-                )).flat();
-
-                if (mode === 1) return { embeds };
-                await message.reply({ embeds });
-            };
 
             if (mode === 1) return { embeds: [embed], components: [row] };
             return await message.reply({ embeds: [embed], components: [row] });
