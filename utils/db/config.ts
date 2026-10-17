@@ -8,6 +8,7 @@ export const TABLES = [
     "rpg_user_privacy",
     "rpg_auto_eat",
     "rpg_partner",
+    "rpg_feed_settings",
 ] as const;
 
 export const TABLES_METADATA: Record<typeof TABLES[number], { CREATE?: string; }> = {
@@ -182,5 +183,25 @@ export const TABLES_METADATA: Record<typeof TABLES[number], { CREATE?: string; }
             -- 老闆要查「我底下有誰」時會用到
             CREATE INDEX rpg_partner_boss_idx ON rpg_partner (boss_id);
         `,
-    }
+    },
+    "rpg_feed_settings": {
+        "CREATE": `
+            CREATE TABLE rpg_feed_settings (
+                user_id      BIGINT  NOT NULL,
+                setting_type TEXT    NOT NULL,
+                target_id    BIGINT  NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+                updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+
+                CONSTRAINT rpg_feed_settings_pkey PRIMARY KEY (user_id, setting_type, target_id),
+                CONSTRAINT rpg_feed_settings_user_id_fkey FOREIGN KEY (user_id)
+                    REFERENCES rpg_users (user_id) ON DELETE CASCADE,
+                CONSTRAINT rpg_feed_settings_target_id_fkey FOREIGN KEY (target_id)
+                    REFERENCES rpg_users (user_id) ON DELETE CASCADE,
+                CONSTRAINT chk_feed_setting_type CHECK (setting_type IN ('can_feed', 'want_feed_by'))
+            );
+
+            CREATE INDEX rpg_feed_settings_target_idx ON rpg_feed_settings (target_id);
+    `,
+    },
 };

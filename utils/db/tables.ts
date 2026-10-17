@@ -118,6 +118,10 @@ export type RPGPartnerSQLRow = ({
     member_id: string,
 });
 
+export type RPGFeedSettingsSQLRow = ({
+    target_id: string;
+});
+
 // #endregion [SQL returned data]
 
 function assertValidAmount(amount: number): asserts amount is number {
@@ -175,7 +179,7 @@ function WithUserID<TBase extends Constructor>(Base: TBase) {
     };
 };
 
-export type RPGPartnerReturnCode =
+type RPGPartnerReturnCode =
     | 1;
 
 interface RPGPartnerReturnSuccess {
@@ -198,6 +202,7 @@ type Constructor<T = object> = new (...args: any[]) => T;
 export type RPGUserData = Omit<RPGUsers, "user_id">;
 export type RPGInventoryData = { [item_id: string]: number };
 export type RPGCooldownsData = { [item_id: string]: Date };
+export type FeedSettingType = "can_feed" | "want_feed_by";
 
 class EmptyBase { };
 class CollectionBase extends Collection<ItemKey, number> { }

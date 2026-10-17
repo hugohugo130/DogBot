@@ -9,8 +9,10 @@ import {
     RPGData,
     RPGInventory,
     RPGPartner,
+    type FeedSettingType,
     type RPGPartnerSQLRow,
     type RPGUserPrivacySQLRow,
+    type RPGFeedSettingsSQLRow,
 } from "./tables.ts";
 import {
     type TransactionsInfo,
@@ -853,3 +855,107 @@ export async function set_partner_feed_time(userid: string): Promise<void> {
 };
 
 // #endregion [rpg_partner]
+
+// #region [rpg_feed_settings]
+
+export async function load_feed_settings(
+    userid: string,
+    setting_type?: FeedSettingType,
+): Promise<string[]> {
+    const table_name = "rpg_feed_settings" as const satisfies typeof TABLES[number];
+    let command = `
+        SELECT target_id
+        FROM ${table_name}
+        WHERE user_id = $1
+    `;
+    const params: string[] = [userid];
+
+    if (setting_type) {
+        command += ` AND setting_type = $2`;
+        params.push(setting_type);
+    };
+
+    const pool = getPool();
+    const { rows } = await pool.query(command, params) as { rows: RPGFeedSettingsSQLRow[] };
+    return rows.map(r => r.target_id);
+};
+
+export async function set_feed_settings(
+    userid: string,
+    setting_type: FeedSettingType,
+    target_ids: string[],
+): Promise<void> {
+    const table_name = "rpg_feed_settings" as const satisfies typeof TABLES[number];
+    const client = await connectPool();
+
+    try {
+        await client.begin();
+
+        await client.query(`
+            DELETE FROM ${table_name}
+            WHERE user_id = $1
+                AND setting_type = $2`,
+            [userid, setting_type],
+        );
+
+        if (target_ids.length) {
+            await client.query(
+                `
+                INSERT INTO ${table_name} (user_id, setting_type, target_id)
+                SELECT $1, $2, target_id
+                FROM UNNEST($3::bigint[]) AS target_id
+                `,
+                [userid, setting_type, target_ids],
+            );
+        };
+
+        await client.commit();
+    } catch (err) {
+        await client.rollback();
+        throw err;
+    } finally {
+        client.release();
+    };
+};
+
+export async function add_feed_setting(
+    userid: string,
+    setting_type: FeedSettingType,
+    target_id: string,
+): Promise<boolean> {
+    const table_name = "rpg_feed_settings" as const satisfies typeof TABLES[number];
+
+    const pool = getPool();
+    const { rowCount } = await pool.query(`
+        INSERT INTO ${table_name} (user_id, setting_type, target_id)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (user_id, setting_type, target_id) DO NOTHING
+        RETURNING *
+    `,
+        [userid, setting_type, target_id],
+    );
+
+    return (rowCount ?? 0) > 0;
+};
+
+export async function remove_feed_setting(
+    userid: string,
+    setting_type: FeedSettingType,
+    target_id: string,
+): Promise<boolean> {
+    const table_name = "rpg_feed_settings" as const satisfies typeof TABLES[number];
+
+    const pool = getPool();
+    const { rowCount } = await pool.query(`
+        DELETE FROM ${table_name}
+        WHERE user_id = $1
+            AND setting_type = $2
+            AND target_id = $3
+    `,
+        [userid, setting_type, target_id],
+    );
+
+    return (rowCount ?? 0) > 0;
+};
+
+// #endregion [rpg_feed_settings]
