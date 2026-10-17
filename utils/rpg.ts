@@ -1103,14 +1103,17 @@ async function get_emoji(name: string, client: DogClient | null = global._client
     return emoji;
 };
 
-async function get_emojis(names: string[], client: DogClient | null = global._client): Promise<string[]> {
+async function get_emojis<const T extends readonly string[]>(
+    names: T,
+    client: DogClient | null = global._client,
+): Promise<{ [K in keyof T]: string }> {
     if (!client) client = await wait_for_client();
 
     const emojis = await Promise.all(
         names.map(name => get_emoji(name, client)),
     );
 
-    return emojis;
+    return emojis as { [K in keyof T]: string };
 };
 
 async function get_cooldown_embed(
