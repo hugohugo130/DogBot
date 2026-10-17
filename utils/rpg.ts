@@ -1593,9 +1593,9 @@ ${lang_order}: ${eat_order_str || lang_none}
 `)
         );
 
-    const row = new ActionRowBuilder<ButtonBuilder>()
-        .addComponents(
-            new ButtonBuilder()
+    const row1 = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents( // toggle, add_select_foods, remove_select_foods, show_change_order_button
+            new ButtonBuilder() // toggle
                 .setCustomId(`autoeat|${user_id}|toggle`)
                 .setLabel(lang_toggle_label)
                 .setStyle(enabled ? ButtonStyle.Success : ButtonStyle.Secondary),
@@ -1612,14 +1612,14 @@ ${lang_order}: ${eat_order_str || lang_none}
                 .setEmoji(emoji_food)
                 .setStyle(ButtonStyle.Danger),
 
-            new ButtonBuilder()
-                .setCustomId(`autoeat|${user_id}|show_change_order_b`)
+            new ButtonBuilder() // show_change_order_button
+                .setCustomId(`autoeat|${user_id}|show_change_order_button`)
                 .setLabel(lang_order_label)
                 .setEmoji(emoji_food)
                 .setStyle(ButtonStyle.Secondary),
         );
 
-    return [container, row];
+    return [container, row1];
 };
 
 export async function selectAutoEatFoods(userID: string, mode: "add" | "remove", locale: Locale | null | undefined = null) {

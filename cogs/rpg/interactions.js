@@ -2334,16 +2334,29 @@ export async function execute(client, interaction) {
                         break;
                     }
 
-                    case "show_change_order_b": {
+                    case "show_change_order_button": {
                         if (!interaction.isButton()) return;
                         const [offset_str = "0"] = args;
                         const offset = parseInt(offset_str);
 
-                        const lang_order_select_food = get_lang_data(locale, "autoeat", "order.select_food");
-                        const lang_order_prev = get_lang_data(locale, "autoeat", "order.prev");
-                        const lang_order_next = get_lang_data(locale, "autoeat", "order.next");
+                        const lang_select_food = get_lang_data(locale, "autoeat", "order.select_food");
+                        const lang_prev = get_lang_data(locale, "autoeat", "order.prev");
+                        const lang_next = get_lang_data(locale, "autoeat", "order.next");
+                        const lang_no_food_selected = get_lang_data(locale, "autoeat", "order.no_food_selected")
+                        const lang_no_food_selected_desc = get_lang_data(locale, "autoeat", "order.no_food_selected_desc")
 
                         const eatOrder = await getAutoEatOrder(user.id);
+                        if (!eatOrder.length) {
+                            const emoji_cross = await get_emoji("crosS", client);
+                            const embed = new EmbedBuilder()
+                                .setColor(embed_error_color)
+                                .setTitle(`${emoji_cross} | ${lang_no_food_selected}`)
+                                .setDescription(lang_no_food_selected_desc)
+                                .setEmbedFooter(interaction);
+
+                            return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                        };
+
                         const row = /** @type {ActionRowBuilder<StringSelectMenuBuilder>} */
                             (new ActionRowBuilder()
                                 .addComponents(
@@ -2366,20 +2379,20 @@ export async function execute(client, interaction) {
                             (new ActionRowBuilder()
                                 .addComponents(
                                     new ButtonBuilder()
-                                        .setCustomId(`autoeat|${user.id}|show_change_order_b|${prev_offset}`)
-                                        .setLabel(lang_order_prev)
+                                        .setCustomId(`autoeat|${user.id}|show_change_order_button|${prev_offset}`)
+                                        .setLabel(lang_prev)
                                         .setDisabled(offset === 0)
                                         .setEmoji("⬅️")
                                         .setStyle(ButtonStyle.Secondary),
                                     new ButtonBuilder()
-                                        .setCustomId(`autoeat|${user.id}|show_change_order_b|${next_offset}`)
-                                        .setLabel(lang_order_next)
+                                        .setCustomId(`autoeat|${user.id}|show_change_order_button|${next_offset}`)
+                                        .setLabel(lang_next)
                                         .setDisabled(!(eatOrder.length >= next_offset))
                                         .setEmoji("➡️")
                                         .setStyle(ButtonStyle.Secondary),
                                 ));
 
-                        const options = { content: lang_order_select_food, components: [row, row2] };
+                        const options = { content: lang_select_food, components: [row, row2] };
 
                         if (offset) {
                             await interaction.update(options);
