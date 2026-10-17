@@ -7,6 +7,7 @@ import {
 
 import {
     add_transaction,
+    remove_whole_feed_setting,
 } from "./rpg.ts";
 import {
     get_id_of_name,
@@ -741,6 +742,9 @@ export class RPGPartner {
 
         // 2. 解除關係
         this.#unlink(bossId, memberId);
+
+        // 3. 解除 autoeat 餵食關係
+        await remove_whole_feed_setting(bossId, memberId);
     };
 
     hasRelationship(userId: string): boolean {

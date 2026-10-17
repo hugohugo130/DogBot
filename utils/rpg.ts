@@ -1699,7 +1699,7 @@ export async function selectAutoEatFoods(
 
     const max_pages = Math.max(1, Math.ceil(foods.length / offsetPerPage));
     const safePage = Math.min(Math.max(0, page), max_pages - 1);
-    const offset = Math.max(0, page * offsetPerPage);
+    const offset = Math.max(0, safePage * offsetPerPage);
 
     const options = foods
         .slice(offset, offset + offsetPerPage)
@@ -1713,7 +1713,7 @@ export async function selectAutoEatFoods(
     const prev_page = safePage - 1;
     const next_page = safePage + 1;
 
-    const row1 = foods.length
+    const row1 = options.length
         ? new ActionRowBuilder<StringSelectMenuBuilder>()
             .addComponents(
                 new StringSelectMenuBuilder()
@@ -1777,14 +1777,16 @@ export async function autoEat_selectCanFeed(
     const currentSettings = await load_feed_settings(user.id, "can_feed");
 
     const options = await Promise.all(
-        partnerIds.map(async (id) => {
-            const targetUser = await get_user(id, client);
+        partnerIds
+            .slice(0, 25)
+            .map(async (id) => {
+                const targetUser = await get_user(id, client);
 
-            return new StringSelectMenuOptionBuilder()
-                .setLabel(targetUser?.globalName ?? targetUser?.username ?? id)
-                .setValue(id)
-                .setDefault(currentSettings.includes(id));
-        }),
+                return new StringSelectMenuOptionBuilder()
+                    .setLabel(targetUser?.globalName ?? targetUser?.username ?? id)
+                    .setValue(id)
+                    .setDefault(currentSettings.includes(id));
+            }),
     );
 
     const row = new ActionRowBuilder<StringSelectMenuBuilder>()
@@ -1824,13 +1826,15 @@ export async function autoEat_selectWantFeedBy(
     const lang_choose_partner = get_lang_data(locale, "autoeat", "want_feed_by.choose_partner");
     const currentSettings = await load_feed_settings(user.id, "want_feed_by");
     const options = await Promise.all(
-        partnerIds.map(async (id) => {
-            const targetUser = await get_user(id, client);
-            return new StringSelectMenuOptionBuilder()
-                .setLabel(targetUser?.globalName ?? targetUser?.username ?? id)
-                .setValue(id)
-                .setDefault(currentSettings.includes(id));
-        }),
+        partnerIds
+            .slice(0, 25)
+            .map(async (id) => {
+                const targetUser = await get_user(id, client);
+                return new StringSelectMenuOptionBuilder()
+                    .setLabel(targetUser?.globalName ?? targetUser?.username ?? id)
+                    .setValue(id)
+                    .setDefault(currentSettings.includes(id));
+            }),
     );
 
     const row = new ActionRowBuilder<StringSelectMenuBuilder>()
@@ -1909,7 +1913,7 @@ export async function try_get_fed_by_partner({
             .sort((a, b) => partnerOrder.indexOf(a) - partnerOrder.indexOf(b))[0];
         if (!food) continue;
 
-        // 4. 原子轉移 1 份食物
+        // 4. 轉移 1 份食物
         const ok = await transfer_food(partnerInventory, toRpgData, food);
         if (!ok) continue;
 

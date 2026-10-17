@@ -958,4 +958,22 @@ export async function remove_feed_setting(
     return (rowCount ?? 0) > 0;
 };
 
+export async function remove_whole_feed_setting(
+    userid: string,
+    target_id: string,
+): Promise<boolean> {
+    const table_name = "rpg_feed_settings" as const satisfies typeof TABLES[number];
+
+    const pool = getPool();
+    const { rowCount } = await pool.query(`
+        DELETE FROM ${table_name}
+        WHERE (user_id = $1 OR target_id = $1)
+            AND (target_id = $2 OR user_id = $2)
+    `,
+        [userid, target_id],
+    );
+
+    return (rowCount ?? 0) > 0;
+};
+
 // #endregion [rpg_feed_settings]

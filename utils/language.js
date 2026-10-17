@@ -429,7 +429,7 @@ Since <t:{1}:R>`,
             "can_feed.choose_partner": "選擇可餵食的夥伴",
 
             "want_feed_by.label": "想被誰餵食",
-            "want_feed_by.choose_partner": "選擇想被哪些夥伴餵食",
+            "want_feed_by.choose_partner": "選擇想被哪個夥伴餵食",
 
             "toggle.label": "切換啟用",
 
