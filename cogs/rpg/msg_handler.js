@@ -1550,7 +1550,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
              */
             const formatFood = (id, amt) => {
                 const hunger = food_data[/** @type {keyof typeof food_data} */ (id)];
-                return `${get_name_of_id(id)} \`${amt.toLocaleString()}\` 個 (回復 \`${hunger}\` ${emoji_drumstick})`;
+                return `${get_name_of_id(id)} \`${amt.toLocaleString()}\` 個 (\`${hunger}\` ${emoji_drumstick})`;
             };
 
             /** @type {import("../../utils/rpg/categorize.ts").CategoryDef[]} */
@@ -1580,7 +1580,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                 inventory,
                 client,
                 categories: eatCategories,
-                inline: false,
+                inline: true,
             });
 
             if (!embed.data.fields?.length) {
