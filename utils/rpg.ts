@@ -12,6 +12,7 @@ import {
     SeparatorBuilder,
     SeparatorSpacingSize,
     StringSelectMenuOptionBuilder,
+    User,
 } from "discord.js";
 
 import {
@@ -39,6 +40,7 @@ import {
     fightjobs,
     failed,
     type ProbKey,
+    max_hunger,
 } from "./config.ts";
 import {
     get_lang_data,
@@ -51,6 +53,7 @@ import {
     get_count,
     getAutoEatOrder,
     load_cooldown,
+    load_feed_settings,
     load_inventory,
     load_rpg_data,
     load_user_counts,
@@ -66,6 +69,7 @@ import {
     rpg_cooldown,
 } from "../cogs/rpg/msg_handler.js";
 import {
+    getPartnerIds,
     help_data,
 } from "../cogs/rpg/interactions.js";
 import {
@@ -74,6 +78,13 @@ import {
 import {
     categorize_backpack,
 } from "./rpg/categorize.ts";
+import {
+    get_user,
+} from "./discord.js";
+import {
+    RPGData,
+    RPGInventory,
+} from "./db/tables.ts";
 import EmbedBuilder from "./customs/embedBuilder.js";
 import DogClient, { type CookSession } from "./customs/client.js";
 
@@ -1463,9 +1474,9 @@ interface LsReturnObject {
 };
 
 interface AutoEatOptions {
+    user_id: string,
     interaction?: BaseInteraction,
     client?: DogClient,
-    user_id: string,
 };
 
 async function ls_function(
@@ -1541,7 +1552,13 @@ async function ls_function(
     return await message.reply({ embeds: [embed] });
 };
 
-export async function autoEatCommand(options: AutoEatOptions): Promise<[ContainerBuilder, ActionRowBuilder<ButtonBuilder>]> {
+export async function autoEatCommand(
+    options: AutoEatOptions,
+): Promise<[
+    ContainerBuilder,
+    ActionRowBuilder<ButtonBuilder>,
+    ActionRowBuilder<ButtonBuilder>,
+]> {
     const { interaction = null, client = await wait_for_client(), user_id } = options;
 
     const locale = interaction?.locale ?? client.get_user_locale(user_id);
@@ -1549,18 +1566,26 @@ export async function autoEatCommand(options: AutoEatOptions): Promise<[Containe
     const [
         rpg_data,
         autoeat_order,
-        emoji_food
+        canFeed,
+        wantFeedBy,
+        [emoji_food, emoji_refresh],
     ] = await Promise.all([
         load_rpg_data(user_id),
         getAutoEatOrder(user_id),
-        get_emoji("food", client),
+        load_feed_settings(user_id, "can_feed"),
+        load_feed_settings(user_id, "want_feed_by"),
+        get_emojis(["food", "refresh"], client),
     ]);
 
     const enabled = rpg_data.autoeat;
 
     const lang_order = get_lang_data(locale, "autoeat", "order");
-    const lang_status = get_lang_data(locale, "autoeat", "status");
     const lang_title = get_lang_data(locale, "autoeat", "title");
+    const lang_status = get_lang_data(locale, "autoeat", "status");
+    const lang_can_feed = get_lang_data(locale, "autoeat", "can_feed.label");
+    const lang_want_feed_by = get_lang_data(locale, "autoeat", "want_feed_by.label");
+    const lang_can_feed_choose_partner = get_lang_data(locale, "autoeat", "can_feed.choose_partner");
+    const lang_want_feed_by_choose_partner = get_lang_data(locale, "autoeat", "want_feed_by.choose_partner");
     const lang_none = get_lang_data(locale, "general", "none");
     const lang_current_status = enabled
         ? get_lang_data(locale, "autoeat", "enabled")
@@ -1571,16 +1596,21 @@ export async function autoEatCommand(options: AutoEatOptions): Promise<[Containe
     const lang_select_foods_remove = get_lang_data(locale, "autoeat", "select_foods.remove");
     const lang_order_label = get_lang_data(locale, "autoeat", "order.label");
 
+    const lang_update_label = get_lang_data(locale, "autoeat", "update.label");
+
     const eat_order_str = autoeat_order
         .map(id => get_name_of_id(id))
         .join(", ");
+
+    const formatUsers = (ids: string[]) =>
+        ids.length ? ids.map(id => `<@${id}>`).join(", ") : lang_none;
 
     const container = new ContainerBuilder()
         .addTextDisplayComponents(
             new TextDisplayBuilder()
                 .setContent(`## **${lang_title}**`)
         )
-        .addSeparatorComponents(
+        .addSeparatorComponents( // small
             new SeparatorBuilder()
                 .setSpacing(SeparatorSpacingSize.Small)
         )
@@ -1590,6 +1620,9 @@ export async function autoEatCommand(options: AutoEatOptions): Promise<[Containe
 ${lang_status}: ${lang_current_status}
 
 ${lang_order}: ${eat_order_str || lang_none}
+
+${lang_can_feed}: ${formatUsers(canFeed)}
+${lang_want_feed_by}: ${formatUsers(wantFeedBy)}
 `)
         );
 
@@ -1600,14 +1633,14 @@ ${lang_order}: ${eat_order_str || lang_none}
                 .setLabel(lang_toggle_label)
                 .setStyle(enabled ? ButtonStyle.Success : ButtonStyle.Secondary),
 
-            new ButtonBuilder()
-                .setCustomId(`autoeat|${user_id}|add_select_foods`)
+            new ButtonBuilder() // add_select_foods
+                .setCustomId(`autoeat|${user_id}|add_foods`)
                 .setLabel(lang_select_foods_add)
                 .setEmoji(emoji_food)
                 .setStyle(ButtonStyle.Primary),
 
-            new ButtonBuilder()
-                .setCustomId(`autoeat|${user_id}|remove_select_foods`)
+            new ButtonBuilder() // remove_select_foods
+                .setCustomId(`autoeat|${user_id}|remove_foods`)
                 .setLabel(lang_select_foods_remove)
                 .setEmoji(emoji_food)
                 .setStyle(ButtonStyle.Danger),
@@ -1619,32 +1652,281 @@ ${lang_order}: ${eat_order_str || lang_none}
                 .setStyle(ButtonStyle.Secondary),
         );
 
-    return [container, row1];
+    const row2 = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents( // select_can_feed
+            new ButtonBuilder()
+                .setCustomId(`autoeat|${user_id}|select_can_feed`)
+                .setLabel(lang_can_feed_choose_partner)
+                .setStyle(ButtonStyle.Secondary),
+
+            new ButtonBuilder() // select_want_feed_by
+                .setCustomId(`autoeat|${user_id}|select_want_feed_by`)
+                .setLabel(lang_want_feed_by_choose_partner)
+                .setStyle(ButtonStyle.Secondary),
+
+            new ButtonBuilder() // refresh
+                .setCustomId(`autoeat|${user_id}|refresh`)
+                .setLabel(lang_update_label)
+                .setEmoji(emoji_refresh)
+                .setStyle(ButtonStyle.Secondary),
+        );
+
+    return [container, row1, row2];
 };
 
-export async function selectAutoEatFoods(userID: string, mode: "add" | "remove", locale: Locale | null | undefined = null) {
-    const lang_select_foods_title = get_lang_data(locale, "autoeat", "select_foods.title")
+export async function selectAutoEatFoods(
+    userID: string,
+    mode: "add" | "remove",
+    locale: Locale | null | undefined = null,
+    page: number = 0, // starts by 0
+) {
+    const offsetPerPage = 25;
+    const lang_select_foods_title = get_lang_data(locale, "autoeat", `select_foods.${mode === "remove" ? "r_" : ""}title`);
+    const lang_refresh = get_lang_data(locale, "general", "refresh");
 
-    const inventory = await load_inventory(userID);
+    const [
+        inventory,
+        emoji_loop,
+    ] = await Promise.all([
+        load_inventory(userID),
+        get_emoji("loop"),
+    ] as const);
+
     const foods = inventory
         .keys()
+        .toArray()
         .filter((item) => isFoodKey(item));
 
-    const options = foods.map(
-        (food) =>
-            new StringSelectMenuOptionBuilder()
-                .setLabel(get_name_of_id(food))
-                .setValue(food)
+    const max_pages = Math.max(1, Math.ceil(foods.length / offsetPerPage));
+    const safePage = Math.min(Math.max(0, page), max_pages - 1);
+    const offset = Math.max(0, page * offsetPerPage);
+
+    const options = foods
+        .slice(offset, offset + offsetPerPage)
+        .map(
+            (food) =>
+                new StringSelectMenuOptionBuilder()
+                    .setLabel(get_name_of_id(food))
+                    .setValue(food)
+        );
+
+    const prev_page = safePage - 1;
+    const next_page = safePage + 1;
+
+    const row1 = foods.length
+        ? new ActionRowBuilder<StringSelectMenuBuilder>()
+            .addComponents(
+                new StringSelectMenuBuilder()
+                    .setCustomId(`autoeat|${userID}|${mode}_selected_food`)
+                    .addOptions(...options)
+            )
+        : null;
+
+    const row2 = new ActionRowBuilder<ButtonBuilder>()
+        .addComponents(
+            new ButtonBuilder()
+                .setCustomId(`autoeat|${userID}|${mode}_foods|${prev_page}`)
+                .setEmoji("◀")
+                .setDisabled(prev_page === -1)
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(`_`)
+                .setLabel(`${safePage + 1} / ${max_pages} 頁`)
+                .setDisabled(true)
+                .setStyle(ButtonStyle.Secondary),
+
+            new ButtonBuilder()
+                .setCustomId(`autoeat|${userID}|${mode}_foods|${next_page}`)
+                .setEmoji("▶")
+                .setDisabled(next_page >= max_pages)
+                .setStyle(ButtonStyle.Primary),
+
+            new ButtonBuilder()
+                .setCustomId(`autoeat|${userID}|${mode}_foods|${safePage}`)
+                .setEmoji(emoji_loop)
+                .setLabel(lang_refresh)
+                .setStyle(ButtonStyle.Success),
+        );
+
+    return {
+        content: lang_select_foods_title,
+        components: [row1, row2].filter(e => e !== null),
+    };
+};
+
+export async function autoEat_selectCanFeed(
+    user: User,
+    originalMessageId: string,
+    locale: Locale | null,
+    client: DogClient | null = global._client
+): Promise<{
+    content: string
+    components?: [ActionRowBuilder<StringSelectMenuBuilder>],
+}> {
+    const partnerIds = await getPartnerIds(user.id);
+
+    if (!partnerIds.length) {
+        const emoji_cross = await get_emoji("crosS", client);
+        return {
+            content: `${emoji_cross} | 你還沒有新增任何夥伴`,
+        };
+    };
+
+    const lang_choose_partner = get_lang_data(locale, "autoeat", "can_feed.choose_partner");
+    const currentSettings = await load_feed_settings(user.id, "can_feed");
+
+    const options = await Promise.all(
+        partnerIds.map(async (id) => {
+            const targetUser = await get_user(id, client);
+
+            return new StringSelectMenuOptionBuilder()
+                .setLabel(targetUser?.globalName ?? targetUser?.username ?? id)
+                .setValue(id)
+                .setDefault(currentSettings.includes(id));
+        }),
     );
 
     const row = new ActionRowBuilder<StringSelectMenuBuilder>()
         .addComponents(
             new StringSelectMenuBuilder()
-                .setCustomId(`autoeat|${userID}|${mode}_selected_food`)
+                .setCustomId(`autoeat|${user.id}|can_feed_selected|${originalMessageId}`)
+                .setPlaceholder(lang_choose_partner)
+                .setMinValues(0)
+                .setMaxValues(options.length)
                 .addOptions(...options)
         );
 
-    return { content: lang_select_foods_title, components: [row] };
+    return {
+        content: lang_choose_partner,
+        components: [row],
+    };
+};
+
+export async function autoEat_selectWantFeedBy(
+    user: User,
+    originalMessageId: string,
+    locale: Locale | null,
+    client: DogClient | null = global._client
+): Promise<{
+    content: string
+    components?: [ActionRowBuilder<StringSelectMenuBuilder>],
+}> {
+    const partnerIds = await getPartnerIds(user.id);
+
+    if (!partnerIds.length) {
+        const emoji_cross = await get_emoji("crosS", client);
+        return {
+            content: `${emoji_cross} | 你還沒有新增任何夥伴`,
+        };
+    };
+
+    const lang_choose_partner = get_lang_data(locale, "autoeat", "want_feed_by.choose_partner");
+    const currentSettings = await load_feed_settings(user.id, "want_feed_by");
+    const options = await Promise.all(
+        partnerIds.map(async (id) => {
+            const targetUser = await get_user(id, client);
+            return new StringSelectMenuOptionBuilder()
+                .setLabel(targetUser?.globalName ?? targetUser?.username ?? id)
+                .setValue(id)
+                .setDefault(currentSettings.includes(id));
+        }),
+    );
+
+    const row = new ActionRowBuilder<StringSelectMenuBuilder>()
+        .addComponents(
+            new StringSelectMenuBuilder()
+                .setCustomId(`autoeat|${user.id}|want_feed_by_selected|${originalMessageId}`)
+                .setPlaceholder(lang_choose_partner)
+                .setMinValues(0)
+                .setMaxValues(1)
+                .addOptions(...options)
+        );
+
+    return {
+        content: lang_choose_partner,
+        components: [row],
+    };
+};
+
+async function transfer_food(
+    from_inventory: RPGInventory,
+    to_rpgData: RPGData,
+    food: FoodKey,
+): Promise<boolean> {
+    const amount = 1;
+
+    if (!from_inventory.has(food)) return false;
+    const food_hunger = food_data[food] * amount;
+    await from_inventory.subtract_item(food, amount);
+    await to_rpgData.add_hunger(food_hunger);
+
+    return true;
+};
+
+/**
+ * @warning remember to refresh all partners' inventory and RPGData of userid after running this function
+ */
+export async function try_get_fed_by_partner({
+    client,
+    userid,
+}: {
+    client: DogClient;
+    userid: string;
+}): Promise<{ embeds: EmbedBuilder[] } | null> {
+    // 1. 我希望被誰餵
+    const wantFeedBy = await load_feed_settings(userid, "want_feed_by");
+    if (!wantFeedBy.length) return null;
+
+    // 2. 篩出「對方也願意餵我」的候選
+    const candidates: string[] = [];
+    for (const partnerId of wantFeedBy) {
+        const partnerCanFeed = await load_feed_settings(partnerId, "can_feed");
+        if (partnerCanFeed.includes(userid)) candidates.push(partnerId);
+    };
+    if (!candidates.length) return null;
+
+    const toRpgData = await load_rpg_data(userid);
+
+    // 3. 逐一嘗試
+    for (const partnerId of candidates) {
+        const partner = await get_user(partnerId, client);
+        if (!partner) continue;
+
+        const [partnerInventory, partnerOrder] = await Promise.all([
+            load_inventory(partnerId),
+            getAutoEatOrder(partnerId),
+        ]);
+
+        // 用夥伴的 autoeat_order 決定優先餵哪個
+        const food = foods
+            .filter(
+                (f) =>
+                    partnerInventory.has(f) &&
+                    food_data[f] < max_hunger &&
+                    partnerOrder.includes(f),
+            )
+            .sort((a, b) => partnerOrder.indexOf(a) - partnerOrder.indexOf(b))[0];
+        if (!food) continue;
+
+        // 4. 原子轉移 1 份食物
+        const ok = await transfer_food(partnerInventory, toRpgData, food);
+        if (!ok) continue;
+
+        const emoji_food = await get_emoji("food", client);
+        const partnerName = partner.globalName ?? partner.username;
+        const food_name = get_name_of_id(food);
+
+        const embed = new EmbedBuilder()
+            .setColor(embed_default_color)
+            .setTitle(`${emoji_food} | ${partnerName} 餵你吃了 ${food_name}`)
+            .setDescription(`${partnerName} 願意餵你，你吃掉了 1 個 ${food_name}`)
+            .setEmbedFooter(userid);
+
+        return { embeds: [embed] };
+    };
+
+    return null;
 };
 
 export async function getCooldownCommandEmbed(userID: string, detail: boolean = true): Promise<EmbedBuilder> {

@@ -57,6 +57,7 @@ import {
     autoEatCommand,
     getCooldownCommandEmbed,
     isRPGCooldownKey,
+    try_get_fed_by_partner,
 } from "../../utils/rpg.ts";
 import {
     load_shop_data,
@@ -2500,6 +2501,17 @@ function find_redirect_targets_from_id(id) {
 };
 
 /**
+ * @overload
+ * @param {object} options
+ * @param {DogClient} options.client - Discord Client
+ * @param {Message | MockMessage} options.message - Discord Message
+ * @param {boolean} [options.bypass_rpg_check]
+ * @param {boolean} [options.bypass_botcheck]
+ * @param {boolean} [options.dm] - 私訊模式
+ * @param {1} [options.mode] - 請求模式 - 0: 預設模式 - 1: 取得訊息回傳參數
+ * @returns {Promise<import("../../utils/types").RPGHandlerRespondArgs>}
+ */
+/**
  * @param {object} options
  * @param {DogClient} options.client - Discord Client
  * @param {Message | MockMessage} options.message - Discord Message
@@ -2636,14 +2648,23 @@ async function rpg_handler({ client, message, bypass_rpg_check = false, bypass_b
     const action = cmd_data[0];
 
     if (rpg_data.autoeat && rpg_work.includes(command) && rpg_data.hunger <= 0) {
-        const [inventory, eatOrder] = await Promise.all([
-            load_inventory(userid),
+        const [
+            eatOrder,
+            inventory,
+        ] = await Promise.all([
             getAutoEatOrder(userid),
+            load_inventory(userid),
         ]);
 
-        const found_food = foods
+        /**
+         * @param {import("../../utils/db/tables").RPGInventory} inventory
+         * @returns {import("../../utils/rpg.ts").FoodKey | undefined}
+         */
+        const get_food = (inventory) => foods
             .filter(food => inventory.has(food) && food_data[food] < max_hunger && eatOrder.includes(food))
             .sort((a, b) => eatOrder.indexOf(a) - eatOrder.indexOf(b))[0];
+
+        const found_food = get_food(inventory);
 
         if (found_food) {
             // 嘗試自動吃掉一個食物
@@ -2669,6 +2690,19 @@ async function rpg_handler({ client, message, bypass_rpg_check = false, bypass_b
         rpg_data = await load_rpg_data(userid);
 
         if (rpg_data.hunger <= 0) {
+            const fedResult = await try_get_fed_by_partner({
+                client,
+                userid,
+            });
+
+            if (fedResult) {
+                const res = await rpg_handler({ client, message, bypass_rpg_check: true, bypass_botcheck, dm, mode: 1 })
+                const embeds = [...fedResult.embeds, ...(res.embeds || [])];
+                const options = { embeds };
+                if (mode === 1) return options;
+                return await message.reply(options);
+            };
+
             const emoji_cross = await get_emoji("crosS", client);
 
             const embed = new EmbedBuilder()

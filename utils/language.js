@@ -18,6 +18,7 @@ const language = {
     [Locale.EnglishUS]: {
         "general": {
             "none": "None",
+            "refresh": "Refresh",
         },
         "embed": {
             "footer": "DogBot · Made by hugo",
@@ -205,11 +206,21 @@ Since <t:{1}:R>`,
             "status": "Status",
             "disabled": "Disabled",
             "enabled": "Enabled",
+
+            "can_feed.label": "Who can I feed",
+            "can_feed.choose_partner": "Pick who you can feed",
+
+            "want_feed_by.label": "Who I wanna be fed by",
+            "want_feed_by.choose_partner": "Pick who feeds you",
+
             "toggle.label": "Toggle On/Off",
+
             "select_foods.add": "Add Foods",
             "select_foods.remove": "Remove Selected Foods",
             "select_foods.title": "Select foods you want to eat automatically",
+            "select_foods.r_title": "Select foods you dont want to eat automatically",
             "select_foods.not_exists": "The food items to be removed are not on the list",
+
             "order.choose_position": "Choose priority of {0}",
             "order.label": "Change priority",
             "order.select_food": "Choose a food",
@@ -217,12 +228,15 @@ Since <t:{1}:R>`,
             "order.next": "Next Page",
             "order.no_food_selected": "No foods selected for auto-eating",
             "order.no_food_selected_desc": "Click Add Foods to choose foods to eat automatically, then set their priority",
+
+            "update.label": "Refresh",
         },
     },
 
     [Locale.ChineseTW]: {
         "general": {
             "none": "無",
+            "refresh": "更新",
         },
         "embed": {
             "footer": "狗狗機器犬 ∙ 由哈狗製作",
@@ -410,11 +424,21 @@ Since <t:{1}:R>`,
             "status": "狀態",
             "disabled": "已停用",
             "enabled": "已啟用",
+
+            "can_feed.label": "我可以餵食誰",
+            "can_feed.choose_partner": "選擇可餵食的夥伴",
+
+            "want_feed_by.label": "想被誰餵食",
+            "want_feed_by.choose_partner": "選擇想被哪些夥伴餵食",
+
             "toggle.label": "切換啟用",
+
             "select_foods.add": "增加食物",
             "select_foods.remove": "移除食物",
             "select_foods.title": "選擇要自動吃的食物",
+            "select_foods.r_title": "選擇要移除自動吃的食物",
             "select_foods.not_exists": "要移除的食物不在清單中",
+
             "order.choose_position": "選擇 {0} 的優先度",
             "order.label": "選擇優先度",
             "order.select_food": "選擇食物",
@@ -422,6 +446,8 @@ Since <t:{1}:R>`,
             "order.next": "下一頁",
             "order.no_food_selected": "你還沒選擇任何要自動進食的食物",
             "order.no_food_selected_desc": "請先點擊 增加食物 來選擇要自動進食的食物，再進行排序",
+
+            "update.label": "更新",
         },
     },
 };

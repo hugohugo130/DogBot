@@ -73,6 +73,8 @@ import {
     autoEatCommand,
     selectAutoEatFoods,
     RPGPrivacy,
+    autoEat_selectCanFeed,
+    autoEat_selectWantFeedBy,
 } from "../../utils/rpg.ts";
 import {
     get_farm_info_embed,
@@ -134,7 +136,8 @@ import {
     removeAutoEat,
     getAutoEatOrder,
     reorderAutoEat,
-    load_partner
+    load_partner,
+    set_feed_settings
 } from "../../utils/db/rpg.ts";
 import {
     getPartnerList,
@@ -809,8 +812,8 @@ export async function get_help_command(category, command_name, guildID = null, i
  */
 async function refreshAutoEatInteraction(interaction, locale, user, client, mode = null) {
     const components = await autoEatCommand({
-        interaction,
         user_id: user.id,
+        interaction,
         client,
     });
 
@@ -832,6 +835,26 @@ async function refreshAutoEatInteraction(interaction, locale, user, client, mode
     } else {
         await interaction.update(editOptions);
     };
+};
+
+/**
+ * 取得與該使用者有關的夥伴 ID（包含自己的 boss 與自己的 partners）
+ * @param {string} userId
+ * @returns {Promise<string[]>}
+ */
+export async function getPartnerIds(userId) {
+    const partner = await load_partner(userId);
+    if (!partner) return [];
+
+    // 你的 member
+    const ids = partner.getMembers();
+
+    // 你的 boss
+    const boss = partner.getBoss?.();
+    if (boss) ids.push(boss);
+
+    // 去重、去掉空值
+    return [...new Set(ids.filter(Boolean))];
 };
 
 export const name = Events.InteractionCreate;
@@ -2286,6 +2309,17 @@ export async function execute(client, interaction) {
                 const [subCommand, ...args] = otherCustomIDs;
 
                 switch (subCommand) {
+                    case "refresh": {
+                        const components = await autoEatCommand({
+                            user_id: user.id,
+                            interaction,
+                            client,
+                        });
+                        await interaction.update({ components });
+
+                        break;
+                    }
+
                     case "toggle": {
                         const rpg_data = await load_rpg_data(user.id);
 
@@ -2294,12 +2328,46 @@ export async function execute(client, interaction) {
 
                         await rpg_data.set_autoeat(set_to);
                         const components = await autoEatCommand({
-                            interaction,
                             user_id: user.id,
+                            interaction,
                             client,
                         });
 
                         await interaction.update({ components, flags: MessageFlags.IsComponentsV2 });
+                        break;
+                    }
+
+                    case "add_foods": {
+                        if (!interaction.isButton()) return;
+
+                        const [page_str = null] = args;
+                        const page = (page_str ? parseInt(page_str) : 0) || 0;
+
+                        const options = await selectAutoEatFoods(user.id, "add", locale, page);
+
+
+                        if (page_str === null) { // 從 auto eat 面板執行，沒有翻過頁
+                            await interaction.reply({ ...options, flags: MessageFlags.Ephemeral });
+                        } else {
+                            await interaction.update(options);
+                        };
+
+                        break;
+                    }
+
+                    case "remove_foods": {
+                        if (!interaction.isButton()) return;
+
+                        const [page_str = null] = args;
+                        const page = (page_str ? parseInt(page_str) : 0) || 0;
+
+                        const options = await selectAutoEatFoods(user.id, "remove", locale, page);
+                        if (page_str === null) { // 從 auto eat 面板執行，沒有翻過頁
+                            await interaction.reply({ ...options, flags: MessageFlags.Ephemeral });
+                        } else {
+                            await interaction.update(options);
+                        };
+
                         break;
                     }
 
@@ -2464,6 +2532,90 @@ export async function execute(client, interaction) {
                         await msg.delete();
                         break;
                     }
+
+                    case "select_can_feed": {
+                        if (!interaction.isButton()) return;
+
+                        const originalMessageId = interaction.message.id;
+
+                        const options = await autoEat_selectCanFeed(user, originalMessageId, locale, client);
+                        await interaction.reply({
+                            ...options,
+                            flags: MessageFlags.Ephemeral,
+                        });
+                        break;
+                    }
+
+                    case "can_feed_selected": {
+                        if (!interaction.isStringSelectMenu()) return;
+
+                        const [originalMessageId] = args;
+                        const selectedIds = interaction.values;
+
+                        // 再次檢查是否仍為夥伴
+                        const partnerIds = await getPartnerIds(user.id);
+                        const validIds = selectedIds.filter(id => partnerIds.includes(id));
+
+                        await set_feed_settings(user.id, "can_feed", validIds);
+
+                        const update_options = await autoEat_selectCanFeed(user, originalMessageId, locale, client);
+                        await interaction.update(update_options);
+
+                        // 更新原本的 Auto Eat 訊息
+                        try {
+                            const originalMessage = await interaction.channel?.messages.fetch(originalMessageId);
+                            if (originalMessage) {
+                                const components = await autoEatCommand({
+                                    user_id: user.id,
+                                    interaction,
+                                    client,
+                                });
+                                await originalMessage.edit({ components });
+                            };
+                        } catch { /* 忽略 */ }
+                        break;
+                    }
+
+                    case "select_want_feed_by": {
+                        if (!interaction.isButton()) return;
+
+                        const originalMessageId = interaction.message.id;
+                        const options = await autoEat_selectWantFeedBy(user, originalMessageId, locale, client);
+                        await interaction.reply({
+                            ...options,
+                            flags: MessageFlags.Ephemeral,
+                        });
+
+                        break;
+                    }
+
+                    case "want_feed_by_selected": {
+                        if (!interaction.isStringSelectMenu()) return;
+
+                        const [originalMessageId] = args;
+                        const selectedIds = interaction.values;
+
+                        const partnerIds = await getPartnerIds(user.id);
+                        const validIds = selectedIds.filter(id => partnerIds.includes(id));
+
+                        await set_feed_settings(user.id, "want_feed_by", validIds);
+
+                        const update_options = await autoEat_selectWantFeedBy(user, originalMessageId, locale, client);
+                        await interaction.update(update_options);
+
+                        try {
+                            const originalMessage = await interaction.channel?.messages.fetch(originalMessageId);
+                            if (originalMessage) {
+                                const components = await autoEatCommand({
+                                    user_id: user.id,
+                                    interaction,
+                                    client,
+                                });
+                                await originalMessage.edit({ components });
+                            };
+                        } catch { /* 忽略 */ }
+                        break;
+                    }
                 };
 
                 break;
@@ -2550,7 +2702,9 @@ export async function execute(client, interaction) {
                         break;
                     }
                 };
-            };
+
+                break;
+            }
         };
     } catch (err) {
         const errorStack = util.inspect(err, { depth: null });
