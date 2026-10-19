@@ -448,23 +448,34 @@ const rpg_commands = {
         const animal_name = product_name.replace("生", "").replace("肉", "");
 
         let title = `是${animal_name}`;
-        let description = `你宰了一隻${animal_name}，獲得了 \`${amount}\` 個 ${product_name}！`;
-        if (item === "raw_chicken") {
+        let desc = null;
+        let extra_desc = "";
+        let quantifier = "隻";
+        if (item === "raw_beef") {
+            title = "哞";
+            quantifier = "頭";
+        } else if (item === "raw_chicken") {
             const egg_amount = randint(1, 3);
-            description += `\n不僅如此！你還發現了 \`${egg_amount}\` 顆 ${get_name_of_id("egg")}！`
+            extra_desc = `\n不僅如此！你還發現了 \`${egg_amount}\` 顆 ${get_name_of_id("egg")}！`;
             await inventory.add_item("egg", egg_amount);
         } else if (item === "raw_pork") {
             title = "佩佩豬";
         } else if (item === "raw_duck") {
             title = `呱!`;
-            description = `呱呱呱呱呱，呱呱呱呱 \`${amount}\` 呱呱呱！`;
+            desc = `呱呱呱呱呱，呱呱呱呱 \`${amount}\` 呱呱呱！`;
         } else if (item === "raw_hugo") {
             title = `哈狗!`;
-            description = `你把哈狗的巢穴連根拔起，並且抓到了 \`${amount}\` 隻 ${product_name} 並逃走了！`;
+            desc = `你把哈狗的巢穴連根拔起，並且抓到了 \`${amount}\` 隻 ${product_name} 然後逃走了！`;
         } else if (item === "dogdog") {
-            title = `🐶 汪!`
-            description = `你偷走了機器犬的幼崽！拿到了 \`${amount}\` 隻 ${product_name}`
+            title = `🐶 汪!`;
+            desc = `你偷走了機器犬的幼崽！拿到了 \`${amount}\` 隻 ${product_name}`;
         };
+
+        const description = (
+            desc === null
+                ? `你宰了一${quantifier}${animal_name}，獲得了 \`${amount}\` 個 ${product_name}！`
+                : desc
+        ) + extra_desc;
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
