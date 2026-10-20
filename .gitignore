@@ -157,3 +157,6 @@ check_circular_dependencies.js
 generate_import_graph.js
 import_graph.json
 analyze_circular.js
+
+# Windows 資料夾設定
+desktop.ini
