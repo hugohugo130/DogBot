@@ -23,11 +23,24 @@ function isDigit(string) {
 };
 
 /**
- * Get the users mentioned in a message
+ * @overload
  * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} message
+ * @param {true} idOnly
+ * @returns {Promise<Array<string>>}
+ */
+/**
+ * @overload
+ * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} message
+ * @param {false} [idOnly]
  * @returns {Promise<Collection<string, User>>}
  */
-async function mentions_users(message) {
+/**
+ * Get the users mentioned in a message
+ * @param {Message | import("../cogs/rpg/msg_handler.js").MockMessage} message
+ * @param {boolean} [idOnly]
+ * @returns {Promise<Collection<string, User> | Array<string>>}
+ */
+async function mentions_users(message, idOnly = false) {
     if (!message.content) return new Collection();
 
     const userIDs = message.content.split(" ")
@@ -42,33 +55,33 @@ async function mentions_users(message) {
         })
         .filter(userID => !!userID && (isDigit(userID) || /^[a-z0-9_.]+$/.test(userID)));
 
+    if (idOnly) return userIDs;
+
     /**
-     * @type {Promise<[string | null, User | null]>[]}
+     * @type {Promise<[string, User] | null>[]}
      */
     const promises = userIDs.map(
         /**
          * @param {string} userid
-         * @returns {Promise<[string | null, User | null]>}
+         * @returns {Promise<[string, User] | null>}
          */
         async (userid) => {
             const user = isDigit(userid)
                 ? await get_user(userid)
                 : await get_user_by_username(userid);
 
-            return [
-                user?.id ?? null,
-                user
-            ];
+            return user?.id ?
+                [
+                    user?.id ?? null,
+                    user,
+                ]
+                : null;
         },
     );
 
-    return (
-        /** @type {Collection<string, User>} */
-        (new Collection(
-            (await Promise.all(promises))
-                .filter(([key, user]) => key !== null && user !== null)
-        ))
-    );
+    const result = await Promise.all(promises);
+    const users = result.filter(e => e !== null);
+    return new Collection(users);
 };
 
 export {
