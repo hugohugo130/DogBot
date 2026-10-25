@@ -75,6 +75,7 @@ import {
     RPGPrivacy,
     autoEat_selectCanFeed,
     autoEat_selectWantFeedBy,
+    run_rpg_command,
 } from "../../utils/rpg.ts";
 import {
     get_farm_info_embed,
@@ -143,12 +144,13 @@ import {
     getPartnerList,
 } from "../../slashcmd/game/rpg/partner.ts";
 import {
+    RPGData,
     RPGPartner,
 } from "../../utils/db/tables.ts";
 import EmbedBuilder from "../../utils/customs/embedBuilder.js";
 import DogClient from "../../utils/customs/client.js";
 
-/** @import { ValidGuideCategory } from "../../utils/types.d.ts" */
+/** @import { HelpCommands, ValidGuideCategory } from "../../utils/types.d.ts" */
 
 const logger = get_logger();
 
@@ -212,7 +214,7 @@ async function get_failed_embed(interaction = null, client = global._client) {
     return embed;
 };
 
-/** @type {{ name: Record<ValidGuideCategory, string>, group: Record<ValidGuideCategory, Record<string, import("../../utils/types").CommandGuide>> }} */
+/** @type {{ name: Record<ValidGuideCategory, string>, group: HelpCommands }} */
 export const help_data = {
     name: {
         general: "一般",
@@ -228,6 +230,21 @@ export const help_data = {
 
         },
         rpg: {
+            "betray": {
+                emoji: "wedding",
+                desc: "__偷偷__找小三",
+                usage: [
+                    {
+                        name: "查看小三狀態",
+                        value: "{cmd}"
+                    },
+                    {
+                        name: "偷偷找 {author} 作為自己的小三",
+                        value: "{cmd} @{author}"
+                    },
+                ],
+                format: "{cmd} [@想偷找的小三]",
+            },
             "brew": {
                 emoji: "potion",
                 desc: "藥劑師研發藥水使用",
@@ -285,7 +302,16 @@ export const help_data = {
             "divorce": {
                 emoji: "broken",
                 desc: "離婚指令",
-                usage: [],
+                usage: [
+                    {
+                        name: "與已婚的{author}離婚",
+                        value: "{cmd}",
+                    },
+                    {
+                        name: "解除與 {author} 的小三關係",
+                        value: "{cmd} @{author}",
+                    },
+                ],
                 format: "{cmd}",
             },
             "eat": {
@@ -438,6 +464,10 @@ export const help_data = {
                     },
                     {
                         name: "和{author}結婚",
+                        value: "{cmd} @{author}"
+                    },
+                    {
+                        name: "在已婚的情況下讓 {author} 做你的小三",
                         value: "{cmd} @{author}"
                     },
                     {
@@ -855,6 +885,60 @@ export async function getPartnerIds(userId) {
 
     // 去重、去掉空值
     return [...new Set(ids.filter(Boolean))];
+};
+
+/**
+ * @param {RPGData} a - 當前按下按鈕的人（錯誤訊息中的「你」）
+ * @param {RPGData} b - 互動的另一方（錯誤訊息中的「對方」）
+ * @param {import("discord.js").Interaction | null} [interaction]
+ * @param {DogClient | null} [client]
+ * @returns {Promise<import("discord.js").InteractionReplyOptions | null>}
+ */
+async function checkThirdPartyWanna(a, b, interaction = null, client = global._client) {
+    const aMarry = a.getMarryInfo();
+    const bMarry = b.getMarryInfo();
+    const aTP = a.getThirdPartyInfo();
+    const bTP = b.getThirdPartyInfo();
+
+    /**
+     * @param {string} title
+     * @param {string | null} [desc]
+     * @returns {Promise<import("discord.js").InteractionReplyOptions>}
+     */
+    const err = async (title, desc = null) => {
+        const emoji = await get_emoji("crosS", client);
+        return {
+            embeds: [new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji} | ${title}`)
+                .setDescription(desc ?? null)
+                .setEmbedFooter(interaction)],
+            flags: MessageFlags.Ephemeral,
+        };
+    };
+
+    // 即使雙方都還沒結婚，也可以偷偷小三
+    // 但只適用於&betray，所以&betray故意不判斷
+    if (!aMarry.status && !bMarry.status) { // 你和對方都還沒結婚，不能成為其中一人的小三
+        return err("你和對方都還沒結婚，不能成為其中一人的小三");
+    };
+
+    if (
+        (aMarry.status && aMarry.with === b.getUserID())
+        || (bMarry.status && bMarry.with === a.getUserID())
+    ) { // 對方是你的配偶
+        return err("對方是你的配偶");
+    };
+
+    if (aTP.status) { // "你已經有小三了，不能再找小四了", "太多了！"
+        return err("你已經有小三了，不能再找小四了", "太多了！");
+    };
+
+    if (bTP.status) { // "對方已經有小三了，你不能是他的小四", "太多了！"
+        return err("對方已經有小三了，你不能是他的小四", "太多了！");
+    };
+
+    return null;
 };
 
 export const name = Events.InteractionCreate;
@@ -1546,8 +1630,6 @@ export async function execute(client, interaction) {
                 break;
             }
             case "marry_accept": {
-                await interaction.deferUpdate();
-
                 const [userId] = otherCustomIDs;
                 const targetUserId = user.id;
 
@@ -1565,6 +1647,20 @@ export async function execute(client, interaction) {
                 const marry_with = marry_data.with ?? null;
                 const married = marry_data.status ?? false;
 
+                if (t_rpg_data.getMarryInfo().status) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你的要結婚對象已經有其他人了!`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.update({
+                        embeds: [embed],
+                        components: [],
+                    });
+                };
+
+                await interaction.deferUpdate();
+
                 if (married) {
                     if (marry_with === targetUserId) {
                         const embed = new EmbedBuilder()
@@ -1579,7 +1675,16 @@ export async function execute(client, interaction) {
                             .setTitle(`${emoji_cross} | 還敢偷找小三!`)
                             .setEmbedFooter(interaction);
 
-                        return await interaction.editReply({ embeds: [embed] });
+                        const row = /** @type {ActionRowBuilder<ButtonBuilder>} */
+                            (new ActionRowBuilder()
+                                .addComponents(
+                                    new ButtonBuilder()
+                                        .setCustomId(`third_party_wanna_1|${user.id}|${userId}`)
+                                        .setLabel("可是我想捏")
+                                        .setStyle(ButtonStyle.Primary),
+                                ));
+
+                        return await interaction.editReply({ embeds: [embed], components: [row] });
                     };
                 };
 
@@ -1610,20 +1715,89 @@ export async function execute(client, interaction) {
 
                 return await interaction.editReply({ content: "", embeds: [embed], components: [] });
             }
-            case "divorce": {
-                const [with_UserId] = otherCustomIDs;
+            case "marry_accept_tp": {
+                const [ownerId] = otherCustomIDs;
+                if (!ownerId) throw new Error("Invalid owner id");
 
-                const [_, emoji_cross, rpg_data, with_User_rpg_data] = await Promise.all([
-                    interaction.deferReply(),
-                    get_emoji("crosS", client),
+                const [
+                    /* discarded */,
+                    next,       // 點按鈕的人
+                    owner,      // 發起人
+                    emoji_check,
+                    emoji_cross,
+                ] = await Promise.all([
+                    interaction.deferUpdate(),
                     load_rpg_data(user.id),
-                    load_rpg_data(with_UserId),
+                    load_rpg_data(ownerId),
+                    get_emoji("check", client),
+                    get_emoji("crosS", client),
                 ]);
 
-                const marry_data = rpg_data.getMarryInfo();
-                const married = marry_data.status ?? false;
+                const nextTP = next.getThirdPartyInfo();
+                const ownerTP = owner.getThirdPartyInfo();
 
-                if (!married) {
+                // 檢查：邀請期間任何一方小三變動都失效
+                if (
+                    !nextTP.status || !ownerTP.status
+                    || nextTP.with !== ownerId
+                    || ownerTP.with !== user.id
+                ) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 雙方不是彼此的小三，邀請失效`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.editReply({ embeds: [embed], components: [] });
+                };
+
+                // 檢查：邀請期間任何一方結婚都失效
+                if (next.getMarryInfo().status || owner.getMarryInfo().status) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你的要結婚對象已經有其他人了!`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.editReply({ embeds: [embed], components: [] });
+                };
+
+                const now = Date.now();
+                await Promise.all([
+                    next.setMarryInfo({ status: true, with: ownerId, time: now }),
+                    owner.setMarryInfo({ status: true, with: user.id, time: now }),
+
+                    next.resetThirdPartyInfo(),
+                    owner.resetThirdPartyInfo(),
+                ]);
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_check} | 求婚成功`)
+                    .setDescription(`<@${user.id}> 和 <@${ownerId}> 現在是夫妻拉`)
+                    .setEmbedFooter(interaction);
+
+                await interaction.editReply({ embeds: [embed], components: [] });
+                break;
+            }
+            case "divorce": {
+                let [given_spouseId = null] = otherCustomIDs;
+                const selfId = user.id;
+                /** @type {string | null} */
+                let spouseId = given_spouseId;
+
+                const [
+                    /* discarded */,
+                    self,
+                    emoji_cross,
+                ] = await Promise.all([
+                    interaction.deferUpdate(),
+                    load_rpg_data(user.id),
+                    get_emoji("crosS", client),
+                ]);
+
+                const selfMarry = self.getMarryInfo();
+                const selfTP = self.getThirdPartyInfo();
+
+                if (!selfMarry.status && !selfTP.status) { // 你還沒有結過婚
                     const embed = new EmbedBuilder()
                         .setColor(embed_error_color)
                         .setTitle(`${emoji_cross} | 你還沒有結過婚ㄝ`)
@@ -1632,18 +1806,386 @@ export async function execute(client, interaction) {
                     return await interaction.editReply({ embeds: [embed] });
                 };
 
+                if (![selfMarry, selfTP].some(e => e.with === spouseId)) {
+                    spouseId = selfMarry.with ?? selfTP.with ?? null;
+                };
+
+                if (!spouseId) throw new Error("Invalid spouse ID");
+
+                const spouse = await load_rpg_data(spouseId);
+
+                // ===== 分流：配偶離婚 vs 小三解除 =====
+                const isDivorceSpouse = selfMarry.status && selfMarry.with === spouseId;
+                const isDivorceTP = !isDivorceSpouse && selfTP.status && selfTP.with === spouseId;
+
+                if (!isDivorceSpouse && !isDivorceTP) {
+                    throw new Error("spouseId is neither spouse nor third party");
+                };
+
+                if (isDivorceTP) {
+                    const spouseTP = spouse.getThirdPartyInfo();
+
+                    const promises = [self.resetThirdPartyInfo()];
+                    if (spouseTP.status && spouseTP.with === selfId) {
+                        promises.push(spouse.resetThirdPartyInfo());
+                    };
+                    await Promise.all(promises);
+
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_default_color)
+                        .setTitle(`${emoji_cross} | 歐不`)
+                        .setDescription(`<@${selfId}> 和 <@${spouseId}> 的小三關係已經結束了 :((`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.editReply({ embeds: [embed], components: [] });
+                };
+
+                // ===== 以下為「對配偶離婚」的邏輯 =====
+                const spouseTP = spouse.getThirdPartyInfo();
+
+                // 1. 收集候選（先收集，再 reset，避免 reset 後讀不到）
+                const candidates = [];
+                if (selfTP.status && selfTP.with) candidates.push({ ownerId: selfId, nextId: selfTP.with });
+                if (spouseTP.status && spouseTP.with) candidates.push({ ownerId: spouseId, nextId: spouseTP.with });
+
+                // 2. 重設結婚資訊，小三資訊保留，除非同意遷移到夫妻
+                //                 這樣才可以直接換夫妻
+                await Promise.all([
+                    self.resetMarryInfo(), spouse.resetMarryInfo(),
+                    // self.resetThirdPartyInfo(), spouse.resetThirdPartyInfo(),
+                ]);
+
+                // 3. 兩個 owner 搶同一個 next -> 全部作廢（保留你原本的防禦）
+                const nextIds = candidates.map(c => c.nextId);
+                if (new Set(nextIds).size !== nextIds.length) candidates.length = 0;
+
+                // 4. 分類：已婚的只記 note，單身的發邀請
+                const notes = [];
+                const invites = [];
+
+                for (const { ownerId, nextId } of candidates) {
+                    const next = await load_rpg_data(nextId);
+
+                    if (next.getMarryInfo().status) {
+                        notes.push(`<@${nextId}> 已婚，無法和 <@${ownerId}> 結婚`);
+                        continue;
+                    };
+                    invites.push({ ownerId, nextId });
+                };
+
+                // 5. 原訊息顯示離婚結果
                 const embed = new EmbedBuilder()
                     .setColor(embed_default_color)
                     .setTitle(`${emoji_cross} | 歐不`)
-                    .setDescription(`<@${user.id}> 和 <@${with_UserId}> 的婚姻關係已經結束了 :((`)
+                    .setDescription(
+                        `<@${selfId}> 和 <@${spouseId}> 的婚姻關係已經結束了 :((` +
+                        (notes.length ? `\n${notes.map(n => `-# ${n}`).join("\n")}` : "")
+                    )
+                    .setEmbedFooter(interaction);
+
+                // 同時移除按鈕 (確定 和 取消)
+                await interaction.editReply({ embeds: [embed], components: [] });
+
+                // 6. 逐一發邀請（不自動結婚）
+                for (const { ownerId, nextId } of invites) {
+                    const inviteEmbed = new EmbedBuilder()
+                        .setColor(embed_marry_color)
+                        .setTitle("❤️ | 結婚邀請")
+                        .setDescription(`<@${ownerId}> 剛剛離婚了，想和你 <@${nextId}> 結婚\n\n你願意嗎？`)
+                        .setEmbedFooter(interaction);
+
+                    const row = /** @type {ActionRowBuilder<ButtonBuilder>} */
+                        (new ActionRowBuilder()
+                            .addComponents(
+                                new ButtonBuilder()
+                                    .setCustomId(`marry_accept_tp|${nextId}|${ownerId}`)
+                                    .setLabel("我願意")
+                                    .setEmoji("❤️")
+                                    .setStyle(ButtonStyle.Success),
+                                new ButtonBuilder()
+                                    .setCustomId(`cancel|${nextId}`)
+                                    .setLabel("拒絕")
+                                    .setStyle(ButtonStyle.Danger),
+                            ));
+
+                    await interaction.followUp({
+                        content: `<@${nextId}>`,
+                        embeds: [inviteEmbed],
+                        components: [row],
+                        allowedMentions: { users: [nextId] },
+                    });
+                };
+
+                break;
+            }
+            case "deny_betray": {
+                const [secretlyDidUserId] = otherCustomIDs;
+                const targetUserId = user.id;
+
+                const [
+                    o_rpg_data,
+                    t_rpg_data,
+                    emoji_cross,
+                ] = await Promise.all([
+                    load_rpg_data(secretlyDidUserId),
+                    load_rpg_data(targetUserId),
+                    get_emoji("crosS", client),
+                ]);
+
+                const o_TP_info = o_rpg_data.getThirdPartyInfo();
+                const t_TP_info = t_rpg_data.getThirdPartyInfo();
+
+                if (
+                    !t_TP_info.status || t_TP_info.with !== secretlyDidUserId
+                    || !o_TP_info.status || o_TP_info.with !== targetUserId
+                ) {
+                    const embed = new EmbedBuilder()
+                        .setColor(embed_error_color)
+                        .setTitle(`${emoji_cross} | 你和他不是小三的關係`)
+                        .setEmbedFooter(interaction);
+
+                    return await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+                };
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle(`${emoji_cross} | 歐不`)
+                    .setDescription(
+                        `<@${secretlyDidUserId}> 和 <@${targetUserId}> 的小三關係已經結束了 :((\n-# 被<@${targetUserId}> 拒絕ㄌ`
+                    )
                     .setEmbedFooter(interaction);
 
                 await Promise.all([
-                    rpg_data.resetMarryInfo(),
-                    with_User_rpg_data.resetMarryInfo(), // 兩邊都要重置
+                    o_rpg_data.resetThirdPartyInfo(),
+                    t_rpg_data.resetThirdPartyInfo(),
+                    interaction.update({ embeds: [embed], components: [] }),
+                ]);
+                break;
+            }
+            case "third_party_wanna_1": {
+                // third_party_wanna_1: A 自己確認
+                // B 的 id
+                const [targetUserId] = otherCustomIDs;
+                if (!targetUserId) throw new Error("Invalid target user id");
+
+                const [
+                    rpg_data,
+                    t_rpg_data,
+                ] = await Promise.all([
+                    load_rpg_data(user.id),
+                    load_rpg_data(targetUserId),
                 ]);
 
-                return await interaction.editReply({ embeds: [embed] });
+                const rejected = await checkThirdPartyWanna(rpg_data, t_rpg_data, interaction, client);
+                if (rejected) {
+                    return await interaction.reply(rejected);
+                };
+
+                const original_reply = interaction.message;
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle("❤️真的嗎？")
+                    .setEmbedFooter(interaction);
+
+                const row = /** @type {ActionRowBuilder<ButtonBuilder>} */
+                    (new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId(`third_party_wanna_2|${user.id}|${targetUserId}`)
+                                .setEmoji("❤️")
+                                .setLabel("真的啦！")
+                                .setStyle(ButtonStyle.Success),
+                            new ButtonBuilder()
+                                .setCustomId(`cancel|${user.id}`)
+                                .setLabel("ㄟ還是算了")
+                                .setStyle(ButtonStyle.Danger),
+                        ));
+
+                /** @type {import("discord.js").InteractionReplyOptions & import("discord.js").InteractionUpdateOptions} */
+                const options = {
+                    embeds: [embed],
+                    components: [row],
+                };
+
+                if (!original_reply.flags.has(MessageFlags.Ephemeral)) { // 在按按鈕的時候才出發「找小三」，所以不是Ephemeral
+                    await interaction.update({ components: [] }); // 把公開訊息的按鈕拔掉
+                    await interaction.followUp({ // 另外發送一條Ephemeral的訊息
+                        ...options,
+                        flags: MessageFlags.Ephemeral,
+                    });
+                } else {
+                    // 如果是Ephemeral，那就直接更新
+                    await interaction.update(options);
+                };
+
+                break;
+            }
+            case "third_party_wanna_2": {
+                // third_party_wanna_2: 發一條 B 看得到的訊息
+                // user.id:      A 的 id
+                // targetUserId: B 的 id
+                const [targetUserId] = otherCustomIDs;
+                if (!targetUserId) throw new Error("Invalid target user id");
+
+                const [
+                    rpg_data,
+                    t_rpg_data,
+                ] = await Promise.all([
+                    load_rpg_data(user.id),
+                    load_rpg_data(targetUserId),
+                ]);
+
+                const rejected = await checkThirdPartyWanna(rpg_data, t_rpg_data, interaction, client);
+                if (rejected) {
+                    return await interaction.update({
+                        embeds: rejected.embeds,
+                        components: [], // 原始訊息的 ephemeral 的按鈕拔掉
+                    });
+                };
+
+                const aMarried = rpg_data.married;
+                const bMarried = t_rpg_data.married;
+
+                let title, desc;
+                if (aMarried && bMarried) {
+                    title = "❤️ | 有人想找你出軌";
+                    desc = `${user.toString()} 想和你互相成為對方的小三...`;
+                } else if (aMarried) {
+                    // A 已婚、B 未婚：A 想包養 B
+                    title = "❤️ | 有人想找你當小三";
+                    desc = `${user.toString()} 想找你當他的小三...`;
+                } else {
+                    // A 未婚、B 已婚：A 想當 B 的小三
+                    title = "❤️ | 有人想當你的小三";
+                    desc = `${user.toString()} 想當你的小三...`;
+                };
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_default_color)
+                    .setTitle(title)
+                    .setDescription(desc)
+                    .setEmbedFooter(interaction);
+
+                const row = /** @type {ActionRowBuilder<ButtonBuilder>} */
+                    (new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId(`third_party_confirm|${targetUserId}|${user.id}`)
+                                .setLabel("我願意")
+                                .setStyle(ButtonStyle.Success),
+
+                            new ButtonBuilder()
+                                .setCustomId(`cancel|${targetUserId}`)
+                                .setLabel("拒絕")
+                                .setStyle(ButtonStyle.Danger),
+                        ));
+
+                const response = await interaction.update({ components: [] }); // 拔掉 A 的按鈕
+                await response.delete();     // 刪除 Ephemeral 訊息
+                await interaction.followUp({ // 公開給 B
+                    content: `<@${targetUserId}>`,
+                    embeds: [embed],
+                    components: [row],
+                    allowedMentions: {
+                        users: [targetUserId],
+                    },
+                });
+                break;
+            }
+            case "third_party_confirm": {
+                // user.id:      B 的 id (按下 我願意 的人)
+                // targetUserId: A 的 id (發起求婚/找小三 的一方)
+                const [targetUserId] = otherCustomIDs;
+
+                const [
+                    rpg_data,   // B (現在按按鈕的人)
+                    t_rpg_data, // A
+                    emoji_check,
+                ] = await Promise.all([
+                    load_rpg_data(user.id),
+                    load_rpg_data(targetUserId),
+                    get_emoji("check", client),
+                ]);
+
+                const rejected = await checkThirdPartyWanna(rpg_data, t_rpg_data, interaction, client);
+                if (rejected) {
+                    return await interaction.update({
+                        embeds: rejected.embeds,
+                        components: [],
+                    });
+                };
+
+                const now = Date.now();
+                /** @type {import("../../utils/config.ts").ThirdPartyInfo} */
+                const o_newInfo = {
+                    status: true,
+                    with: targetUserId,
+                    time: now,
+                };
+
+                /** @type {import("../../utils/config.ts").ThirdPartyInfo} */
+                const t_newInfo = {
+                    status: true,
+                    with: user.id,
+                    time: now,
+                };
+
+                const bMarried = rpg_data.married;
+                const aMarried = t_rpg_data.married;
+
+                let desc;
+                if (aMarried && bMarried) {
+                    desc = `${user.toString()} 和 <@${targetUserId}> 現在互為對方的小三`;
+                } else if (bMarried) {
+                    // B 已婚、A 未婚：B 有小三 A
+                    desc = `${user.toString()} 現在有小三 <@${targetUserId}>`;
+                } else if (aMarried) {
+                    // A 已婚、B 未婚：A 有小三 B
+                    desc = `<@${targetUserId}> 現在有小三 ${user.toString()}`;
+                } else {
+                    // 兩人皆未婚：理論上不該發生（checkThirdPartyWanna 已擋）
+                    throw new Error("third_party_confirm reached with both unmarried");
+                };
+
+                const embed = new EmbedBuilder()
+                    .setColor(embed_marry_color)
+                    .setTitle(`${emoji_check} | 關係成立`)
+                    .setDescription(desc)
+                    .setEmbedFooter(interaction);
+
+                await Promise.all([
+                    // 即使未結婚也會寫入小三記錄
+                    rpg_data.setThirdPartyInfo(o_newInfo),   // A 有小三 B
+                    t_rpg_data.setThirdPartyInfo(t_newInfo), // B 也出軌
+                ]);
+
+                await interaction.update({ embeds: [embed], components: [] });
+                break;
+            }
+            case "job_menu": {
+                if (!interaction.isButton()) return;
+                if (channel && !channel.isSendable()) return;
+
+                const res = await run_rpg_command("job",
+                    {
+                        author: user,
+                        channel,
+                        guild,
+                    },
+                    {
+                        bypass_rpg_check: true,
+                        dm: channel?.isDMBased(),
+                        mode: 1,
+                    },
+                );
+
+                await interaction.update({
+                    ...res,
+                    content: null,
+                });
+
+                break;
             }
             case "job_transfer": {
                 const [emoji_job, delay_embed] = await Promise.all([

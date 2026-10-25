@@ -19,6 +19,7 @@ import {
 } from "../rpg.ts";
 import {
     max_hunger,
+    type ThirdPartyInfo,
     type DailyInfo,
     type MarryInfo,
 } from "../config.ts";
@@ -64,6 +65,9 @@ export type RPGUsersSQLRow = (BaseData & {
     married: boolean,
     married_with: string | null,
     married_at: Date | null,
+    third_party: boolean,
+    third_party_with: string | null,
+    third_party_at: Date | null,
     autoeat: boolean,
 });
 
@@ -164,7 +168,7 @@ function WithUserID<TBase extends Constructor>(Base: TBase) {
             this._userID = user_id;
         };
 
-        protected getUserID(): string {
+        getUserID(): string {
             this.assertUserID();
             return this._userID;
         };
@@ -225,6 +229,9 @@ export class RPGData extends UserDataBase {
     married: boolean = false;
     married_with: string | null = null;
     married_at: Date | null = null;
+    third_party: boolean = false;
+    third_party_with: string | null = null;
+    third_party_at: Date | null = null;
     autoeat: boolean = false;
 
     constructor(data?: Partial<RPGUserData> | null, userid?: string | null) {
@@ -319,10 +326,19 @@ export class RPGData extends UserDataBase {
     };
 
     getMarryInfo(): MarryInfo {
+        if (this.married && this.married_with !== null && this.married_at !== null) {
+            return {
+                status: true,
+                with: this.married_with,
+                time: this.married_at.getTime(),
+            };
+        };
+
+        // 資料不一致（例如 married=true 但 with/at 為 null）也視為未結婚
         return {
-            status: this.married,
-            with: this.married_with,
-            time: this.married_at?.getTime() ?? null,
+            status: false,
+            with: null,
+            time: null,
         };
     };
 
@@ -392,6 +408,54 @@ export class RPGData extends UserDataBase {
             daily: null,
             daily_times: 0,
             daily_msg: false,
+        });
+    };
+
+    getThirdPartyInfo(): ThirdPartyInfo {
+        if (this.third_party && this.third_party_with !== null && this.third_party_at !== null) {
+            return {
+                status: true,
+                with: this.third_party_with,
+                time: this.third_party_at.getTime(),
+            };
+        };
+
+        // 資料不一致（例如 third_party=true 但 with/at 為 null）也視為沒有小三
+        return {
+            status: false,
+            with: null,
+            time: null,
+        };
+    };
+
+    async setThirdPartyInfo(data: ThirdPartyInfo): Promise<void> {
+        const { status: third_party, with: third_party_with, time: third_party_at_timestamp } = data;
+
+        const third_party_at = third_party_at_timestamp ? new Date(third_party_at_timestamp) : null;
+        await this._mutex.runExclusive(async () => {
+            await this.poolWithUserID(async (pool, userID) => {
+                await pool.query(`
+                    UPDATE rpg_users
+                    SET third_party = $1::boolean,
+                        third_party_with = $2::bigint,
+                        third_party_at = $3::timestamptz
+                    WHERE user_id = $4::bigint
+                `,
+                    [third_party, third_party_with, third_party_at, userID],
+                );
+            });
+
+            this.third_party = third_party;
+            this.third_party_with = third_party_with;
+            this.third_party_at = third_party_at;
+        });
+    };
+
+    async resetThirdPartyInfo(): Promise<void> {
+        await this.setThirdPartyInfo({
+            status: false,
+            with: null,
+            time: null
         });
     };
 
@@ -485,7 +549,7 @@ export class RPGData extends UserDataBase {
 
             this.autoeat = enabled;
         });
-    }
+    };
 
     toJSON(): RPGUserData {
         return {
@@ -500,6 +564,9 @@ export class RPGData extends UserDataBase {
             married: this.married,
             married_with: this.married_with,
             married_at: this.married_at,
+            third_party: this.third_party,
+            third_party_with: this.third_party_with,
+            third_party_at: this.third_party_at,
             autoeat: this.autoeat,
         };
     };

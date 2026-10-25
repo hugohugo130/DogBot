@@ -41,7 +41,7 @@ function isDigit(string) {
  * @returns {Promise<Collection<string, User> | Array<string>>}
  */
 async function mentions_users(message, idOnly = false) {
-    if (!message.content) return new Collection();
+    if (!message.content) return idOnly ? [] : new Collection();
 
     const userIDs = message.content.split(" ")
         .flatMap(userID => {
@@ -55,7 +55,7 @@ async function mentions_users(message, idOnly = false) {
         })
         .filter(userID => !!userID && (isDigit(userID) || /^[a-z0-9_.]+$/.test(userID)));
 
-    if (idOnly) return userIDs;
+    if (idOnly) return userIDs.filter(isDigit);
 
     /**
      * @type {Promise<[string, User] | null>[]}

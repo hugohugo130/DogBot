@@ -20,6 +20,7 @@ import {
 } from "./db/tables.ts";
 import {
     MockMessage,
+    rpg_commands,
 } from "../cogs/rpg/msg_handler.js";
 import {
     failed,
@@ -64,10 +65,10 @@ type WithNull<
 // 根據 context 推斷 interaction 的 guild 屬性
 type ChatInputCommandInteractionFromContext<C extends AllowedContextTuple> =
     C extends readonly ["dm"]
-        ? WithNull<djsChatInputCommandInteraction, "guild" | "guildId">
-        : C extends readonly ["guild"]
-        ? WithNonNull<djsChatInputCommandInteraction, "guild" | "guildId">
-        : djsChatInputCommandInteraction;
+    ? WithNull<djsChatInputCommandInteraction, "guild" | "guildId">
+    : C extends readonly ["guild"]
+    ? WithNonNull<djsChatInputCommandInteraction, "guild" | "guildId">
+    : djsChatInputCommandInteraction;
 
 export type ButtonExecutor = (
     interaction: ButtonInteraction,
@@ -154,7 +155,8 @@ type CommandGuideUsage = {
 };
 
 type RPGCmdFunction =
-    ({ client, message, rpg_data, args, mode, random_item }: RPGCmdArgument) => Promise<Message | object | null | void>;
+    ({ client, message, rpg_data, args, mode, random_item }: RPGCmdArgument)
+        => Promise<Message | object | null | void>;
 
 export interface RandomItem {
     item: SuccessItem;
@@ -194,6 +196,16 @@ export type RPGHandlerReturn =
     | Record<string, never>
     | null
     | void;
+
+type OmittableGuideRPGCommands =
+    | "help";
+
+type HelpKeys = ValidGuideCategory;
+export type HelpCommands =
+    Record<HelpKeys, Record<string, CommandGuide>>
+    & {
+        rpg: Record<Exclude<keyof typeof rpg_commands, OmittableGuideRPGCommands>, CommandGuide>
+    };
 
 // #endregion [RPG]
 

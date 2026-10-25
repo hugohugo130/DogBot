@@ -41,6 +41,9 @@ export const TABLES_METADATA: Record<typeof TABLES[number], { CREATE?: string; }
                 married BOOLEAN NOT NULL DEFAULT false,
                 married_with BIGINT NULL,
                 married_at TIMESTAMPTZ NULL,
+                third_party BOOLEAN NOT NULL DEFAULT false,
+                third_party_with BIGINT NULL,
+                third_party_at TIMESTAMPTZ NULL,
                 autoeat BOOLEAN NOT NULL DEFAULT false,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
                 updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -50,10 +53,17 @@ export const TABLES_METADATA: Record<typeof TABLES[number], { CREATE?: string; }
                 CONSTRAINT chk_marriage_consistency CHECK (
                     (married = false AND married_with IS NULL AND married_at IS NULL)
                     OR
-                    (married = true AND married_with IS NOT NULL AND married_at IS NOT NULL)
+                    (married = true  AND married_with IS NOT NULL AND married_at IS NOT NULL)
+                ),
+                CONSTRAINT chk_third_party_consistency CHECK (
+                    (third_party = false AND third_party_with IS NULL AND third_party_at IS NULL)
+                    OR
+                    (third_party = true AND third_party_with IS NOT NULL AND third_party_at IS NOT NULL)
                 ),
                 CONSTRAINT rpg_users_married_with_fkey FOREIGN KEY (married_with)
-                    REFERENCES rpg_users (user_id) ON DELETE SET NULL
+                    REFERENCES rpg_users (user_id) ON DELETE NO ACTION, -- 不允許刪除
+                CONSTRAINT rpg_users_third_party_with_fkey FOREIGN KEY (third_party_with)
+                    REFERENCES rpg_users (user_id) ON DELETE NO ACTION  -- 不允許刪除
             );
         `,
     },

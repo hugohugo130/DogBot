@@ -47,11 +47,13 @@ interface FarmData {
     endsAt: number;
 };
 
-export interface MarryInfo {
-    status: boolean;
-    with: string | null;
-    time: number | null;
-};
+export type MarryInfo =
+    | { status: true, with: string, time: number }
+    | { status: false, with: null, time: null };
+
+export type ThirdPartyInfo =
+    | { status: true, with: string, time: number }
+    | { status: false, with: null, time: null };
 
 export interface DailyInfo {
     daily: Date | null,

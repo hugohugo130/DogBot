@@ -13,6 +13,8 @@ import {
     SeparatorSpacingSize,
     StringSelectMenuOptionBuilder,
     User,
+    Guild,
+    type SendableChannels,
 } from "discord.js";
 
 import {
@@ -61,12 +63,16 @@ import {
 } from "./db/rpg.ts";
 import type {
     JobNames,
+    RPGHandlerRespondArgs,
+    RPGHandlerReturn,
     ValidGuideCategory,
 } from "./types.d.ts";
 import {
     item_exists,
+    MockMessage,
     rpg_actions,
     rpg_cooldown,
+    rpg_handler,
 } from "../cogs/rpg/msg_handler.js";
 import {
     getPartnerIds,
@@ -2017,6 +2023,99 @@ async function startsWith_prefixes(guildID: string | null, str: string): Promise
 
     return false;
 };
+
+// #region [run_rpg_command]
+// mode 省略或傳 0 → 跟 rpg_handler 的 mode 0 一樣（B）
+export function run_rpg_command(
+    command: string,
+    args?: {
+        author?: User | null;
+        channel?: SendableChannels | null;
+        guild?: Guild | null;
+        mentioned_user?: User;
+    },
+    options?: {
+        bypass_rpg_check?: boolean;
+        bypass_botcheck?: boolean;
+        dm?: boolean;
+        mode?: 0;
+    },
+    client?: DogClient | null,
+): Promise<Exclude<RPGHandlerReturn, RPGHandlerRespondArgs>>;
+
+// mode 傳 1 → 跟 rpg_handler 的 mode 1 一樣（A）
+export function run_rpg_command(
+    command: string,
+    args?: {
+        author?: User | null;
+        channel?: SendableChannels | null;
+        guild?: Guild | null;
+        mentioned_user?: User;
+    },
+    options?: {
+        bypass_rpg_check?: boolean;
+        bypass_botcheck?: boolean;
+        dm?: boolean;
+        mode: 1;
+    },
+    client?: DogClient | null,
+): Promise<RPGHandlerRespondArgs>;
+
+// mode 是 0 | 1（變數）→ 聯合
+export function run_rpg_command(
+    command: string,
+    args?: {
+        author?: User | null;
+        channel?: SendableChannels | null;
+        guild?: Guild | null;
+        mentioned_user?: User;
+    },
+    options?: {
+        bypass_rpg_check?: boolean;
+        bypass_botcheck?: boolean;
+        dm?: boolean;
+        mode?: 0 | 1;
+    },
+    client?: DogClient | null,
+): Promise<RPGHandlerReturn>;
+
+// 實作簽名
+export async function run_rpg_command(
+    command: string,
+    { author, channel, guild, mentioned_user }: {
+        author?: User | null,
+        channel?: SendableChannels | null,
+        guild?: Guild | null,
+        mentioned_user?: User,
+    } = {},
+    { bypass_rpg_check, bypass_botcheck, dm, mode }: {
+        bypass_rpg_check?: boolean,
+        bypass_botcheck?: boolean,
+        dm?: boolean,
+        mode?: 0 | 1,
+    } = {},
+    client: DogClient | null = global._client,
+) {
+    if (!client) client = await wait_for_client();
+    const prefix = await firstPrefix(guild?.id);
+
+    command = command.replace(prefix, "");
+    command = prefix + command;
+
+    const message = new MockMessage(command, channel, author, guild, mentioned_user);
+    const res = await rpg_handler({
+        client,
+        message,
+        bypass_rpg_check,
+        bypass_botcheck,
+        dm,
+        mode,
+    });
+
+    return res;
+};
+
+// #endregion [run_rpg_command]
 
 /**
  * Get the translation of adventure job by its ID

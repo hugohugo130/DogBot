@@ -77,6 +77,9 @@ export async function save_rpg_data(userid: string, rpg_data: RPGData): Promise<
             married,
             married_with,
             married_at,
+            third_party,
+            third_party_with,
+            third_party_at,
             autoeat
         )
         VALUES (
@@ -92,7 +95,10 @@ export async function save_rpg_data(userid: string, rpg_data: RPGData): Promise<
             $10::boolean,
             $11::bigint,
             $12::timestamptz,
-            $13::boolean
+            $13::boolean,
+            $14::bigint,
+            $15::timestamptz,
+            $16::boolean
         )
         ON CONFLICT (user_id)
         DO UPDATE SET
@@ -107,6 +113,9 @@ export async function save_rpg_data(userid: string, rpg_data: RPGData): Promise<
             married = EXCLUDED.married,
             married_with = EXCLUDED.married_with,
             married_at = EXCLUDED.married_at,
+            third_party = EXCLUDED.third_party,
+            third_party_with = EXCLUDED.third_party_with,
+            third_party_at = EXCLUDED.third_party_at,
             autoeat = EXCLUDED.autoeat
     `;
 
@@ -122,6 +131,9 @@ export async function save_rpg_data(userid: string, rpg_data: RPGData): Promise<
         married,
         married_with,
         married_at,
+        third_party,
+        third_party_with,
+        third_party_at,
         autoeat,
     } = rpg_data;
 
@@ -141,9 +153,27 @@ export async function save_rpg_data(userid: string, rpg_data: RPGData): Promise<
             married,
             married_with,
             married_at,
+            third_party,
+            third_party_with,
+            third_party_at,
             autoeat,
         ],
     );
+};
+
+export async function has_third_party(userid: string): Promise<boolean> {
+    const table_name = "rpg_users" as const satisfies typeof TABLES[number];
+
+    const pool = getPool();
+    const { rowCount } = await pool.query(`
+        SELECT 1 FROM ${table_name}
+        WHERE third_party = true
+            AND third_party_with = $1
+        LIMIT 1
+    `, [userid],
+    );
+
+    return (rowCount ?? 0) > 0;
 };
 
 // #endregion [rpg_users]

@@ -258,11 +258,11 @@ async function redirect({ client, message, command, mode = 0 }) {
  * @returns {Promise<EmbedBuilder>}
  */
 async function show_marry_info(marry_info, interaction = null, client = global._client) {
-    const married = marry_info.status ?? false;
-    if (!married || !marry_info.time) throw new Error("not married and triggered show_marry_info");
+    const { status: married, time } = marry_info;
+    if (!married || !time) throw new Error("not married and triggered show_marry_info");
 
     const emoji_check = await get_emoji("check", client);
-    const marryTime = convertToSecondTimestamp(marry_info.time);
+    const marryTime = convertToSecondTimestamp(time);
 
     const embed = new EmbedBuilder()
         .setTitle(`${emoji_check} 結婚資訊`)
@@ -271,6 +271,33 @@ async function show_marry_info(marry_info, interaction = null, client = global._
 你和 <@${marry_info.with}> ❤️
 
 結婚紀念日 - <t:${marryTime}:R>`
+        )
+        .setEmbedFooter(interaction);
+
+    return embed;
+};
+
+/**
+ * Get the embed for showing third party info of a user
+ * @param {import("../../utils/config").ThirdPartyInfo} TP_info
+ * @param {BaseInteraction | null} [interaction]
+ * @param {DogClient | null} [client]
+ * @returns {Promise<EmbedBuilder>}
+ */
+async function show_TP_info(TP_info, interaction = null, client = global._client) {
+    const { status, time } = TP_info;
+    if (!status || !time) throw new Error(`status is ${status} and triggered show_TP_info`);
+
+    const emoji_check = await get_emoji("check", client);
+    const marryTime = convertToSecondTimestamp(time);
+
+    const embed = new EmbedBuilder()
+        .setTitle(`${emoji_check} 小三資訊`)
+        .setColor(embed_marry_color)
+        .setDescription(`
+你和 <@${TP_info.with}> ❤️
+
+小三紀念日 - <t:${marryTime}:R>`
         )
         .setEmbedFooter(interaction);
 
@@ -1282,7 +1309,7 @@ ${buyer_mention} 將要花費 \`${total_price}$ (${pricePerOne}$ / 個)\` 購買
 
         if (specific_cmd && specific_cmd !== "help") {
             specific_cmd = redirect_data[specific_cmd] ?? specific_cmd;
-            const { get_help_command } = /** @type {import("./interactions.js")} */ (await import(new URL("./interactions.js", import.meta.url).href));
+            const { get_help_command } = /** @type {typeof import("./interactions.js")} */ (await import(new URL("./interactions.js", import.meta.url).href));
             const embed = await get_help_command("rpg", specific_cmd, message.guild?.id, null, client);
 
             if (!embed) {
@@ -1436,8 +1463,9 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         if (args.length > 0) {
             const extra_embeds = [];
 
-            const food_id = args[0];
-            const food_name = get_name_of_id(food_id);
+            const given_food_id = args[0];
+            const food_name = get_name_of_id(given_food_id);
+            const food_id = get_id_of_name(food_name)
 
             if (!isFoodKey(food_id)) {
                 const embed = new EmbedBuilder()
@@ -1884,8 +1912,7 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
         assertRPGData(rpg_data);
 
         const marry_info = rpg_data.getMarryInfo();
-        const marry_with = marry_info.with ?? null;
-        const married = marry_info.status ?? false;
+        const { status: married = false, with: marry_with = null } = marry_info;
 
         const [emoji_cross, target_users] = await Promise.all([
             get_emoji("crosS", client),
@@ -1894,20 +1921,15 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
 
         const target_user = target_users.first();
         if (!target_user) {
-            if (!married) {
-                const embed = new EmbedBuilder()
+            const embed = married
+                ? await show_marry_info(marry_info, null, client)
+                : (new EmbedBuilder()
                     .setColor(embed_error_color)
                     .setTitle(`${emoji_cross} | 錯誤的使用者`)
-                    .setEmbedFooter(message.author.id);
+                    .setEmbedFooter(message.author.id));
 
-                if (mode === 1) return { embeds: [embed] };
-                return await message.reply({ embeds: [embed] });
-            } else {
-                const embed = await show_marry_info(marry_info, null, client);
-
-                if (mode === 1) return { embeds: [embed] };
-                return await message.reply({ embeds: [embed] });
-            };
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
         };
 
         if (target_user.id === message.author.id) {
@@ -1935,22 +1957,55 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
                     .setTitle(`${emoji_cross} | 還敢偷找小三!`)
                     .setEmbedFooter(message.author.id);
 
-                if (mode === 1) return { embeds: [embed] };
-                return await message.reply({ embeds: [embed] });
+                const row = /** @type {ActionRowBuilder<ButtonBuilder>} */
+                    (new ActionRowBuilder()
+                        .addComponents(
+                            new ButtonBuilder()
+                                .setCustomId(`third_party_wanna_1|${message.author.id}|${target_user.id}`)
+                                .setLabel("可是我想捏")
+                                .setStyle(ButtonStyle.Primary),
+                        ));
+
+                if (mode === 1) return { embeds: [embed], components: [row] };
+                return await message.reply({ embeds: [embed], components: [row] });
             };
         };
 
         const t_rpg_data = await load_rpg_data(target_user.id);
         const t_marry_info = t_rpg_data.getMarryInfo();
+        const t_TP_info = t_rpg_data.getThirdPartyInfo();
         const t_married = t_marry_info.status ?? false;
         if (t_married) {
+            // 對方已經有小三了
+            if (t_TP_info.status) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 對方已經有小三了`)
+                    .setDescription(`<@${t_TP_info.with}> 是他的小三`)
+                    .setEmbedFooter(message.author.id);
+
+                if (mode === 1) return { embeds: [embed] };
+                return await message.reply({ embeds: [embed] });
+            };
+
+            // 對方已婚，但沒有小三，所以可以請求小三
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你的要結婚對象已經有其他人了!`)
+                .setDescription("-# ||不過如果你真的想，也不是不行喔！||")
                 .setEmbedFooter(message.author.id);
 
-            if (mode === 1) return { embeds: [embed] };
-            return await message.reply({ embeds: [embed] });
+            const row = /** @type {ActionRowBuilder<ButtonBuilder>} */ (
+                new ActionRowBuilder()
+                    .addComponents(
+                        new ButtonBuilder()
+                            .setCustomId(`third_party_wanna_1|${message.author.id}|${target_user.id}`)
+                            .setLabel("可是我想捏")
+                            .setStyle(ButtonStyle.Primary),
+                    ));
+
+            if (mode === 1) return { embeds: [embed], components: [row] };
+            return await message.reply({ embeds: [embed], components: [row] });
         };
 
         const embed = new EmbedBuilder()
@@ -1976,46 +2031,196 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
             (new ActionRowBuilder()
                 .addComponents(deny_button, accept_button));
 
-        if (mode === 1) return { content: `${target_user.toString()}`, embeds: [embed], components: [row] };
-        return await message.reply({ content: `${target_user.toString()}`, embeds: [embed], components: [row] });
+        /** @type {import("discord.js").MessageReplyOptions} */
+        const options = {
+            content: `${target_user.toString()}`,
+            embeds: [embed],
+            components: [row],
+            allowedMentions: {
+                users: [target_user.id],
+            },
+        };
+
+        if (mode === 1) return options;
+        return await message.reply(options);
     }, async (_, userid) => {
         const rpg_data = await load_rpg_data(userid);
         const marry_info = rpg_data.getMarryInfo();
-        const married = marry_info.status ?? false;
+        const { status: married = false } = marry_info;
 
         return !married;
+    }],
+    betray: ["偷偷小三", async function ({ client, message, rpg_data, mode }) {
+        if (!message.author) return;
+        assertRPGData(rpg_data);
+
+        const marry = rpg_data.getMarryInfo();
+        const TP = rpg_data.getThirdPartyInfo();
+        const { status = false, with: TP_with = null } = TP;
+
+        const [emoji_cross, target_users] = await Promise.all([
+            get_emoji("crosS", client),
+            mentions_users(message),
+        ]);
+
+        const target_user = target_users.first();
+        if (!target_user) {
+            const embed = status
+                ? await show_TP_info(TP, null, client)
+                : (new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 錯誤的使用者`)
+                    .setEmbedFooter(message.author.id));
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        if (target_user.id === message.author.id) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 欸不是 不要跟自己結婚好嘛>_<`)
+                .setEmbedFooter(message.author.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        if (marry.status && marry.with === target_user.id) {
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 你那麼健忘哦? 你們已經是夫妻了!`)
+                .setEmbedFooter(message.author.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        if (status) {
+            if (TP_with === target_user.id) {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 你那麼健忘哦? 他已經是你的小三了!`)
+                    .setEmbedFooter(message.author.id);
+
+                if (mode === 1) return { embeds: [embed] };
+                return await message.reply({ embeds: [embed] });
+            } else {
+                const embed = new EmbedBuilder()
+                    .setColor(embed_error_color)
+                    .setTitle(`${emoji_cross} | 還敢偷找小四!`)
+                    .setDescription("-# 太多了辣 :(")
+                    .setEmbedFooter(message.author.id);
+
+                if (mode === 1) return { embeds: [embed] };
+                return await message.reply({ embeds: [embed] });
+            };
+        };
+
+        const t_rpg_data = await load_rpg_data(target_user.id);
+        const t_TP_info = t_rpg_data.getThirdPartyInfo();
+        if (t_TP_info.status) { // 對方已經有小三了
+            const embed = new EmbedBuilder()
+                .setColor(embed_error_color)
+                .setTitle(`${emoji_cross} | 對方已經有小三了`)
+                .setDescription(`<@${t_TP_info.with}> 是他的小三`)
+                .setEmbedFooter(message.author.id);
+
+            if (mode === 1) return { embeds: [embed] };
+            return await message.reply({ embeds: [embed] });
+        };
+
+        const now = Date.now();
+        await Promise.all([
+            rpg_data.setThirdPartyInfo({
+                status: true,
+                with: target_user.id,
+                time: now,
+            }),
+            t_rpg_data.setThirdPartyInfo({
+                status: true,
+                with: message.author.id,
+                time: now,
+            }),
+        ]);
+
+        const embed = new EmbedBuilder()
+            .setColor(embed_default_color)
+            .setTitle(`❤️ | 偷認小三`)
+            .setDescription(`
+${message.author.toString()} 偷偷認你為小三了！
+-# 如果你不接受，可以按「拒絕」
+`)
+            .setThumbnail("https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Drawn_love_hearts.svg/1200px-Drawn_love_hearts.svg.png")
+            .setEmbedFooter(message.author.id);
+
+        const deny_button = new ButtonBuilder()
+            .setCustomId(`deny_betray|${target_user.id}|${message.author.id}`)
+            .setLabel("拒絕")
+            .setStyle(ButtonStyle.Danger);
+
+        const row =
+            /** @type {ActionRowBuilder<ButtonBuilder>} */
+            (new ActionRowBuilder()
+                .addComponents(deny_button));
+
+        /** @type {import("discord.js").MessageReplyOptions} */
+        const options = {
+            content: `${target_user.toString()}`,
+            embeds: [embed],
+            components: [row],
+            allowedMentions: {
+                users: [target_user.id],
+            },
+        };
+
+        if (mode === 1) return options;
+        return await message.reply(options);
+    }, async (_, userid) => {
+        const rpg_data = await load_rpg_data(userid);
+        const TP = rpg_data.getThirdPartyInfo();
+        const { status = false } = TP;
+
+        return !status;
     }],
     divorce: ["離婚", async function ({ client, message, rpg_data, mode }) {
         if (!message.author) return;
         assertRPGData(rpg_data);
 
-        const emoji_cross = await get_emoji("crosS", client);
+        const [
+            mentioned_users,
+            emoji_cross,
+        ] = await Promise.all([
+            mentions_users(message, true),
+            get_emoji("crosS", client),
+        ]);
+
+        const marry = rpg_data.getMarryInfo();
+        const TP = rpg_data.getThirdPartyInfo();
 
         const userid = message.author.id;
+        const targetUserId = mentioned_users[0] ?? marry.with ?? TP.with;
 
-        const marry_info = rpg_data.getMarryInfo();
-        const married = marry_info.status ?? false;
+        const allowedUserIds = [marry.with, TP.with].filter(e => e != null);
 
-        if (!married) {
+        if (!allowedUserIds.some(e => e == targetUserId)) {
             const embed = new EmbedBuilder()
                 .setColor(embed_default_color)
-                .setTitle(`${emoji_cross} | 你還沒有結過婚ㄝ`)
+                .setTitle(`${emoji_cross} | 你還沒跟他結婚ㄝ`)
                 .setEmbedFooter(userid);
 
             if (mode === 1) return { embeds: [embed] };
             return await message.reply({ embeds: [embed] });
         };
 
-        const with_UserId = marry_info.with;
-
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle("⚠ | 離婚確認")
-            .setDescription(`你確定你不愛 <@${with_UserId}> 了嗎?!`)
+            .setDescription(`你確定你不愛 <@${targetUserId}> 了嗎?!`)
             .setEmbedFooter(userid);
 
         const confirm_button = new ButtonBuilder()
-            .setCustomId(`divorce|${userid}|${with_UserId}`)
+            .setCustomId(`divorce|${userid}|${targetUserId}`)
             .setLabel("確定")
             .setStyle(ButtonStyle.Danger);
 
@@ -2034,10 +2239,12 @@ ${emoji_slash} 正在努力轉移部分功能的指令到斜線指令
     }, async (_, userid) => {
         const rpg_data = await load_rpg_data(userid);
 
-        const marry_info = rpg_data.getMarryInfo();
-        const married = marry_info.status ?? false;
+        const marry = rpg_data.getMarryInfo();
+        const TP = rpg_data.getThirdPartyInfo();
+        const { status: m_status } = marry;
+        const { status: TP_status } = TP;
 
-        return !married;
+        return !m_status && !TP_status;
     }],
     job: ["職業", async function ({ client, message, rpg_data, args, mode }) {
         if (!message.author) return;
@@ -2256,17 +2463,24 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
         const [
             inventory,
             rpg_data,
+            t_rpg_data,
             partner,
             [emoji_cross, emoji_drumstick],
         ] = await Promise.all([
             load_inventory(original_user.id),
+            load_rpg_data(original_user.id),
             load_rpg_data(target_user.id),
             load_partner(target_user.id),
             get_emojis(["crosS", "drumstick"], client),
         ]);
+
         const isPartner = partner.hasRelationship(original_user.id);
-        const isMarried = rpg_data.married_with === original_user.id;
-        if (!isPartner && !isMarried) {
+        const isMarried = t_rpg_data.married_with === original_user.id;
+        const isTP = ( // 其中一方是對方的小三
+            rpg_data.third_party_with === target_user.id
+            || t_rpg_data.third_party_with === original_user.id
+        );
+        if (!isPartner && !isMarried && !isTP) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 你沒有這隻寵物或是你沒有和她結婚`)
@@ -2276,8 +2490,9 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
         };
 
         args = removeMentionsInArgs(args, [target_user.id]);
-        const food_id = args[0]
-        const food_name = get_name_of_id(food_id);
+        const given_food_id = args[0];
+        const food_name = get_name_of_id(given_food_id);
+        const food_id = get_id_of_name(food_name);
 
         if (!isFoodKey(food_id)) {
             const embed = new EmbedBuilder()
@@ -2325,7 +2540,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
         const add = food_data[food_id]
         if (!add) throw new Error(`No food data get of food ${food_id}`);
 
-        if (rpg_data.hunger >= max_hunger) {
+        if (t_rpg_data.hunger >= max_hunger) {
             const embed = new EmbedBuilder()
                 .setColor(embed_error_color)
                 .setTitle(`${emoji_cross} | 他已經吃太飽了`)
@@ -2337,10 +2552,10 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
 
         const extra_embeds = [];
         let newadd = add * eat_amount;
-        if ((rpg_data.hunger + newadd) > max_hunger) {
+        if ((t_rpg_data.hunger + newadd) > max_hunger) {
             const old_amount = eat_amount;
 
-            const new_amount = Math.floor((max_hunger - rpg_data.hunger) / add);
+            const new_amount = Math.floor((max_hunger - t_rpg_data.hunger) / add);
             const new_newadd = add * new_amount;
 
             if (!force_eat) {
@@ -2367,7 +2582,7 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
             if (force_eat) {
                 embed.setColor(embed_warn_color)
                     .setTitle(`${emoji_cross} | 爆體保護被停用！`)
-                    .setDescription(`你停用了爆體保護，浪費了 \`${(rpg_data.hunger + newadd) - max_hunger}\` 飽食度`);
+                    .setDescription(`你停用了爆體保護，浪費了 \`${(t_rpg_data.hunger + newadd) - max_hunger}\` 飽食度`);
             };
 
             extra_embeds.push(embed);
@@ -2375,14 +2590,14 @@ ${emoji_nekoWave} 如果出現紅字 \`Invalid Form Body\` 的錯誤訊息
 
         await Promise.all([
             inventory.subtract_item(food_id, eat_amount),
-            rpg_data.add_hunger(newadd),
+            t_rpg_data.add_hunger(newadd),
             set_partner_feed_time(target_user.id),
         ]);
 
         const embed = new EmbedBuilder()
             .setColor(embed_default_color)
             .setTitle(`${emoji_drumstick} | 成功進食`)
-            .setDescription(`你餵給 ${target_user.toString()} \`${eat_amount}\` 個 \`${food_name}\`，他的體力值增加到了 \`${rpg_data.hunger}\``)
+            .setDescription(`你餵給 ${target_user.toString()} \`${eat_amount}\` 個 \`${food_name}\`，他的體力值增加到了 \`${t_rpg_data.hunger}\``)
             .setEmbedFooter(original_user.id);
 
         const embeds = [embed, ...extra_embeds];
@@ -2519,8 +2734,30 @@ function find_redirect_targets_from_id(id) {
  * @param {boolean} [options.bypass_rpg_check]
  * @param {boolean} [options.bypass_botcheck]
  * @param {boolean} [options.dm] - 私訊模式
- * @param {1} [options.mode] - 請求模式 - 0: 預設模式 - 1: 取得訊息回傳參數
+ * @param {1} options.mode - 請求模式 - 0: 預設模式 - 1: 取得訊息回傳參數
  * @returns {Promise<import("../../utils/types").RPGHandlerRespondArgs>}
+ */
+/**
+ * @overload
+ * @param {object} options
+ * @param {DogClient} options.client - Discord Client
+ * @param {Message | MockMessage} options.message - Discord Message
+ * @param {boolean} [options.bypass_rpg_check]
+ * @param {boolean} [options.bypass_botcheck]
+ * @param {boolean} [options.dm] - 私訊模式
+ * @param {0} options.mode - 請求模式 - 0: 預設模式 - 1: 取得訊息回傳參數
+ * @returns {Promise<Exclude<import("../../utils/types").RPGHandlerReturn, import("../../utils/types").RPGHandlerRespondArgs>>}
+ */
+/**
+ * @overload
+ * @param {object} options
+ * @param {DogClient} options.client - Discord Client
+ * @param {Message | MockMessage} options.message - Discord Message
+ * @param {boolean} [options.bypass_rpg_check]
+ * @param {boolean} [options.bypass_botcheck]
+ * @param {boolean} [options.dm] - 私訊模式
+ * @param {0 | 1} [options.mode] - 請求模式 - 0: 預設模式 - 1: 取得訊息回傳參數
+ * @returns {Promise<import("../../utils/types").RPGHandlerReturn>}
  */
 /**
  * @param {object} options
