@@ -23,7 +23,7 @@
     "emoji-regex": "^11.0.0",
     "expr-eval": "^2.0.2",
     "express": "^5.2.1",
-    "file-type": "^22.1.1",
+    "file-type": "^22.2.0",
     "mediaplex": "^1.0.0",
     "opusscript": "^0.0.8",
     "pg": "^8.23.0",
