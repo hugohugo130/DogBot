@@ -180,7 +180,7 @@ async function show_transactions(userid) {
  * @param {BaseInteraction} interaction
  * @returns {Promise<EmbedBuilder>}
  */
-async function get_transaction_embed(interaction) {
+export async function get_transaction_embed(interaction) {
     const userid = interaction.user.id;
     const username = interaction.user.username;
 
