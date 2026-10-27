@@ -41,7 +41,7 @@
     "@typescript-eslint/parser": "^8.71.2",
     "eslint": "^10.13.0",
     "eslint-plugin-command": "^4.0.0",
-    "eslint-plugin-jsdoc": "^64.5.4",
+    "eslint-plugin-jsdoc": "^65.4.2",
     "globals": "^17.13.0",
     "jiti": "^2.7.0",
     "jscodeshift": "^17.4.0",
